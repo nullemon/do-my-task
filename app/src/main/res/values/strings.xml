@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">DoMyTask</string>
+    <string name="notif_listener_label">DoMyTask reply reader</string>
+
+    <!-- Accessibility service description shown in system settings. -->
+    <string name="accessibility_description">
+        DoMyTask uses this service to carry out the tasks you ask for by tapping,
+        typing, and scrolling inside other apps on your behalf — for example opening
+        a chat and sending a message. It only acts while you have given it a task.
+    </string>
+</resources>

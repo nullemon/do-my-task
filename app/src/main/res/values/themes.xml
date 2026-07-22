@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      Minimal base theme. Actual colors are driven by Compose (see ui/Theme.kt);
+      this only needs to be a no-action-bar theme so the Compose content fills the
+      window. Uses a framework Material theme so no extra AppCompat/Material
+      dependency is required.
+    -->
+    <style name="Theme.DoMyTask" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/window_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>

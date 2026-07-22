@@ -12,7 +12,7 @@ class TextToSpeechManager(context: Context) {
     private val pending = ArrayList<Pair<String, Boolean>>()
     private val counter = AtomicInteger(0)
 
-    private val tts = TextToSpeech(context.applicationContext) { status ->
+    private val tts: TextToSpeech = TextToSpeech(context.applicationContext) { status ->
         if (status == TextToSpeech.SUCCESS) {
             ready = true
             tts.language = Locale.getDefault()

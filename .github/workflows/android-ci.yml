@@ -35,3 +35,38 @@ jobs:
           name: domytask-debug-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
+
+  # Publishes the built APK to a rolling "debug-latest" release so it can be
+  # downloaded and installed directly on a phone (no GitHub login needed).
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/claude/')
+    permissions:
+      contents: write
+    steps:
+      - name: Download built APK
+        uses: actions/download-artifact@v4
+        with:
+          name: domytask-debug-apk
+          path: apk
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp apk/*.apk out/DoMyTask-debug.apk
+
+      - name: Publish rolling debug release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: debug-latest
+          name: DoMyTask debug (latest)
+          body: |
+            Latest debug build of DoMyTask, updated automatically on every push.
+
+            **Install on your phone:** download `DoMyTask-debug.apk` below, open it,
+            and allow installing from unknown sources when prompted. Then complete the
+            in-app Setup checklist (mic, accessibility, notification access, overlay,
+            and your AI API key).
+          prerelease: true
+          files: out/DoMyTask-debug.apk

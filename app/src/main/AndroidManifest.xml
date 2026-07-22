@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
     <!--
       Lets the app launch other apps and show UI while running in the background
@@ -45,6 +47,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Transparent activity that wakes the screen and dismisses a non-secure
+             lock (or prompts the user to unlock a secure one) before a task runs. -->
+        <activity
+            android:name=".AssistantOverlayActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:showWhenLocked="true"
+            android:taskAffinity=""
+            android:theme="@style/Theme.DoMyTask.Transparent"
+            android:turnScreenOn="true"
+            tools:targetApi="27" />
 
         <!-- Always-listening voice service (wake phrase + command capture). -->
         <service

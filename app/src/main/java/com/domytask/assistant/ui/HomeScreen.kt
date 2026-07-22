@@ -51,6 +51,7 @@ data class SetupStatus(
     val notifications: Boolean,
     val postNotif: Boolean,
     val overlay: Boolean,
+    val battery: Boolean,
     val apiKey: Boolean,
 ) {
     val allReady: Boolean get() = mic && accessibility && apiKey
@@ -66,6 +67,7 @@ fun HomeScreen(
     onOpenNotificationAccess: () -> Unit,
     onRequestPostNotif: () -> Unit,
     onOpenOverlay: () -> Unit,
+    onOpenBattery: () -> Unit,
     onOpenSettings: () -> Unit,
     onToggleAssistant: (Boolean) -> Unit,
     onTalk: () -> Unit,
@@ -100,6 +102,7 @@ fun HomeScreen(
                 onOpenNotificationAccess = onOpenNotificationAccess,
                 onRequestPostNotif = onRequestPostNotif,
                 onOpenOverlay = onOpenOverlay,
+                onOpenBattery = onOpenBattery,
                 onOpenSettings = onOpenSettings,
             )
 
@@ -126,6 +129,7 @@ private fun SetupCard(
     onOpenNotificationAccess: () -> Unit,
     onRequestPostNotif: () -> Unit,
     onOpenOverlay: () -> Unit,
+    onOpenBattery: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     Card(Modifier.fillMaxWidth()) {
@@ -136,6 +140,7 @@ private fun SetupCard(
             SetupRow("Notification access (read replies)", setup.notifications, "Enable", onOpenNotificationAccess)
             SetupRow("Show notifications", setup.postNotif, "Grant", onRequestPostNotif)
             SetupRow("Display over other apps", setup.overlay, "Enable", onOpenOverlay)
+            SetupRow("Keep running in background", setup.battery, "Allow", onOpenBattery)
             SetupRow("AI API key", setup.apiKey, "Add key", onOpenSettings)
         }
     }

@@ -145,6 +145,23 @@ adb install app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
+## Locked phone & waking the screen
+
+When a task starts, DoMyTask can **wake the screen and show over the lock screen** (toggle
+in Settings; grant *Display over other apps* and *Keep running in background*). What happens
+next depends on your lock:
+
+- **No lock / swipe only** → it dismisses the lock and runs fully hands-free.
+- **Secure lock (PIN, pattern, fingerprint)** → it wakes the screen and pops the unlock
+  prompt; you authenticate with **one tap / your fingerprint**, then it continues.
+
+It can keep **listening** while locked (best-effort, battery permitting), and it can **speak**
+replies. What it **cannot** do — and no app can — is **enter your PIN/password to unlock the
+phone for you.** Android blocks every app (accessibility included) from typing into or reading
+the lock-screen credential field; there is no API to submit it. That is the same protection
+that stops a thief from unlocking your phone, so it can't be turned off. The realistic model
+is *"listen anytime; the screen must be unlocked for it to act."*
+
 ## Safety notes
 
 - The agent is instructed to **stay within your request** and to **not pay, buy, delete, or

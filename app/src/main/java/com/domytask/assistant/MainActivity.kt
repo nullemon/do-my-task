@@ -95,6 +95,14 @@ private fun AppRoot() {
                 )
             )
         },
+        onOpenBattery = {
+            context.startActivity(
+                Intent(
+                    android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                    android.net.Uri.parse("package:${context.packageName}"),
+                )
+            )
+        },
         onOpenSettings = { showSettings = true },
         onToggleAssistant = { on ->
             if (on) VoiceService.start(context) else VoiceService.stop(context)
@@ -129,8 +137,10 @@ private fun computeSetup(context: Context): SetupStatus {
     val notifications = NotificationManagerCompat.getEnabledListenerPackages(context)
         .contains(context.packageName)
     val overlay = android.provider.Settings.canDrawOverlays(context)
+    val power = context.getSystemService(android.os.PowerManager::class.java)
+    val battery = power?.isIgnoringBatteryOptimizations(context.packageName) ?: true
     val apiKey = Settings(context).hasKeyForActiveProvider()
-    return SetupStatus(mic, accessibility, notifications, postNotif, overlay, apiKey)
+    return SetupStatus(mic, accessibility, notifications, postNotif, overlay, battery, apiKey)
 }
 
 private fun isAccessibilityEnabled(context: Context): Boolean {

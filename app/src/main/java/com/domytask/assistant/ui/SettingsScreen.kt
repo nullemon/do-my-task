@@ -54,6 +54,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit) {
     var maxSteps by remember { mutableFloatStateOf(settings.maxSteps.toFloat()) }
     var screenshots by remember { mutableStateOf(settings.useScreenshots) }
     var narrate by remember { mutableStateOf(settings.narrateSteps) }
+    var wakeScreen by remember { mutableStateOf(settings.wakeScreenForTasks) }
     var providerMenu by remember { mutableStateOf(false) }
 
     fun persist() {
@@ -66,6 +67,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit) {
         settings.maxSteps = maxSteps.toInt()
         settings.useScreenshots = screenshots
         settings.narrateSteps = narrate
+        settings.wakeScreenForTasks = wakeScreen
     }
 
     Scaffold(
@@ -132,6 +134,7 @@ fun SettingsScreen(settings: Settings, onBack: () -> Unit) {
             Slider(value = maxSteps, onValueChange = { maxSteps = it }, valueRange = 5f..50f, steps = 8)
 
             ToggleRow("Speak each step out loud", narrate) { narrate = it }
+            ToggleRow("Wake the screen for tasks (shows over the lock screen)", wakeScreen) { wakeScreen = it }
             ToggleRow("Send screenshots to the AI (more accurate, higher cost)", screenshots) { screenshots = it }
 
             Spacer(Modifier.size(4.dp))

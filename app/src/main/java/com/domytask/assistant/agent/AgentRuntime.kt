@@ -1,6 +1,10 @@
 package com.domytask.assistant.agent
 
+import android.app.KeyguardManager
 import android.content.Context
+import android.content.Intent
+import android.os.PowerManager
+import com.domytask.assistant.AssistantOverlayActivity
 import com.domytask.assistant.data.Settings
 import com.domytask.assistant.llm.LlmClientFactory
 import com.domytask.assistant.llm.LlmHttpException
@@ -46,6 +50,7 @@ object AgentRuntime {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var job: Job? = null
     private var tts: TextToSpeechManager? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state
@@ -102,6 +107,11 @@ object AgentRuntime {
         val taskStart = now()
         var step = 0
         try {
+            acquireWakeLock()
+            if (wakeScreenIfNeeded(settings)) {
+                // Give the screen a moment to come on / the user a moment to unlock.
+                delay(1600)
+            }
             while (step < settings.maxSteps) {
                 coroutineContext.ensureActive()
                 step++
@@ -140,8 +150,39 @@ object AgentRuntime {
         } catch (e: CancellationException) {
             // Cancelled by the user; nothing more to do.
         } finally {
+            releaseWakeLock()
             _state.update { it.copy(running = false) }
         }
+    }
+
+    /** Wakes the screen / shows over the lock screen if the phone is asleep or locked. */
+    private fun wakeScreenIfNeeded(settings: Settings): Boolean {
+        if (!settings.wakeScreenForTasks) return false
+        val power = appContext.getSystemService(PowerManager::class.java) ?: return false
+        val keyguard = appContext.getSystemService(KeyguardManager::class.java)
+        val asleep = !power.isInteractive
+        val locked = keyguard?.isKeyguardLocked == true
+        if (!asleep && !locked) return false
+
+        append(LogKind.INFO, if (locked) "Waking the screen — unlock to continue." else "Waking the screen.")
+        val intent = Intent(appContext, AssistantOverlayActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { appContext.startActivity(intent) }
+        return true
+    }
+
+    private fun acquireWakeLock() {
+        val power = appContext.getSystemService(PowerManager::class.java) ?: return
+        val lock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "domytask:task").apply {
+            setReferenceCounted(false)
+        }
+        runCatching { lock.acquire(10 * 60 * 1000L) }
+        wakeLock = lock
+    }
+
+    private fun releaseWakeLock() {
+        runCatching { if (wakeLock?.isHeld == true) wakeLock?.release() }
+        wakeLock = null
     }
 
     private suspend fun execute(d: AgentDecision, taskStart: Long): String = when (d.action) {

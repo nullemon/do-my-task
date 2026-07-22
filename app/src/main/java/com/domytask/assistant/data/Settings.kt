@@ -67,6 +67,11 @@ class Settings(context: Context) {
         get() = prefs.getBoolean(KEY_NARRATE, true)
         set(value) = prefs.edit().putBoolean(KEY_NARRATE, value).apply()
 
+    /** Wake the screen (and show over the lock screen) when a task starts. */
+    var wakeScreenForTasks: Boolean
+        get() = prefs.getBoolean(KEY_WAKE_SCREEN, true)
+        set(value) = prefs.edit().putBoolean(KEY_WAKE_SCREEN, value).apply()
+
     fun keyFor(provider: LlmProvider): String = when (provider) {
         LlmProvider.GEMINI -> geminiKey
         LlmProvider.CLAUDE -> claudeKey
@@ -86,6 +91,7 @@ class Settings(context: Context) {
         private const val KEY_MAX_STEPS = "max_steps"
         private const val KEY_SCREENSHOTS = "use_screenshots"
         private const val KEY_NARRATE = "narrate_steps"
+        private const val KEY_WAKE_SCREEN = "wake_screen"
         const val DEFAULT_WAKE = "hey assistant"
     }
 }

@@ -18,6 +18,8 @@ import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+from . import ai, bypass
+from .bypass import BypassConfig
 from .engine import ScanConfig, scan
 
 _STATIC_DIR = os.path.join(os.path.dirname(__file__), "webui")
@@ -57,26 +59,37 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(data)
 
-    # --- scan API (streams NDJSON) ----------------------------------------
+    # --- POST routing -----------------------------------------------------
     def do_POST(self):
-        if self.path.split("?", 1)[0] != "/api/scan":
-            return self.send_error(404, "Not found")
+        route = self.path.split("?", 1)[0]
+        payload = self._read_json()
+        if payload is None:
+            return  # error already sent
+        if route == "/api/scan":
+            return self._stream(scan(self._config_from_payload(payload)))
+        if route == "/api/bypass":
+            return self._stream(bypass.run(self._bypass_config_from_payload(payload)))
+        if route == "/api/analyze":
+            return self._analyze(payload)
+        self.send_error(404, "Not found")
+
+    def _read_json(self):
         try:
             length = int(self.headers.get("Content-Length", 0))
-            payload = json.loads(self.rfile.read(length) or b"{}")
+            return json.loads(self.rfile.read(length) or b"{}")
         except (ValueError, json.JSONDecodeError):
-            return self.send_error(400, "Bad JSON")
+            self.send_error(400, "Bad JSON")
+            return None
 
-        config = self._config_from_payload(payload)
-
+    def _stream(self, events):
+        """Stream an event generator as newline-delimited JSON."""
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Accel-Buffering", "no")
         self.end_headers()
-
         try:
-            for event in scan(config):
+            for event in events:
                 self.wfile.write((json.dumps(event) + "\n").encode("utf-8"))
                 self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
@@ -88,6 +101,28 @@ class Handler(BaseHTTPRequestHandler):
                 self.wfile.flush()
             except OSError:
                 pass
+
+    def _analyze(self, payload):
+        """Run the optional AI analysis; return a single JSON object."""
+        baseline = payload.get("baseline") or {}
+        bypasses = payload.get("bypasses") or []
+        api_key = payload.get("api_key") or None
+        try:
+            result = ai.analyze(baseline, bypasses, api_key=api_key)
+            body = json.dumps({"ok": True, "analysis": result}).encode("utf-8")
+            status = 200
+        except ai.AIUnavailable as e:
+            body = json.dumps({"ok": False, "error": str(e),
+                               "needs_setup": True}).encode("utf-8")
+            status = 200
+        except Exception as e:
+            body = json.dumps({"ok": False, "error": str(e)}).encode("utf-8")
+            status = 200
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     @staticmethod
     def _config_from_payload(p: dict) -> ScanConfig:
@@ -115,6 +150,23 @@ class Handler(BaseHTTPRequestHandler):
             host_header=p.get("host_header") or "",
             spoof_ip=p.get("spoof_ip") or "",
             extra_headers=headers,
+        )
+
+    @staticmethod
+    def _bypass_config_from_payload(p: dict) -> BypassConfig:
+        headers = p.get("extra_headers") or {}
+        if isinstance(headers, str):
+            headers = _parse_header_lines(headers)
+        return BypassConfig(
+            target_url=(p.get("target_url") or "").strip(),
+            spoof_ip=(p.get("spoof_ip") or "127.0.0.1").strip(),
+            host_header=(p.get("host_header") or "").strip(),
+            extra_headers=headers,
+            concurrency=int(p.get("concurrency") or 20),
+            timeout=float(p.get("timeout") or 8.0),
+            verify_tls=bool(p.get("verify_tls", True)),
+            user_agent=p.get("user_agent")
+            or BypassConfig.__dataclass_fields__["user_agent"].default,
         )
 
 

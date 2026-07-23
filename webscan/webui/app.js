@@ -227,7 +227,232 @@ function escapeHtml(s) {
 }
 function escapeAttr(s) { return escapeHtml(s); }
 
+// ================================================================== TABS
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
+    const mode = tab.dataset.mode;
+    $("mode-scan").hidden = mode !== "scan";
+    $("mode-bypass").hidden = mode !== "bypass";
+  });
+});
+
+// ================================================================== BYPASS MODE
+let bpController = null;
+let bpBaseline = null;
+let bpBypasses = [];
+const V_RANK = { BYPASS: 0, ignored: 1, redirect: 2, other: 3, "not-found": 4, blocked: 5, error: 6 };
+
+function bpReadConfig() {
+  return {
+    target_url: $("bpUrl").value.trim(),
+    spoof_ip: $("bpSpoofIp").value.trim() || "127.0.0.1",
+    host_header: $("bpHostHeader").value.trim(),
+    concurrency: parseInt($("bpConcurrency").value, 10) || 20,
+    timeout: parseFloat($("bpTimeout").value) || 8,
+    verify_tls: $("bpVerifyTls").checked,
+    extra_headers: $("bpExtraHeaders").value,
+  };
+}
+
+async function runBypass(evt) {
+  evt.preventDefault();
+  if (!$("bpUrl").value.trim()) return;
+
+  bpBaseline = null; bpBypasses = [];
+  $("bpBody").innerHTML = "";
+  $("bpTable").hidden = true;
+  $("bpEmpty").hidden = false;
+  $("bpBanner").hidden = true;
+  $("aiBox").hidden = true;
+  $("aiResult").hidden = true;
+  $("bpBarFill").style.width = "0";
+  bpSetRunning(true);
+
+  bpController = new AbortController();
+  let resp;
+  try {
+    resp = await fetch("/api/bypass", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bpReadConfig()),
+      signal: bpController.signal,
+    });
+  } catch (e) {
+    if (e.name !== "AbortError") $("bpProgressText").textContent = `Request failed: ${e.message}`;
+    bpSetRunning(false);
+    return;
+  }
+
+  const reader = resp.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = buffer.indexOf("\n")) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (line) bpHandle(JSON.parse(line));
+      }
+    }
+  } catch (e) {
+    if (e.name !== "AbortError") $("bpProgressText").textContent = `Stream error: ${e.message}`;
+  }
+  bpSetRunning(false);
+}
+
+function bpHandle(ev) {
+  switch (ev.type) {
+    case "baseline": {
+      bpBaseline = { url: ev.url, status: ev.status, locked: ev.locked };
+      const b = $("bpBanner");
+      b.hidden = false;
+      b.className = "baseline-banner " + (ev.status === 0 ? "err" : ev.locked ? "locked" : "open");
+      b.innerHTML = `<b>Baseline:</b> HTTP ${ev.status || "—"} — ${escapeHtml(ev.note)}`;
+      break;
+    }
+    case "start":
+      $("bpProgressText").dataset.total = ev.total;
+      $("bpProgressText").textContent = `Trying ${ev.total} bypass techniques…`;
+      break;
+    case "result":
+      bpRenderRow(ev);
+      if (ev.bypass) bpBypasses.push(ev);
+      break;
+    case "progress": {
+      const pct = ev.total ? Math.round((ev.done / ev.total) * 100) : 0;
+      $("bpBarFill").style.width = pct + "%";
+      $("bpProgressText").textContent = `${ev.done} / ${ev.total} tried — ${ev.bypasses} bypass(es) found`;
+      break;
+    }
+    case "done":
+      $("bpBarFill").style.width = "100%";
+      bpFinish(ev);
+      break;
+    case "fatal":
+      $("bpProgressText").textContent = `Error: ${ev.error}`;
+      break;
+  }
+}
+
+function bpRenderRow(r) {
+  $("bpTable").hidden = false;
+  $("bpEmpty").hidden = true;
+  const tr = document.createElement("tr");
+  const hdrs = Object.keys(r.sent_headers || {}).length
+    ? `<div class="notes-cell">headers: ${escapeHtml(Object.entries(r.sent_headers).map(([k, v]) => `${k}: ${v}`).join(", "))}</div>`
+    : "";
+  const note = r.note ? `<div class="notes-cell">${escapeHtml(r.note)}</div>` : "";
+  tr.innerHTML = `
+    <td><span class="verdict-pill v-${r.verdict}">${r.verdict}</span></td>
+    <td class="status">${r.status || "—"}</td>
+    <td><span class="url-cell">${escapeHtml(r.technique)}</span><span class="cat-tag">${escapeHtml(r.category)} · ${escapeHtml(r.method)}${r.directory_listing ? " · dir listing" : ""}</span></td>
+    <td class="notes-cell">${escapeHtml(r.description)}${hdrs}${note}</td>`;
+  const body = $("bpBody");
+  const rank = V_RANK[r.verdict] ?? 9;
+  let inserted = false;
+  for (const row of body.children) {
+    const rv = row.querySelector(".verdict-pill")?.textContent || "";
+    if ((V_RANK[rv] ?? 9) > rank) { body.insertBefore(tr, row); inserted = true; break; }
+  }
+  if (!inserted) body.appendChild(tr);
+}
+
+function bpFinish(ev) {
+  const n = ev.bypass_count;
+  const insideOnly = n > 0 && (ev.bypasses || []).every((b) => b.inside_file);
+  const someInside = (ev.bypasses || []).some((b) => b.inside_file);
+  if (!ev.locked && ev.baseline_status) {
+    $("bpProgressText").textContent =
+      `Done. That URL wasn't Forbidden (HTTP ${ev.baseline_status}) — it may not be locked.`;
+  } else if (n > 0) {
+    if (insideOnly) {
+      $("bpProgressText").innerHTML =
+        `<b>Found it.</b> The directory is 403, but ${n} file(s) <b>inside</b> it are served directly ` +
+        `(see the red rows). Your lock only hides the listing — the files are still public. ` +
+        `Hit “Explain &amp; fix” for the exact config.`;
+    } else {
+      $("bpProgressText").textContent =
+        `Done. Found ${n} working bypass(es)${someInside ? " (including files served inside the directory)" : ""} — see the red rows. Lock these down.`;
+    }
+    $("aiBox").hidden = false;
+  } else if (ev.locked) {
+    $("bpProgressText").textContent =
+      "Done. No request-based bypass got through — the lock is holding. If people still see it, the way in is likely a cached copy, a different URL/alias, or a search-engine snapshot.";
+  } else {
+    $("bpProgressText").textContent = "Done.";
+  }
+}
+
+function bpSetRunning(on) {
+  $("bpRunBtn").disabled = on;
+  $("bpRunBtn").textContent = on ? "Testing…" : "Test bypasses";
+  $("bpStopBtn").disabled = !on;
+}
+
+function bpStop() {
+  if (bpController) bpController.abort();
+  $("bpProgressText").textContent = "Stopped.";
+  bpSetRunning(false);
+}
+
+// ---- AI analysis ----
+async function runAnalyze() {
+  const btn = $("aiRunBtn");
+  btn.disabled = true;
+  btn.textContent = "Analyzing…";
+  const box = $("aiResult");
+  box.hidden = false;
+  box.innerHTML = `<p class="ai-help">Asking Claude to explain and write the fix… (this can take a moment)</p>`;
+  try {
+    const resp = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        baseline: bpBaseline,
+        bypasses: bpBypasses,
+        api_key: $("aiKey").value.trim() || undefined,
+      }),
+    });
+    const data = await resp.json();
+    if (data.ok) bpRenderAnalysis(data.analysis);
+    else if (data.needs_setup)
+      box.innerHTML = `<div class="ai-setup">${escapeHtml(data.error)}</div>`;
+    else box.innerHTML = `<div class="ai-error">${escapeHtml(data.error)}</div>`;
+  } catch (e) {
+    box.innerHTML = `<div class="ai-error">Request failed: ${escapeHtml(e.message)}</div>`;
+  }
+  btn.disabled = false;
+  btn.textContent = "Explain & fix";
+}
+
+function bpRenderAnalysis(a) {
+  const box = $("aiResult");
+  let html = `<h3>AI analysis <span class="sev-pill sev-${a.overall_severity}">${a.overall_severity}</span></h3>`;
+  html += `<div class="ai-card"><span class="ai-label">Root cause</span><p>${escapeHtml(a.root_cause)}</p>`;
+  if (a.summary) html += `<p>${escapeHtml(a.summary)}</p>`;
+  html += `</div>`;
+  for (const b of a.bypasses || []) {
+    html += `<div class="ai-card"><h4>${escapeHtml(b.technique)}</h4>` +
+      `<p>${escapeHtml(b.how_it_works)}</p>` +
+      `<p class="ai-fix"><span class="ai-label">Fix</span><br>${escapeHtml(b.fix)}</p></div>`;
+  }
+  if (a.recommended_config) {
+    html += `<div class="ai-card"><span class="ai-label">Apply this configuration</span>` +
+      `<pre>${escapeHtml(a.recommended_config)}</pre></div>`;
+  }
+  box.innerHTML = html;
+}
+
 // ------------------------------------------------------------------ wire up
+$("bypassForm").addEventListener("submit", runBypass);
+$("bpStopBtn").addEventListener("click", bpStop);
+$("aiRunBtn").addEventListener("click", runAnalyze);
 $("scanForm").addEventListener("submit", runScan);
 $("stopBtn").addEventListener("click", stopScan);
 $("exportBtn").addEventListener("click", exportJson);

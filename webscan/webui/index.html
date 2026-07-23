@@ -23,7 +23,12 @@
     machine running this tool.
   </div>
 
-  <main class="layout">
+  <nav class="tabs">
+    <button class="tab active" data-mode="scan">Exposure scan</button>
+    <button class="tab" data-mode="bypass">403 / Forbidden bypass test</button>
+  </nav>
+
+  <main class="layout" id="mode-scan">
     <!-- ---------------- form ---------------- -->
     <section class="panel form">
       <form id="scanForm">
@@ -132,6 +137,92 @@ private/reports/
         </table>
         <div class="empty" id="empty">Results will stream here as the scan runs.</div>
       </div>
+    </section>
+  </main>
+
+  <!-- ================= BYPASS MODE ================= -->
+  <main class="layout" id="mode-bypass" hidden>
+    <section class="panel form">
+      <p class="mode-intro">
+        You locked a directory (e.g. with <code>.htaccess</code>) and it returns
+        <b>Forbidden</b> — but people still reach it. Paste the locked URL and
+        this tries every known way in (IP-header spoofing, path/encoding tricks,
+        method changes, <code>X-Original-URL</code>, Referer rules…) and tells you
+        which works — and how to fix it.
+      </p>
+      <form id="bypassForm">
+        <label class="field">
+          <span>Locked URL to test</span>
+          <input id="bpUrl" type="text" placeholder="https://mysite.com/private/" required>
+          <small>The exact URL that currently shows Forbidden. It confirms the lock first, then tries to get past it.</small>
+        </label>
+
+        <fieldset class="spoof">
+          <legend>Spoof server &amp; IP</legend>
+          <div class="row">
+            <label class="field grow">
+              <span>IP to try in trust headers</span>
+              <input id="bpSpoofIp" type="text" value="127.0.0.1">
+              <small>Used for X-Forwarded-For / X-Real-IP / … to test IP allow-lists. 127.0.0.1 is the classic.</small>
+            </label>
+          </div>
+          <label class="field">
+            <span>Your server / origin (Host header override)</span>
+            <input id="bpHostHeader" type="text" placeholder="mysite.com">
+            <small>Hit your origin IP directly while presenting your domain (bypass CDN to test the real box).</small>
+          </label>
+        </fieldset>
+
+        <details class="advanced">
+          <summary>Advanced options</summary>
+          <div class="row">
+            <label class="field"><span>Concurrency</span>
+              <input id="bpConcurrency" type="number" value="20" min="1" max="64"></label>
+            <label class="field"><span>Timeout (s)</span>
+              <input id="bpTimeout" type="number" value="8" min="1" max="60" step="0.5"></label>
+          </div>
+          <label class="check"><input id="bpVerifyTls" type="checkbox" checked> Verify TLS certs</label>
+          <label class="field"><span>Extra headers (one per line, <code>Name: value</code>)</span>
+            <textarea id="bpExtraHeaders" rows="2" placeholder="Cookie: session=…"></textarea></label>
+        </details>
+
+        <div class="actions">
+          <button type="submit" id="bpRunBtn" class="primary">Test bypasses</button>
+          <button type="button" id="bpStopBtn" class="ghost" disabled>Stop</button>
+        </div>
+      </form>
+
+      <div class="ai-box" id="aiBox" hidden>
+        <h3>Explain &amp; fix with AI</h3>
+        <p class="ai-help">Have Claude explain how each bypass works and write the exact fix for your config.</p>
+        <label class="field">
+          <span>Anthropic API key <em>(optional — uses ANTHROPIC_API_KEY / your logged-in profile if blank)</em></span>
+          <input id="aiKey" type="password" placeholder="sk-ant-… (kept in memory only, sent to your local server)">
+        </label>
+        <button type="button" id="aiRunBtn" class="primary">Explain &amp; fix</button>
+      </div>
+    </section>
+
+    <section class="panel results">
+      <div class="results-head">
+        <div class="progress">
+          <div class="bar"><div class="bar-fill" id="bpBarFill"></div></div>
+          <span id="bpProgressText">Ready.</span>
+        </div>
+      </div>
+      <div class="baseline-banner" id="bpBanner" hidden></div>
+
+      <div class="table-wrap">
+        <table id="bpTable" hidden>
+          <thead>
+            <tr><th>Verdict</th><th>Status</th><th>Technique</th><th>What it did</th></tr>
+          </thead>
+          <tbody id="bpBody"></tbody>
+        </table>
+        <div class="empty" id="bpEmpty">Enter a locked URL and hit <b>Test bypasses</b>.</div>
+      </div>
+
+      <div class="ai-result" id="aiResult" hidden></div>
     </section>
   </main>
 

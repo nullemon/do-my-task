@@ -1,13 +1,17 @@
-# webscan — website exposure scanner
+# webscan — website security toolkit
 
-Find exposed URLs, directories, config files, backups and secrets on **your
-own** website — so you can lock them down. Point it at a site and a path, hit
-**Scan**, and it bulk-checks a wordlist of commonly-leaked paths (`.git/`,
-`.env`, `backup.sql`, admin panels, open directory listings, …), streaming
-results live and ranking them by severity.
+Two tools in one **local web app in your browser** (no build step, no installs —
+just Python 3), for hardening **your own** sites:
 
-It runs as a **local web app in your browser** (no build step, no installs —
-just Python 3) and also has a **command-line** mode for scripting.
+1. **Exposure scan** — find exposed URLs, directories, config files, backups and
+   secrets (`.git/`, `.env`, `backup.sql`, admin panels, open directory
+   listings, …) so you can lock them down. Streams results live, ranked by
+   severity, with a command-line mode too.
+2. **403 / Forbidden bypass test** — you locked a directory (e.g. with
+   `.htaccess`) and it returns *Forbidden*, but people still reach it. Paste the
+   locked URL and it tries every known way in (IP-header spoofing, path/encoding
+   tricks, method changes, `X-Original-URL`, Referer rules…), tells you which
+   works, and — optionally, using Claude — explains why and writes the exact fix.
 
 > ⚠️ **Authorized use only.** Only scan sites and servers you own or have
 > written permission to test. All requests are made from the machine running
@@ -58,6 +62,56 @@ The **Spoof server & IP** panel lets you test your **own** access controls:
 
 If a path returns **403 without** the spoof and **200 with** it, your IP
 control is bypassable — the scanner flags the difference.
+
+---
+
+## 403 / Forbidden bypass test
+
+Switch to the **403 / Forbidden bypass test** tab when a directory you locked
+still leaks. Paste the exact locked URL (e.g. `https://mysite.com/private/`) and
+hit **Test bypasses**. It:
+
+1. **Confirms the lock** — makes a normal request and checks it really is
+   Forbidden (if it isn't, it tells you the directory may not be locked at all).
+2. **Tries ~40 bypass techniques**, each a single ordinary HTTP request:
+   - **IP-header spoofing** — `X-Forwarded-For`, `X-Real-IP`, `X-Client-IP`,
+     `True-Client-IP`, … to test IP allow-lists (`Require ip`, `Deny/Allow`).
+   - **Path & encoding tricks** — case changes, trailing `/.`, `//`, `..;/`,
+     `%2e`/`%20`/`%00`, suffixes like `.json`/`~`, slash toggling — anything that
+     matches the rule literally but resolves to the file on disk.
+   - **HTTP method changes** — `POST`/`HEAD`/`PUT`/`OPTIONS`/arbitrary verbs and
+     `X-HTTP-Method-Override`, to slip past `<Limit GET POST>` style rules.
+   - **Routing headers** — `X-Original-URL` / `X-Rewrite-URL` (request an allowed
+     path, smuggle the locked one in a header) and `Referer`-based `.htaccess`.
+3. **Reports which got through** as red **BYPASS** rows — with the exact request
+   and headers. It uses control requests to avoid false positives (a path trick
+   that just hits your catch-all page, or a routing header the server correctly
+   ignored, are *not* reported as bypasses).
+
+### Explain & fix with AI (optional)
+
+If bypasses are found, click **Explain & fix**. This is the only feature that
+uses an AI API: it sends the results to **Claude** (`claude-opus-4-8`), which
+explains the root cause, rates severity, and writes a corrected `.htaccess` /
+server config you can apply. To enable it:
+
+```bash
+pip install anthropic
+export ANTHROPIC_API_KEY=sk-ant-...   # or run `ant auth login`, or paste a key in the UI
+```
+
+Without it, the deterministic bypass results and a built-in fix hint for each
+technique still work — the AI just adds a written explanation and ready-to-paste
+config.
+
+> **What "spoof" means here:** header-based testing of your own access controls,
+> which is the meaningful (and browser-possible) form. It does **not** forge
+> network packets, and every request is read-only.
+
+If **no** bypass gets through but people still see the content, the way in is
+probably *outside* these request tests — a cached copy (CDN/browser), a search-
+engine snapshot from before you locked it, or the file reachable at a different
+URL/alias. The tool says so instead of pretending it found nothing.
 
 ---
 

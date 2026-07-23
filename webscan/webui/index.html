@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>webscan — website exposure scanner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◎</span>
+      <div>
+        <h1>webscan</h1>
+        <p class="tag">Find exposed URLs, directories &amp; secrets on your own site — then lock them.</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="notice" id="notice">
+    <strong>Authorized use only.</strong> Point this at sites and servers you
+    own or have written permission to test. All requests are made from the
+    machine running this tool.
+  </div>
+
+  <main class="layout">
+    <!-- ---------------- form ---------------- -->
+    <section class="panel form">
+      <form id="scanForm">
+        <label class="field">
+          <span>Target site URL(s)</span>
+          <textarea id="targets" rows="2" placeholder="https://mysite.com
+https://staging.mysite.com" required></textarea>
+          <small>One per line for a bulk scan. Or use your server's IP (e.g. http://203.0.113.10) with a Host override below.</small>
+        </label>
+
+        <div class="row">
+          <label class="field grow">
+            <span>Base path to scan under</span>
+            <input id="basePath" type="text" value="/" placeholder="/  or  /app">
+          </label>
+          <label class="field">
+            <span>Wordlist</span>
+            <select id="wordlist">
+              <option value="common">Common (all checks)</option>
+              <option value="sensitive">Sensitive files (.git, .env, backups)</option>
+              <option value="config">Config &amp; deploy</option>
+              <option value="directories">Directories &amp; admin</option>
+              <option value="info">Info &amp; logs</option>
+            </select>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Specific URLs / paths to check <em>(optional)</em></span>
+          <textarea id="customPaths" rows="2" placeholder="admin/secret-panel
+private/reports/
+.env.old"></textarea>
+          <small>Search any path of your choice — added on top of the wordlist. Relative to the base path.</small>
+        </label>
+
+        <!-- spoofing -->
+        <fieldset class="spoof">
+          <legend>Spoof server &amp; IP <span class="hint">test your own access controls</span></legend>
+          <div class="row">
+            <label class="field grow">
+              <span>Spoofed client IP</span>
+              <input id="spoofIp" type="text" placeholder="127.0.0.1">
+              <small>Sends X-Forwarded-For, X-Real-IP, X-Client-IP … to test IP allow-lists.</small>
+            </label>
+            <button type="button" class="chip" data-ip="127.0.0.1">127.0.0.1</button>
+          </div>
+          <label class="field">
+            <span>Your server / origin (Host header override)</span>
+            <input id="hostHeader" type="text" placeholder="mysite.com">
+            <small>Hit your origin server IP directly while presenting your domain (bypass CDN to test the real box).</small>
+          </label>
+        </fieldset>
+
+        <details class="advanced">
+          <summary>Advanced options</summary>
+          <div class="row">
+            <label class="field"><span>Concurrency</span>
+              <input id="concurrency" type="number" value="20" min="1" max="64"></label>
+            <label class="field"><span>Timeout (s)</span>
+              <input id="timeout" type="number" value="8" min="1" max="60" step="0.5"></label>
+            <label class="field"><span>Method</span>
+              <select id="method"><option>GET</option><option>HEAD</option></select></label>
+          </div>
+          <div class="row">
+            <label class="check"><input id="followRedirects" type="checkbox"> Follow redirects</label>
+            <label class="check"><input id="verifyTls" type="checkbox" checked> Verify TLS certs</label>
+          </div>
+          <label class="field"><span>Extra headers (one per line, <code>Name: value</code>)</span>
+            <textarea id="extraHeaders" rows="2" placeholder="Authorization: Bearer …"></textarea></label>
+          <label class="field"><span>User-Agent</span>
+            <input id="userAgent" type="text" placeholder="webscan/1.0 (+authorized-security-scan)"></label>
+        </details>
+
+        <div class="actions">
+          <button type="submit" id="scanBtn" class="primary">Scan</button>
+          <button type="button" id="stopBtn" class="ghost" disabled>Stop</button>
+          <button type="button" id="exportBtn" class="ghost" disabled>Export JSON</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ---------------- results ---------------- -->
+    <section class="panel results">
+      <div class="results-head">
+        <div class="progress">
+          <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+          <span id="progressText">Ready.</span>
+        </div>
+        <div class="stats" id="stats"></div>
+      </div>
+
+      <div class="filters" id="filters" hidden>
+        <input id="search" type="search" placeholder="Filter results…">
+        <label class="check"><input type="checkbox" id="onlyExposed"> Only exposed/findings</label>
+      </div>
+
+      <div class="table-wrap">
+        <table id="resultsTable" hidden>
+          <thead>
+            <tr>
+              <th>Severity</th><th>Status</th><th>URL</th>
+              <th>Verdict</th><th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+        <div class="empty" id="empty">Results will stream here as the scan runs.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

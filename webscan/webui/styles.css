@@ -210,6 +210,9 @@ tbody tr:hover { background: rgba(79,140,255,.05); }
   padding: 2px 8px; border-radius: 20px; text-transform: uppercase;
 }
 .v-BYPASS { background: rgba(255,92,108,.18); color: var(--high); }
+.v-CHECK { background: rgba(255,179,71,.18); color: var(--med); }
+.v-real { background: rgba(255,92,108,.22); color: #fff; }
+.v-false { background: rgba(107,116,136,.16); color: var(--info); text-decoration: line-through; }
 .v-blocked { background: rgba(55,210,155,.16); color: var(--ok); }
 .v-ignored, .v-other { background: rgba(107,116,136,.16); color: var(--info); }
 .v-redirect, .v-not-found, .v-error { background: rgba(107,116,136,.12); color: var(--info); }
@@ -234,5 +237,27 @@ tbody tr:hover { background: rgba(79,140,255,.05); }
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #d6e2ff; white-space: pre;
 }
 .ai-error { color: var(--high); font-size: 13px; padding: 10px 0; }
+
+/* ---------- response viewer ---------- */
+button.small { padding: 5px 12px; font-size: 12px; }
+.view-btn {
+  background: var(--panel-2); border: 1px solid var(--border); color: var(--accent-hi);
+  border-radius: 6px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; font-weight: 600;
+}
+.view-btn:hover { border-color: var(--accent); }
+.viewer { margin-top: 16px; border: 1px solid var(--accent); border-radius: 8px; overflow: hidden; }
+.viewer-head { display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 12px; background: rgba(79,140,255,.08); border-bottom: 1px solid var(--border); }
+.viewer-head b { font-size: 13px; }
+.viewer-meta { padding: 8px 12px; font-size: 12px; color: var(--muted);
+  font-family: ui-monospace, monospace; border-bottom: 1px solid var(--border); word-break: break-all; }
+.viewer-meta .real { color: var(--high); font-weight: 700; }
+.viewer-meta .fake { color: var(--med); font-weight: 700; }
+.viewer-body { padding: 12px; max-height: 460px; overflow: auto; }
+.viewer-body img { max-width: 100%; border-radius: 6px; display: block; }
+.viewer-body pre { margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; line-height: 1.5; color: #d6e2ff; white-space: pre-wrap; word-break: break-word; }
+.viewer-body .binary { color: var(--muted); font-size: 13px; }
+.ai-assist legend { color: var(--accent-hi); }
 .ai-setup { color: var(--med); font-size: 13px; padding: 10px 14px; border: 1px solid rgba(255,179,71,.35);
   border-radius: 8px; background: rgba(255,179,71,.06); }

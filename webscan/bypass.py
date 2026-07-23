@@ -219,7 +219,7 @@ def header_and_method_attempts(scheme, netloc, path, config: BypassConfig):
 
     # Referer-based .htaccess protection (very common for directory/hotlink locks)
     ref = _url(scheme, netloc, path)
-    add("GET", path, {"Referer": ref}, "rewrite-header: Referer match",
+    add("GET", path, {"Referer": ref}, "referer: Referer match",
         f"Sent Referer: {ref}",
         "Referer-based protection is trivially spoofable — never use Referer for access control. Replace "
         "the `RewriteCond %{HTTP_REFERER}` rule with real auth (Basic/Digest, `Require`, or app-level login).")
@@ -340,9 +340,27 @@ def _do_request(scheme, netloc, method, path, extra_headers, base_cfg, opener):
 
 
 def _similar(a: str, b: str, threshold: float = 0.9) -> bool:
+    """True if two response bodies are basically the same page.
+
+    Used only to SUPPRESS false positives, so it errs toward 'not similar' (a
+    missed suppression just means the finding is shown as CHECK for the user to
+    eyeball — safe). Uses a real ratio (not the quick_ratio upper bound, which
+    over-reported similarity) plus a length guard.
+    """
     if not a or not b:
         return False
-    return engine._quick_ratio(a[:2048], b[:2048]) >= threshold
+    la, lb = len(a), len(b)
+    if abs(la - lb) > 0.25 * max(la, lb):
+        return False
+    import difflib
+    return difflib.SequenceMatcher(None, a[:4096], b[:4096]).ratio() >= threshold
+
+
+def _is_trace_echo(content_type: str, body_text: str) -> bool:
+    """A TRACE 200 whose body is the echoed request — not disclosed content."""
+    if "message/http" in (content_type or "").lower():
+        return True
+    return body_text.lstrip()[:8].upper().startswith("TRACE ")
 
 
 def run(config: BypassConfig):
@@ -373,18 +391,36 @@ def run(config: BypassConfig):
         ),
     }
 
-    # 2) Controls, so we don't cry "bypass" at a false positive:
-    #    - soft404: a nonexistent sibling path. Path-mutation 200s that match
-    #      this are the site's catch-all, not the protected resource.
-    #    - root: GET "/" (the path the X-Original-URL/X-Rewrite-URL attempts
-    #      request). If a rewrite-header 200 just returns "/", the header was
-    #      ignored — not a bypass.
-    parent = orig_path.rstrip("/").rsplit("/", 1)[0] + "/"
-    _, sc = _do_request(scheme, netloc, "GET",
-                        parent + "webscan-bypass-40c1f-nope", {}, base_cfg, opener)
-    soft404 = engine._text(sc["body"]) if sc["status"] in SERVED else ""
-    _, rc = _do_request(scheme, netloc, "GET", "/", {}, base_cfg, opener)
-    root_body = engine._text(rc["body"]) if rc["status"] in SERVED else ""
+    # 2) Controls — measured at the RIGHT depth so we don't cry "bypass" at a
+    #    false positive (nor wrongly suppress a real one). A control is only
+    #    trusted when the probe actually returned served content (a catch-all);
+    #    a probe that itself 404s/403s just means "no catch-all here".
+    NOPE = "webscan-bypass-40c1f-nope"
+    target_is_dir = orig_path.endswith("/")
+    parent = orig_path.rstrip("/").rsplit("/", 1)[0] + "/"   # dir containing the target
+
+    def _probe(method, path):
+        _, r = _do_request(scheme, netloc, method, path, {}, base_cfg, opener)
+        return r["status"], engine._text(r["body"])
+
+    # Catch-all for path-mutation variants of the target (a nonexistent sibling
+    # at the same depth).
+    s, b = _probe("GET", parent + NOPE + ("/" if target_is_dir else ""))
+    soft404_sib = b if s in SERVED else ""
+    # Catch-all for files INSIDE the target directory (inside-file probes).
+    if target_is_dir:
+        s, b = _probe("GET", orig_path + NOPE + ".zzz")
+        soft404_inside = b if s in SERVED else ""
+    else:
+        soft404_inside = ""
+    # The homepage — the X-Original-URL / X-Rewrite-URL attempts request "/".
+    s, b = _probe("GET", "/")
+    root_body = b if s in SERVED else ""
+    # Per-method controls: the same method on a nonexistent sibling. If a method
+    # answers the same way there, it's global method handling, not a bypass.
+    method_controls = {}
+    for m in ("HEAD", "OPTIONS", "PUT", "DELETE", "TRACE", "PATCH", "POST", "FOO"):
+        method_controls[m] = _probe(m, parent + NOPE)
 
     total = len(attempts)
     yield {"type": "start", "total": total, "baseline_status": baseline_status}
@@ -395,16 +431,63 @@ def run(config: BypassConfig):
         status = resp["status"]
         served = status in SERVED
         body_text = engine._text(resp["body"])
+        body_len = len(resp["body"])
+        ctype = resp["content_type"]
         cat = a["category"]
+        method = a["method"]
 
         bypass = served and locked
+        verified = False   # True = we're confident it served the real resource
         verdict_note = ""
+        _view_hint = ("Reachable — open “View response” to confirm it served your "
+                      "locked file, not the homepage / an error / a redirect.")
         if bypass:
-            # Suppress the false positives the controls expose.
-            if cat in ("path", "inside-file") and soft404 and _similar(body_text, soft404):
-                bypass, verdict_note = False, "matched the site's catch-all page (not a real resource)"
-            elif cat == "rewrite-header" and root_body and _similar(body_text, root_body):
-                bypass, verdict_note = False, "header ignored — served the normal / page, not the locked resource"
+            if cat == "inside-file":
+                if soft404_inside and _similar(body_text, soft404_inside):
+                    bypass, verdict_note = False, "matched the in-directory catch-all (the file doesn't really exist)"
+                else:
+                    verified = True   # a real file served from inside the locked dir
+
+            elif cat in ("ip-header", "referer"):
+                # Same locked path; distinct content means the guard was bypassed.
+                if (soft404_sib and _similar(body_text, soft404_sib)) or \
+                   (soft404_inside and _similar(body_text, soft404_inside)):
+                    bypass, verdict_note = False, "looks like a generic/catch-all page, not the locked resource"
+                else:
+                    verified = True
+
+            elif cat == "path":
+                if soft404_sib and _similar(body_text, soft404_sib):
+                    bypass, verdict_note = False, "matched the site's catch-all page (not the locked resource)"
+                else:
+                    verified = bool(soft404_sib)   # trusted control present -> confident
+                    if not verified:
+                        verdict_note = _view_hint
+
+            elif cat == "rewrite-header":
+                # These request "/" and smuggle the locked path in a header.
+                if body_len == 0:
+                    bypass, verdict_note = False, "empty response — nothing was disclosed"
+                elif root_body and _similar(body_text, root_body):
+                    bypass, verdict_note = False, "served the normal / page — the header was ignored, not a bypass"
+                else:
+                    verdict_note = _view_hint   # ambiguous — user must eyeball it
+
+            elif cat == "http-method":
+                ctl_status, ctl_body = method_controls.get(method, (None, ""))
+                if method == "TRACE" and _is_trace_echo(ctype, body_text):
+                    bypass, verdict_note = False, (
+                        "TRACE just echoes your request back, not your files. (TRACE is enabled — a minor "
+                        "issue of its own, but not how the directory is read.)")
+                elif body_len == 0:
+                    bypass, verdict_note = False, "server answered the method with an empty body — no content disclosed"
+                elif ctl_status in SERVED and _similar(body_text, ctl_body):
+                    bypass, verdict_note = False, "same 2xx on an unprotected path — server-level method handling, not a bypass"
+                elif (soft404_sib and _similar(body_text, soft404_sib)) or \
+                     (root_body and _similar(body_text, root_body)):
+                    bypass, verdict_note = False, "served a generic/normal page, not the locked resource"
+                else:
+                    verdict_note = _view_hint   # ambiguous — user must eyeball it
 
         listing = bypass and any(
             s.lower() in body_text.lower()
@@ -419,12 +502,15 @@ def run(config: BypassConfig):
         elif status == 0:
             verdict = "error"
         elif bypass:
-            verdict = "BYPASS"
+            verdict = "BYPASS" if verified else "CHECK"
         elif served:
             verdict = "ignored"  # served, but a control proved it isn't the locked resource
         else:
             verdict = "other"
 
+        # A short text preview for the inline results; the full body is fetched
+        # on demand by the /api/view endpoint when the user clicks View.
+        preview = body_text[:600] if body_text.strip() else ""
         return {
             "type": "result",
             "technique": a["technique"],
@@ -435,13 +521,16 @@ def run(config: BypassConfig):
             "url": url,
             "sent_headers": a["headers"],
             "status": status,
-            "content_length": resp["content_length"] or len(resp["body"]),
+            "content_type": ctype,
+            "content_length": resp["content_length"] or body_len,
             "elapsed_ms": resp["elapsed_ms"],
             "bypass": bypass,
+            "verified": verified,
             "inside_file": bypass and cat == "inside-file",
             "directory_listing": listing,
             "verdict": verdict,
             "note": verdict_note,
+            "body_preview": preview,
         }
 
     done = 0

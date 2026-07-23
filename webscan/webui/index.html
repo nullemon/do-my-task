@@ -173,6 +173,17 @@ private/reports/
           </label>
         </fieldset>
 
+        <fieldset class="spoof ai-assist">
+          <legend>AI assist <span class="hint">optional — needs a Claude API key</span></legend>
+          <label class="check"><input id="bpAiVerify" type="checkbox">
+            Verify each finding with Claude — auto-filters false positives (TRACE echoes, homepage, redirects)</label>
+          <label class="field">
+            <span>Anthropic API key <em>(blank = <code>ANTHROPIC_API_KEY</code> / your logged-in profile)</em></span>
+            <input id="bpAiKey" type="password" placeholder="sk-ant-… (kept in memory only, sent to your local server)">
+          </label>
+          <small>Enables both AI verification (above) and “Explain &amp; fix” after the scan. Requires <code>pip install anthropic</code>.</small>
+        </fieldset>
+
         <details class="advanced">
           <summary>Advanced options</summary>
           <div class="row">
@@ -194,11 +205,7 @@ private/reports/
 
       <div class="ai-box" id="aiBox" hidden>
         <h3>Explain &amp; fix with AI</h3>
-        <p class="ai-help">Have Claude explain how each bypass works and write the exact fix for your config.</p>
-        <label class="field">
-          <span>Anthropic API key <em>(optional — uses ANTHROPIC_API_KEY / your logged-in profile if blank)</em></span>
-          <input id="aiKey" type="password" placeholder="sk-ant-… (kept in memory only, sent to your local server)">
-        </label>
+        <p class="ai-help">Have Claude explain how each finding works and write the exact fix for your config (uses the API key above).</p>
         <button type="button" id="aiRunBtn" class="primary">Explain &amp; fix</button>
       </div>
     </section>
@@ -215,11 +222,21 @@ private/reports/
       <div class="table-wrap">
         <table id="bpTable" hidden>
           <thead>
-            <tr><th>Verdict</th><th>Status</th><th>Technique</th><th>What it did</th></tr>
+            <tr><th>Verdict</th><th>Status</th><th>Technique</th><th>What it did</th><th>Response</th></tr>
           </thead>
           <tbody id="bpBody"></tbody>
         </table>
         <div class="empty" id="bpEmpty">Enter a locked URL and hit <b>Test bypasses</b>.</div>
+      </div>
+
+      <!-- Response viewer: shows what a technique actually served -->
+      <div class="viewer" id="viewer" hidden>
+        <div class="viewer-head">
+          <b id="viewerTitle">Response</b>
+          <button type="button" class="ghost small" id="viewerClose">Close</button>
+        </div>
+        <div class="viewer-meta" id="viewerMeta"></div>
+        <div class="viewer-body" id="viewerBody"></div>
       </div>
 
       <div class="ai-result" id="aiResult" hidden></div>

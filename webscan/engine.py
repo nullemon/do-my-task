@@ -170,14 +170,18 @@ def _read_body(resp, limit: int = 4096) -> bytes:
     return raw[:limit]
 
 
-def fetch(url: str, config: ScanConfig, opener) -> dict:
-    """Perform one request. Returns a raw response dict (never raises)."""
+def fetch(url: str, config: ScanConfig, opener, body_limit: int = 4096) -> dict:
+    """Perform one request. Returns a raw response dict (never raises).
+
+    body_limit caps how many bytes of the response body are read — small for
+    scanning, large for the response viewer.
+    """
     headers = _headers_for(config)
     req = urllib.request.Request(url, headers=headers, method=config.method)
     started = time.monotonic()
     try:
         with opener.open(req, timeout=config.timeout) as resp:
-            body = b"" if config.method == "HEAD" else _read_body(resp)
+            body = b"" if config.method == "HEAD" else _read_body(resp, body_limit)
             return {
                 "status": resp.status,
                 "location": resp.headers.get("Location", ""),

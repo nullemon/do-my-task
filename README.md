@@ -83,26 +83,40 @@ hit **Test bypasses**. It:
      `X-HTTP-Method-Override`, to slip past `<Limit GET POST>` style rules.
    - **Routing headers** — `X-Original-URL` / `X-Rewrite-URL` (request an allowed
      path, smuggle the locked one in a header) and `Referer`-based `.htaccess`.
-3. **Reports which got through** as red **BYPASS** rows — with the exact request
-   and headers. It uses control requests to avoid false positives (a path trick
-   that just hits your catch-all page, or a routing header the server correctly
-   ignored, are *not* reported as bypasses).
+3. **Reports which got through**, most-serious first:
+   - Red **BYPASS** = confident it served the protected resource (a file inside
+     the directory, an IP-header/Referer bypass with distinct content).
+   - Orange **CHECK** = reachable but ambiguous (a header/method trick where the
+     `200` could be your file *or* the homepage/an error). Look before trusting.
 
-### Explain & fix with AI (optional)
+   Control requests suppress the obvious false positives automatically — a path
+   trick that just hits your catch-all, a `TRACE` that only echoes the request,
+   an `OPTIONS`/method the server answers globally, or a routing header it
+   ignored (served `/`) are **not** reported as bypasses.
 
-If bypasses are found, click **Explain & fix**. This is the only feature that
-uses an AI API: it sends the results to **Claude** (`claude-opus-4-8`), which
-explains the root cause, rates severity, and writes a corrected `.htaccess` /
-server config you can apply. To enable it:
+### See what each finding served (View)
+
+Every row has a **View** button. It replays that exact request from the local
+server and shows you the real response — **renders the image** if it's an image,
+otherwise the page/text plus status and content-type. This is how you settle a
+**CHECK**: if `X-Rewrite-URL` returns your actual `003.png`, it's a real bypass;
+if it returns your homepage, it isn't. No guessing.
+
+### AI verify + Explain & fix (optional)
+
+Tick **Verify each finding with Claude** (in *AI assist*) and it sends each
+finding's response to **Claude** (`claude-opus-4-8`), which auto-labels every
+row **REAL** or **false+** — filtering the ambiguous CHECK rows for you. After a
+scan, **Explain & fix** has Claude write the root cause, severity, and a
+corrected `.htaccess`/server config. To enable either:
 
 ```bash
 pip install anthropic
 export ANTHROPIC_API_KEY=sk-ant-...   # or run `ant auth login`, or paste a key in the UI
 ```
 
-Without it, the deterministic bypass results and a built-in fix hint for each
-technique still work — the AI just adds a written explanation and ready-to-paste
-config.
+Without it, the deterministic results, the response viewer, and a built-in fix
+hint per technique all still work — AI just adds verification and a written fix.
 
 > **What "spoof" means here:** header-based testing of your own access controls,
 > which is the meaningful (and browser-possible) form. It does **not** forge
@@ -207,16 +221,20 @@ serve.py                 # start the web app  -> python3 serve.py
 scan.py                  # command-line entry -> python3 scan.py <url>
 webscan/
   engine.py              # concurrent scan engine, detection & soft-404 logic
+  bypass.py              # 403/Forbidden bypass techniques + depth-aware controls
+  ai.py                  # optional Claude analysis/verification (Anthropic SDK)
   wordlists.py           # built-in path list + content signatures (edit me)
-  server.py              # local web server + streaming NDJSON scan API
-  cli.py                 # argparse command-line interface
+  server.py              # local web server: /api/scan /api/bypass /api/view
+  cli.py                 # argparse command-line interface (exposure scan)
   webui/
-    index.html           # the app
+    index.html           # the app (two tabs)
     styles.css
-    app.js               # form + live streaming results
+    app.js               # forms, live streaming, response viewer, AI calls
 ```
 
-No third-party dependencies — standard library only. Requires Python 3.8+.
+Core tool: **no third-party dependencies** (standard library only, Python 3.8+).
+The optional AI features (`webscan/ai.py`) are the sole exception — they use the
+official `anthropic` SDK, imported lazily so everything else runs without it.
 
 ---
 

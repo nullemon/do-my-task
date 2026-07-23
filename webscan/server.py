@@ -12,15 +12,19 @@ Bind stays on localhost by default so the tool isn't exposed to your network.
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import os
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from . import ai, bypass
+from . import ai, bypass, engine
 from .bypass import BypassConfig
 from .engine import ScanConfig, scan
+
+_TEXTUAL = ("text/", "application/json", "application/xml", "application/javascript",
+            "application/xhtml", "+json", "+xml")
 
 _STATIC_DIR = os.path.join(os.path.dirname(__file__), "webui")
 
@@ -37,8 +41,20 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):  # keep the console quiet
         pass
 
+    def _host_ok(self):
+        """Only serve requests addressed to loopback — blocks a malicious web
+        page from reaching this local API via DNS-rebinding."""
+        host = self.headers.get("Host", "")
+        name = host.rsplit(":", 1)[0].strip("[]").lower() if host else ""
+        if name in ("localhost", "127.0.0.1", "::1", "") or name.endswith(".localhost"):
+            return True
+        self.send_error(403, "Forbidden: unexpected Host header")
+        return False
+
     # --- static files -----------------------------------------------------
     def do_GET(self):
+        if not self._host_ok():
+            return
         path = self.path.split("?", 1)[0]
         if path in ("/", "/index.html"):
             return self._send_static("index.html")
@@ -61,6 +77,8 @@ class Handler(BaseHTTPRequestHandler):
 
     # --- POST routing -----------------------------------------------------
     def do_POST(self):
+        if not self._host_ok():
+            return
         route = self.path.split("?", 1)[0]
         payload = self._read_json()
         if payload is None:
@@ -70,7 +88,11 @@ class Handler(BaseHTTPRequestHandler):
         if route == "/api/bypass":
             return self._stream(bypass.run(self._bypass_config_from_payload(payload)))
         if route == "/api/analyze":
-            return self._analyze(payload)
+            return self._json_call(payload, "analyze")
+        if route == "/api/verify":
+            return self._json_call(payload, "verify")
+        if route == "/api/view":
+            return self._view(payload)
         self.send_error(404, "Not found")
 
     def _read_json(self):
@@ -102,27 +124,75 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 pass
 
-    def _analyze(self, payload):
-        """Run the optional AI analysis; return a single JSON object."""
-        baseline = payload.get("baseline") or {}
-        bypasses = payload.get("bypasses") or []
-        api_key = payload.get("api_key") or None
-        try:
-            result = ai.analyze(baseline, bypasses, api_key=api_key)
-            body = json.dumps({"ok": True, "analysis": result}).encode("utf-8")
-            status = 200
-        except ai.AIUnavailable as e:
-            body = json.dumps({"ok": False, "error": str(e),
-                               "needs_setup": True}).encode("utf-8")
-            status = 200
-        except Exception as e:
-            body = json.dumps({"ok": False, "error": str(e)}).encode("utf-8")
-            status = 200
-        self.send_response(status)
+    def _send_json(self, obj):
+        body = json.dumps(obj).encode("utf-8")
+        self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+
+    def _json_call(self, payload, kind):
+        """Run an optional AI call (analyze | verify); return one JSON object."""
+        api_key = payload.get("api_key") or None
+        try:
+            if kind == "analyze":
+                result = ai.analyze(payload.get("baseline") or {},
+                                    payload.get("bypasses") or [], api_key=api_key)
+                out = {"ok": True, "analysis": result}
+            else:  # verify
+                result = ai.verify_bypasses(payload.get("target_url") or "",
+                                            payload.get("baseline") or {},
+                                            payload.get("candidates") or [],
+                                            api_key=api_key)
+                out = {"ok": True, "results": result.get("results", [])}
+        except ai.AIUnavailable as e:
+            out = {"ok": False, "error": str(e), "needs_setup": True}
+        except Exception as e:
+            out = {"ok": False, "error": str(e)}
+        self._send_json(out)
+
+    def _view(self, payload):
+        """Replay one request (method + headers) and return its full response so
+        the user can SEE what a bypass actually served — image, page, or echo."""
+        default_ua = ScanConfig.__dataclass_fields__["user_agent"].default
+        headers = payload.get("headers") or {}
+        if isinstance(headers, str):
+            headers = _parse_header_lines(headers)
+        cfg = ScanConfig(
+            targets=[], method=(payload.get("method") or "GET").upper(),
+            verify_tls=bool(payload.get("verify_tls", True)),
+            timeout=float(payload.get("timeout") or 12.0),
+            host_header=payload.get("host_header") or "",
+            extra_headers=headers, follow_redirects=False,
+            user_agent=payload.get("user_agent") or default_ua,
+        )
+        url = payload.get("url") or ""
+        try:
+            opener = engine._make_opener(cfg)
+            resp = engine.fetch(url, cfg, opener, body_limit=2_000_000)
+        except Exception as e:
+            return self._send_json({"ok": False, "error": str(e)})
+
+        ctype = (resp["content_type"] or "").lower()
+        body = resp["body"]
+        out = {"ok": True, "status": resp["status"], "content_type": resp["content_type"],
+               "length": resp["content_length"] or len(body), "server": resp["server"],
+               "location": resp["location"], "error": resp["error"],
+               "method": cfg.method, "url": url}
+        if resp["status"] == 0:
+            out["ok"] = False
+            out["error"] = resp["error"] or "request failed"
+        elif ctype.startswith("image/"):
+            out["kind"] = "image"
+            out["body_b64"] = base64.b64encode(body).decode("ascii")
+        elif (not ctype) or any(t in ctype for t in _TEXTUAL):
+            out["kind"] = "text"
+            out["body_text"] = body.decode("utf-8", "replace")[:60000]
+        else:
+            out["kind"] = "binary"
+            out["body_b64"] = base64.b64encode(body[:64]).decode("ascii")  # sniff only
+        self._send_json(out)
 
     @staticmethod
     def _config_from_payload(p: dict) -> ScanConfig:

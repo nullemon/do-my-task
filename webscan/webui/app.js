@@ -242,7 +242,8 @@ document.querySelectorAll(".tab").forEach((tab) => {
 let bpController = null;
 let bpBaseline = null;
 let bpBypasses = [];
-const V_RANK = { BYPASS: 0, ignored: 1, redirect: 2, other: 3, "not-found": 4, blocked: 5, error: 6 };
+let bpAll = [];
+const V_RANK = { BYPASS: 0, CHECK: 1, ignored: 2, redirect: 3, other: 4, "not-found": 5, blocked: 6, error: 7 };
 
 function bpReadConfig() {
   return {
@@ -260,13 +261,14 @@ async function runBypass(evt) {
   evt.preventDefault();
   if (!$("bpUrl").value.trim()) return;
 
-  bpBaseline = null; bpBypasses = [];
+  bpBaseline = null; bpBypasses = []; bpAll = [];
   $("bpBody").innerHTML = "";
   $("bpTable").hidden = true;
   $("bpEmpty").hidden = false;
   $("bpBanner").hidden = true;
   $("aiBox").hidden = true;
   $("aiResult").hidden = true;
+  $("viewer").hidden = true;
   $("bpBarFill").style.width = "0";
   bpSetRunning(true);
 
@@ -343,7 +345,9 @@ function bpHandle(ev) {
 function bpRenderRow(r) {
   $("bpTable").hidden = false;
   $("bpEmpty").hidden = true;
+  const idx = bpAll.push(r) - 1;
   const tr = document.createElement("tr");
+  r._tr = tr;
   const hdrs = Object.keys(r.sent_headers || {}).length
     ? `<div class="notes-cell">headers: ${escapeHtml(Object.entries(r.sent_headers).map(([k, v]) => `${k}: ${v}`).join(", "))}</div>`
     : "";
@@ -352,7 +356,8 @@ function bpRenderRow(r) {
     <td><span class="verdict-pill v-${r.verdict}">${r.verdict}</span></td>
     <td class="status">${r.status || "—"}</td>
     <td><span class="url-cell">${escapeHtml(r.technique)}</span><span class="cat-tag">${escapeHtml(r.category)} · ${escapeHtml(r.method)}${r.directory_listing ? " · dir listing" : ""}</span></td>
-    <td class="notes-cell">${escapeHtml(r.description)}${hdrs}${note}</td>`;
+    <td class="notes-cell">${escapeHtml(r.description)}${hdrs}${note}</td>
+    <td><button class="view-btn" data-idx="${idx}">View</button></td>`;
   const body = $("bpBody");
   const rank = V_RANK[r.verdict] ?? 9;
   let inserted = false;
@@ -363,6 +368,48 @@ function bpRenderRow(r) {
   if (!inserted) body.appendChild(tr);
 }
 
+// ---- response viewer: show what a technique actually served ----
+async function viewResponse(idx) {
+  const r = bpAll[idx];
+  if (!r) return;
+  $("viewer").hidden = false;
+  $("viewerTitle").textContent = `${r.method} ${r.url}`;
+  $("viewerMeta").textContent = "Loading…";
+  $("viewerBody").innerHTML = "";
+  $("viewer").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  try {
+    const resp = await fetch("/api/view", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        url: r.url, method: r.method, headers: r.sent_headers,
+        verify_tls: $("bpVerifyTls").checked,
+        host_header: $("bpHostHeader").value.trim(),
+      }),
+    });
+    const d = await resp.json();
+    if (!d.ok) { $("viewerMeta").textContent = "Error: " + (d.error || "request failed"); return; }
+    let m = `HTTP ${d.status}  ·  ${d.content_type || "no content-type"}  ·  ${d.length} bytes`;
+    if (d.location) m += `  ·  → ${d.location}`;
+    $("viewerMeta").textContent = m;
+    const body = $("viewerBody");
+    if (d.kind === "image") {
+      const img = document.createElement("img");
+      img.src = `data:${d.content_type};base64,${d.body_b64}`;
+      img.alt = "served response";
+      body.appendChild(img);
+    } else if (d.kind === "text") {
+      const pre = document.createElement("pre");
+      pre.textContent = d.body_text && d.body_text.length ? d.body_text : "(empty body)";
+      body.appendChild(pre);
+    } else {
+      body.innerHTML = `<div class="binary">Binary content (${d.length} bytes), content-type ${escapeHtml(d.content_type || "?")}. Not rendered.</div>`;
+    }
+  } catch (e) {
+    $("viewerMeta").textContent = "Request failed: " + e.message;
+  }
+}
+
 function bpFinish(ev) {
   const n = ev.bypass_count;
   const insideOnly = n > 0 && (ev.bypasses || []).every((b) => b.inside_file);
@@ -371,16 +418,19 @@ function bpFinish(ev) {
     $("bpProgressText").textContent =
       `Done. That URL wasn't Forbidden (HTTP ${ev.baseline_status}) — it may not be locked.`;
   } else if (n > 0) {
+    const checks = (ev.bypasses || []).filter((b) => !b.verified).length;
     if (insideOnly) {
       $("bpProgressText").innerHTML =
         `<b>Found it.</b> The directory is 403, but ${n} file(s) <b>inside</b> it are served directly ` +
         `(see the red rows). Your lock only hides the listing — the files are still public. ` +
         `Hit “Explain &amp; fix” for the exact config.`;
     } else {
-      $("bpProgressText").textContent =
-        `Done. Found ${n} working bypass(es)${someInside ? " (including files served inside the directory)" : ""} — see the red rows. Lock these down.`;
+      $("bpProgressText").innerHTML =
+        `Done. ${n} reachable finding(s)${someInside ? " (including files inside the directory)" : ""}` +
+        (checks ? ` — ${checks} orange <b>CHECK</b> row(s) are ambiguous: click <b>View</b> to see what was served, or use AI verify.` : " — see the red rows.");
     }
     $("aiBox").hidden = false;
+    if ($("bpAiVerify").checked) runVerify();
   } else if (ev.locked) {
     $("bpProgressText").textContent =
       "Done. No request-based bypass got through — the lock is holding. If people still see it, the way in is likely a cached copy, a different URL/alias, or a search-engine snapshot.";
@@ -401,7 +451,64 @@ function bpStop() {
   bpSetRunning(false);
 }
 
-// ---- AI analysis ----
+// ---- AI verify: let Claude filter false positives ----
+async function runVerify() {
+  if (!bpBypasses.length) return;
+  $("bpProgressText").textContent = "Asking Claude to verify each finding…";
+  const candidates = bpBypasses.map((b) => ({
+    technique: b.technique, method: b.method, url: b.url,
+    sent_headers: b.sent_headers, status: b.status,
+    content_type: b.content_type, body_preview: b.body_preview,
+  }));
+  try {
+    const resp = await fetch("/api/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        target_url: bpBaseline && bpBaseline.url,
+        baseline: bpBaseline,
+        candidates,
+        api_key: $("bpAiKey").value.trim() || undefined,
+      }),
+    });
+    const d = await resp.json();
+    if (!d.ok) {
+      $("bpProgressText").textContent = d.needs_setup
+        ? d.error + " (AI verify skipped — findings above are from the built-in checks.)"
+        : "AI verify failed: " + d.error;
+      return;
+    }
+    applyVerify(d.results || []);
+  } catch (e) {
+    $("bpProgressText").textContent = "AI verify request failed: " + e.message;
+  }
+}
+
+function applyVerify(results) {
+  let real = 0, fake = 0;
+  for (const res of results) {
+    const b = bpBypasses[res.index];
+    if (!b || !b._tr) continue;
+    const pill = b._tr.querySelector(".verdict-pill");
+    if (res.is_real) {
+      real++; pill.className = "verdict-pill v-real"; pill.textContent = "REAL";
+    } else {
+      fake++; pill.className = "verdict-pill v-false"; pill.textContent = "false+";
+    }
+    const cell = b._tr.children[3];
+    if (cell) {
+      const div = document.createElement("div");
+      div.className = "notes-cell";
+      div.textContent = `AI (${res.confidence}): ${res.reason}`;
+      cell.appendChild(div);
+    }
+  }
+  $("bpProgressText").innerHTML =
+    `AI verified: <b>${real}</b> real bypass(es), ${fake} false positive(s) filtered. ` +
+    (real ? "The REAL rows are the ones to fix — hit “Explain &amp; fix”." : "Nothing real got through.");
+}
+
+// ---- AI analysis (explain + write the fix) ----
 async function runAnalyze() {
   const btn = $("aiRunBtn");
   btn.disabled = true;
@@ -416,7 +523,7 @@ async function runAnalyze() {
       body: JSON.stringify({
         baseline: bpBaseline,
         bypasses: bpBypasses,
-        api_key: $("aiKey").value.trim() || undefined,
+        api_key: $("bpAiKey").value.trim() || undefined,
       }),
     });
     const data = await resp.json();
@@ -453,6 +560,11 @@ function bpRenderAnalysis(a) {
 $("bypassForm").addEventListener("submit", runBypass);
 $("bpStopBtn").addEventListener("click", bpStop);
 $("aiRunBtn").addEventListener("click", runAnalyze);
+$("viewerClose").addEventListener("click", () => { $("viewer").hidden = true; });
+$("bpBody").addEventListener("click", (e) => {
+  const btn = e.target.closest(".view-btn");
+  if (btn) viewResponse(parseInt(btn.dataset.idx, 10));
+});
 $("scanForm").addEventListener("submit", runScan);
 $("stopBtn").addEventListener("click", stopScan);
 $("exportBtn").addEventListener("click", exportJson);

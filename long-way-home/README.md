@@ -33,3 +33,10 @@ python3 -I audio/soundtrack.py
 - Shot timing and transitions: `SCENES` in `src/main.js`.
 - The dog's look: `DOG_BODY`, `HEAD_TOP`, `EAR` (side view) and `DB_SIT` / `DB_STAND` (back view) in `src/chars.js`.
 - Music: `compose()` in `audio/soundtrack.py` (melodies `M1`–`M3`, chords in `CH`).
+
+## Windows + Blender setup (3D remake)
+
+On the Alienware: install the tools with winget, clone this repo, then run
+`powershell -ExecutionPolicy Bypass -File long-way-home\tools\setup-windows.ps1` from the repo root.
+It puts Blender on PATH, installs the Python and Node pieces, and runs a GPU render test.
+The brief for Claude Code is in the repo-root `CLAUDE.md`.

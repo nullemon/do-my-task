@@ -1,0 +1,12 @@
+{
+  "name": "long-way-home",
+  "private": true,
+  "description": "The Long Way Home - code-animated Facebook Reels series",
+  "scripts": {
+    "stills": "node render.cjs --stills",
+    "video": "node render.cjs --video out/video_silent.mp4"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

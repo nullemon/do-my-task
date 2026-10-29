@@ -73,3 +73,10 @@ Rules:
   to sketch concept art before modeling (check Google's docs for the current model name). Never print
   or commit the key. Final pictures must come from Blender.
 - Sound: keep `audio/soundtrack.py` for now; a voice/real-SFX pass comes later.
+
+## Track 2: local AI studio
+
+`ai-studio/` sets up ComfyUI with open image and video models (generation, image edit, image-to-video,
+motion transfer, character replacement, video object swap) on the Alienware. Its brief is
+`ai-studio/CLAUDE.md`. The "no downloaded models" rule above is about 3D assets for the Blender remake;
+it does not apply to AI model weights in `ai-studio/`.

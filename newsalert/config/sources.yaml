@@ -1,0 +1,179 @@
+# Every feed / account the system watches.
+#
+#   name:      unique display name
+#   type:      rss | youtube | bluesky | x | wikipedia
+#   url:       feed URL (rss / youtube)
+#   account:   handle / DID / channel id (social sources)
+#   category:  celebrity | anime | manga | tv   (default hint; triage decides per story)
+#   trust:     official | major | signal
+#                official = the studio / publisher / agency / family / verified rep itself
+#                major    = professional newsroom
+#                signal   = fast but unverified (Wikipedia edits, fan/aggregator sites)
+#   group:     ownership group. Two `major` sources only count as independent
+#              confirmation if their groups differ (e.g. Variety + Deadline are both
+#              Penske Media, so together they are still SINGLE OUTLET). Defaults to name.
+#   interval:  poll interval in seconds (default from settings.yaml)
+#   enabled:   false to skip without deleting
+#
+# These URLs could not be fetched from the build sandbox (its network is locked
+# down). Run `newsalert check-sources` on your VM; it reports any URL that fails or
+# whose newest item looks oddly old (often a wrong time zone in the feed).
+
+# ---------------- Anime / manga ----------------
+- name: Anime News Network
+  type: rss
+  url: https://www.animenewsnetwork.com/news/rss.xml?ann-edition=w
+  category: anime
+  trust: major
+  group: ann
+
+- name: Crunchyroll News
+  type: rss
+  url: https://cr-news-api-service.prd.crunchyrollsvc.com/v1/en-US/rss
+  category: anime
+  trust: major
+  group: crunchyroll
+
+- name: MyAnimeList News
+  type: rss
+  url: https://myanimelist.net/rss/news.xml
+  category: anime
+  trust: major
+  group: myanimelist
+  interval: 120
+
+- name: Comic Natalie
+  type: rss
+  url: https://natalie.mu/comic/feed/news
+  category: manga
+  trust: major
+  group: natalie
+
+- name: Eiga Natalie
+  type: rss
+  url: https://natalie.mu/eiga/feed/news
+  category: tv
+  trust: major
+  group: natalie
+
+- name: Music Natalie
+  type: rss
+  url: https://natalie.mu/music/feed/news
+  category: celebrity
+  trust: major
+  group: natalie
+  interval: 120
+
+- name: Anime!Anime!
+  type: rss
+  url: https://animeanime.jp/rss/index.rdf
+  category: anime
+  trust: major
+  group: iid
+
+- name: Anime Corner
+  type: rss
+  url: https://animecorner.me/feed/
+  category: anime
+  trust: signal
+  interval: 120
+
+# ---------------- Japanese entertainment wire ----------------
+- name: Yahoo! News Japan Entertainment
+  type: rss
+  url: https://news.yahoo.co.jp/rss/topics/entertainment.xml
+  category: celebrity
+  trust: major
+  group: yahoo-japan
+
+# ---------------- Celebrity / TV (English) ----------------
+- name: Variety
+  type: rss
+  url: https://variety.com/feed/
+  category: tv
+  trust: major
+  group: penske
+
+- name: Deadline
+  type: rss
+  url: https://deadline.com/feed/
+  category: tv
+  trust: major
+  group: penske
+
+- name: The Hollywood Reporter
+  type: rss
+  url: https://www.hollywoodreporter.com/feed/
+  category: tv
+  trust: major
+  group: penske
+
+- name: Billboard
+  type: rss
+  url: https://www.billboard.com/feed/
+  category: celebrity
+  trust: major
+  group: penske
+  interval: 120
+
+- name: Rolling Stone
+  type: rss
+  url: https://www.rollingstone.com/feed/
+  category: celebrity
+  trust: major
+  group: penske
+  interval: 120
+
+- name: TMZ
+  type: rss
+  url: https://www.tmz.com/rss.xml
+  category: celebrity
+  trust: major
+  group: tmz
+
+- name: E! News
+  type: rss
+  url: https://www.eonline.com/syndication/feeds/rssfeeds/topstories.xml
+  category: celebrity
+  trust: major
+  group: nbcuniversal
+
+- name: BBC Entertainment & Arts
+  type: rss
+  url: https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml
+  category: celebrity
+  trust: major
+  group: bbc
+
+- name: Sky News Entertainment
+  type: rss
+  url: https://feeds.skynews.com/feeds/rss/entertainment.xml
+  category: celebrity
+  trust: major
+  group: sky
+
+- name: The Guardian Culture
+  type: rss
+  url: https://www.theguardian.com/culture/rss
+  category: celebrity
+  trust: major
+  group: guardian
+  interval: 120
+
+- name: New York Times Arts
+  type: rss
+  url: https://rss.nytimes.com/services/xml/rss/nyt/Arts.xml
+  category: celebrity
+  trust: major
+  group: nyt
+  interval: 120
+
+# AP has no public RSS feed of its own; Google News's public RSS search endpoint
+# is the allowed way to follow it. Expect a few minutes of extra delay.
+- name: AP Entertainment (via Google News)
+  type: rss
+  url: https://news.google.com/rss/search?q=site:apnews.com+entertainment+when:1d&hl=en-US&gl=US&ceid=US:en
+  category: celebrity
+  trust: major
+  group: ap
+  interval: 180

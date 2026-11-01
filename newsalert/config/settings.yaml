@@ -1,0 +1,20 @@
+# newsalert settings. Relative paths are resolved against the project root.
+# Sections for later build steps (triage, alerts, quiet hours, health) are added
+# as those steps land.
+
+db_path: data/newsalert.db
+log_file: data/newsalert.log   # JSON lines; set to null to log to stderr only
+log_level: INFO
+
+polling:
+  default_interval: 60     # seconds; a source's own `interval` overrides this
+  min_interval: 30         # floor for any source interval (be polite)
+  request_timeout: 10      # seconds per HTTP request
+  max_backoff: 900         # cap (seconds) for exponential backoff after errors
+  max_retry_after: 3600    # cap (seconds) for a server's Retry-After
+  startup_stagger: 30      # spread first polls over this many seconds
+  user_agent: "newsalert/0.1 (personal breaking-news alerts; low-frequency polling)"
+
+pipeline:
+  stale_minutes: 30        # ignore items published > this long before we fetched them
+  text_dedupe_hours: 72    # window for exact-duplicate text matching across sources

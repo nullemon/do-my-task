@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">
+  <title>Official Anime Channel</title>
+  <entry>
+    <id>yt:video:abc123</id>
+    <yt:videoId>abc123</yt:videoId>
+    <title>Series Y Season 2 | Official Teaser</title>
+    <link rel="alternate" href="https://www.youtube.com/watch?v=abc123"/>
+    <author><name>Official Anime Channel</name></author>
+    <published>2026-10-31T10:00:00+00:00</published>
+    <updated>2026-10-31T10:05:00+00:00</updated>
+  </entry>
+</feed>

@@ -100,6 +100,6 @@ if ($failed.Count) {
   Warn "$($failed.Count) download(s) failed. Re-run the same command to resume."
   Warn 'If a file says 401/403, open its Hugging Face page, accept the license, then set HF_TOKEN and re-run.'
 }
-Write-Host "Start ComfyUI:  $portable\run_nvidia_gpu.bat"
+Write-Host 'Start ComfyUI:  powershell -ExecutionPolicy Bypass -File ai-studio\start-comfyui.ps1'
 Write-Host 'Then open http://127.0.0.1:8188 -> Workflow -> Browse Templates, and pick one of:'
 foreach ($p in $Packs) { if ($manifest.$p) { Write-Host "  $($manifest.$p.templates -join ', ')" } }

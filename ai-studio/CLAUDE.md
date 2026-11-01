@@ -42,7 +42,8 @@ automatically, which works but is slow, and the 14B models need 32 GB+ of system
 
 ## Workflow
 
-1. Start ComfyUI (`D:\AI\ComfyUI_windows_portable\run_nvidia_gpu.bat`, then http://127.0.0.1:8188).
+1. Start ComfyUI with `ai-studio\start-comfyui.ps1` (it runs `run_nvidia_gpu.bat` from its own folder; the .bat
+   fails if started from anywhere else), then http://127.0.0.1:8188.
 2. For each template above: open it (Workflow → Browse Templates), confirm it runs once from the UI, then
    Workflow → Export (API) to `ai-studio/workflows/<template>.json`. Record which node ids take the prompt,
    input image, input video, mask, resolution, frame count and seed in `ai-studio/workflows/README.md`.

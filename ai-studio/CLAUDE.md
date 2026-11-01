@@ -15,6 +15,7 @@ at the highest quality this machine allows:
 | Video with sound, portrait-friendly (optional) | LTX-2.3 (`video_ltx2_3_i2v`) | ltx |
 
 `models.json` lists every file, its folder and URL (taken from ComfyUI's official templates).
+`comfy_batch.py` spreads a list of jobs over several ComfyUI servers (one per GPU).
 `setup-comfyui.ps1` installs ComfyUI portable on the drive with the most free space (on this laptop `D:\AI`)
 and downloads the packs that suit the GPU and RAM it detects. `comfy_run.py` runs an
 API-format workflow headlessly.
@@ -74,3 +75,17 @@ notes on where it falls short of Genjutsu.
   (Wan, Qwen Image and Z-Image are Apache-2.0 as far as we know; LTX, SCAIL-2 and SAM have their own terms).
 - Only animate or swap real people with their consent.
 - Commit scripts, workflow JSONs and notes; never commit model files or outputs.
+
+## On RunPod (rented GPUs)
+
+`runpod/setup.sh` installs everything on the network volume (`/workspace`) and starts one ComfyUI per GPU
+on ports 8188, 8189, … (`runpod/start.sh`). The user's guide is `runpod/README.md`.
+
+- Paths: ComfyUI `/workspace/ComfyUI`, Python `/workspace/venv/bin/python`, outputs `/workspace/outputs/gpuN`,
+  logs `/workspace/logs`.
+- With 32–96 GB of VRAM, use the quality settings: 720p (1080p on 96 GB), longer clips, `video` (Wan 2.2 14B)
+  instead of `video_light`, `motion_full` (Wan Animate 2) for final motion transfer, then `upscale` (SeedVR2).
+- Spread queues over every GPU with `comfy_batch.py --jobs jobs.json --auto`; write the jobs file instead of
+  running jobs one by one.
+- The pod bills by the hour: tell the user when a batch is done so they can stop it, and never leave a
+  long job running without saying how long it will take.

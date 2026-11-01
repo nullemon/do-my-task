@@ -9,3 +9,5 @@ image-to-video, motion transfer, character replacement and video object swap.
 
 `models.json` lists the files per pack (image, video, motion, swap, ltx). `comfy_run.py` runs exported
 API-format workflows from the command line.
+
+Renting bigger GPUs: see `runpod/README.md` (one command sets up the same studio on RunPod).

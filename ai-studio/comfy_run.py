@@ -40,6 +40,55 @@ def parse_value(v):
         return v
 
 
+def run_job(server, workflow, sets=None, uploads=None, random_seed=False, out='outputs', timeout=3600, log=print):
+    """Queue one API-format workflow on a ComfyUI server, wait for it, download its outputs.
+    workflow: path or dict. sets: {"NODE.input": value}. uploads: {"NODE.input": "local/file"}."""
+    wf = json.load(open(workflow, encoding='utf-8')) if isinstance(workflow, str) else json.loads(json.dumps(workflow))
+    if 'nodes' in wf:
+        raise ValueError('UI-format workflow: in ComfyUI use Workflow -> Export (API) and pass that file.')
+    for key, path in (uploads or {}).items():
+        nid, inp = key.split('.', 1)
+        wf[nid]['inputs'][inp] = upload(server, path)
+    for key, val in (sets or {}).items():
+        nid, inp = key.split('.', 1)
+        wf[nid]['inputs'][inp] = val
+    if random_seed:
+        for node in wf.values():
+            for k in ('seed', 'noise_seed'):
+                if k in node['inputs'] and not isinstance(node['inputs'][k], list):
+                    node['inputs'][k] = random.randint(0, 2**48)
+    pid = call(server, '/prompt', json.dumps({'prompt': wf, 'client_id': uuid.uuid4().hex}).encode(),
+               {'Content-Type': 'application/json'})['prompt_id']
+    log(f'queued {pid} on {server}')
+    t0 = time.time()
+    while True:
+        hist = call(server, f'/history/{pid}')
+        if pid in hist:
+            break
+        if time.time() - t0 > timeout:
+            raise TimeoutError(f'{pid} timed out after {timeout}s')
+        time.sleep(2)
+    entry = hist[pid]
+    status = entry.get('status', {})
+    if status.get('status_str') == 'error':
+        raise RuntimeError('ComfyUI reported an error: ' + json.dumps(status.get('messages', []))[:2000])
+    os.makedirs(out, exist_ok=True)
+    saved = []
+    for node_out in entry.get('outputs', {}).values():
+        for files in node_out.values():
+            if not isinstance(files, list):
+                continue
+            for f in files:
+                if isinstance(f, dict) and 'filename' in f and f.get('type') == 'output':
+                    q = urllib.parse.urlencode({'filename': f['filename'], 'subfolder': f.get('subfolder', ''), 'type': 'output'})
+                    dest = os.path.join(out, f['filename'])
+                    with open(dest, 'wb') as fh:
+                        fh.write(call(server, '/view?' + q, raw=True))
+                    saved.append(dest)
+    log(f'done {pid} in {time.time() - t0:.0f}s')
+    return saved
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--server', default='http://127.0.0.1:8188')
@@ -52,59 +101,20 @@ def main():
     ap.add_argument('--timeout', type=int, default=3600)
     a = ap.parse_args()
 
-    wf = json.load(open(a.workflow, encoding='utf-8'))
-    if 'nodes' in wf:
-        sys.exit('This is a UI-format workflow. In ComfyUI use Workflow -> Export (API) and pass that file.')
     if a.list:
+        wf = json.load(open(a.workflow, encoding='utf-8'))
+        if 'nodes' in wf:
+            sys.exit('This is a UI-format workflow. In ComfyUI use Workflow -> Export (API) and pass that file.')
         for nid, node in sorted(wf.items(), key=lambda kv: int(kv[0]) if kv[0].isdigit() else 0):
             simple = {k: v for k, v in node['inputs'].items() if not isinstance(v, list)}
             print(f"{nid:>5}  {node['class_type']:32s} {json.dumps(simple)[:150]}")
         return
-
-    for item in a.upload:
-        key, path = item.split('=', 1)
-        nid, inp = key.split('.', 1)
-        wf[nid]['inputs'][inp] = upload(a.server, path)
-    for item in a.set:
-        key, val = item.split('=', 1)
-        nid, inp = key.split('.', 1)
-        wf[nid]['inputs'][inp] = parse_value(val)
-    if a.random_seed:
-        for node in wf.values():
-            for k in ('seed', 'noise_seed'):
-                if k in node['inputs'] and not isinstance(node['inputs'][k], list):
-                    node['inputs'][k] = random.randint(0, 2**48)
-
-    client = uuid.uuid4().hex
-    pid = call(a.server, '/prompt', json.dumps({'prompt': wf, 'client_id': client}).encode(),
-               {'Content-Type': 'application/json'})['prompt_id']
-    print('queued', pid)
-    t0 = time.time()
-    while True:
-        hist = call(a.server, f'/history/{pid}')
-        if pid in hist:
-            break
-        if time.time() - t0 > a.timeout:
-            sys.exit('timed out')
-        time.sleep(2)
-    entry = hist[pid]
-    status = entry.get('status', {})
-    if status.get('status_str') == 'error':
-        sys.exit('ComfyUI reported an error: ' + json.dumps(status.get('messages', []))[:2000])
-    os.makedirs(a.out, exist_ok=True)
-    saved = []
-    for out in entry.get('outputs', {}).values():
-        for files in out.values():
-            if not isinstance(files, list):
-                continue
-            for f in files:
-                if isinstance(f, dict) and 'filename' in f and f.get('type') == 'output':
-                    q = urllib.parse.urlencode({'filename': f['filename'], 'subfolder': f.get('subfolder', ''), 'type': 'output'})
-                    data = call(a.server, '/view?' + q, raw=True)
-                    dest = os.path.join(a.out, f['filename'])
-                    open(dest, 'wb').write(data)
-                    saved.append(dest)
-    print(f'done in {time.time() - t0:.0f}s')
+    sets = dict((k, parse_value(v)) for k, v in (item.split('=', 1) for item in a.set))
+    uploads = dict(item.split('=', 1) for item in a.upload)
+    try:
+        saved = run_job(a.server, a.workflow, sets, uploads, a.random_seed, a.out, a.timeout)
+    except (ValueError, RuntimeError, TimeoutError) as e:
+        sys.exit(str(e))
     for s in saved:
         print('  ', s)
 

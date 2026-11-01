@@ -42,7 +42,7 @@ shell/card approach if hair is too slow; eyes as separate spheres with a refract
 
 ## Hardware and rendering
 
-Alienware m16 R2, Windows 11, **RTX 4060 Laptop GPU (8 GB VRAM)** (confirmed by nvidia-smi), Intel Core Ultra.
+Alienware m16 R2, Windows 11, **RTX 4060 Laptop GPU (8 GB VRAM)**, 64 GB RAM, Intel Core Ultra (all confirmed).
 Drives: C: has ~120 GB free, D: ~425 GB free; put big caches and renders on D:.
 
 - Run Blender headless: `blender -b <file.blend> -P <script.py> -- <args>`. `BLENDER_EXE` is set.

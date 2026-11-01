@@ -21,11 +21,12 @@ API-format workflow headlessly.
 
 ## The machine and how to fit big models on it
 
-**RTX 4060 Laptop GPU with 8 GB VRAM** (confirmed by nvidia-smi), Windows 11; the setup script prints the
-system RAM. Most of these models are far larger than 8 GB; ComfyUI offloads weights to system RAM
+**RTX 4060 Laptop GPU with 8 GB VRAM** and **64 GB system RAM** (both confirmed), one NVMe SSD split into C: and D:, Windows 11. Most of these models are far larger than 8 GB; ComfyUI offloads weights to system RAM
 automatically, which works but is slow, and the 14B models need 32 GB+ of system RAM to load at all.
 
-- Default to the light paths: Z-Image Turbo for images, Wan 2.2 5B for image-to-video.
+- The 64 GB of RAM is what lets the 14B models run here: ComfyUI keeps what doesn't fit in the 8 GB card in
+  RAM. Ask the user to close browsers and other heavy apps before long jobs (they idle at ~28 GB used).
+- Default to the light paths for drafts (Z-Image Turbo, Wan 2.2 5B), then the 14B models for final shots.
 - Treat motion transfer / character replacement (14B) as overnight jobs at 480p, and tell the user how long
   one clip took before queueing more. If it is impractical, say so and suggest renting a cloud GPU for those
   jobs (same workflows) rather than forcing it.

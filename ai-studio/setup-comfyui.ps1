@@ -29,6 +29,7 @@ $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemor
 Ok "$($gpu[0]), driver $($gpu[1]), $vramGB GB graphics memory, $ramGB GB system RAM"
 if (-not $Packs) {
   if ($vramGB -ge 12 -and $ramGB -ge 32) { $Packs = @('image', 'video', 'motion', 'swap') }
+  elseif ($ramGB -ge 48) { $Packs = @('image', 'video_light', 'video', 'motion', 'swap') }
   elseif ($ramGB -ge 32) { $Packs = @('image', 'video_light', 'motion') }
   else { $Packs = @('image', 'video_light') }
 }

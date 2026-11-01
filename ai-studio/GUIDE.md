@@ -70,6 +70,28 @@ Your character performs the motion from a driving video.
 - **On RunPod (32–96 GB):** width/height **720 × 1280** (tall clip), **1280 × 720** (wide), **960 × 720** (4:3) or
   **960 × 960** (square); the cache device can stay on gpu.
 
+### Long motion-transfer videos (30 s – 2 min)
+
+Use the full **"Wan Animate 2: Motion Transfer"** template: it goes through the whole clip by itself, 5 s at a time,
+and keeps the clip's sound. The result is as long as your clip.
+
+1. **Film well:** tripod, still camera, whole body in frame the entire time, one person, good light, clothes that
+   stand out from the wall. Start on the most exciting move (that's your hook).
+2. **Convert** (keeps the sound): `ffmpeg -y -i dance.mp4 -vf "fps=16,scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264
+   -crf 16 -pix_fmt yuv420p -c:a aac ComfyUI/input/dance16.mp4`
+3. **Test 5 seconds first** (`-t 5` in the same command, saved as `dance16_test.mp4`): fix the prompts and settings on
+   the short test, note how long it took, then run the full clip (about that time × clip seconds ÷ 5).
+4. **Character picture:** same framing as the clip (full body ↔ full body), standing, arms visible, facing the camera,
+   plain background, simple outfit (fine patterns flicker).
+5. **Settings:** 720 × 1280, cache_dtype default, reference_image_strength 1.1–1.2 for long clips (stops slow drift),
+   pose_end_percent 0.7 if the character's body shape is very different from the dancer's.
+6. **Finish:** SeedVR2 to 1080p, then captions/music as needed.
+
+**"1 dance, many worlds"** (keeps long videos interesting): run the same clip 3–6 times with different characters
+and backgrounds (one per GPU if you rent several), then cut between them on the beat:
+`python ai-studio/world_mix.py --audio dance16.mp4 --every 4 --original dance16.mp4 v1.mp4 v2.mp4 v3.mp4`
+(all versions follow the same clip, so the moves flow straight across every cut).
+
 ## 5. Replace a character in a video: "SCAIL-2 Int8: Character Replacement"
 
 - **Load Video:** the original clip (the person or animal to replace).

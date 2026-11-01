@@ -1,16 +1,17 @@
-# Local AI studio for the Alienware (RTX 4080 12 GB, 64 GB RAM): ComfyUI portable + open models for
-# images, image-to-video, motion transfer, character replacement and video object swap.
+# Local AI studio for the Alienware: ComfyUI portable + open models for images, image-to-video,
+# motion transfer, character replacement and video object swap.
 #
 # Run from the repo root in PowerShell:
 #   powershell -ExecutionPolicy Bypass -File ai-studio\setup-comfyui.ps1
+# It picks the drive with the most free space and the model packs that suit your graphics card.
 # Options:
-#   -Root D:\AI                      install somewhere else (needs ~200 GB free for the default packs)
-#   -Packs image,video,motion,swap   which model packs to download (add ltx for LTX-2.3, ~45 GB more)
+#   -Root D:\AI                 install to a specific folder
+#   -Packs image,video_light    choose packs yourself: image, video_light, video, motion, swap, ltx
 # Safe to re-run: finished downloads are skipped and interrupted ones resume.
 
 param(
-  [string]$Root = 'C:\AI',
-  [string[]]$Packs = @('image', 'video', 'motion', 'swap')
+  [string]$Root = '',
+  [string[]]$Packs = @()
 )
 $ErrorActionPreference = 'Stop'
 function Ok($m) { Write-Host "  OK  $m" -ForegroundColor Green }
@@ -19,20 +20,37 @@ function Step($m) { Write-Host "`n== $m" -ForegroundColor Cyan }
 
 $here = $PSScriptRoot
 $manifest = Get-Content (Join-Path $here 'models.json') -Raw | ConvertFrom-Json
-$Packs = $Packs | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ }
 
-Step 'GPU and driver'
-$smi = Get-Command nvidia-smi -ErrorAction SilentlyContinue
-if ($smi) { nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader; Ok 'NVIDIA driver found' }
-else { Warn 'nvidia-smi not found: install the latest NVIDIA Studio driver from the NVIDIA app first'; exit 1 }
+Step 'GPU, driver and memory'
+if (-not (Get-Command nvidia-smi -ErrorAction SilentlyContinue)) { Warn 'nvidia-smi not found: install the latest NVIDIA Studio driver from the NVIDIA app first'; exit 1 }
+$gpu = (nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader,nounits | Select-Object -First 1).Split(',') | ForEach-Object { $_.Trim() }
+$vramGB = [math]::Round([double]$gpu[2] / 1024)
+$ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)
+Ok "$($gpu[0]), driver $($gpu[1]), $vramGB GB graphics memory, $ramGB GB system RAM"
+if (-not $Packs) {
+  if ($vramGB -ge 12 -and $ramGB -ge 32) { $Packs = @('image', 'video', 'motion', 'swap') }
+  elseif ($ramGB -ge 32) { $Packs = @('image', 'video_light', 'motion') }
+  else { $Packs = @('image', 'video_light') }
+}
+$Packs = $Packs | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+Ok "packs: $($Packs -join ', ')"
+if ($vramGB -lt 12) { Warn 'Under 12 GB of graphics memory: big video models run, but slowly, by borrowing system RAM.' }
+if ($ramGB -lt 32 -and ($Packs -contains 'motion' -or $Packs -contains 'video' -or $Packs -contains 'swap')) {
+  Warn 'The 14B video models (video, motion, swap) need 32 GB+ of system RAM on this card; expect failures.'
+}
 
 Step 'Disk space'
+if (-not $Root) {
+  $best = Get-PSDrive -PSProvider FileSystem | Where-Object { $_.Free -gt 0 -and $_.Root -match '^[A-Z]:\\$' } | Sort-Object Free -Descending | Select-Object -First 1
+  $Root = Join-Path $best.Root 'AI'
+}
 New-Item -ItemType Directory -Force -Path $Root | Out-Null
 $drive = (Get-Item $Root).PSDrive
 $freeGB = [math]::Round($drive.Free / 1GB)
-$needGB = 30 + 45 * $Packs.Count
-if ($freeGB -lt $needGB) { Warn "$freeGB GB free on $($drive.Name):, about $needGB GB recommended. Use -Root on a bigger drive or fewer -Packs."; exit 1 }
-Ok "$freeGB GB free on $($drive.Name):"
+$needGB = 10
+foreach ($p in $Packs) { if ($manifest.$p) { $needGB += [int]$manifest.$p.approxGB } }
+if ($freeGB -lt $needGB) { Warn "$freeGB GB free on $($drive.Name):, about $needGB GB needed. Use -Root on a bigger drive or fewer -Packs."; exit 1 }
+Ok "installing to $Root ($freeGB GB free, about $needGB GB needed)"
 
 Step '7-Zip'
 $sevenZip = 'C:\Program Files\7-Zip\7z.exe'

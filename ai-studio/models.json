@@ -1,10 +1,10 @@
 {
   "image": {
     "about": "Images: Z-Image Turbo (fast) + Qwen Image 2.1 (generate and edit, object swap in stills)",
+    "approxGB": 50,
     "templates": [
       "image_z_image_turbo",
-      "image_qwen_image_2_1_image_edit",
-      "image_qwen_image_2_1_turbo_t2i"
+      "image_qwen_image_2_1_image_edit"
     ],
     "models": [
       {
@@ -41,21 +41,36 @@
         "name": "qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors",
         "dir": "text_encoders",
         "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors"
-      },
+      }
+    ]
+  },
+  "video_light": {
+    "about": "Image-to-video for 8 GB cards: Wan 2.2 5B (text or image to video, 720p)",
+    "approxGB": 17,
+    "templates": [
+      "video_wan2_2_5B_ti2v"
+    ],
+    "models": [
       {
-        "name": "qwen_image_2.1_turbo_int8_convrot.safetensors",
+        "name": "wan2.2_ti2v_5B_fp16.safetensors",
         "dir": "diffusion_models",
-        "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/diffusion_models/qwen_image_2.1_turbo_int8_convrot.safetensors"
+        "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_ti2v_5B_fp16.safetensors"
       },
       {
-        "name": "qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors",
+        "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
         "dir": "text_encoders",
-        "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors"
+        "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors"
+      },
+      {
+        "name": "wan2.2_vae.safetensors",
+        "dir": "vae",
+        "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan2.2_vae.safetensors"
       }
     ]
   },
   "video": {
     "about": "Image-to-video: Wan 2.2 14B with 4-step speed LoRAs",
+    "approxGB": 38,
     "templates": [
       "video_wan2_2_14B_i2v"
     ],
@@ -94,6 +109,7 @@
   },
   "motion": {
     "about": "Motion transfer / character replacement: Wan Animate 2 (distilled) + SCAIL-2 int8",
+    "approxGB": 45,
     "templates": [
       "video_wan_animate2_distilled",
       "video_wan21_scail2_character_replacement_int8"
@@ -143,6 +159,7 @@
   },
   "swap": {
     "about": "Video object swap / removal: Wan 2.1 VACE inpainting + SAM 3.1 masks",
+    "approxGB": 45,
     "templates": [
       "video_wan_vace_inpainting"
     ],
@@ -176,6 +193,7 @@
   },
   "ltx": {
     "about": "Optional: LTX-2.3 image-to-video with sound, portrait friendly (big download)",
+    "approxGB": 47,
     "templates": [
       "video_ltx2_3_i2v"
     ],

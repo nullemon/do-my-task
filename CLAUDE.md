@@ -42,12 +42,14 @@ shell/card approach if hair is too slow; eyes as separate spheres with a refract
 
 ## Hardware and rendering
 
-Alienware m16 R2, Windows 11, RTX 4080 Laptop GPU (12 GB VRAM), Intel Core Ultra 9, 64 GB RAM.
+Alienware m16 R2, Windows 11, **RTX 4060 Laptop GPU (8 GB VRAM)** (confirmed by nvidia-smi), Intel Core Ultra.
+Drives: C: has ~120 GB free, D: ~425 GB free; put big caches and renders on D:.
 
 - Run Blender headless: `blender -b <file.blend> -P <script.py> -- <args>`. `BLENDER_EXE` is set.
 - Every render script enables the GPU itself (OptiX, fall back to CUDA). See `long-way-home/tools/gpu-check.py`.
 - Previews: EEVEE, 540×960. Finals: Cycles + OptiX denoiser, 1080×1920, motion blur on.
-  Aim for under ~30 s per final frame; tell the user before starting anything that will take hours.
+  Aim for under ~30 s per final frame (8 GB VRAM: keep scenes lean, prefer EEVEE); tell the user before
+  starting anything that will take hours.
 - Render to `long-way-home/blender/renders/<shot>/####.png` (git-ignored), then assemble with ffmpeg.
 - Captions, title card, grain and grading can reuse the existing compositor in `long-way-home/src/main.js`
   (draw the Blender frame as the background, then the existing captions on top), or be done in ffmpeg.

@@ -68,6 +68,16 @@ pkill -f "main.py --listen"; curl -fsSL https://raw.githubusercontent.com/nullem
 Leave out packs you don't want. Check each model's license before commercial use (MiniMax H3's reportedly
 excludes some countries).
 
+## Blender (3D) on the pod
+
+```bash
+bash /workspace/do-my-task/ai-studio/runpod/blender.sh
+```
+
+Installs the newest Blender into `/workspace/blender` (kept between pods), then renders a GPU test frame and prints
+how long it took. Render headless with `blender -b -P script.py`. Cycles with OptiX uses the GPU; EEVEE needs display
+drivers that some pods don't have, so the scripts default to Cycles here.
+
 ## Let Claude Code drive it
 
 In the pod's terminal:

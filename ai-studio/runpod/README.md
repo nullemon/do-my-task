@@ -46,6 +46,26 @@ RunPod stops your pods (the network volume keeps your files).
 3. Open the `GPU … ready` links.
 4. **When you're done: Stop the pod** (Pods → Stop). Otherwise it keeps billing by the hour.
 
+## Add the long-video models (optional, about 200 GB more)
+
+| Pack | What it does | Size |
+|---|---|---|
+| `minimax_h3` | MiniMax H3: picture/reference to video with sound, up to 2K, ~15 s per run, plus continuation | ~66 GB |
+| `ltx25` | LTX-2.5: picture/text to video with sound, multi-shot | ~57 GB |
+| `dancer` | Wan Dancer: a song + a character picture → a dance up to about a minute | ~40 GB new |
+| `s2v` | Wan 2.2 S2V: picture + voice or song → talking/singing | ~18 GB new |
+| `infinitetalk` | InfiniteTalk: long talking videos from audio | ~19 GB new |
+
+First make the network volume bigger (Storage → your volume → edit size; 600 GB for all of them). Then, in the
+pod's terminal (this stops ComfyUI, updates it, downloads, and starts it again):
+
+```bash
+pkill -f "main.py --listen"; curl -fsSL https://raw.githubusercontent.com/nullemon/do-my-task/claude/sharp-wright-ft6mhj/ai-studio/runpod/setup.sh | PACKS="minimax_h3 ltx25 dancer s2v infinitetalk" bash
+```
+
+Leave out packs you don't want. Check each model's license before commercial use (MiniMax H3's reportedly
+excludes some countries).
+
 ## Let Claude Code drive it
 
 In the pod's terminal:

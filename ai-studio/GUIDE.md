@@ -92,6 +92,19 @@ and backgrounds (one per GPU if you rent several), then cut between them on the 
 `python ai-studio/world_mix.py --audio dance16.mp4 --every 4 --original dance16.mp4 v1.mp4 v2.mp4 v3.mp4`
 (all versions follow the same clip, so the moves flow straight across every cut).
 
+### "Made in Blender" viewport videos
+
+The trend clips are an AI motion-transfer video placed inside a screenshot of Blender's viewport.
+1. Character picture (Z-Image): full body, facing the camera, plain dark grey background, clearly an adult, original.
+2. Wan Animate 2 with your dance clip. Background prompt: `an empty 3D software viewport, plain flat dark grey
+   background, faint floor grid with a thin red line and a thin green line crossing on the floor, soft even studio
+   lighting, wind blowing the hair and loose clothes`. Then SeedVR2 to 1080 x 1920.
+3. Blender screenshot (on the laptop): Animation workspace, window made tall, Overlays -> untick Floor, Axes, Text
+   Info, delete the default objects, Win+Shift+S -> `blender_ui.png`.
+4. `python ai-studio/viewport_mix.py result.mp4 --ui blender_ui.png --playhead x0,x1,y0,y1` (timeline area in
+   screenshot pixels; Paint shows them). Close-up cuts: crop a copy and alternate with `world_mix.py`.
+Label these as AI on Facebook (Meta asks for it on realistic AI video).
+
 ## 5. Replace a character in a video: "SCAIL-2 Int8: Character Replacement"
 
 - **Load Video:** the original clip (the person or animal to replace).

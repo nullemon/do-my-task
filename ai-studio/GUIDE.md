@@ -55,6 +55,14 @@ Your character performs the motion from a driving video.
 - In the big box: width/height **480 × 832**, length **81**, and set the cache **device** to **cpu**
   (avoids running out of graphics memory).
 - Output: the video plus a side-by-side with the driving clip.
+- **GIF as the motion clip:** convert it to MP4 first, at 16 fps (Wan's native rate; frames are used 1:1):
+  `ffmpeg -y -i in.gif -vf "fps=16,scale=trunc(iw/2)*2:trunc(ih/2)*2" -pix_fmt yuv420p ComfyUI/input/in.mp4`
+- **"Invalid input: Create Video – chroma_subsampling":** the template was saved with an older Create Video node.
+  Set **chroma_subsampling** to **auto** on both Create Video nodes (one is inside the **Video Stitch** box;
+  the ⌖ button in the error panel jumps to it). If **color_space** looks wrong, set it to **sRGB**.
+- **On RunPod (32–96 GB):** width/height **720 × 1280** (tall clip), **1280 × 720** (wide) or **960 × 960** (square);
+  the cache device can stay on gpu. One box makes 81 frames (5 s at 16 fps); the small number under Load Video
+  says how many boxes a longer clip needs.
 
 ## 5. Replace a character in a video: "SCAIL-2 Int8: Character Replacement"
 

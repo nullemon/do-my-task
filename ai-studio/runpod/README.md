@@ -55,6 +55,8 @@ RunPod stops your pods (the network volume keeps your files).
 | `dancer` | Wan Dancer: a song + a character picture → a dance up to about a minute | ~40 GB new |
 | `s2v` | Wan 2.2 S2V: picture + voice or song → talking/singing | ~18 GB new |
 | `infinitetalk` | InfiniteTalk: long talking videos from audio | ~19 GB new |
+| `audio` | ACE-Step 1.5 XL Turbo (music) + Stable Audio 3.0 (sound effects) | ~36 GB |
+| `music3` | MiniMax Music 3: full songs up to ~5 minutes | ~15 GB |
 
 First make the network volume bigger (Storage → your volume → edit size; 600 GB for all of them). Then, in the
 pod's terminal (this stops ComfyUI, updates it, downloads, and starts it again):

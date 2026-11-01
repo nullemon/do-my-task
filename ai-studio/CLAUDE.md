@@ -17,6 +17,10 @@ at the highest quality this machine allows:
 | Video with sound, multi-shot (RunPod) | LTX-2.5 (`video_ltx2_5_i2v`, `_t2v`, `_flf2v`) | ltx25 |
 | Song + picture → dance, up to ~1 min (RunPod) | Wan Dancer (`video_wan_dancer`) | dancer |
 | Picture + voice/song → talking or singing (RunPod) | Wan 2.2 S2V (`video_wan2_2_14B_s2v`), InfiniteTalk (`video_wan2_1_infinitetalk`) | s2v, infinitetalk |
+| Music / sound effects | ACE-Step 1.5 XL Turbo (`audio_ace_step1_5_xl_turbo`), Stable Audio 3.0 (`audio_stable_audio_3_medium`), MiniMax Music 3 | audio, music3 |
+
+Story episodes (80s cartoon or any style): `cartoon/` — `story_to_episode.py` (Claude writes the shot list),
+`pick.py`, `make_episode.py` (assembly, retro finish, captions, mix). Guide: `cartoon/README.md`.
 
 `models.json` lists every file, its folder and URL (taken from ComfyUI's official templates).
 `comfy_batch.py` spreads a list of jobs over several ComfyUI servers (one per GPU).

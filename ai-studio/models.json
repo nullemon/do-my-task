@@ -512,5 +512,74 @@
         "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors"
       }
     ]
+  },
+  "audio": {
+    "about": "Music and sound effects: ACE-Step 1.5 XL Turbo (songs/instrumentals) + Stable Audio 3.0 Medium (SFX)",
+    "approxGB": 36,
+    "templates": [
+      "audio_ace_step1_5_xl_turbo",
+      "audio_stable_audio_3_medium"
+    ],
+    "models": [
+      {
+        "name": "acestep_v1.5_xl_turbo_bf16.safetensors",
+        "dir": "diffusion_models",
+        "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/diffusion_models/acestep_v1.5_xl_turbo_bf16.safetensors"
+      },
+      {
+        "name": "ace_1.5_vae.safetensors",
+        "dir": "vae",
+        "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/vae/ace_1.5_vae.safetensors"
+      },
+      {
+        "name": "qwen_0.6b_ace15.safetensors",
+        "dir": "text_encoders",
+        "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/text_encoders/qwen_0.6b_ace15.safetensors"
+      },
+      {
+        "name": "qwen_4b_ace15.safetensors",
+        "dir": "text_encoders",
+        "url": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/text_encoders/qwen_4b_ace15.safetensors"
+      },
+      {
+        "name": "qwen3.5_2b_bf16.safetensors",
+        "dir": "text_encoders",
+        "url": "https://huggingface.co/Comfy-Org/Qwen3.5/resolve/main/text_encoders/qwen3.5_2b_bf16.safetensors"
+      },
+      {
+        "name": "stable_audio_3_medium.safetensors",
+        "dir": "checkpoints",
+        "url": "https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/checkpoints/stable_audio_3_medium.safetensors"
+      },
+      {
+        "name": "t5gemma_b_b_ul2.safetensors",
+        "dir": "text_encoders",
+        "url": "https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/text_encoders/t5gemma_b_b_ul2.safetensors"
+      }
+    ]
+  },
+  "music3": {
+    "about": "MiniMax Music 3: full songs up to ~5 minutes",
+    "approxGB": 15,
+    "templates": [
+      "audio_minimax_music_3"
+    ],
+    "models": [
+      {
+        "name": "minimax_music3_dit_fp16.safetensors",
+        "dir": "diffusion_models",
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/diffusion_models/minimax_music3_dit_fp16.safetensors"
+      },
+      {
+        "name": "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+        "dir": "text_encoders",
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors"
+      },
+      {
+        "name": "minimax_music3_dav.safetensors",
+        "dir": "vae",
+        "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/vae/minimax_music3_dav.safetensors"
+      }
+    ]
   }
 }

@@ -61,6 +61,7 @@ main() {
   fi
   torch_ok || { warn "PyTorch can't use this machine's GPU (driver $DRIVER_MAJOR). Stop the pod, pick another, run again."; exit 1; }
   "$PY" -m pip install -q -r "$WORK/ComfyUI/requirements.txt"
+  "$PY" -m pip install -q anthropic   # Claude, for the episode script writer (ai-studio/cartoon)
   ok "$("$PY" -c 'import torch; print("PyTorch", torch.__version__, "CUDA", torch.version.cuda)')"
 
   step "Models: $PACKS"

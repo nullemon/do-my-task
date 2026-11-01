@@ -13,6 +13,10 @@ at the highest quality this machine allows:
 | Character replacement in a video (works with animals) | SCAIL-2 int8 (`video_wan21_scail2_character_replacement_int8`) | motion |
 | Object swap / removal in a video | Wan 2.1 VACE inpainting + SAM 3.1 masks (`video_wan_vace_inpainting`) | swap |
 | Video with sound, portrait-friendly (optional) | LTX-2.3 (`video_ltx2_3_i2v`) | ltx |
+| Long videos with sound, up to 2K, continuation (RunPod) | MiniMax H3 (`video_minimax_h3_i2v`, `_r2v`, `_i2v_continuation`, `_multiframe_reference`) | minimax_h3 |
+| Video with sound, multi-shot (RunPod) | LTX-2.5 (`video_ltx2_5_i2v`, `_t2v`, `_flf2v`) | ltx25 |
+| Song + picture → dance, up to ~1 min (RunPod) | Wan Dancer (`video_wan_dancer`) | dancer |
+| Picture + voice/song → talking or singing (RunPod) | Wan 2.2 S2V (`video_wan2_2_14B_s2v`), InfiniteTalk (`video_wan2_1_infinitetalk`) | s2v, infinitetalk |
 
 `models.json` lists every file, its folder and URL (taken from ComfyUI's official templates).
 `comfy_batch.py` spreads a list of jobs over several ComfyUI servers (one per GPU).

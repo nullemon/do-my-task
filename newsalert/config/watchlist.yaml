@@ -1,0 +1,2692 @@
+# Priority watchlist — entries get +1 importance in triage, are polled most often,
+# and their Wikipedia pages are watched for edits.
+# Generated 2026-11-01; edit freely.
+#
+# kind:      series | person | studio
+# category:  anime | manga | tv | celebrity   (primary category for alerts)
+# roles:     (person/studio only) creator, mangaka, author, director, studio, voice_actor, composer, actor, showrunner, writer
+# works:     (person/studio only) names of watchlist series they are connected to — must match a series `name` exactly
+# aliases:   other spellings / native-script names / alternate titles used for matching
+# wikipedia: exact English Wikipedia article title
+# match_risk: true if the name/alias is a common word or phrase that may false-match ordinary headlines
+entries:
+  # ---------- Anime / manga series ----------
+  - name: One Piece
+    kind: series
+    category: anime
+    aliases: [ワンピース]
+    wikipedia: One Piece
+  - name: Attack on Titan
+    kind: series
+    category: anime
+    aliases: [Shingeki no Kyojin, 進撃の巨人]
+    wikipedia: Attack on Titan
+  - name: Demon Slayer
+    kind: series
+    category: anime
+    aliases: ["Demon Slayer: Kimetsu no Yaiba", Kimetsu no Yaiba, 鬼滅の刃]
+    wikipedia: "Demon Slayer: Kimetsu no Yaiba"
+  - name: Jujutsu Kaisen
+    kind: series
+    category: anime
+    aliases: [呪術廻戦]
+    wikipedia: Jujutsu Kaisen
+  - name: Chainsaw Man
+    kind: series
+    category: anime
+    aliases: [チェンソーマン]
+    wikipedia: Chainsaw Man
+  - name: "Frieren: Beyond Journey's End"
+    kind: series
+    category: anime
+    aliases: [Frieren, Sousou no Frieren, 葬送のフリーレン]
+    wikipedia: Frieren
+  - name: Solo Leveling
+    kind: series
+    category: anime
+    aliases: [俺だけレベルアップな件, 나 혼자만 레벨업]
+    wikipedia: Solo Leveling
+  - name: Spy × Family
+    kind: series
+    category: anime
+    aliases: [Spy x Family, SPY×FAMILY, スパイファミリー]
+    wikipedia: Spy × Family
+  - name: Dandadan
+    kind: series
+    category: anime
+    aliases: [Dan Da Dan, ダンダダン]
+    wikipedia: Dandadan
+  - name: Oshi no Ko
+    kind: series
+    category: anime
+    aliases: [推しの子]
+    wikipedia: Oshi no Ko
+  - name: Kaiju No. 8
+    kind: series
+    category: anime
+    aliases: [Kaiju No.8, Kaijū No. 8, "Monster #8", 怪獣8号]
+    wikipedia: Kaiju No. 8
+  - name: My Hero Academia
+    kind: series
+    category: anime
+    aliases: [Boku no Hero Academia, 僕のヒーローアカデミア, ヒロアカ]
+    wikipedia: My Hero Academia
+  - name: Naruto
+    kind: series
+    category: anime
+    aliases: [ナルト]
+    wikipedia: Naruto
+  - name: Death Note
+    kind: series
+    category: anime
+    aliases: [デスノート]
+    wikipedia: Death Note
+  - name: Fullmetal Alchemist
+    kind: series
+    category: anime
+    aliases: ["Fullmetal Alchemist: Brotherhood", Hagane no Renkinjutsushi, 鋼の錬金術師, ハガレン]
+    wikipedia: Fullmetal Alchemist
+  - name: Hunter × Hunter
+    kind: series
+    category: anime
+    aliases: [Hunter x Hunter, HUNTER×HUNTER, ハンター×ハンター]
+    wikipedia: Hunter × Hunter
+  - name: One-Punch Man
+    kind: series
+    category: anime
+    aliases: [One Punch Man, ワンパンマン]
+    wikipedia: One-Punch Man
+  - name: Dragon Ball
+    kind: series
+    category: anime
+    aliases: [ドラゴンボール]
+    wikipedia: Dragon Ball
+  - name: Bleach
+    kind: series
+    category: anime
+    aliases: [Thousand-Year Blood War, BLEACH 千年血戦篇]
+    wikipedia: Bleach (manga)
+    match_risk: true
+  - name: Sword Art Online
+    kind: series
+    category: anime
+    aliases: [ソードアート・オンライン]
+    wikipedia: Sword Art Online
+  - name: Tokyo Ghoul
+    kind: series
+    category: anime
+    aliases: [東京喰種]
+    wikipedia: Tokyo Ghoul
+  - name: Steins;Gate
+    kind: series
+    category: anime
+    aliases: [Steins Gate, シュタインズ・ゲート, シュタインズゲート]
+    wikipedia: Steins;Gate
+  - name: Re:Zero
+    kind: series
+    category: anime
+    aliases: [Re:Zero − Starting Life in Another World, Re:ゼロから始める異世界生活, リゼロ]
+    wikipedia: Re:Zero
+  - name: Haikyu!!
+    kind: series
+    category: anime
+    aliases: [Haikyu, ハイキュー]
+    wikipedia: Haikyu!!
+  - name: Mob Psycho 100
+    kind: series
+    category: anime
+    aliases: [モブサイコ100]
+    wikipedia: Mob Psycho 100
+  - name: Vinland Saga
+    kind: series
+    category: anime
+    aliases: [ヴィンランド・サガ]
+    wikipedia: Vinland Saga
+  - name: Neon Genesis Evangelion
+    kind: series
+    category: anime
+    aliases: [Evangelion, エヴァンゲリオン, ヱヴァンゲリヲン]
+    wikipedia: Neon Genesis Evangelion
+  - name: JoJo's Bizarre Adventure
+    kind: series
+    category: anime
+    aliases: [ジョジョの奇妙な冒険, JoJo no Kimyō na Bōken, Steel Ball Run]
+    wikipedia: JoJo's Bizarre Adventure
+  - name: Code Geass
+    kind: series
+    category: anime
+    aliases: [コードギアス]
+    wikipedia: Code Geass
+  - name: The Apothecary Diaries
+    kind: series
+    category: anime
+    aliases: [Kusuriya no Hitorigoto, 薬屋のひとりごと]
+    wikipedia: The Apothecary Diaries
+  # ---------- Anime people & studios ----------
+  - name: Eiichiro Oda
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [One Piece]
+    aliases: [尾田栄一郎, Oda Eiichiro]
+    wikipedia: Eiichiro Oda
+  - name: Toei Animation
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [One Piece, Dragon Ball]
+    aliases: [東映アニメーション]
+    wikipedia: Toei Animation
+  - name: Kohei Tanaka
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [One Piece]
+    aliases: [田中公平, Kōhei Tanaka]
+    wikipedia: Kohei Tanaka (composer)
+    match_risk: true
+  - name: Shirō Hamaguchi
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [One Piece]
+    aliases: [浜口史郎, Shiro Hamaguchi]
+    wikipedia: Shirō Hamaguchi
+  - name: Mayumi Tanaka
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece, Dandadan]
+    aliases: [田中真弓]
+    wikipedia: Mayumi Tanaka
+    match_risk: true
+  - name: Kazuya Nakai
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece]
+    aliases: [中井和哉]
+    wikipedia: Kazuya Nakai
+  - name: Akemi Okamura
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece]
+    aliases: [岡村明美]
+    wikipedia: Akemi Okamura
+  - name: Kappei Yamaguchi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece, Death Note]
+    aliases: [山口勝平]
+    wikipedia: Kappei Yamaguchi
+  - name: Hiroaki Hirata
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece]
+    aliases: [平田広明]
+    wikipedia: Hiroaki Hirata
+  - name: Hiroshi Kamiya
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece, Attack on Titan]
+    aliases: [神谷浩史]
+    wikipedia: Hiroshi Kamiya
+  - name: Toshio Furukawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece, Dragon Ball]
+    aliases: [古川登志夫]
+    wikipedia: Toshio Furukawa
+  - name: Christopher Sabat
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One Piece, My Hero Academia, Dragon Ball]
+    aliases: [Chris Sabat]
+    wikipedia: Christopher Sabat
+  - name: Hajime Isayama
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Attack on Titan]
+    aliases: [諫山創, 諌山創, Isayama Hajime]
+    wikipedia: Hajime Isayama
+  - name: Wit Studio
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Attack on Titan, Spy × Family, Vinland Saga]
+    aliases: [ウィットスタジオ]
+    wikipedia: Wit Studio
+  - name: MAPPA
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Attack on Titan, Jujutsu Kaisen, Chainsaw Man, Vinland Saga]
+    wikipedia: MAPPA
+  - name: Tetsurō Araki
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Attack on Titan, Death Note]
+    aliases: [荒木哲郎, Tetsuro Araki]
+    wikipedia: Tetsurō Araki
+  - name: Hiroyuki Sawano
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Attack on Titan, Solo Leveling]
+    aliases: [澤野弘之, SawanoHiroyuki]
+    wikipedia: Hiroyuki Sawano
+  - name: Yuki Kaji
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan, My Hero Academia, Haikyu!!]
+    aliases: [梶裕貴, Yūki Kaji]
+    wikipedia: Yuki Kaji
+  - name: Yui Ishikawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan]
+    aliases: [石川由依]
+    wikipedia: Yui Ishikawa
+  - name: Marina Inoue
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan]
+    aliases: [井上麻里奈]
+    wikipedia: Marina Inoue
+  - name: Romi Park
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan, Fullmetal Alchemist]
+    aliases: [朴璐美, Park Romi]
+    wikipedia: Romi Park
+  - name: Daisuke Ono
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan, JoJo's Bizarre Adventure]
+    aliases: [小野大輔]
+    wikipedia: Daisuke Ono
+  - name: Hiro Shimono
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan, Demon Slayer]
+    aliases: [下野紘]
+    wikipedia: Hiro Shimono
+  - name: Takehito Koyasu
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Attack on Titan, JoJo's Bizarre Adventure]
+    aliases: [子安武人]
+    wikipedia: Takehito Koyasu
+  - name: Koyoharu Gotouge
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Demon Slayer]
+    aliases: [吾峠呼世晴, Gotouge Koyoharu]
+    wikipedia: Koyoharu Gotouge
+  - name: Ufotable
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Demon Slayer]
+    wikipedia: Ufotable
+  - name: Haruo Sotozaki
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Demon Slayer]
+    aliases: [外崎春雄]
+  - name: Yuki Kajiura
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Demon Slayer, Sword Art Online]
+    aliases: [梶浦由記]
+    wikipedia: Yuki Kajiura
+  - name: Go Shiina
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Demon Slayer]
+    aliases: [椎名豪]
+    wikipedia: Go Shiina
+  - name: Natsuki Hanae
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Dandadan, Tokyo Ghoul]
+    aliases: [花江夏樹]
+    wikipedia: Natsuki Hanae
+  - name: Akari Kitō
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer]
+    aliases: [鬼頭明里, Akari Kito]
+    wikipedia: Akari Kitō
+  - name: Yoshitsugu Matsuoka
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Sword Art Online]
+    aliases: [松岡禎丞]
+    wikipedia: Yoshitsugu Matsuoka
+  - name: Satoshi Hino
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer]
+    aliases: [日野聡]
+    wikipedia: Satoshi Hino
+  - name: Kana Hanazawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Tokyo Ghoul, Steins;Gate]
+    aliases: [花澤香菜, 花沢香菜]
+    wikipedia: Kana Hanazawa
+  - name: Saori Hayami
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Spy × Family]
+    aliases: [早見沙織]
+    wikipedia: Saori Hayami
+  - name: Reina Ueda
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Chainsaw Man, Solo Leveling]
+    aliases: [上田麗奈]
+    wikipedia: Reina Ueda
+  - name: Takahiro Sakurai
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Jujutsu Kaisen, Mob Psycho 100, Code Geass]
+    aliases: [櫻井孝宏, 桜井孝宏]
+    wikipedia: Takahiro Sakurai
+  - name: Akira Ishida
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Demon Slayer, Naruto]
+    aliases: [石田彰]
+    wikipedia: Akira Ishida
+  - name: Gege Akutami
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Jujutsu Kaisen]
+    aliases: [芥見下々, Akutami Gege]
+    wikipedia: Gege Akutami
+  - name: Sunghoo Park
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Jujutsu Kaisen]
+    aliases: [朴性厚, 박성후, Park Sung-hoo]
+    wikipedia: Sunghoo Park
+  - name: Shōta Goshozono
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Jujutsu Kaisen]
+    aliases: [御所園翔太, Shota Goshozono]
+  - name: Yoshimasa Terui
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Jujutsu Kaisen]
+    aliases: [照井順政]
+  - name: Junya Enoki
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Jujutsu Kaisen]
+    aliases: [榎木淳弥]
+    wikipedia: Junya Enoki
+  - name: Yuma Uchida
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Jujutsu Kaisen]
+    aliases: [内田雄馬, Yūma Uchida]
+    wikipedia: Yuma Uchida
+  - name: Asami Seto
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Jujutsu Kaisen, Kaiju No. 8]
+    aliases: [瀬戸麻沙美]
+    wikipedia: Asami Seto
+  - name: Yuichi Nakamura
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Jujutsu Kaisen]
+    aliases: [中村悠一, Yūichi Nakamura]
+    wikipedia: Yuichi Nakamura (voice actor)
+    match_risk: true
+  - name: Junichi Suwabe
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Jujutsu Kaisen, Bleach]
+    aliases: [諏訪部順一]
+    wikipedia: Junichi Suwabe
+  - name: Tatsuki Fujimoto
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Chainsaw Man]
+    aliases: [藤本タツキ, Fujimoto Tatsuki]
+    wikipedia: Tatsuki Fujimoto
+  - name: Ryū Nakayama
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Chainsaw Man]
+    aliases: [中山竜, Ryu Nakayama]
+  - name: Tatsuya Yoshihara
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Chainsaw Man]
+    aliases: [吉原達矢]
+  - name: Kensuke Ushio
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Chainsaw Man, Dandadan]
+    aliases: [牛尾憲輔]
+    wikipedia: Kensuke Ushio
+  - name: Kikunosuke Toya
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Chainsaw Man]
+    aliases: [戸谷菊之介]
+    wikipedia: Kikunosuke Toya
+  - name: Tomori Kusunoki
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Chainsaw Man]
+    aliases: [楠木ともり]
+    wikipedia: Tomori Kusunoki
+  - name: Fairouz Ai
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Chainsaw Man, Kaiju No. 8, JoJo's Bizarre Adventure]
+    aliases: [ファイルーズあい]
+    wikipedia: Fairouz Ai
+  - name: Shogo Sakata
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Chainsaw Man, JoJo's Bizarre Adventure]
+    aliases: [坂田将吾, Shōgo Sakata]
+    wikipedia: Shogo Sakata
+  - name: Kanehito Yamada
+    kind: person
+    category: manga
+    roles: [mangaka, writer]
+    works: ["Frieren: Beyond Journey's End"]
+    aliases: [山田鐘人]
+  - name: Tsukasa Abe
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: ["Frieren: Beyond Journey's End"]
+    aliases: [アベツカサ]
+  - name: Madhouse
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: ["Frieren: Beyond Journey's End", Death Note, Hunter × Hunter, One-Punch Man]
+    aliases: [マッドハウス]
+    wikipedia: Madhouse, Inc.
+    match_risk: true
+  - name: Keiichirō Saitō
+    kind: person
+    category: anime
+    roles: [director]
+    works: ["Frieren: Beyond Journey's End"]
+    aliases: [斎藤圭一郎, Keiichiro Saito]
+    wikipedia: Keiichirō Saitō
+  - name: Tomoya Kitagawa
+    kind: person
+    category: anime
+    roles: [director]
+    works: ["Frieren: Beyond Journey's End"]
+  - name: Evan Call
+    kind: person
+    category: anime
+    roles: [composer]
+    works: ["Frieren: Beyond Journey's End"]
+    aliases: [エバン・コール]
+    wikipedia: Evan Call
+  - name: Atsumi Tanezaki
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: ["Frieren: Beyond Journey's End", Spy × Family]
+    aliases: [種﨑敦美, 種崎敦美]
+    wikipedia: Atsumi Tanezaki
+  - name: Kana Ichinose
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: ["Frieren: Beyond Journey's End"]
+    aliases: [市ノ瀬加那]
+    wikipedia: Kana Ichinose
+  - name: Chiaki Kobayashi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: ["Frieren: Beyond Journey's End"]
+    aliases: [小林千晃]
+    wikipedia: Chiaki Kobayashi
+  - name: Nobuhiko Okamoto
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: ["Frieren: Beyond Journey's End", My Hero Academia]
+    aliases: [岡本信彦]
+    wikipedia: Nobuhiko Okamoto
+  - name: Chugong
+    kind: person
+    category: manga
+    roles: [author]
+    works: [Solo Leveling]
+  - name: A-1 Pictures
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Solo Leveling, Sword Art Online]
+    wikipedia: A-1 Pictures
+  - name: Shunsuke Nakashige
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Solo Leveling]
+  - name: Taito Ban
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Solo Leveling]
+    aliases: [坂泰斗]
+    wikipedia: Taito Ban
+  - name: Tatsuya Endo
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Spy × Family]
+    aliases: [遠藤達哉]
+    wikipedia: Tatsuya Endo
+  - name: CloverWorks
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Spy × Family]
+    wikipedia: CloverWorks
+  - name: Kazuhiro Furuhashi
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Spy × Family]
+    aliases: [古橋一浩]
+  - name: Ichirō Ōkouchi
+    kind: person
+    category: anime
+    roles: [creator, writer]
+    works: [Spy × Family, Code Geass]
+    aliases: [大河内一楼, Ichiro Okouchi]
+    wikipedia: Ichirō Ōkouchi
+  - name: Takuya Eguchi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Spy × Family]
+    aliases: [江口拓也]
+    wikipedia: Takuya Eguchi
+  - name: Yukinobu Tatsu
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Dandadan]
+    aliases: [龍幸伸]
+    wikipedia: Yukinobu Tatsu
+  - name: Science Saru
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Dandadan]
+    aliases: [サイエンスSARU]
+    wikipedia: Science Saru
+  - name: Fūga Yamashiro
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Dandadan]
+    aliases: [山代風我, Fuga Yamashiro]
+  - name: Shion Wakayama
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Dandadan]
+    aliases: [若山詩音]
+    wikipedia: Shion Wakayama
+  - name: Ayane Sakura
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Dandadan, My Hero Academia]
+    aliases: [佐倉綾音]
+    wikipedia: Ayane Sakura
+  - name: Kaito Ishikawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Dandadan, My Hero Academia, One-Punch Man, Haikyu!!]
+    aliases: [石川界人]
+    wikipedia: Kaito Ishikawa
+  - name: Aka Akasaka
+    kind: person
+    category: manga
+    roles: [mangaka, writer]
+    works: [Oshi no Ko]
+    aliases: [赤坂アカ]
+    wikipedia: Aka Akasaka
+  - name: Mengo Yokoyari
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Oshi no Ko]
+    aliases: [横槍メンゴ]
+    wikipedia: Mengo Yokoyari
+  - name: Doga Kobo
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Oshi no Ko]
+    aliases: [動画工房]
+    wikipedia: Doga Kobo
+  - name: Daisuke Hiramaki
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Oshi no Ko]
+    aliases: [平牧大輔]
+  - name: Rie Takahashi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Oshi no Ko, Re:Zero]
+    aliases: [高橋李依]
+    wikipedia: Rie Takahashi
+  - name: Takeo Ōtsuka
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Oshi no Ko, The Apothecary Diaries]
+    aliases: [大塚剛央, Takeo Otsuka]
+    wikipedia: Takeo Ōtsuka (voice actor)
+  - name: Yurie Igoma
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Oshi no Ko]
+    aliases: [伊駒ゆりえ]
+    wikipedia: Yurie Igoma
+  - name: Megumi Han
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Oshi no Ko, Hunter × Hunter]
+    aliases: [潘めぐみ]
+    wikipedia: Megumi Han
+  - name: Naoya Matsumoto
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Kaiju No. 8]
+    aliases: [松本直也]
+    wikipedia: Naoya Matsumoto (manga artist)
+  - name: Production I.G
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Kaiju No. 8, Haikyu!!]
+    aliases: [Production IG, プロダクション・アイジー]
+    wikipedia: Production I.G
+  - name: Masaya Fukunishi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Kaiju No. 8]
+    aliases: [福西勝也]
+    wikipedia: Masaya Fukunishi
+  - name: Kōhei Horikoshi
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [My Hero Academia]
+    aliases: [堀越耕平, Kohei Horikoshi]
+    wikipedia: Kōhei Horikoshi
+  - name: Studio Bones
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [My Hero Academia, Fullmetal Alchemist, Mob Psycho 100]
+    aliases: [ボンズ]
+    wikipedia: Bones (studio)
+    match_risk: true
+  - name: Kenji Nagasaki
+    kind: person
+    category: anime
+    roles: [director]
+    works: [My Hero Academia]
+    aliases: [長崎健司]
+    wikipedia: Kenji Nagasaki
+  - name: Yuki Hayashi
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [My Hero Academia, Haikyu!!]
+    aliases: [林ゆうき]
+    wikipedia: Yuki Hayashi (composer)
+    match_risk: true
+  - name: Daiki Yamashita
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [My Hero Academia]
+    aliases: [山下大輝]
+    wikipedia: Daiki Yamashita
+  - name: Kenta Miyake
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [My Hero Academia]
+    aliases: [三宅健太]
+    wikipedia: Kenta Miyake
+  - name: Aoi Yūki
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [My Hero Academia, The Apothecary Diaries]
+    aliases: [悠木碧, Aoi Yuki]
+    wikipedia: Aoi Yūki
+  - name: Masashi Kishimoto
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Naruto]
+    aliases: [岸本斉史, Kishimoto Masashi]
+    wikipedia: Masashi Kishimoto
+  - name: Studio Pierrot
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Naruto, Bleach, Tokyo Ghoul]
+    aliases: [ぴえろ]
+    wikipedia: Studio Pierrot
+  - name: Hayato Date
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Naruto]
+    aliases: [伊達勇登]
+  - name: Yasuharu Takanashi
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Naruto]
+    aliases: [高梨康治]
+  - name: Junko Takeuchi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Naruto]
+    aliases: [竹内順子]
+    wikipedia: Junko Takeuchi
+  - name: Noriaki Sugiyama
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Naruto, Bleach]
+    aliases: [杉山紀彰]
+    wikipedia: Noriaki Sugiyama
+  - name: Chie Nakamura
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Naruto]
+    aliases: [中村千絵]
+    wikipedia: Chie Nakamura
+  - name: Kazuhiko Inoue
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Naruto]
+    aliases: [井上和彦]
+    wikipedia: Kazuhiko Inoue
+  - name: Tsugumi Ohba
+    kind: person
+    category: manga
+    roles: [mangaka, writer]
+    works: [Death Note]
+    aliases: [大場つぐみ, Tsugumi Ōba]
+    wikipedia: Tsugumi Ohba
+  - name: Takeshi Obata
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Death Note]
+    aliases: [小畑健]
+    wikipedia: Takeshi Obata
+  - name: Yoshihisa Hirano
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Death Note, Hunter × Hunter]
+    aliases: [平野義久]
+    wikipedia: Yoshihisa Hirano
+  - name: Mamoru Miyano
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Death Note, Tokyo Ghoul, Steins;Gate]
+    aliases: [宮野真守]
+    wikipedia: Mamoru Miyano
+  - name: Shidō Nakamura
+    kind: person
+    category: anime
+    roles: [voice_actor, actor]
+    works: [Death Note]
+    aliases: [中村獅童, Shido Nakamura, Shidou Nakamura, Nakamura Shidō]
+    wikipedia: Nakamura Shidō II
+  - name: Aya Hirano
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Death Note]
+    aliases: [平野綾]
+    wikipedia: Aya Hirano
+  - name: Hiromu Arakawa
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Fullmetal Alchemist]
+    aliases: [荒川弘]
+    wikipedia: Hiromu Arakawa
+  - name: Yasuhiro Irie
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Fullmetal Alchemist]
+    aliases: [入江泰浩]
+    wikipedia: Yasuhiro Irie
+  - name: Akira Senju
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Fullmetal Alchemist]
+    aliases: [千住明]
+    wikipedia: Akira Senju
+  - name: Michiru Ōshima
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Fullmetal Alchemist]
+    aliases: [大島ミチル, Michiru Oshima]
+    wikipedia: Michiru Ōshima
+  - name: Rie Kugimiya
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Fullmetal Alchemist]
+    aliases: [釘宮理恵]
+    wikipedia: Rie Kugimiya
+  - name: Shin-ichiro Miki
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Fullmetal Alchemist, Bleach]
+    aliases: [三木眞一郎, 三木真一郎, Shinichiro Miki]
+    wikipedia: Shin-ichiro Miki
+  - name: Yoshihiro Togashi
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Hunter × Hunter]
+    aliases: [冨樫義博, 富樫義博]
+    wikipedia: Yoshihiro Togashi
+  - name: Mariya Ise
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Hunter × Hunter]
+    aliases: [伊瀬茉莉也]
+    wikipedia: Mariya Ise
+  - name: Miyuki Sawashiro
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Hunter × Hunter, Sword Art Online]
+    aliases: [沢城みゆき]
+    wikipedia: Miyuki Sawashiro
+  - name: Daisuke Namikawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Hunter × Hunter]
+    aliases: [浪川大輔]
+    wikipedia: Daisuke Namikawa
+  - name: ONE (manga artist)
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [One-Punch Man, Mob Psycho 100]
+    wikipedia: One (manga artist)
+    match_risk: true
+  - name: Yusuke Murata
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [One-Punch Man]
+    aliases: [村田雄介]
+    wikipedia: Yusuke Murata
+  - name: J.C.Staff
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [One-Punch Man]
+    aliases: [J.C. Staff, ジェー・シー・スタッフ]
+    wikipedia: J.C.Staff
+  - name: Shingo Natsume
+    kind: person
+    category: anime
+    roles: [director]
+    works: [One-Punch Man]
+    aliases: [夏目真悟]
+  - name: Makoto Furukawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [One-Punch Man]
+    aliases: [古川慎]
+    wikipedia: Makoto Furukawa
+  - name: Masako Nozawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Dragon Ball]
+    aliases: [野沢雅子]
+    wikipedia: Masako Nozawa
+  - name: Ryō Horikawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Dragon Ball]
+    aliases: [堀川りょう, Ryo Horikawa]
+  - name: Tite Kubo
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Bleach]
+    aliases: [久保帯人]
+    wikipedia: Tite Kubo
+  - name: Noriyuki Abe
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Bleach]
+    aliases: [阿部記之]
+  - name: Tomohisa Taguchi
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Bleach]
+    aliases: [田口智久]
+  - name: Shirō Sagisu
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Bleach, Neon Genesis Evangelion]
+    aliases: [鷺巣詩郎, Shiro Sagisu]
+    wikipedia: Shirō Sagisu
+  - name: Masakazu Morita
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Bleach]
+    aliases: [森田成一]
+    wikipedia: Masakazu Morita
+  - name: Fumiko Orikasa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Bleach]
+    aliases: [折笠富美子]
+    wikipedia: Fumiko Orikasa
+  - name: Johnny Yong Bosch
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Bleach, Code Geass]
+    wikipedia: Johnny Yong Bosch
+  - name: Reki Kawahara
+    kind: person
+    category: manga
+    roles: [author]
+    works: [Sword Art Online]
+    aliases: [川原礫]
+    wikipedia: Reki Kawahara
+  - name: Tomohiko Itō
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Sword Art Online]
+    aliases: [伊藤智彦, Tomohiko Ito]
+    wikipedia: Tomohiko Itō (director)
+  - name: Haruka Tomatsu
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Sword Art Online]
+    aliases: [戸松遥]
+    wikipedia: Haruka Tomatsu
+  - name: Ayana Taketatsu
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Sword Art Online]
+    aliases: [竹達彩奈]
+    wikipedia: Ayana Taketatsu
+  - name: Sui Ishida
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Tokyo Ghoul]
+    aliases: [石田スイ]
+    wikipedia: Sui Ishida
+  - name: Shuhei Morita
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Tokyo Ghoul]
+    aliases: [森田修平]
+    wikipedia: Shuhei Morita
+  - name: Yutaka Yamada
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Tokyo Ghoul, Vinland Saga]
+    aliases: [やまだ豊]
+    wikipedia: Yutaka Yamada
+    match_risk: true
+  - name: Sora Amamiya
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Tokyo Ghoul]
+    aliases: [雨宮天]
+    wikipedia: Sora Amamiya
+  - name: Chiyomaru Shikura
+    kind: person
+    category: anime
+    roles: [creator, composer]
+    works: [Steins;Gate]
+    aliases: [志倉千代丸]
+    wikipedia: Chiyomaru Shikura
+  - name: White Fox
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Steins;Gate, Re:Zero]
+    aliases: [ホワイトフォックス]
+    wikipedia: White Fox
+    match_risk: true
+  - name: Takeshi Abo
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Steins;Gate]
+    aliases: [阿保剛]
+  - name: Asami Imai
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Steins;Gate]
+    aliases: [今井麻美]
+    wikipedia: Asami Imai
+  - name: Tomokazu Seki
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Steins;Gate]
+    aliases: [関智一]
+    wikipedia: Tomokazu Seki
+  - name: Tappei Nagatsuki
+    kind: person
+    category: manga
+    roles: [author]
+    works: [Re:Zero]
+    aliases: [長月達平]
+    wikipedia: Tappei Nagatsuki
+  - name: Yūsuke Kobayashi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Re:Zero]
+    aliases: [小林裕介, Yusuke Kobayashi]
+    wikipedia: Yūsuke Kobayashi (voice actor)
+    match_risk: true
+  - name: Inori Minase
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Re:Zero]
+    aliases: [水瀬いのり]
+    wikipedia: Inori Minase
+  - name: Rie Murakawa
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Re:Zero]
+    aliases: [村川梨衣]
+    wikipedia: Rie Murakawa
+  - name: Haruichi Furudate
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Haikyu!!]
+    aliases: [古舘春一]
+    wikipedia: Haruichi Furudate
+  - name: Ayumu Murase
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Haikyu!!]
+    aliases: [村瀬歩]
+    wikipedia: Ayumu Murase
+  - name: Yuzuru Tachikawa
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Mob Psycho 100]
+    aliases: [立川譲]
+    wikipedia: Yuzuru Tachikawa
+  - name: Kenji Kawai
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [Mob Psycho 100]
+    aliases: [川井憲次]
+    wikipedia: Kenji Kawai
+  - name: Setsuo Itō
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Mob Psycho 100]
+    aliases: [伊藤節生, Setsuo Ito]
+    wikipedia: Setsuo Itō
+  - name: Makoto Yukimura
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Vinland Saga]
+    aliases: [幸村誠]
+    wikipedia: Makoto Yukimura
+  - name: Shūhei Yabuta
+    kind: person
+    category: anime
+    roles: [director]
+    works: [Vinland Saga]
+    aliases: [籔田修平, Shuhei Yabuta]
+  - name: Yūto Uemura
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Vinland Saga]
+    aliases: [上村祐翔, Yuto Uemura]
+    wikipedia: Yūto Uemura
+  - name: Kensho Ono
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Vinland Saga, JoJo's Bizarre Adventure]
+    aliases: [小野賢章, Kenshō Ono]
+    wikipedia: Kensho Ono
+  - name: Hideaki Anno
+    kind: person
+    category: anime
+    roles: [creator, director]
+    works: [Neon Genesis Evangelion]
+    aliases: [庵野秀明]
+    wikipedia: Hideaki Anno
+  - name: Yoshiyuki Sadamoto
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [Neon Genesis Evangelion]
+    aliases: [貞本義行]
+    wikipedia: Yoshiyuki Sadamoto
+  - name: Studio Khara
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [Neon Genesis Evangelion]
+    aliases: [Khara Inc., スタジオカラー]
+    wikipedia: Khara (studio)
+  - name: Megumi Ogata
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Neon Genesis Evangelion]
+    aliases: [緒方恵美]
+    wikipedia: Megumi Ogata
+  - name: Megumi Hayashibara
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Neon Genesis Evangelion]
+    aliases: [林原めぐみ]
+    wikipedia: Megumi Hayashibara
+  - name: Yūko Miyamura
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Neon Genesis Evangelion]
+    aliases: [宮村優子, Yuko Miyamura]
+    wikipedia: Yūko Miyamura
+  - name: Kotono Mitsuishi
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Neon Genesis Evangelion]
+    aliases: [三石琴乃]
+    wikipedia: Kotono Mitsuishi
+  - name: Hirohiko Araki
+    kind: person
+    category: manga
+    roles: [mangaka]
+    works: [JoJo's Bizarre Adventure]
+    aliases: [荒木飛呂彦]
+    wikipedia: Hirohiko Araki
+  - name: David Production
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [JoJo's Bizarre Adventure]
+    aliases: [デイヴィッドプロダクション]
+    wikipedia: David Production
+  - name: Yugo Kanno
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [JoJo's Bizarre Adventure]
+    aliases: [菅野祐悟]
+    wikipedia: Yugo Kanno
+  - name: Tomokazu Sugita
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [JoJo's Bizarre Adventure]
+    aliases: [杉田智和]
+    wikipedia: Tomokazu Sugita
+  - name: Gorō Taniguchi
+    kind: person
+    category: anime
+    roles: [creator, director]
+    works: [Code Geass]
+    aliases: [谷口悟朗, Goro Taniguchi]
+  - name: Jun Fukuyama
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Code Geass]
+    aliases: [福山潤]
+    wikipedia: Jun Fukuyama
+  - name: Yukana
+    kind: person
+    category: anime
+    roles: [voice_actor]
+    works: [Code Geass]
+    aliases: [ゆかな]
+    wikipedia: Yukana
+  - name: Hyūganatsu
+    kind: person
+    category: manga
+    roles: [author]
+    works: [The Apothecary Diaries]
+    aliases: [日向夏, Natsu Hyūga, Hyuganatsu]
+    match_risk: true
+  - name: Toho Animation Studio
+    kind: studio
+    category: anime
+    roles: [studio]
+    works: [The Apothecary Diaries]
+    wikipedia: Toho Animation Studio
+  - name: Satoru Kōsaki
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [The Apothecary Diaries]
+    aliases: [神前暁, Satoru Kosaki]
+    wikipedia: Satoru Kōsaki
+  - name: Kevin Penkin
+    kind: person
+    category: anime
+    roles: [composer]
+    works: [The Apothecary Diaries]
+    aliases: [ケビン・ペンキン]
+    wikipedia: Kevin Penkin
+  # ---------- TV series ----------
+  - name: Breaking Bad
+    kind: series
+    category: tv
+    aliases: [ブレイキング・バッド]
+    wikipedia: Breaking Bad
+  - name: Better Call Saul
+    kind: series
+    category: tv
+    aliases: [ベター・コール・ソウル]
+    wikipedia: Better Call Saul
+  - name: Game of Thrones
+    kind: series
+    category: tv
+    aliases: [ゲーム・オブ・スローンズ]
+    wikipedia: Game of Thrones
+  - name: House of the Dragon
+    kind: series
+    category: tv
+    aliases: [ハウス・オブ・ザ・ドラゴン]
+    wikipedia: House of the Dragon
+  - name: Stranger Things
+    kind: series
+    category: tv
+    aliases: [ストレンジャー・シングス]
+    wikipedia: Stranger Things
+    match_risk: true
+  - name: The Last of Us
+    kind: series
+    category: tv
+    wikipedia: The Last of Us (TV series)
+  - name: The Bear
+    kind: series
+    category: tv
+    wikipedia: The Bear (TV series)
+    match_risk: true
+  - name: Wednesday
+    kind: series
+    category: tv
+    aliases: [ウェンズデー]
+    wikipedia: Wednesday (TV series)
+    match_risk: true
+  - name: Squid Game
+    kind: series
+    category: tv
+    aliases: [오징어 게임, イカゲーム]
+    wikipedia: Squid Game
+  - name: Severance
+    kind: series
+    category: tv
+    wikipedia: Severance (TV series)
+    match_risk: true
+  - name: The Boys
+    kind: series
+    category: tv
+    aliases: [ザ・ボーイズ]
+    wikipedia: The Boys (TV series)
+    match_risk: true
+  - name: Euphoria
+    kind: series
+    category: tv
+    wikipedia: Euphoria (American TV series)
+    match_risk: true
+  - name: The White Lotus
+    kind: series
+    category: tv
+    aliases: [ホワイト・ロータス]
+    wikipedia: The White Lotus
+  - name: Friends
+    kind: series
+    category: tv
+    wikipedia: Friends
+    match_risk: true
+  - name: The Office
+    kind: series
+    category: tv
+    wikipedia: The Office (American TV series)
+    match_risk: true
+  - name: Succession
+    kind: series
+    category: tv
+    wikipedia: Succession (TV series)
+    match_risk: true
+  - name: The Sopranos
+    kind: series
+    category: tv
+    wikipedia: The Sopranos
+  - name: Peaky Blinders
+    kind: series
+    category: tv
+    aliases: [ピーキー・ブラインダーズ]
+    wikipedia: Peaky Blinders (TV series)
+  - name: The Mandalorian
+    kind: series
+    category: tv
+    aliases: [マンダロリアン]
+    wikipedia: The Mandalorian
+  - name: Shōgun
+    kind: series
+    category: tv
+    aliases: [Shogun, SHOGUN 将軍]
+    wikipedia: Shōgun (2024 TV series)
+    match_risk: true
+  - name: Fallout
+    kind: series
+    category: tv
+    wikipedia: Fallout (American TV series)
+    match_risk: true
+  - name: The Walking Dead
+    kind: series
+    category: tv
+    aliases: [ウォーキング・デッド]
+    wikipedia: The Walking Dead (TV series)
+  - name: The Crown
+    kind: series
+    category: tv
+    wikipedia: The Crown (TV series)
+    match_risk: true
+  - name: Ted Lasso
+    kind: series
+    category: tv
+    aliases: [テッド・ラッソ]
+    wikipedia: Ted Lasso
+  - name: Yellowstone
+    kind: series
+    category: tv
+    wikipedia: Yellowstone (American TV series)
+    match_risk: true
+  - name: The Big Bang Theory
+    kind: series
+    category: tv
+    aliases: [ビッグバン★セオリー]
+    wikipedia: The Big Bang Theory
+    match_risk: true
+  - name: Black Mirror
+    kind: series
+    category: tv
+    aliases: [ブラック・ミラー]
+    wikipedia: Black Mirror
+  - name: The Pitt
+    kind: series
+    category: tv
+    wikipedia: The Pitt
+    match_risk: true
+  - name: Bridgerton
+    kind: series
+    category: tv
+    aliases: [ブリジャートン]
+    wikipedia: Bridgerton
+  - name: Sherlock
+    kind: series
+    category: tv
+    wikipedia: Sherlock (TV series)
+    match_risk: true
+  # ---------- TV people ----------
+  - name: Vince Gilligan
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Breaking Bad, Better Call Saul]
+    wikipedia: Vince Gilligan
+  - name: Bryan Cranston
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad]
+    wikipedia: Bryan Cranston
+  - name: Aaron Paul
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad, Black Mirror]
+    wikipedia: Aaron Paul
+  - name: Anna Gunn
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad]
+    wikipedia: Anna Gunn
+  - name: Bob Odenkirk
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad, Better Call Saul]
+    wikipedia: Bob Odenkirk
+  - name: Giancarlo Esposito
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad, Better Call Saul, The Boys, The Mandalorian]
+    wikipedia: Giancarlo Esposito
+  - name: Dean Norris
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad]
+    wikipedia: Dean Norris
+  - name: Jonathan Banks
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad, Better Call Saul]
+    wikipedia: Jonathan Banks
+  - name: Jesse Plemons
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Breaking Bad, Black Mirror]
+    wikipedia: Jesse Plemons
+  - name: Dave Porter
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Breaking Bad, Better Call Saul]
+    wikipedia: Dave Porter (composer)
+  - name: Peter Gould
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Better Call Saul]
+    wikipedia: Peter Gould
+  - name: Rhea Seehorn
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Better Call Saul]
+    wikipedia: Rhea Seehorn
+  - name: David Benioff
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Game of Thrones]
+    wikipedia: David Benioff
+  - name: D. B. Weiss
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Game of Thrones]
+    aliases: [D.B. Weiss, DB Weiss]
+    wikipedia: D. B. Weiss
+  - name: George R. R. Martin
+    kind: person
+    category: celebrity
+    roles: [author, creator]
+    works: [Game of Thrones, House of the Dragon]
+    aliases: [George R.R. Martin, George RR Martin]
+    wikipedia: George R. R. Martin
+  - name: Emilia Clarke
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones]
+    wikipedia: Emilia Clarke
+  - name: Kit Harington
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones]
+    wikipedia: Kit Harington
+  - name: Peter Dinklage
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones]
+    wikipedia: Peter Dinklage
+  - name: Lena Headey
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones]
+    wikipedia: Lena Headey
+  - name: Sophie Turner
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones]
+    wikipedia: Sophie Turner
+  - name: Maisie Williams
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones]
+    wikipedia: Maisie Williams
+  - name: Gwendoline Christie
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones, Wednesday]
+    wikipedia: Gwendoline Christie
+  - name: Pedro Pascal
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones, The Last of Us, The Mandalorian]
+    wikipedia: Pedro Pascal
+  - name: Bella Ramsey
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Game of Thrones, The Last of Us]
+    wikipedia: Bella Ramsey
+  - name: Ramin Djawadi
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Game of Thrones, House of the Dragon, Fallout]
+    wikipedia: Ramin Djawadi
+  - name: Ryan Condal
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [House of the Dragon]
+    wikipedia: Ryan Condal
+  - name: Matt Smith
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [House of the Dragon, The Crown]
+    wikipedia: Matt Smith
+    match_risk: true
+  - name: Emma D'Arcy
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [House of the Dragon]
+    wikipedia: Emma D'Arcy
+  - name: Olivia Cooke
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [House of the Dragon]
+    wikipedia: Olivia Cooke
+  - name: Paddy Considine
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [House of the Dragon]
+    wikipedia: Paddy Considine
+  - name: The Duffer Brothers
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Stranger Things]
+    aliases: [Duffer Brothers, Matt Duffer, Ross Duffer]
+    wikipedia: The Duffer Brothers
+  - name: Millie Bobby Brown
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Stranger Things]
+    wikipedia: Millie Bobby Brown
+  - name: Winona Ryder
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Stranger Things]
+    wikipedia: Winona Ryder
+  - name: David Harbour
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Stranger Things]
+    wikipedia: David Harbour
+  - name: Finn Wolfhard
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Stranger Things]
+    wikipedia: Finn Wolfhard
+  - name: Sadie Sink
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Stranger Things]
+    wikipedia: Sadie Sink
+  - name: Craig Mazin
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Last of Us]
+    wikipedia: Craig Mazin
+  - name: Neil Druckmann
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [The Last of Us]
+    wikipedia: Neil Druckmann
+  - name: Kaitlyn Dever
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Last of Us]
+    wikipedia: Kaitlyn Dever
+  - name: Gustavo Santaolalla
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [The Last of Us]
+    wikipedia: Gustavo Santaolalla
+  - name: Christopher Storer
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Bear]
+    wikipedia: Christopher Storer
+  - name: Jeremy Allen White
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Bear]
+    wikipedia: Jeremy Allen White
+  - name: Ayo Edebiri
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Bear]
+    wikipedia: Ayo Edebiri
+  - name: Ebon Moss-Bachrach
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Bear]
+    wikipedia: Ebon Moss-Bachrach
+  - name: Alfred Gough
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Wednesday]
+    wikipedia: Alfred Gough
+  - name: Miles Millar
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Wednesday]
+    wikipedia: Miles Millar
+  - name: Tim Burton
+    kind: person
+    category: celebrity
+    roles: [director]
+    works: [Wednesday]
+    wikipedia: Tim Burton
+  - name: Jenna Ortega
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Wednesday]
+    wikipedia: Jenna Ortega
+  - name: Catherine Zeta-Jones
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Wednesday]
+    aliases: [Catherine Zeta Jones]
+    wikipedia: Catherine Zeta-Jones
+  - name: Emma Myers
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Wednesday]
+    wikipedia: Emma Myers
+  - name: Danny Elfman
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Wednesday]
+    wikipedia: Danny Elfman
+  - name: Hwang Dong-hyuk
+    kind: person
+    category: celebrity
+    roles: [creator, director]
+    works: [Squid Game]
+    aliases: [황동혁]
+    wikipedia: Hwang Dong-hyuk
+  - name: Lee Jung-jae
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Squid Game]
+    aliases: [이정재]
+    wikipedia: Lee Jung-jae
+  - name: Lee Byung-hun
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Squid Game]
+    aliases: [이병헌]
+    wikipedia: Lee Byung-hun
+  - name: Wi Ha-joon
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Squid Game]
+    aliases: [위하준]
+    wikipedia: Wi Ha-joon
+  - name: Jung Ho-yeon
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Squid Game]
+    aliases: [정호연, HoYeon Jung]
+    wikipedia: Jung Ho-yeon
+  - name: Jung Jae-il
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Squid Game]
+    aliases: [정재일]
+    wikipedia: Jung Jae-il
+  - name: Dan Erickson
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Severance]
+    wikipedia: Dan Erickson
+    match_risk: true
+  - name: Ben Stiller
+    kind: person
+    category: celebrity
+    roles: [director]
+    works: [Severance]
+    wikipedia: Ben Stiller
+  - name: Adam Scott
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Severance]
+    wikipedia: Adam Scott
+    match_risk: true
+  - name: Britt Lower
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Severance]
+    wikipedia: Britt Lower
+  - name: Patricia Arquette
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Severance]
+    wikipedia: Patricia Arquette
+  - name: John Turturro
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Severance]
+    wikipedia: John Turturro
+  - name: Christopher Walken
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Severance]
+    wikipedia: Christopher Walken
+  - name: Tramell Tillman
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Severance]
+    wikipedia: Tramell Tillman
+  - name: Theodore Shapiro
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Severance]
+    wikipedia: Theodore Shapiro
+  - name: Eric Kripke
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Boys]
+    wikipedia: Eric Kripke
+  - name: Karl Urban
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Boys]
+    wikipedia: Karl Urban
+  - name: Antony Starr
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Boys]
+    wikipedia: Antony Starr
+  - name: Jack Quaid
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Boys]
+    wikipedia: Jack Quaid
+  - name: Erin Moriarty
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Boys]
+    wikipedia: Erin Moriarty (actress)
+  - name: Jeffrey Dean Morgan
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Boys, The Walking Dead]
+    wikipedia: Jeffrey Dean Morgan
+  - name: Sam Levinson
+    kind: person
+    category: celebrity
+    roles: [creator, writer]
+    works: [Euphoria]
+    wikipedia: Sam Levinson
+  - name: Zendaya
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Euphoria]
+    wikipedia: Zendaya
+  - name: Hunter Schafer
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Euphoria]
+    wikipedia: Hunter Schafer
+  - name: Jacob Elordi
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Euphoria]
+    wikipedia: Jacob Elordi
+  - name: Sydney Sweeney
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Euphoria, The White Lotus]
+    wikipedia: Sydney Sweeney
+  - name: Labrinth
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Euphoria]
+    wikipedia: Labrinth
+  - name: Mike White
+    kind: person
+    category: celebrity
+    roles: [creator, director, writer]
+    works: [The White Lotus]
+    wikipedia: Mike White (filmmaker)
+    match_risk: true
+  - name: Jennifer Coolidge
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The White Lotus]
+    wikipedia: Jennifer Coolidge
+  - name: Michael Imperioli
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The White Lotus, The Sopranos]
+    wikipedia: Michael Imperioli
+  - name: Aimee Lou Wood
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The White Lotus]
+    wikipedia: Aimee Lou Wood
+  - name: Walton Goggins
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The White Lotus, Fallout]
+    wikipedia: Walton Goggins
+  - name: Parker Posey
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The White Lotus]
+    wikipedia: Parker Posey
+  - name: Lalisa Manobal
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The White Lotus]
+    aliases: [Lisa Manobal, Blackpink's Lisa, BLACKPINK Lisa, Lisa of Blackpink]
+    wikipedia: Lisa (rapper)
+  - name: Cristobal Tapia de Veer
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [The White Lotus]
+    aliases: [Cristóbal Tapia de Veer]
+    wikipedia: Cristobal Tapia de Veer
+  - name: Marta Kauffman
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [Friends]
+    wikipedia: Marta Kauffman
+  - name: David Crane
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [Friends]
+    match_risk: true
+  - name: Jennifer Aniston
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Friends]
+    wikipedia: Jennifer Aniston
+  - name: Courteney Cox
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Friends]
+    wikipedia: Courteney Cox
+  - name: Lisa Kudrow
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Friends]
+    wikipedia: Lisa Kudrow
+  - name: Matt LeBlanc
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Friends]
+    wikipedia: Matt LeBlanc
+  - name: David Schwimmer
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Friends]
+    wikipedia: David Schwimmer
+  - name: Greg Daniels
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Office]
+    wikipedia: Greg Daniels
+  - name: Ricky Gervais
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [The Office]
+    wikipedia: Ricky Gervais
+  - name: Steve Carell
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Office]
+    wikipedia: Steve Carell
+  - name: Rainn Wilson
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Office]
+    wikipedia: Rainn Wilson
+  - name: John Krasinski
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Office]
+    wikipedia: John Krasinski
+  - name: Jenna Fischer
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Office]
+    wikipedia: Jenna Fischer
+  - name: Jesse Armstrong
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Succession]
+    wikipedia: Jesse Armstrong
+  - name: Brian Cox
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Succession]
+    wikipedia: Brian Cox (actor)
+    match_risk: true
+  - name: Jeremy Strong
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Succession]
+    wikipedia: Jeremy Strong
+  - name: Sarah Snook
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Succession]
+    wikipedia: Sarah Snook
+  - name: Kieran Culkin
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Succession]
+    wikipedia: Kieran Culkin
+  - name: Matthew Macfadyen
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Succession]
+    wikipedia: Matthew Macfadyen
+  - name: Nicholas Britell
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Succession]
+    wikipedia: Nicholas Britell
+  - name: David Chase
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Sopranos]
+    wikipedia: David Chase
+  - name: Edie Falco
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Sopranos]
+    wikipedia: Edie Falco
+  - name: Lorraine Bracco
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Sopranos]
+    wikipedia: Lorraine Bracco
+  - name: Steven Van Zandt
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Sopranos]
+    aliases: [Little Steven]
+    wikipedia: Steven Van Zandt
+  - name: Steven Knight
+    kind: person
+    category: celebrity
+    roles: [creator, writer]
+    works: [Peaky Blinders]
+    wikipedia: Steven Knight
+  - name: Cillian Murphy
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Peaky Blinders]
+    wikipedia: Cillian Murphy
+  - name: Tom Hardy
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Peaky Blinders]
+    wikipedia: Tom Hardy
+  - name: Paul Anderson
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Peaky Blinders]
+    match_risk: true
+  - name: Anya Taylor-Joy
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Peaky Blinders]
+    wikipedia: Anya Taylor-Joy
+  - name: Jon Favreau
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Mandalorian]
+    wikipedia: Jon Favreau
+  - name: Dave Filoni
+    kind: person
+    category: celebrity
+    roles: [director, writer]
+    works: [The Mandalorian]
+    wikipedia: Dave Filoni
+  - name: Ludwig Göransson
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [The Mandalorian]
+    aliases: [Ludwig Goransson]
+    wikipedia: Ludwig Göransson
+  - name: Rachel Kondo
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [Shōgun]
+    wikipedia: Rachel Kondo
+  - name: Justin Marks
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Shōgun]
+    wikipedia: Justin Marks (writer)
+  - name: Hiroyuki Sanada
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Shōgun]
+    aliases: [真田広之]
+    wikipedia: Hiroyuki Sanada
+  - name: Anna Sawai
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Shōgun]
+    aliases: [アンナ・サワイ]
+    wikipedia: Anna Sawai
+  - name: Cosmo Jarvis
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Shōgun]
+    wikipedia: Cosmo Jarvis
+  - name: Tadanobu Asano
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Shōgun]
+    aliases: [浅野忠信]
+    wikipedia: Tadanobu Asano
+  - name: Atticus Ross
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Shōgun]
+    wikipedia: Atticus Ross
+  - name: Geneva Robertson-Dworet
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Fallout]
+  - name: Graham Wagner
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Fallout]
+  - name: Jonathan Nolan
+    kind: person
+    category: celebrity
+    roles: [director]
+    works: [Fallout]
+    wikipedia: Jonathan Nolan
+  - name: Ella Purnell
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Fallout]
+    wikipedia: Ella Purnell
+  - name: Aaron Moten
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Fallout]
+  - name: Kyle MacLachlan
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Fallout]
+    wikipedia: Kyle MacLachlan
+  - name: Robert Kirkman
+    kind: person
+    category: celebrity
+    roles: [creator, writer]
+    works: [The Walking Dead]
+    wikipedia: Robert Kirkman
+  - name: Frank Darabont
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Walking Dead]
+    wikipedia: Frank Darabont
+  - name: Andrew Lincoln
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Walking Dead]
+    wikipedia: Andrew Lincoln
+  - name: Norman Reedus
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Walking Dead]
+    wikipedia: Norman Reedus
+  - name: Danai Gurira
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Walking Dead]
+    wikipedia: Danai Gurira
+  - name: Lauren Cohan
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Walking Dead]
+    wikipedia: Lauren Cohan
+  - name: Bear McCreary
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [The Walking Dead]
+    wikipedia: Bear McCreary
+  - name: Peter Morgan
+    kind: person
+    category: celebrity
+    roles: [creator, writer]
+    works: [The Crown]
+    wikipedia: Peter Morgan
+    match_risk: true
+  - name: Claire Foy
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Crown]
+    wikipedia: Claire Foy
+  - name: Olivia Colman
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Crown]
+    wikipedia: Olivia Colman
+  - name: Imelda Staunton
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Crown]
+    wikipedia: Imelda Staunton
+  - name: Elizabeth Debicki
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Crown]
+    wikipedia: Elizabeth Debicki
+  - name: Vanessa Kirby
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Crown]
+    wikipedia: Vanessa Kirby
+  - name: Hans Zimmer
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [The Crown]
+    wikipedia: Hans Zimmer
+  - name: Jason Sudeikis
+    kind: person
+    category: celebrity
+    roles: [creator, actor]
+    works: [Ted Lasso]
+    wikipedia: Jason Sudeikis
+  - name: Bill Lawrence
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [Ted Lasso]
+    wikipedia: Bill Lawrence (TV producer)
+    match_risk: true
+  - name: Brendan Hunt
+    kind: person
+    category: celebrity
+    roles: [creator, actor]
+    works: [Ted Lasso]
+    wikipedia: Brendan Hunt
+  - name: Hannah Waddingham
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Ted Lasso]
+    wikipedia: Hannah Waddingham
+  - name: Brett Goldstein
+    kind: person
+    category: celebrity
+    roles: [actor, writer]
+    works: [Ted Lasso]
+    wikipedia: Brett Goldstein
+  - name: Juno Temple
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Ted Lasso]
+    wikipedia: Juno Temple
+  - name: Tom Howe
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Ted Lasso]
+    wikipedia: Tom Howe (musician)
+    match_risk: true
+  - name: Taylor Sheridan
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Yellowstone]
+    wikipedia: Taylor Sheridan
+  - name: Kevin Costner
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Yellowstone]
+    wikipedia: Kevin Costner
+  - name: Kelly Reilly
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Yellowstone]
+    wikipedia: Kelly Reilly
+  - name: Luke Grimes
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Yellowstone]
+    wikipedia: Luke Grimes
+  - name: Cole Hauser
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Yellowstone]
+    wikipedia: Cole Hauser
+  - name: Brian Tyler
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Yellowstone]
+    wikipedia: Brian Tyler
+  - name: Chuck Lorre
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [The Big Bang Theory]
+    wikipedia: Chuck Lorre
+  - name: Bill Prady
+    kind: person
+    category: celebrity
+    roles: [creator]
+    works: [The Big Bang Theory]
+    wikipedia: Bill Prady
+  - name: Jim Parsons
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Big Bang Theory]
+    wikipedia: Jim Parsons
+  - name: Johnny Galecki
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Big Bang Theory]
+    wikipedia: Johnny Galecki
+  - name: Kaley Cuoco
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Big Bang Theory]
+    wikipedia: Kaley Cuoco
+  - name: Mayim Bialik
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Big Bang Theory]
+    wikipedia: Mayim Bialik
+  - name: Kunal Nayyar
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Big Bang Theory]
+    wikipedia: Kunal Nayyar
+  - name: Charlie Brooker
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Black Mirror]
+    wikipedia: Charlie Brooker
+  - name: R. Scott Gemmill
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [The Pitt]
+    aliases: [Scott Gemmill]
+    wikipedia: R. Scott Gemmill
+  - name: Noah Wyle
+    kind: person
+    category: celebrity
+    roles: [actor, writer]
+    works: [The Pitt]
+    wikipedia: Noah Wyle
+  - name: Katherine LaNasa
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Pitt]
+    wikipedia: Katherine LaNasa
+  - name: Supriya Ganesh
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Pitt]
+    wikipedia: Supriya Ganesh
+  - name: Isa Briones
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Pitt]
+    wikipedia: Isa Briones
+  - name: Fiona Dourif
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [The Pitt]
+    wikipedia: Fiona Dourif
+  - name: Chris Van Dusen
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Bridgerton]
+    wikipedia: Chris Van Dusen
+  - name: Julia Quinn
+    kind: person
+    category: celebrity
+    roles: [author]
+    works: [Bridgerton]
+    wikipedia: Julia Quinn
+  - name: Phoebe Dynevor
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Bridgerton]
+    wikipedia: Phoebe Dynevor
+  - name: Regé-Jean Page
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Bridgerton]
+    aliases: [Rege-Jean Page]
+    wikipedia: Regé-Jean Page
+  - name: Jonathan Bailey
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Bridgerton]
+    wikipedia: Jonathan Bailey
+  - name: Simone Ashley
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Bridgerton]
+    wikipedia: Simone Ashley
+  - name: Nicola Coughlan
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Bridgerton]
+    wikipedia: Nicola Coughlan
+  - name: Julie Andrews
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Bridgerton]
+    wikipedia: Julie Andrews
+  - name: Kris Bowers
+    kind: person
+    category: celebrity
+    roles: [composer]
+    works: [Bridgerton]
+    wikipedia: Kris Bowers
+  - name: Steven Moffat
+    kind: person
+    category: celebrity
+    roles: [creator, showrunner]
+    works: [Sherlock]
+    wikipedia: Steven Moffat
+  - name: Mark Gatiss
+    kind: person
+    category: celebrity
+    roles: [creator, actor]
+    works: [Sherlock]
+    wikipedia: Mark Gatiss
+  - name: Benedict Cumberbatch
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Sherlock]
+    wikipedia: Benedict Cumberbatch
+  - name: Martin Freeman
+    kind: person
+    category: celebrity
+    roles: [actor]
+    works: [Sherlock]
+    wikipedia: Martin Freeman

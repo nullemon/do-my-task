@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TabNap settings</title>
+    <link rel="icon" href="../icons/icon32.png" />
+    <link rel="stylesheet" href="../src/ui.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-head">
+        <img src="../icons/icon128.png" alt="" width="44" height="44" />
+        <div>
+          <h1>TabNap settings</h1>
+          <p class="desc">
+            Puts tabs you aren’t using to sleep so the browser frees their memory. A sleeping tab stays in
+            your tab bar and reloads when you click it.
+          </p>
+        </div>
+      </header>
+
+      <section class="card" aria-labelledby="h-general">
+        <div class="row">
+          <div class="text">
+            <h2 id="h-general">Automatic unloading</h2>
+            <p class="desc">When off, TabNap leaves your tabs alone. “Unload other tabs now” still works.</p>
+          </div>
+          <label class="switch">
+            <input id="enabled" type="checkbox" role="switch" aria-labelledby="h-general" />
+            <span class="track"></span>
+          </label>
+        </div>
+        <div class="row">
+          <label class="text" for="idleMinutes">
+            <strong>Unload tabs after</strong>
+            <span class="desc">How long a tab can sit in the background before it is put to sleep.</span>
+          </label>
+          <select id="idleMinutes"></select>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-allow">
+        <h2 id="h-allow">Never unload these sites</h2>
+        <p class="desc">
+          A site also covers its subdomains: <code>google.com</code> covers <code>mail.google.com</code>, but
+          <code>mail.google.com</code> doesn’t cover the rest of Google. Add a port to match only that port, like
+          <code>localhost:3000</code>. Chrome’s Memory Saver and Edge’s sleeping tabs are told to leave these sites
+          alone too.
+        </p>
+        <form id="add-form" class="add" novalidate>
+          <input
+            id="add-input"
+            type="text"
+            placeholder="youtube.com, or paste a link"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Site to never unload"
+            aria-describedby="add-msg"
+          />
+          <button class="btn primary" type="submit">Add site</button>
+        </form>
+        <p id="add-msg" class="msg" role="status"></p>
+        <ul id="allowlist" class="sites"></ul>
+        <p id="allow-empty" class="empty">No sites yet. You can also add the site you’re on from the TabNap button.</p>
+      </section>
+
+      <section class="card" aria-labelledby="h-protect">
+        <h2 id="h-protect">Tabs that are never unloaded</h2>
+        <label class="check">
+          <input id="protectAudio" type="checkbox" />
+          <span><strong>Tabs playing audio</strong><span class="desc">Music, videos and calls keep playing.</span></span>
+        </label>
+        <label class="check">
+          <input id="protectPinned" type="checkbox" />
+          <span><strong>Pinned tabs</strong></span>
+        </label>
+        <label class="check">
+          <input id="protectForms" type="checkbox" />
+          <span>
+            <strong>Tabs with text you’ve typed but not sent</strong>
+            <span class="desc">Forms, comments and messages you’re still writing.</span>
+          </span>
+        </label>
+        <p class="always-title">Always protected</p>
+        <ul class="always">
+          <li>The tab you’re looking at in each window</li>
+          <li>Tabs you set to “Keep this tab awake” from the TabNap button</li>
+          <li>Tabs that are still loading</li>
+          <li>Browser and extension pages</li>
+        </ul>
+      </section>
+
+      <section class="card" aria-labelledby="h-pressure">
+        <div class="row">
+          <label class="check flat">
+            <input id="pressureEnabled" type="checkbox" />
+            <span>
+              <strong id="h-pressure">When memory runs low</strong>
+              <span class="desc">
+                Unload background tabs sooner when free memory drops below the limit: tabs left at least a minute
+                ago, the one you saw longest ago first, up to 5 every 30 seconds.
+              </span>
+            </span>
+          </label>
+          <select id="pressurePercent" aria-label="Free memory limit"></select>
+        </div>
+        <p id="mem-now" class="desc note" hidden></p>
+      </section>
+
+      <section class="card" aria-labelledby="h-heavy">
+        <div class="row">
+          <label class="check flat">
+            <input id="heavyEnabled" type="checkbox" />
+            <span>
+              <strong id="h-heavy">Heavy tabs</strong>
+              <span class="desc">
+                Unload a tab early (after a minute in the background) when its JavaScript memory is over the limit.
+                This is an approximate figure the browser reports for the page’s scripts, not the tab’s total memory,
+                and not every browser provides it.
+              </span>
+            </span>
+          </label>
+          <select id="heavyLimitMB" aria-label="JavaScript memory limit"></select>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-keys">
+        <div class="row">
+          <div class="text">
+            <h2 id="h-keys">Keyboard shortcut</h2>
+            <p class="desc">Unload other tabs now: <kbd id="shortcut">not set</kbd></p>
+          </div>
+          <button id="change-shortcut" class="btn" type="button">Change</button>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="h-stats">
+        <h2 id="h-stats">So far</h2>
+        <p class="total"><strong id="total">0</strong> <span id="total-label">tabs unloaded on this device</span></p>
+        <p id="breakdown" class="desc"></p>
+      </section>
+
+      <footer class="foot">
+        <button id="reset" class="btn" type="button">Reset settings to defaults</button>
+        <span class="desc">Your never-unload list is kept.</span>
+        <span id="saved" class="saved" aria-live="polite"></span>
+      </footer>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

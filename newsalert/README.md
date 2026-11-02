@@ -125,6 +125,15 @@ Without a key, every new item alerts on its raw headline, unfiltered.
 See **[docs/sources-setup.md](docs/sources-setup.md)** for YouTube channels, Bluesky
 accounts (free, no keys), the X API, and Wikipedia.
 
+Seeded and enabled:
+- **YouTube (15 channels):** Crunchyroll, Crunchyroll Dubs, Netflix Anime, Aniplex USA, MAPPA, ufotable,
+  Toei Animation, TMS, Jump Channel, Netflix, Netflix Japan, HBO, HBO Max, Prime Video and Disney+.
+- **Bluesky:** Anime News Network and AP.
+- **Wikipedia:** the current "Deaths in …" pages, plus every watchlist page (only edits that look like
+  death, health or arrest news).
+
+Entries we couldn't verify from the build sandbox ship with `enabled: false` and a TODO.
+
 - **X / Twitter:** reading timelines requires **paid** X API access. Logged-in scraping
   breaks X's terms, so it is not built. The X watcher is in place but stays off until you
   set `X_BEARER_TOKEN`. Mark the accounts you care most about with `priority: true`; those

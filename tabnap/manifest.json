@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "TabNap",
+  "version": "1.0.0",
+  "description": "Frees memory by putting tabs you're not using to sleep. Sites you choose are never unloaded.",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "TabNap",
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "permissions": ["tabs", "storage", "alarms", "system.memory"],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "commands": {
+    "unload-others": {
+      "suggested_key": { "default": "Alt+Shift+U" },
+      "description": "Unload other tabs now"
+    }
+  }
+}

@@ -177,3 +177,282 @@
   trust: major
   group: ap
   interval: 180
+
+# ======================================================================
+# YouTube channels (build step 5). Public per-channel Atom feeds, no API key.
+#   account: the channel id (UC + 22 characters), not the @handle.
+#   To find one: open the channel page, View Source, search for "channelId",
+#   or open any of its videos and follow the channel link (/channel/UC...).
+# Channel ids below were cross-checked against public channel-stats sites
+# (vidIQ, PLAYBOARD, SpeakRJ, SocialCounts); YouTube itself wasn't reachable
+# from the build sandbox. `enabled: false` = id could not be verified.
+# ======================================================================
+
+# ---------------- Anime distributors / studios ----------------
+- name: Crunchyroll (YouTube)
+  type: youtube
+  account: UC6pGDc4bFGD1_36IKv3FnYg
+  category: anime
+  trust: official
+  group: crunchyroll
+
+- name: Crunchyroll Dubs (YouTube)
+  type: youtube
+  account: UCVi2lI40LetxLBKn-rtWC3A
+  category: anime
+  trust: official
+  group: crunchyroll
+  interval: 300
+
+- name: Netflix Anime (YouTube)
+  type: youtube
+  account: UCBSs9x2KzSLhyyA9IKyt4YA
+  category: anime
+  trust: official
+  group: netflix
+
+- name: Aniplex USA (YouTube)
+  type: youtube
+  account: UCDb0peSmF5rLX7BvuTcJfCw
+  category: anime
+  trust: official
+  group: aniplex
+
+- name: MAPPA (YouTube)
+  type: youtube
+  account: UCjfAEJZdfbIjVHdo5yODfyQ
+  category: anime
+  trust: official
+  group: mappa
+
+- name: ufotable (YouTube)
+  type: youtube
+  account: UCRc3mprfrE8qaugB1VfQXiA
+  category: anime
+  trust: official
+  group: ufotable
+  interval: 300
+
+- name: Toei Animation (YouTube)
+  type: youtube
+  account: UCLhgIX2L5ZCaWdlaxR_oTAg
+  category: anime
+  trust: official
+  group: toei
+
+- name: TMS Entertainment (YouTube)
+  type: youtube
+  account: UCzGf0DdUJVrsbcWL3e_tK1Q
+  category: anime
+  trust: official
+  group: tms
+  interval: 300
+
+- name: Jump Channel (YouTube)
+  type: youtube
+  account: UC47AYUs8AVU1QsT5LhpXjaw
+  category: manga
+  trust: official
+  group: shueisha
+
+# TODO verify channel id: TOHO animation (@tohoanimation). Put the UC... id in
+# `account` and set enabled: true.
+- name: TOHO animation (YouTube)
+  type: youtube
+  account: UC_TODO_verify_tohoanimation
+  category: anime
+  trust: official
+  group: toho
+  enabled: false
+
+# TODO verify channel id: KADOKAWA anime (@KADOKAWAanime).
+- name: KADOKAWA Anime (YouTube)
+  type: youtube
+  account: UC_TODO_verify_kadokawaanime
+  category: anime
+  trust: official
+  group: kadokawa
+  enabled: false
+
+# TODO verify channel id: Aniplex (Japan) official channel.
+- name: Aniplex Japan (YouTube)
+  type: youtube
+  account: UC_TODO_verify_aniplex_jp
+  category: anime
+  trust: official
+  group: aniplex
+  enabled: false
+
+# ---------------- Streamers / networks (TV) ----------------
+- name: Netflix (YouTube)
+  type: youtube
+  account: UCWOA1ZGywLbqmigxE4Qlvuw
+  category: tv
+  trust: official
+  group: netflix
+
+- name: Netflix Japan (YouTube)
+  type: youtube
+  account: UCv2ejD5B1xOYtGB2cf80B8g
+  category: tv
+  trust: official
+  group: netflix
+  interval: 300
+
+- name: HBO (YouTube)
+  type: youtube
+  account: UCVTQuK2CaWaTgSsoNkn5AiQ
+  category: tv
+  trust: official
+  group: warner-bros-discovery
+
+- name: HBO Max (YouTube)
+  type: youtube
+  account: UCx-KWLTKlB83hDI6UKECtJQ
+  category: tv
+  trust: official
+  group: warner-bros-discovery
+
+- name: Prime Video (YouTube)
+  type: youtube
+  account: UCQJWtTnAHhEG5w4uN0udnUQ
+  category: tv
+  trust: official
+  group: amazon
+
+- name: Disney+ (YouTube)
+  type: youtube
+  account: UCIrgJInjLS2BhlHOMDW7v0g
+  category: tv
+  trust: official
+  group: disney
+
+# ======================================================================
+# Bluesky accounts (build step 5). Free Jetstream websocket, no keys.
+#   account: handle (apnews.com, name.bsky.social) or DID (did:plc:...).
+#   Replies are skipped (bluesky.include_replies); reposts never arrive.
+# Handles marked enabled: false could not be confirmed from the sandbox:
+# open https://bsky.app/profile/<handle>; if it is the real official
+# account, set enabled: true.
+# ======================================================================
+- name: Anime News Network (Bluesky)
+  type: bluesky
+  account: animenewsnetwork.com
+  category: anime
+  trust: major
+  group: ann
+
+- name: AP (Bluesky)
+  type: bluesky
+  account: apnews.com
+  category: celebrity
+  trust: major
+  group: ap
+
+# TODO verify handle
+- name: Variety (Bluesky)
+  type: bluesky
+  account: variety.com
+  category: tv
+  trust: major
+  group: penske
+  enabled: false
+
+# TODO verify handle
+- name: Deadline (Bluesky)
+  type: bluesky
+  account: deadline.com
+  category: tv
+  trust: major
+  group: penske
+  enabled: false
+
+# TODO verify handle
+- name: The Hollywood Reporter (Bluesky)
+  type: bluesky
+  account: hollywoodreporter.com
+  category: tv
+  trust: major
+  group: penske
+  enabled: false
+
+# TODO verify handle
+- name: Crunchyroll (Bluesky)
+  type: bluesky
+  account: crunchyroll.com
+  category: anime
+  trust: official
+  group: crunchyroll
+  enabled: false
+
+# ======================================================================
+# X accounts (build step 6). Needs a PAID X API tier: set X_BEARER_TOKEN in
+# .env, then flip enabled: true on the accounts you want. Without a token
+# the X watcher stays idle. Reads count against x.monthly_read_budget.
+#   priority: true  -> polled every x.priority_interval (default 5 min)
+#   otherwise       -> every x.default_interval (default 30 min)
+# Example official accounts; check each handle on x.com before enabling.
+# ======================================================================
+- name: Crunchyroll (X)
+  type: x
+  account: Crunchyroll
+  category: anime
+  trust: official
+  group: crunchyroll
+  priority: true
+  enabled: false
+
+- name: MAPPA (X)
+  type: x
+  account: MAPPA_Info
+  category: anime
+  trust: official
+  group: mappa
+  priority: true
+  enabled: false
+
+- name: ufotable (X)
+  type: x
+  account: ufotable
+  category: anime
+  trust: official
+  group: ufotable
+  enabled: false
+
+- name: Netflix Anime (X)
+  type: x
+  account: NetflixAnime
+  category: anime
+  trust: official
+  group: netflix
+  enabled: false
+
+- name: Shonen Jump (X)
+  type: x
+  account: shonenjump
+  category: manga
+  trust: official
+  group: viz
+  enabled: false
+
+- name: Toei Animation (X)
+  type: x
+  account: ToeiAnimation
+  category: anime
+  trust: official
+  group: toei
+  enabled: false
+
+# ======================================================================
+# Wikipedia (build step 7). One source; Wikimedia EventStreams, no keys.
+# Watches "Deaths in <Month> <Year>", "Deaths in <Year>" and every
+# `wikipedia:` page in watchlist.yaml. Always trust: signal (a hint, never
+# a confirmation); reverted edits trigger a "possibly false" follow-up.
+# Set a contact address in settings.yaml polling.user_agent first
+# (Wikimedia's User-Agent policy).
+# ======================================================================
+- name: Wikipedia
+  type: wikipedia
+  category: celebrity
+  trust: signal
+  group: wikipedia

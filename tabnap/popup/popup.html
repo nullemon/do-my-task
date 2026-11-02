@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>TabNap</title>
+    <link rel="stylesheet" href="../src/ui.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="head">
+        <img src="../icons/icon48.png" alt="" width="30" height="30" />
+        <div class="title">
+          <h1>TabNap</h1>
+          <p id="mode" class="sub">&nbsp;</p>
+        </div>
+        <label class="switch" title="Turn automatic unloading on or off">
+          <input id="enabled" type="checkbox" role="switch" aria-label="Automatic unloading" />
+          <span class="track"></span>
+        </label>
+      </header>
+
+      <section class="card stats" aria-label="Tabs">
+        <p class="count">
+          <strong id="asleep">–</strong>
+          <span id="count-text">tabs asleep</span>
+        </p>
+        <div id="mem" class="mem" hidden>
+          <div class="mem-row">
+            <span>Memory in use</span>
+            <span id="mem-pct"></span>
+          </div>
+          <div class="bar"><span id="mem-bar"></span></div>
+        </div>
+      </section>
+
+      <section class="card tab" aria-label="This tab">
+        <p class="label">This tab</p>
+        <p id="host" class="host">&nbsp;</p>
+        <p><span id="tab-status" class="pill">&nbsp;</span></p>
+
+        <div class="row">
+          <label for="allow" id="allow-label">Never unload this site</label>
+          <span class="switch">
+            <input id="allow" type="checkbox" role="switch" />
+            <span class="track"></span>
+          </span>
+        </div>
+        <p id="allow-hint" class="hint" hidden></p>
+
+        <div class="row">
+          <label for="awake">Keep this tab awake</label>
+          <span class="switch">
+            <input id="awake" type="checkbox" role="switch" />
+            <span class="track"></span>
+          </span>
+        </div>
+        <p id="error" class="error" role="alert" hidden></p>
+      </section>
+
+      <button id="unload" class="btn primary wide" type="button">Unload other tabs now</button>
+      <p id="result" class="result" aria-live="polite"></p>
+
+      <footer class="foot">
+        <button id="settings" class="link" type="button">Settings</button>
+        <span id="shortcut-wrap" hidden>Shortcut <kbd id="shortcut"></kbd></span>
+      </footer>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

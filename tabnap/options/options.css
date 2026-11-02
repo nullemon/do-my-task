@@ -1,0 +1,302 @@
+body {
+  font-size: 14px;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 36px 16px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.page-head img {
+  flex: none;
+  border-radius: 10px;
+}
+
+.page-head h1 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin-bottom: 4px;
+}
+
+.card {
+  padding: 18px 20px;
+}
+
+h2 {
+  font-size: 15px;
+  font-weight: 650;
+  margin-bottom: 4px;
+}
+
+.desc {
+  display: block;
+  font-size: 13px;
+}
+
+code {
+  font: 12.5px/1 ui-monospace, "Cascadia Mono", Consolas, monospace;
+  background: var(--surface-2);
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.row + .row {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.row select {
+  flex: none;
+}
+
+/* ------------------------------------------------------------ allowlist */
+.add {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.add input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  font-size: 14px;
+}
+
+.add input.invalid {
+  border-color: var(--danger);
+}
+
+.msg {
+  min-height: 18px;
+  margin: 6px 0 2px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.msg.error {
+  color: var(--danger);
+}
+
+.msg.ok {
+  color: var(--ok);
+}
+
+.sites {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.sites:empty {
+  display: none;
+}
+
+.sites li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.sites li + li {
+  border-top: 1px solid var(--border);
+}
+
+.sites li:hover {
+  background: var(--surface-2);
+}
+
+.remove {
+  flex: none;
+  appearance: none;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 600 12.5px/1 var(--font);
+  padding: 7px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+.remove:hover {
+  color: var(--danger);
+  background: var(--surface);
+}
+
+.remove:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.empty {
+  margin-top: 4px;
+  padding: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+/* ---------------------------------------------------------- checkboxes */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+
+.check + .check {
+  border-top: 1px solid var(--border);
+}
+
+.check.flat {
+  padding: 0;
+  min-width: 0;
+}
+
+.check input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.check > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.always-title {
+  margin-top: 12px;
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.always {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.always li + li {
+  margin-top: 2px;
+}
+
+.note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ---------------------------------------------------------------- stats */
+.total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+
+.total strong {
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.total span {
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------- footer */
+.foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 4px 2px 0;
+}
+
+.btn.confirm {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.saved {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ok);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.saved.show {
+  opacity: 1;
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding-top: 20px;
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .row .switch {
+    align-self: flex-start;
+  }
+
+  .add {
+    flex-direction: column;
+  }
+
+  .saved {
+    margin-left: 0;
+  }
+}

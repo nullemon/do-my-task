@@ -1,0 +1,12 @@
+# docker compose up -d --build      then: docker compose logs -f
+# CLI inside the container:  docker compose exec newsalert newsalert stats
+services:
+  newsalert:
+    build: .
+    restart: unless-stopped
+    env_file: .env               # NTFY_URL, NTFY_TOPIC, NTFY_TOKEN, ANTHROPIC_API_KEY, X_BEARER_TOKEN
+    environment:
+      ALERT_MODE: ntfy           # a container can't ring your laptop directly; ntfy does that
+    volumes:
+      - ./config:/app/config:ro  # edit sources/watchlist/settings on the host, then restart
+      - ./data:/app/data         # SQLite DB + JSON logs survive rebuilds

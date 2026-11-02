@@ -1,0 +1,8 @@
+{
+  "items": [
+    {"at_s": 0, "source": "Wikipedia (replay)", "source_type": "wikipedia", "trust": "signal", "category": "celebrity",
+     "title": "Deaths in November 2026: added \"Some Famous Singer, 52, American singer.\"",
+     "url": "https://en.wikipedia.org/w/index.php?diff=2&oldid=1", "external_id": "rev:2", "published_ago_s": 10},
+    {"at_s": 300, "retract": {"source": "Wikipedia (replay)", "external_id": "rev:2", "reason": "wikipedia edit reverted"}}
+  ]
+}

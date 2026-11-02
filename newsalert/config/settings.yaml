@@ -18,3 +18,35 @@ polling:
 pipeline:
   stale_minutes: 30        # ignore items published > this long before we fetched them
   text_dedupe_hours: 72    # window for exact-duplicate text matching across sources
+
+triage:
+  model: claude-haiku-5-5
+  importance_threshold: 3  # stories below this (after watchlist boost) are dropped
+  watchlist_boost: 1       # +importance when the subject is on watchlist.yaml
+  timeout_seconds: 3       # on timeout/error the alert still fires with the raw headline
+  max_concurrency: 4
+  summary_language: English
+
+cluster:
+  window_hours: 6          # same subject + same event within this window = one story
+  title_similarity: 0.5    # headline word overlap (names excluded) that joins without AI
+  ai_tiebreak: true        # ask Haiku when only the name matches
+
+alerts:
+  normal_min_gap_seconds: 30   # at most one normal alert per 30 s; the rest queue
+  max_extra_links: 3
+  ntfy_retries: 2              # extra attempts after the first, within the window below
+  ntfy_retry_window_seconds: 5
+  ring_sound: config/sounds/ring.wav     # local mode only (the laptop listener has its own copy)
+  chime_sound: config/sounds/chime.wav
+  retraction_window_minutes: 15          # deleted post / reverted edit within this -> "possibly false"
+
+quiet_hours:
+  enabled: false
+  start: "23:00"           # urgent still rings; normal alerts are held and sent as one digest at `end`
+  end: "07:30"
+  timezone: null           # IANA name, e.g. "Asia/Kolkata", "Europe/London"; null = the VM's local time
+
+health:
+  failure_alert_minutes: 10    # alert (normal priority) when a watcher has failed this long
+  check_interval_seconds: 60

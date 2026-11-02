@@ -1,6 +1,6 @@
 """Ingest raw items: dedupe -> stale/seed check -> store -> hand new items to the sink.
 
-Step 1 sink prints to the console. Later steps swap in triage + alerting.
+The sink is the AlertEngine (engine.py) in production; tests use a recorder.
 """
 
 from __future__ import annotations
@@ -8,13 +8,13 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Callable, Protocol
+from typing import Protocol
 
 from .config import Settings, Source
 from .db import Database
 from .dedupe import is_stale, normalize_url, text_hash
 from .models import RawItem
-from .text import humanize_age, truncate
+from .text import truncate
 
 log = logging.getLogger("newsalert.pipeline")
 
@@ -29,22 +29,6 @@ class IngestStats:
     duplicate: int = 0
     stale: int = 0
     seeded: int = 0
-
-
-class ConsoleSink:
-    """Prints each new item. Used by build step 1."""
-
-    def __init__(self, clock: Callable[[], float] = time.time) -> None:
-        self.clock = clock
-
-    async def on_new_item(self, item_id: int, item: RawItem, source: Source) -> None:
-        age = None if item.published_at is None else self.clock() - item.published_at
-        print(
-            f"\n[{item.category.upper()}] [{item.trust}] {item.source} · {humanize_age(age)}\n"
-            f"  {truncate(item.title, 200)}\n"
-            f"  {item.url or '(no url)'}",
-            flush=True,
-        )
 
 
 class Pipeline:

@@ -1,0 +1,14 @@
+{
+  "_comment": "newsalert replay tests/fixtures/replay_death_story.json --no-ai   (or drop --no-ai to use Haiku). at_s orders events; --realtime waits for them.",
+  "items": [
+    {"at_s": 0, "source": "Wikipedia (replay)", "source_type": "wikipedia", "trust": "signal", "category": "celebrity",
+     "title": "Deaths in November 2026: added \"Jane Example, 81, British actress (Show X).\"",
+     "url": "https://en.wikipedia.org/w/index.php?diff=1&oldid=0", "external_id": "rev:1", "published_ago_s": 20},
+    {"at_s": 20, "source": "TMZ", "title": "Jane Example Dead at 81", "text": "Actress Jane Example, star of Show X, has died at 81, her family said.",
+     "url": "https://www.tmz.com/2026/11/02/jane-example-dead/", "published_ago_s": 15},
+    {"at_s": 45, "source": "BBC Entertainment & Arts", "title": "Jane Example: Show X actress dies aged 81",
+     "url": "https://www.bbc.co.uk/news/entertainment-arts-1", "published_ago_s": 30},
+    {"at_s": 60, "source": "Anime News Network", "title": "Attack on Titan Gets New Anime Film in 2027",
+     "url": "https://www.animenewsnetwork.com/news/2026-11-02/aot-film", "published_ago_s": 50}
+  ]
+}

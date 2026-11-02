@@ -5,6 +5,7 @@ pyyaml>=6.0
 python-dotenv>=1.0
 anthropic>=0.40
 websockets>=12
+tzdata>=2024.1
 # dev
 pytest>=8
 pytest-asyncio>=0.23

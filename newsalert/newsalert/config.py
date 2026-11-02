@@ -90,12 +90,20 @@ class HealthSettings(_Strict):
 
 class YouTubeSettings(_Strict):
     feed_url_template: str = "https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+    interval: int = 120                # seconds between polls of each channel (a source's `interval` wins)
 
 
 class BlueskySettings(_Strict):
     jetstream_url: str = "wss://jetstream2.us-east.bsky.network/subscribe"
+    # Other official public Jetstream instances, tried in turn after repeated failures.
+    jetstream_fallback_urls: list[str] = Field(default_factory=lambda: [
+        "wss://jetstream1.us-east.bsky.network/subscribe",
+        "wss://jetstream1.us-west.bsky.network/subscribe",
+        "wss://jetstream2.us-west.bsky.network/subscribe",
+    ])
     resolve_url: str = "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle"
     include_replies: bool = False
+    handle_cache_hours: int = 24       # re-resolve handle -> DID after this long
 
 
 class XSettings(_Strict):
@@ -103,6 +111,7 @@ class XSettings(_Strict):
     monthly_read_budget: int = 10000   # posts you may read per month on your tier
     priority_interval: int = 300       # seconds between polls of `priority: true` accounts
     default_interval: int = 1800       # seconds between polls of other accounts
+    max_results: int = 10              # posts per timeline request (API minimum is 5)
 
 
 class WikipediaSettings(_Strict):
@@ -110,6 +119,9 @@ class WikipediaSettings(_Strict):
     api_url: str = "https://en.wikipedia.org/w/api.php"
     wiki: str = "enwiki"
     revert_window_minutes: int = 15
+    revert_check_seconds: int = 120    # how often emitted edits are re-checked for `mw-reverted`
+    deaths_previous_month_days: int = 7  # keep watching last month's Deaths page this many days
+    read_timeout: float = 60.0         # reconnect if the stream sends nothing for this long
 
 
 class Settings(_Strict):

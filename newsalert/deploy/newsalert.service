@@ -1,0 +1,36 @@
+# systemd unit for newsalert. Install:
+#   sudo useradd --system --home /opt/newsalert --shell /usr/sbin/nologin newsalert
+#   sudo cp -r newsalert /opt/newsalert && cd /opt/newsalert
+#   sudo python3.12 -m venv .venv && sudo .venv/bin/pip install .
+#   sudo cp .env.example .env && sudo nano .env        # NTFY_TOPIC, ANTHROPIC_API_KEY, ...
+#   sudo chown -R newsalert:newsalert /opt/newsalert && sudo chmod 600 /opt/newsalert/.env
+#   sudo cp deploy/newsalert.service /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now newsalert
+#   journalctl -u newsalert -f
+[Unit]
+Description=newsalert breaking-news alerts (alert only, never posts)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=newsalert
+Group=newsalert
+WorkingDirectory=/opt/newsalert
+Environment=NEWSALERT_HOME=/opt/newsalert
+EnvironmentFile=/opt/newsalert/.env
+ExecStart=/opt/newsalert/.venv/bin/newsalert run
+Restart=always
+RestartSec=5
+# Hardening: it only needs outbound HTTPS and its own data dir.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/newsalert/data
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

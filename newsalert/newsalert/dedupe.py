@@ -71,3 +71,144 @@ def is_stale(published_at: float | None, fetched_at: float, stale_minutes: int) 
     if published_at is None:
         return False
     return (fetched_at - published_at) > stale_minutes * 60
+
+
+# --------------------------------------------------------------------------- story clustering
+#
+# Items about the same event (same subject + same event type within the cluster
+# window) join one story. Cheap signals first: shared watchlist entities, an
+# event-type keyword guess, and headline token overlap. Only ambiguous cases
+# (same entity, unclear event) are sent to Haiku as a tie-break.
+
+import re as _re
+from dataclasses import dataclass as _dataclass, field as _field
+
+from .watchlist import WatchlistIndex as _WatchlistIndex, has_cjk as _has_cjk
+
+# Order matters: the first matching type wins ("died after arrest" -> death).
+_EVENT_KEYWORDS: list[tuple[str, list[str]]] = [
+    ("death", ["died", "dies", "dead at", "death of", "passed away", "passes away", "obituary",
+               "killed", "rip ", "死去", "逝去", "死亡", "亡くな", "訃報", "永眠"]),
+    ("arrest", ["arrested", "arrest", "charged with", "indicted", "逮捕", "書類送検"]),
+    ("health", ["hospitalized", "hospitalised", "diagnosed", "surgery", "health reasons",
+                "medical leave", "入院", "療養", "体調不良", "休養", "手術"]),
+    ("cancellation", ["cancelled", "canceled", "cancels", "axed", "scrapped", "中止", "打ち切り"]),
+    ("delay", ["delayed", "postponed", "pushed back", "delay", "延期"]),
+    ("casting", ["cast as", "joins cast", "joins the cast", "casting", "to star in", "to play",
+                 "voice cast", "キャスト", "出演決定", "声優"]),
+    ("award", ["wins", "won", "award", "awards", "nominated", "nominations", "受賞", "大賞", "ノミネート"]),
+    ("controversy", ["controversy", "backlash", "apologizes", "apologises", "scandal", "lawsuit",
+                     "sued", "炎上", "謝罪", "不倫", "騒動"]),
+    ("announcement", ["announces", "announced", "announcement", "season", "sequel", "adaptation",
+                      "renewed", "trailer", "teaser", "release date", "premiere", "green-lit",
+                      "greenlit", "発表", "決定", "アニメ化", "制作決定", "放送開始", "新作"]),
+]
+EVENT_TYPES = ["death", "announcement", "delay", "cancellation", "casting", "award", "arrest",
+               "health", "controversy", "other"]
+
+_STOPWORDS = set(
+    "a an the of in on at to for from by with and or but is are was were be been as it its this that "
+    "these those has have had will would can could new news says said after before over into about "
+    "his her their they he she you we our up out more than just first last".split()
+)
+_WORD = _re.compile(r"\w+")
+
+
+def event_hint(text: str) -> str | None:
+    """Keyword guess at the event type, or None if nothing obvious."""
+    t = " " + text.casefold() + " "
+    for event, words in _EVENT_KEYWORDS:
+        if any(w in t for w in words):
+            return event
+    return None
+
+
+def title_tokens(text: str) -> set[str]:
+    """Content tokens; CJK runs become character bigrams so Japanese titles compare too."""
+    norm = normalize_text(text)
+    out: set[str] = set()
+    for word in _WORD.findall(norm):
+        if _has_cjk(word):
+            out.update(word[i : i + 2] for i in range(max(len(word) - 1, 1)))
+        elif word not in _STOPWORDS and (len(word) > 2 or word.isdigit()):
+            out.add(word)
+    return out
+
+
+def token_similarity(a: set[str], b: set[str]) -> float:
+    if not a or not b:
+        return 0.0
+    return len(a & b) / min(len(a), len(b)) if min(len(a), len(b)) >= 3 else len(a & b) / max(len(a), len(b))
+
+
+@_dataclass
+class ItemFeatures:
+    entities: set[str]          # watchlist entry names mentioned
+    risky_only: bool            # every entity hit is a match_risk entry (e.g. "Friends")
+    event: str | None
+    tokens: set[str]            # headline tokens minus the matched watchlist names
+
+
+@_dataclass
+class StoryFeatures:
+    story_id: int
+    subject_key: str
+    event_type: str | None
+    entities: set[str] = _field(default_factory=set)
+    tokens: list[set[str]] = _field(default_factory=list)
+
+
+@_dataclass
+class ClusterDecision:
+    story_id: int | None        # join this story
+    ambiguous: list[int]        # candidates worth an AI tie-break
+    reason: str
+
+
+def item_features(title: str, text: str, index: _WatchlistIndex) -> ItemFeatures:
+    matches = index.find(f"{title}\n{text}")
+    entities = {m.entry.name for m in matches}
+    risky_only = bool(matches) and all(m.entry.match_risk for m in matches)
+    # Names alone must not make two headlines look alike ("X wins award" vs "X arrested"),
+    # so the overlap score only counts the other words.
+    name_tokens: set[str] = set()
+    for m in matches:
+        if not m.entry.match_risk:
+            name_tokens |= title_tokens(m.alias) | title_tokens(m.entry.name)
+    tokens = title_tokens(title) - name_tokens
+    return ItemFeatures(entities, risky_only, event_hint(f"{title} {text[:300]}"), tokens)
+
+
+def match_story(
+    item: ItemFeatures,
+    stories: list[StoryFeatures],
+    *,
+    title_similarity: float,
+    subject_in_text: callable = None,
+) -> ClusterDecision:
+    """Pick the existing story this item belongs to, if the cheap signals are clear."""
+    best: tuple[float, int, str] | None = None
+    ambiguous: list[int] = []
+    for s in stories:
+        sim = max((token_similarity(item.tokens, t) for t in s.tokens), default=0.0)
+        shared = bool(item.entities & s.entities) and not item.risky_only
+        if not shared and subject_in_text is not None and s.subject_key:
+            shared = subject_in_text(s.subject_key)
+        same_event = item.event is not None and item.event == s.event_type
+        diff_event = item.event is not None and s.event_type not in (None, "other") and item.event != s.event_type
+
+        if sim >= title_similarity and not diff_event:
+            score, why = 2.0 + sim, f"headline overlap {sim:.2f}"
+        elif shared and same_event:
+            score, why = 1.5 + sim, f"same entity + same event ({s.event_type})"
+        elif shared and not diff_event and sim >= 0.25:
+            score, why = 1.0 + sim, f"same entity + overlap {sim:.2f}"
+        else:
+            if shared and not diff_event:
+                ambiguous.append(s.story_id)
+            continue
+        if best is None or score > best[0]:
+            best = (score, s.story_id, why)
+    if best is not None:
+        return ClusterDecision(best[1], [], best[2])
+    return ClusterDecision(None, ambiguous, "no clear match" if not ambiguous else "same entity, unclear event")

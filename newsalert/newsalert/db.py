@@ -101,7 +101,42 @@ MIGRATIONS: list[str] = [
         value TEXT
     );
     """,
+    # v2: story lifecycle + AI usage accounting
+    """
+    ALTER TABLE stories ADD COLUMN status TEXT NOT NULL DEFAULT 'new';
+    ALTER TABLE stories ADD COLUMN relevant INTEGER;
+    ALTER TABLE stories ADD COLUMN subject_key TEXT;
+    ALTER TABLE stories ADD COLUMN entities TEXT;
+    ALTER TABLE stories ADD COLUMN watchlist INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE stories ADD COLUMN ai_ok INTEGER;
+    ALTER TABLE stories ADD COLUMN headline TEXT;
+    ALTER TABLE stories ADD COLUMN told_rank INTEGER;
+    CREATE INDEX stories_subject ON stories(subject_key, event_type, created_at);
+    CREATE INDEX stories_status ON stories(status);
+    CREATE INDEX items_story ON items(story_id);
+
+    CREATE TABLE usage (
+        id            INTEGER PRIMARY KEY,
+        ts            REAL NOT NULL,
+        purpose       TEXT NOT NULL,          -- triage | tiebreak
+        model         TEXT NOT NULL,
+        input_tokens  INTEGER NOT NULL DEFAULT 0,
+        output_tokens INTEGER NOT NULL DEFAULT 0,
+        cost_usd      REAL NOT NULL DEFAULT 0,
+        latency_ms    REAL,
+        ok            INTEGER NOT NULL,
+        error         TEXT
+    );
+    CREATE INDEX usage_ts ON usage(ts);
+    """,
 ]
+
+STORY_FIELDS = {
+    "category", "event_type", "subject", "importance", "is_rumor", "summary", "confidence",
+    "urgency", "first_item_id", "published_at", "fetched_at", "triaged_at", "alerted_at",
+    "updated_at", "status", "relevant", "subject_key", "entities", "watchlist", "ai_ok",
+    "headline", "told_rank",
+}
 
 _SOURCE_STATE_FIELDS = {
     "etag",
@@ -220,6 +255,100 @@ class Database:
 
     def all_source_states(self) -> list[sqlite3.Row]:
         return self.conn.execute("SELECT * FROM source_state ORDER BY source").fetchall()
+
+    def get_item(self, item_id: int) -> sqlite3.Row | None:
+        return self.conn.execute("SELECT * FROM items WHERE id=?", (item_id,)).fetchone()
+
+    def set_item_story(self, item_id: int, story_id: int) -> None:
+        self.conn.execute("UPDATE items SET story_id=? WHERE id=?", (story_id, item_id))
+
+    # ------------------------------------------------------------------ stories
+
+    def create_story(self, **fields: Any) -> int:
+        unknown = set(fields) - STORY_FIELDS
+        if unknown:
+            raise ValueError(f"unknown story fields: {unknown}")
+        fields.setdefault("updated_at", time.time())
+        cols = ", ".join(["created_at", *fields])
+        marks = ", ".join("?" for _ in range(len(fields) + 1))
+        cur = self.conn.execute(
+            f"INSERT INTO stories ({cols}) VALUES ({marks})", (time.time(), *fields.values())
+        )
+        return cur.lastrowid
+
+    def update_story(self, story_id: int, **fields: Any) -> None:
+        unknown = set(fields) - STORY_FIELDS
+        if unknown:
+            raise ValueError(f"unknown story fields: {unknown}")
+        fields.setdefault("updated_at", time.time())
+        cols = ", ".join(f"{k}=?" for k in fields)
+        self.conn.execute(f"UPDATE stories SET {cols} WHERE id=?", (*fields.values(), story_id))
+
+    def get_story(self, story_id: int) -> sqlite3.Row | None:
+        return self.conn.execute("SELECT * FROM stories WHERE id=?", (story_id,)).fetchone()
+
+    def stories_since(self, since: float) -> list[sqlite3.Row]:
+        return self.conn.execute(
+            "SELECT * FROM stories WHERE created_at>=? AND status!='retracted' ORDER BY id", (since,)
+        ).fetchall()
+
+    def stories_with_status(self, status: str) -> list[sqlite3.Row]:
+        return self.conn.execute("SELECT * FROM stories WHERE status=? ORDER BY id", (status,)).fetchall()
+
+    def story_items(self, story_id: int, include_deleted: bool = True) -> list[sqlite3.Row]:
+        sql = "SELECT * FROM items WHERE story_id=?"
+        if not include_deleted:
+            sql += " AND deleted_at IS NULL"
+        return self.conn.execute(sql + " ORDER BY id", (story_id,)).fetchall()
+
+    # ------------------------------------------------------------------ alerts / usage
+
+    def record_alert(
+        self,
+        *,
+        story_id: int | None,
+        kind: str,
+        urgency: str,
+        title: str,
+        message: str,
+        channel: str,
+        ok: bool,
+        error: str | None = None,
+        sent_at: float | None = None,
+    ) -> int:
+        now = time.time()
+        cur = self.conn.execute(
+            """INSERT INTO alerts (story_id, kind, urgency, channel, title, message, created_at, sent_at, ok, error)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (story_id, kind, urgency, channel, title, message, now, sent_at or now, int(ok), error),
+        )
+        return cur.lastrowid
+
+    def story_was_rung(self, story_id: int) -> bool:
+        return (
+            self.conn.execute(
+                "SELECT 1 FROM alerts WHERE story_id=? AND kind='ring' AND ok=1", (story_id,)
+            ).fetchone()
+            is not None
+        )
+
+    def record_usage(
+        self,
+        *,
+        purpose: str,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        cost_usd: float,
+        latency_ms: float | None,
+        ok: bool,
+        error: str | None = None,
+    ) -> None:
+        self.conn.execute(
+            """INSERT INTO usage (ts, purpose, model, input_tokens, output_tokens, cost_usd, latency_ms, ok, error)
+               VALUES (?,?,?,?,?,?,?,?,?)""",
+            (time.time(), purpose, model, input_tokens, output_tokens, cost_usd, latency_ms, int(ok), error),
+        )
 
     # ------------------------------------------------------------------ audit / kv
 

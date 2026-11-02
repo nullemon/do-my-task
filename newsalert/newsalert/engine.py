@@ -260,7 +260,7 @@ class AlertEngine:
                 self.db.update_story(story_id, status="retracted")
                 log.info("story.retracted_before_alert", extra={"story_id": story_id, "reason": reason})
                 return
-            if story["status"] != "alerted":
+            if story["status"] not in ("alerted", "sending"):
                 return
             if not remaining:
                 self.db.update_story(story_id, status="retracted")

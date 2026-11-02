@@ -177,18 +177,19 @@ class Dispatcher:
 
     async def _deliver_story(self, story_id: int, urgency: str) -> bool:
         story = self.db.get_story(story_id)
-        if story is None or story["status"] in ("retracted", "dropped") or self.db.story_was_rung(story_id):
+        if story is None or story["status"] in ("retracted", "dropped", "sending") or self.db.story_was_rung(story_id):
             return False
         alert = self._build(story_id, urgency, self.is_muted())
         if alert is None:
             return False
+        # "sending" lets a retraction that arrives mid-send know the ring is on its way.
+        self.db.update_story(story_id, status="sending")
         ok = await self._deliver(alert)
-        self.db.update_story(
-            story_id,
-            status="alerted" if ok else "failed",
-            alerted_at=self.clock(),
-            told_rank=RANK.get(story["confidence"], 0),
-        )
+        after = self.db.get_story(story_id)
+        fields = {"alerted_at": self.clock(), "told_rank": RANK.get(story["confidence"], 0)}
+        if after["status"] == "sending":
+            fields["status"] = "alerted" if ok else "failed"
+        self.db.update_story(story_id, **fields)
         return ok
 
     async def _deliver(self, alert: Alert) -> bool:

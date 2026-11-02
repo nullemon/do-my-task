@@ -87,7 +87,7 @@ from .watchlist import WatchlistIndex as _WatchlistIndex, has_cjk as _has_cjk
 
 # Order matters: the first matching type wins ("died after arrest" -> death).
 _EVENT_KEYWORDS: list[tuple[str, list[str]]] = [
-    ("death", ["died", "dies", "dead at", "death of", "passed away", "passes away", "obituary",
+    ("death", ["died", "dies", "dead at", "death of", "deaths in ", "passed away", "passes away", "obituary",
                "killed", "rip ", "死去", "逝去", "死亡", "亡くな", "訃報", "永眠"]),
     ("arrest", ["arrested", "arrest", "charged with", "indicted", "逮捕", "書類送検"]),
     ("health", ["hospitalized", "hospitalised", "diagnosed", "surgery", "health reasons",

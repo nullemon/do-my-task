@@ -1,0 +1,32 @@
+; newsalert laptop listener settings.
+; Copy this file to listener.ini (same folder as newsalert_listener.py) and fill in topic.
+; Lines starting with ; are comments.
+
+[listener]
+; ntfy server. Leave as is for ntfy.sh (must match NTFY_URL on the VM).
+url = https://ntfy.sh
+
+; Your long random topic name: exactly the same as NTFY_TOPIC in the VM's .env.
+; Anyone who knows it can read your alerts, so treat it like a password.
+topic =
+
+; Optional ntfy access token (starts with tk_). Only needed if you reserved the topic
+; with an ntfy.sh account. Same as NTFY_TOKEN on the VM (or a read-only token).
+token =
+
+; Folder with ring.wav and chime.wav. Empty = the "sounds" folder next to this file.
+sounds_dir =
+
+; Alerts older than this many minutes when they arrive (e.g. right after the laptop
+; wakes up) are shown without ringing. 0 = always ring.
+ring_max_age_minutes = 15
+
+; Stop ringing after this many minutes even if nobody presses Open or Dismiss.
+; 0 = keep ringing until a button is pressed.
+ring_timeout_minutes = 0
+
+; Show a small "listener connected" notification when it starts. yes / no
+startup_toast = yes
+
+; Log file. Empty = newsalert_listener.log next to this file. "-" = no log file.
+log_file =

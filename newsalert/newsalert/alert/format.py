@@ -91,7 +91,12 @@ def upgrade_alert(story, items: Sequence, new_sources: Iterable[str], *, max_lin
     headline = truncate(story["headline"] or first["title"], 120)
     title = f"[{(story['category'] or first['category']).upper()}] [{story['confidence']}] {headline}"
     others = _other_sources(items, max_links)
-    lines = [f"Now {story['confidence'].lower()} by: {', '.join(names)}"]
+    lead = {
+        "CONFIRMED": "Now confirmed by",
+        "OFFICIAL SOURCE": "Now from an official source",
+        "SINGLE OUTLET": "Now reported by a major outlet",
+    }.get(story["confidence"], "Now reported by")
+    lines = [f"{lead}: {', '.join(names)}"]
     if story["summary"]:
         lines.append(f"Summary: {story['summary']}")
     for name, url in others:

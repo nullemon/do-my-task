@@ -50,3 +50,43 @@ quiet_hours:
 health:
   failure_alert_minutes: 10    # alert (normal priority) when a watcher has failed this long
   check_interval_seconds: 60
+
+# ---------------- YouTube (step 5) ----------------
+youtube:
+  feed_url_template: "https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+  interval: 120            # seconds between polls of each channel (a source's `interval` wins)
+
+# ---------------- Bluesky (step 5) ----------------
+bluesky:
+  # Free public Jetstream websocket; one connection serves every Bluesky source.
+  jetstream_url: "wss://jetstream2.us-east.bsky.network/subscribe"
+  jetstream_fallback_urls:   # other official instances, tried after repeated failures
+    - "wss://jetstream1.us-east.bsky.network/subscribe"
+    - "wss://jetstream1.us-west.bsky.network/subscribe"
+    - "wss://jetstream2.us-west.bsky.network/subscribe"
+  resolve_url: "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle"
+  include_replies: false   # replies are usually chatter, not announcements
+  handle_cache_hours: 24   # re-resolve handle -> DID after this long
+
+# ---------------- X API (step 6) ----------------
+# Idle unless X_BEARER_TOKEN is set in .env (paid API tier required).
+x:
+  api_base: "https://api.x.com/2"
+  monthly_read_budget: 10000   # posts your tier lets you read per month; at 90% only
+                               # priority accounts are polled, at 100% none until next month
+  priority_interval: 300       # seconds between polls of `priority: true` accounts
+  default_interval: 1800       # seconds between polls of the other accounts
+  max_results: 10              # posts per request (API minimum 5)
+
+# ---------------- Wikipedia (step 7) ----------------
+# Wikimedia requires a descriptive User-Agent with contact info: put your email
+# or a URL in polling.user_agent above, e.g.
+#   user_agent: "newsalert/0.1 (personal news alerts; you@example.com)"
+wikipedia:
+  stream_url: "https://stream.wikimedia.org/v2/stream/recentchange"
+  api_url: "https://en.wikipedia.org/w/api.php"
+  wiki: enwiki
+  revert_window_minutes: 15     # a revert within this window sends a "possibly false" follow-up
+  revert_check_seconds: 120     # how often emitted edits are re-checked for being reverted
+  deaths_previous_month_days: 7 # keep watching last month's "Deaths in ..." page this long
+  read_timeout: 60              # reconnect if the stream is silent this many seconds

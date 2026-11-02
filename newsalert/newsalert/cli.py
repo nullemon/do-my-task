@@ -126,6 +126,11 @@ async def _test_alert(urgent: bool) -> int:
             return 1
         alert = make_test_alert(urgent)
         results = await deliver(notifiers, alert)
+        for n in notifiers:  # local mode: let the ring play until dismissed before exiting
+            if hasattr(n, "wait_idle"):
+                await n.wait_idle(150)
+            if hasattr(n, "aclose"):
+                await n.aclose()
     db = _db(cfg)
     for r in results:
         db.record_alert(story_id=None, kind="test", urgency=alert.urgency, title=alert.title,
@@ -175,7 +180,11 @@ async def _replay(path: Path, *, send: bool, no_ai: bool, realtime: bool) -> int
             pipeline, engine, dispatcher, _ = build_stack(
                 cfg, db, client, notifiers=notifiers, triager=NoAITriager() if no_ai else None,
             )
-            sender = asyncio.create_task(dispatcher.run())
+            async def settle():
+                await engine.drain()
+                while not dispatcher._queue.empty():
+                    await dispatcher.process_one()
+
             start = time.monotonic()
             for ev in sorted(events, key=lambda e: e.get("at_s", 0)):
                 if realtime:
@@ -183,7 +192,7 @@ async def _replay(path: Path, *, send: bool, no_ai: bool, realtime: bool) -> int
                 if "retract" in ev:
                     r = ev["retract"]
                     await pipeline.retract(r["source"], r["external_id"], r.get("reason", "deleted"))
-                    await engine.drain()
+                    await settle()
                     continue
                 src = by_name.get(ev["source"])
                 now = time.time()
@@ -201,11 +210,7 @@ async def _replay(path: Path, *, send: bool, no_ai: bool, realtime: bool) -> int
                 item = RawItem(**fields)
                 source = src or _adhoc_source(item)
                 await pipeline.ingest(source, [item], seeding=False)
-                await engine.drain()
-            while not dispatcher._queue.empty():
-                await asyncio.sleep(0.05)
-            await asyncio.sleep(0.1)
-            sender.cancel()
+                await settle()
         rows = db.conn.execute("SELECT kind, urgency, COUNT(*) n FROM alerts GROUP BY kind, urgency").fetchall()
         stories = db.conn.execute("SELECT status, COUNT(*) n FROM stories GROUP BY status").fetchall()
         db.close()

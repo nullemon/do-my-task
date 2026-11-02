@@ -381,3 +381,36 @@ def test_fallback_result_uses_keywords():
     r = fallback_result(TriageInput(source="s", trust="major", category="tv", title="Show X cancelled after one season",
                                     text=""), "timeout")
     assert r.event_type == "cancellation" and r.summary is None and not r.ai_ok
+
+
+async def test_retraction_while_ring_in_flight_still_sends_possibly_false(tmp_path):
+    h = Harness(tmp_path, FakeTriager({"John Doe": {"event_type": "death", "importance": 5}}))
+    release = asyncio.Event()
+    real_send = h.notifier.send
+
+    async def slow_send(alert):
+        if alert.kind == "ring":
+            await release.wait()
+        return await real_send(alert)
+
+    h.notifier.send = slow_send
+    wiki = src("Wikipedia", "signal", type_="wikipedia")
+    feed = asyncio.create_task(h.feed(wiki, "John Doe dies at 78", ext="rev:7"))
+    await asyncio.sleep(0.05)                      # ring is now mid-send
+    assert h.db.conn.execute("SELECT status FROM stories").fetchone()["status"] == "sending"
+    await h.pipeline.retract("Wikipedia", "rev:7", "wikipedia edit reverted")
+    release.set()
+    await feed
+    await h.engine.drain()
+    assert sorted(h.kinds()) == ["retraction", "ring"]
+    assert h.db.conn.execute("SELECT status FROM stories").fetchone()["status"] == "retracted"
+
+
+async def test_deaths_page_edit_counts_as_death_without_ai(tmp_path):
+    from newsalert.triage import NoAITriager
+
+    h = Harness(tmp_path, NoAITriager())
+    await h.feed(src("Wikipedia", "signal", type_="wikipedia", category="celebrity"),
+                 'Deaths in November 2026: added "Jane Example, 81, British actress."')
+    (ring,) = h.rings()
+    assert ring.urgency == "urgent" and DEATH_WARNING in ring.message and "[UNCONFIRMED]" in ring.title

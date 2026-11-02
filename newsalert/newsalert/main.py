@@ -100,6 +100,10 @@ async def run(cfg: AppConfig) -> None:
                 t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             await engine.drain()
+            for n in notifiers:
+                if hasattr(n, "aclose"):
+                    with contextlib.suppress(Exception):
+                        await n.aclose()
             db.close()
             log.info("newsalert.stop")
 

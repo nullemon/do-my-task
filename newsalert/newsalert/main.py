@@ -34,9 +34,11 @@ async def run(cfg: AppConfig) -> None:
     pipeline = Pipeline(db, cfg.settings, sink)
 
     async with make_client(cfg) as client:
-        ctx = WatcherContext(db=db, pipeline=pipeline, client=client, settings=cfg.settings)
+        ctx = WatcherContext(
+            db=db, pipeline=pipeline, client=client, settings=cfg.settings, watchlist=cfg.watchlist
+        )
         watchers = build_watchers(cfg.sources, ctx)
-        unseeded = [w.source.name for w in watchers if not db.get_source_state(w.source.name).get("seeded")]
+        unseeded = [s.name for s in cfg.enabled_sources if not db.get_source_state(s.name).get("seeded")]
         log.info(
             "newsalert.start",
             extra={
@@ -53,7 +55,7 @@ async def run(cfg: AppConfig) -> None:
             flush=True,
         )
 
-        tasks = [asyncio.create_task(w.run(), name=f"watch:{w.source.name}") for w in watchers]
+        tasks = [asyncio.create_task(w.run(), name=f"watch:{w.name}") for w in watchers]
         stop = asyncio.Event()
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):

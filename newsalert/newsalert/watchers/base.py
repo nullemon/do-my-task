@@ -13,7 +13,7 @@ from typing import Any
 
 import httpx
 
-from ..config import Settings, Source
+from ..config import Settings, Source, Watchlist
 from ..db import Database
 from ..models import RawItem
 
@@ -60,6 +60,7 @@ class WatcherContext:
     pipeline: Any  # Pipeline; Any avoids an import cycle
     client: httpx.AsyncClient
     settings: Settings
+    watchlist: Watchlist = field(default_factory=Watchlist)
 
 
 class PollingWatcher(ABC):
@@ -69,6 +70,10 @@ class PollingWatcher(ABC):
         self.interval = interval
         self.start_delay = start_delay
         self.failures = 0
+
+    @property
+    def name(self) -> str:
+        return self.source.name
 
     @abstractmethod
     async def poll(self, state: dict[str, Any]) -> PollResult: ...

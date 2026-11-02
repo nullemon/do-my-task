@@ -51,12 +51,82 @@ class PipelineSettings(_Strict):
     text_dedupe_hours: int = 72
 
 
+class TriageSettings(_Strict):
+    model: str = "claude-haiku-5-5"
+    importance_threshold: int = 3   # drop stories below this (after watchlist boost)
+    watchlist_boost: int = 1
+    timeout_seconds: float = 3.0    # on timeout/error: alert anyway with the raw headline
+    max_concurrency: int = 4
+    summary_language: str = "English"
+
+
+class ClusterSettings(_Strict):
+    window_hours: int = 6           # items about the same subject+event within this join one story
+    title_similarity: float = 0.5   # token-overlap score that auto-joins without asking Haiku
+    ai_tiebreak: bool = True        # ask Haiku when the cheap match is ambiguous
+
+
+class AlertSettings(_Strict):
+    normal_min_gap_seconds: int = 30   # at most one normal alert per this many seconds
+    max_extra_links: int = 3
+    ntfy_retries: int = 2              # extra attempts after the first
+    ntfy_retry_window_seconds: float = 5.0
+    ring_sound: str = "config/sounds/ring.wav"
+    chime_sound: str = "config/sounds/chime.wav"
+    retraction_window_minutes: int = 15
+
+
+class QuietHoursSettings(_Strict):
+    enabled: bool = False
+    start: str = "23:00"            # HH:MM, local to `timezone`
+    end: str = "07:30"
+    timezone: str | None = None     # IANA name, e.g. "Asia/Kolkata"; None = system local time
+
+
+class HealthSettings(_Strict):
+    failure_alert_minutes: int = 10
+    check_interval_seconds: int = 60
+
+
+class YouTubeSettings(_Strict):
+    feed_url_template: str = "https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+
+
+class BlueskySettings(_Strict):
+    jetstream_url: str = "wss://jetstream2.us-east.bsky.network/subscribe"
+    resolve_url: str = "https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle"
+    include_replies: bool = False
+
+
+class XSettings(_Strict):
+    api_base: str = "https://api.x.com/2"
+    monthly_read_budget: int = 10000   # posts you may read per month on your tier
+    priority_interval: int = 300       # seconds between polls of `priority: true` accounts
+    default_interval: int = 1800       # seconds between polls of other accounts
+
+
+class WikipediaSettings(_Strict):
+    stream_url: str = "https://stream.wikimedia.org/v2/stream/recentchange"
+    api_url: str = "https://en.wikipedia.org/w/api.php"
+    wiki: str = "enwiki"
+    revert_window_minutes: int = 15
+
+
 class Settings(_Strict):
     db_path: str = "data/newsalert.db"
     log_file: str | None = "data/newsalert.log"
     log_level: str = "INFO"
     polling: PollingSettings = Field(default_factory=PollingSettings)
     pipeline: PipelineSettings = Field(default_factory=PipelineSettings)
+    triage: TriageSettings = Field(default_factory=TriageSettings)
+    cluster: ClusterSettings = Field(default_factory=ClusterSettings)
+    alerts: AlertSettings = Field(default_factory=AlertSettings)
+    quiet_hours: QuietHoursSettings = Field(default_factory=QuietHoursSettings)
+    health: HealthSettings = Field(default_factory=HealthSettings)
+    youtube: YouTubeSettings = Field(default_factory=YouTubeSettings)
+    bluesky: BlueskySettings = Field(default_factory=BlueskySettings)
+    x: XSettings = Field(default_factory=XSettings)
+    wikipedia: WikipediaSettings = Field(default_factory=WikipediaSettings)
 
 
 # --------------------------------------------------------------------------- sources
@@ -72,11 +142,14 @@ class Source(_Strict):
     group: str | None = None
     interval: int | None = None
     enabled: bool = True
+    priority: bool = False   # watchlist-related account: polled most often (X)
 
     @model_validator(mode="after")
     def _check_access(self) -> "Source":
-        if self.type in ("rss", "youtube") and not self.url:
-            raise ValueError(f"source {self.name!r}: type {self.type} needs a url")
+        if self.type == "rss" and not self.url:
+            raise ValueError(f"source {self.name!r}: type rss needs a url")
+        if self.type == "youtube" and not (self.url or self.account):
+            raise ValueError(f"source {self.name!r}: type youtube needs a url or account (channel id)")
         if self.type in ("bluesky", "x") and not self.account:
             raise ValueError(f"source {self.name!r}: type {self.type} needs an account")
         return self

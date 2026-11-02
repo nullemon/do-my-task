@@ -106,3 +106,25 @@ class Pipeline:
             self.db.audit("source.seeded", source=source.name, items=stats.seeded)
             log.info("source.seeded", extra={"source": source.name, "items": stats.seeded})
         return stats
+
+    async def retract(self, source: str, external_id: str, reason: str) -> bool:
+        """A watcher saw an item disappear: post deleted, Wikipedia edit reverted, etc.
+
+        Marks the item deleted and lets the sink send a "possibly false" follow-up.
+        Returns True if the item was known.
+        """
+        row = self.db.conn.execute(
+            "SELECT id, deleted_at FROM items WHERE source=? AND external_id=?", (source, external_id)
+        ).fetchone()
+        if row is None or row["deleted_at"] is not None:
+            return False
+        self.db.conn.execute("UPDATE items SET deleted_at=? WHERE id=?", (time.time(), row["id"]))
+        self.db.audit("item.retracted", source=source, external_id=external_id, reason=reason)
+        log.info("item.retracted", extra={"source": source, "item_id": row["id"], "reason": reason})
+        handler = getattr(self.sink, "on_retraction", None)
+        if handler is not None:
+            try:
+                await handler(row["id"], reason)
+            except Exception:
+                log.exception("sink.retraction_error", extra={"item_id": row["id"]})
+        return True

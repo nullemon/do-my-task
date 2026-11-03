@@ -359,7 +359,8 @@ def build_volume_group():
         L.new(gi.outputs["Density"], ptv.inputs["Density"])
         vol_out = ptv.outputs[0]
         it = int(CONFIG["SMOOTH_ITER"])
-        if it > 0 and hasattr(bpy.types, "GeometryNodeGridMean"):
+        if it > 0 and all(hasattr(bpy.types, t) for t in ("GeometryNodeGridMean", "GeometryNodeGetNamedGrid",
+                                                     "GeometryNodeStoreNamedGrid", "GeometryNodeGridDilateAndErode")):
             # Blender 5.x: blur the density grid -> smooth molten surface instead of a union of spheres
             gg = N.new("GeometryNodeGetNamedGrid"); gg.data_type = "FLOAT"
             gg.inputs["Name"].default_value = "density"

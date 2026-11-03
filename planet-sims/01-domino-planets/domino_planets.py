@@ -493,6 +493,14 @@ def new_obj(sc, coll, name, data):
     return o
 
 
+def overlay_only(o):
+    """Camera-attached UI (labels, cards): no shadows, no bounce light."""
+    for attr in ("visible_shadow", "visible_diffuse", "visible_glossy",
+                 "visible_transmission", "visible_volume_scatter"):
+        if hasattr(o, attr):
+            setattr(o, attr, False)
+
+
 # =============================================================================
 # build
 # =============================================================================
@@ -839,6 +847,7 @@ def build_labels(sc, B, S, cam):
         cu.align_y = "CENTER"
         cu.materials.append(mat)
         o = new_obj(sc, B["coll"], name, cu)
+        overlay_only(o)
         return o
 
     # hook caption (top)
@@ -857,6 +866,7 @@ def build_labels(sc, B, S, cam):
                  rounded_rect_mesh("HookCard", hook.dimensions.x + 0.04, hook.data.size * 1.7, hook.data.size * 0.6))
     hb.data.materials.append(mat_emission("HookCard", (0.0, 0.0, 0.0), 1.0))
     hb.parent = cam
+    overlay_only(hb)
     hb.location = (0, vis_h * 0.415 + hook.data.size * 0.04, -d)
 
     for zi, (p, _) in enumerate(zones):
@@ -880,6 +890,7 @@ def build_labels(sc, B, S, cam):
                        rounded_rect_mesh("Card_" + p, tw + th * 1.0, th * 1.75, th * 0.5))
         card.data.materials.append(mat_emission("Card_" + p, L["card"], 1.0))
         card.parent = root
+        overlay_only(card)
         # pop in when the wave enters, pop out when it leaves
         f_in = sw[zi] if zi > 0 else 6
         f_out = sw[zi + 1] if zi + 1 < n else None

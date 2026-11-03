@@ -99,7 +99,7 @@ LOOK = {  # ground, rock, sky_low, sky_high, sun strength, sun colour, stars, em
     "Neptune": dict(ground=(0.20, 0.30, 0.65), rock=(0.12, 0.17, 0.40), sky0=(0.35, 0.50, 0.95), sky1=(0.08, 0.15, 0.55), sun=1.4, sunc=(0.85, 0.9, 1.0), stars=False),
     "Saturn":  dict(ground=(0.70, 0.60, 0.40), rock=(0.45, 0.38, 0.25), sky0=(0.95, 0.85, 0.60), sky1=(0.65, 0.55, 0.35), sun=2.0, sunc=(1.0, 0.92, 0.75), stars=False),
     "Jupiter": dict(ground=(0.62, 0.42, 0.24), rock=(0.40, 0.24, 0.13), sky0=(0.90, 0.62, 0.38), sky1=(0.55, 0.32, 0.18), sun=2.6, sunc=(1.0, 0.85, 0.65), stars=False, bands=True),
-    "Sun":     dict(ground=(1.00, 0.45, 0.05), rock=(0.35, 0.05, 0.01), sky0=(1.00, 0.55, 0.12), sky1=(0.85, 0.22, 0.03), sun=1.5, sunc=(1.0, 0.7, 0.4), stars=False, emissive=True),
+    "Sun":     dict(ground=(1.00, 0.45, 0.05), rock=(0.35, 0.05, 0.01), sky0=(0.80, 0.30, 0.05), sky1=(0.45, 0.08, 0.01), sun=1.5, sunc=(1.0, 0.7, 0.4), stars=False, emissive=True),
 }
 
 VERDICT_STYLE = {
@@ -630,8 +630,8 @@ def terrain_mat(planet):
     sepn = N.new("ShaderNodeSeparateXYZ")
     Lk.new(geo.outputs["Normal"], sepn.inputs[0])
     flat = N.new("ShaderNodeMapRange")
-    flat.inputs["From Min"].default_value = 0.55
-    flat.inputs["From Max"].default_value = 0.85
+    flat.inputs["From Min"].default_value = 0.45
+    flat.inputs["From Max"].default_value = 0.7
     Lk.new(sepn.outputs[2], flat.inputs["Value"])
     tc = N.new("ShaderNodeTexCoord")
     noise = N.new("ShaderNodeTexNoise")
@@ -642,14 +642,14 @@ def terrain_mat(planet):
     wave = N.new("ShaderNodeTexWave")
     wave.wave_type = "BANDS"
     wave.bands_direction = "Z"
-    wave.inputs["Scale"].default_value = 0.09
-    wave.inputs["Distortion"].default_value = 2.5
+    wave.inputs["Scale"].default_value = 0.06
+    wave.inputs["Distortion"].default_value = 6.0
     wave.inputs["Detail"].default_value = 3.0
     Lk.new(tc.outputs["Object"], wave.inputs["Vector"])
     rock_ramp = N.new("ShaderNodeValToRGB")
     r = L["rock"]
-    rock_ramp.color_ramp.elements[0].color = (r[0] * 0.55, r[1] * 0.55, r[2] * 0.55, 1)
-    rock_ramp.color_ramp.elements[1].color = (min(1, r[0] * 1.5), min(1, r[1] * 1.5), min(1, r[2] * 1.5), 1)
+    rock_ramp.color_ramp.elements[0].color = (r[0] * 0.75, r[1] * 0.75, r[2] * 0.75, 1)
+    rock_ramp.color_ramp.elements[1].color = (min(1, r[0] * 1.25), min(1, r[1] * 1.25), min(1, r[2] * 1.25), 1)
     Lk.new(wave.outputs["Fac"], rock_ramp.inputs["Fac"])
     gnd_ramp = N.new("ShaderNodeValToRGB")
     gcol = L["ground"]
@@ -679,7 +679,7 @@ def terrain_mat(planet):
         er.color_ramp.elements[0].color = (1.0, 0.85, 0.3, 1)
         er.color_ramp.elements[1].color = (0.9, 0.25, 0.02, 1)
         Lk.new(vor.outputs["Distance"], er.inputs["Fac"])
-        st = N.new("ShaderNodeMath"); st.operation = "MULTIPLY"; st.inputs[1].default_value = 3.0
+        st = N.new("ShaderNodeMath"); st.operation = "MULTIPLY"; st.inputs[1].default_value = 1.1
         Lk.new(flat.outputs["Result"], st.inputs[0])
         Lk.new(er.outputs["Color"], b.inputs["Emission Color"])
         Lk.new(st.outputs[0], b.inputs["Emission Strength"])
@@ -1160,7 +1160,7 @@ def build_hud(scene, cam, planet, pred, ev, sim_numbers, t_verdict, fps):
     shadow = emit_mat("HudShadow_" + planet, (0, 0, 0), 0.0, alpha=0.55)
     vname, icon_kind, vcol = VERDICT_STYLE[pred["verdict"]]
     vmat = emit_mat("HudVerdict_" + planet, vcol, 1.0)
-    plate_mat = emit_mat("HudPlate_" + planet, (0.0, 0.0, 0.0), 0.0, alpha=0.62)
+    plate_mat = emit_mat("HudPlate_" + planet, (0.0, 0.0, 0.0), 0.0, alpha=0.82)
     hw = 0.42 * 0.93
     items = []
 
@@ -1180,6 +1180,10 @@ def build_hud(scene, cam, planet, pred, ev, sim_numbers, t_verdict, fps):
     hud_text("Planet", planet.upper() + " \u00b7 %.2f m/s\u00b2" % GRAVITY[planet], 0.425, 2 * hw, 0.075)
     hud_text("Specs", "same car \u00b7 %d km/h \u00b7 %g\u00b0 ramp \u00b7 %g m gap" %
              (round(LAUNCH_SPEED * 3.6), RAMP_ANGLE_DEG, GAP), -0.68, 2 * hw * 0.9, 0.03)
+    bm = bmesh.new()
+    box(bm, (0, -0.68, -1.004), (0.86, 0.06, 0.001), 0)
+    strip = mesh_obj("SpecsPlate_" + planet, bm, (plate_mat,), scene_coll=coll)
+    strip.parent = cam
     # verdict card (pops in)
     card = link(bpy.data.objects.new(PFX + "VerdictCard_" + planet, None), coll)
     card.parent = cam
@@ -1208,9 +1212,15 @@ def build_hud(scene, cam, planet, pred, ev, sim_numbers, t_verdict, fps):
     sub.location = (0, -0.075, 0)
     fit_text(scene, sub, 0.70, 0.04)
     fv = round(t_verdict * fps) + 1
-    for f, s in ((1, 0.0), (fv - 1, 0.0), (fv + 3, 1.15), (fv + 6, 1.0)):
+    for f, s in ((1, 0.3), (fv - 1, 0.3), (fv + 3, 1.15), (fv + 6, 1.0)):
         card.scale = (s, s, s)
         key(card, "scale", f)
+    for o in (plate, bars, vt, icon, sub):
+        for f, hid in ((1, True), (fv - 1, True), (fv, False)):
+            o.hide_render = hid
+            o.hide_viewport = hid
+            key(o, "hide_render", f)
+            key(o, "hide_viewport", f)
 
 
 # =============================================================================
@@ -1252,7 +1262,7 @@ def build_scene(planet, S, preview):
     cam_d.clip_end = 1000
     cam = link(bpy.data.objects.new(PFX + "Cam_" + planet, cam_d), sc.collection)
     sc.camera = cam
-    cam.rotation_euler = (math.radians(84), 0, 0)
+    cam.rotation_euler = (math.radians(75), 0, 0)
     DIST = 15.0
     cx = cz = None
     shake_events = [ev[k] for k in ("land", "wall", "floor", "crush") if k in ev]
@@ -1273,7 +1283,7 @@ def build_scene(planet, S, preview):
             if 0 <= a < 0.6:
                 amp = 0.25 * math.exp(-a / 0.15)
                 sx += amp * rnd.uniform(-1, 1); sz += amp * rnd.uniform(-1, 1)
-        cam.location = (cx + sx, -DIST, cz + 2.4 + sz)
+        cam.location = (cx + sx, -DIST, cz + 5.0 + sz)
         key(cam, "location", i + 1)
 
     # numbers for the end card
@@ -1381,7 +1391,7 @@ def main():
                      "CRUSHED": ev.get("crush", 1.5) + 0.25, "OVERSHOT": ev.get("launch", 1.8) + 1.75,
                      "LOST IN SPACE": ev.get("launch", 1.8) + 1.1}[pred["verdict"]]
             shots = [("key", int(key_t * FPS) + 1)]
-            if p in ("Earth", "Pluto", "Jupiter"):
+            if p in ("Earth", "Sun"):
                 shots.append(("end", sc.frame_end))
             for tag, fr in shots:
                 path = os.path.join(pdir, "%02d_%s_%s.png" % (PLANETS.index(p) + 1, p, tag))

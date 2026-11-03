@@ -478,7 +478,7 @@ def build_scene(idx, planet, args, base, res, frames):
     for side in ("front", "back", "left", "right", "top"):
         setattr(d, "use_collision_border_" + side, False)   # open: splash leaves, no invisible walls
     d.delete_in_obstacle = True
-    d.use_fractions = True                      # smoother liquid/glass contact
+    d.use_fractions = False                     # fractions leak through the thin glass wall
     d.surface_tension = SURFACE_TENSION
     # gravity: Mantaflow uses scene.gravity when scene.use_gravity is on
     # (x effector_weights.gravity); otherwise its own domain.gravity.  Set both.

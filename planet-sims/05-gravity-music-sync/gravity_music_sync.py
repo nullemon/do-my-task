@@ -60,7 +60,8 @@ DROP_STRENGTH = 0.80       # hits with bass punch >= this fraction of the max ..
 DROP_AFTER_GAP_S = 1.5     # ... that also follow >= this many seconds without hits are "drops"
 QUIET_LEVEL = 0.30         # normalised loudness below this = fully quiet (float)
 LOUD_LEVEL = 0.80          # normalised loudness above this = fully loud (Earth)
-FLOAT_PERIOD_S = 4.6       # quiet gravity breathes: up for ~1/3 of this, then gently down
+FLOAT_PERIOD_S = 6.0       # quiet gravity breathes: up for ~1/4 of this, then a gentle sink ...
+FLOAT_SINK = 0.35          # ... at this fraction of the quiet strength, then up again
 BEAT_HOLD_FRAMES = 7       # frames gravity stays at BEAT_PLANET after a hit
 DROP_HOLD_FRAMES = 4       # frames gravity stays at DROP_PLANET after a drop
 SETTLE_FRAMES = 3          # frames of Earth gravity after a hit before easing back
@@ -173,7 +174,7 @@ def make_demo_track(path, sr=44100, dur=20.0):
     noise = rng.standard_normal(len(k))
     noise = np.convolve(noise, np.ones(8) / 8, mode="same")
     tone = np.sin(2 * np.pi * np.cumsum(200 + 900 * prog ** 2) / sr)
-    out[i0:i1] += (0.40 * prog ** 2) * (0.6 * noise + 0.4 * tone)
+    out[i0:i1] += (0.05 * prog ** 2) * (0.6 * noise + 0.4 * tone)   # soft riser: still 'quiet'
     # 11 s: THE DROP (Sun)
     add(kick(1.0, 0.6), 11.0)
     add(sub(0.6, 1.2), 11.0)
@@ -299,7 +300,7 @@ def gravity_curve(an, fps):
     qt = np.zeros(n)
     for f in range(1, n):
         qt[f] = qt[f - 1] + 1.0 / fps if x[f] < 0.5 else 0.0
-    up_eff = up * np.clip(1.6 * np.cos(2 * np.pi * qt / FLOAT_PERIOD_S), -1, 1)
+    up_eff = up * np.clip(1.6 * np.cos(2 * np.pi * qt / FLOAT_PERIOD_S), -FLOAT_SINK, 1)
     base = up_eff + (-down - up_eff) * x
     g = base.copy()
     hits = []
@@ -558,7 +559,7 @@ def rigid(o, kind="ACTIVE", shape="CONVEX_HULL", mass=1.0, friction=0.6, bounce=
 # =============================================================================
 # BUILD THE ROOM
 # =============================================================================
-RX, RY_BACK, RY_FRONT, RZ = 2.1, 2.0, -1.7, 3.3   # room half-width, back wall y, front limit, height
+RX, RY_BACK, RY_FRONT, RZ = 2.1, 2.0, -1.15, 3.3   # room half-width, back wall y, front limit, height
 
 
 def build_room():
@@ -731,7 +732,7 @@ def build_props(rng):
         z += th + 0.003
     # books on the floor
     for i in range(3):
-        book("BookFloor%d" % i, (rng.uniform(-1.6, 1.6), rng.uniform(-1.3, -0.6), 0.03 + 0.04 * i),
+        book("BookFloor%d" % i, (rng.uniform(-1.6, 1.6), rng.uniform(-0.95, -0.55), 0.03 + 0.04 * i),
              (0, 0, rng.uniform(0, 3)), 0.2, 0.15, 0.035, (i + 5) % 8)
 
     # cups / mugs
@@ -758,23 +759,24 @@ def build_props(rng):
         bm_sphere(bm, r, sub=3)
         name = "Ball%d" % i
         o = new_obj(name, finalize(bm, name, [mat("Ball%d" % i, c, 0.25, coat=0.8)], smooth=True))
-        o.location = (rng.uniform(-1.8, 1.8), rng.uniform(-1.4, 0.9), r + 0.002)
-        if abs(o.location.x - 0.15) < 0.6 and abs(o.location.y - 0.1) < 0.6:
-            o.location.y -= 1.1
+        o.location = (rng.uniform(-1.8, 1.8), rng.uniform(-0.95, 0.9), r + 0.002)
+        if abs(o.location.x - 0.15) < 0.65 and abs(o.location.y - 0.1) < 0.65:
+            o.location.x += 1.3 if o.location.x > 0.15 else -1.3
         rigid(o, mass=0.4, shape="SPHERE", friction=0.5, bounce=0.6, margin=0.002)
 
     # cushions on the sofa
     cush_cols = [(0.95, 0.55, 0.35), (0.85, 0.65, 0.2), (0.6, 0.7, 0.55), (0.9, 0.85, 0.75)]
     for i, c in enumerate(cush_cols):
         bm = bmesh.new()
-        bm_box(bm, (0.4, 0.12, 0.4))
+        bm_box(bm, (0.4, 0.17, 0.4))
         name = "Cushion%d" % i
         me = finalize(bm, name, [mat("Cushion%d" % i, c, 0.9, sheen=0.9)])
         o = new_obj(name, me)
-        o.location = (-1.35 + i * 0.45, RY_BACK - 0.36, 0.76)
+        bevel(o, 0.07, 3)
+        o.location = (-1.35 + i * 0.45, RY_BACK - 0.36, 0.79)
         o.rotation_euler = (-0.25, rng.uniform(-0.15, 0.15), rng.uniform(-0.1, 0.1))
         sd = o.modifiers.new("Sub", "SUBSURF")
-        sd.levels = 2
+        sd.levels = 1
         sd.render_levels = 2
         o.data.polygons.foreach_set("use_smooth", [True] * len(o.data.polygons))
         rigid(o, mass=0.5, shape="BOX", friction=0.9, bounce=0.05)

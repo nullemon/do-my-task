@@ -131,7 +131,9 @@ def predict(g):
     else:
         # misses the mesa: a long, high flight leaves the frame upward -> space
         verdict = "LOST IN SPACE" if t_land > SPACE_AIRTIME else "OVERSHOT"
-    return dict(range=rng, airtime=t_land, peak=peak, z_far_wall=z_at_far_wall,
+    tn = (GAP - HALF_LEN) / vx   # when the car's NOSE reaches the far wall
+    z_nose_wall = RAMP_HEIGHT + vz * tn - 0.5 * g * tn ** 2
+    return dict(range=rng, z_nose_wall=z_nose_wall, airtime=t_land, peak=peak, z_far_wall=z_at_far_wall,
                 verdict=verdict, g_earths=g / 9.81,
                 ramp_ok=LAUNCH_SPEED ** 2 >= 2 * g * RAMP_HEIGHT)
 
@@ -882,7 +884,7 @@ def build_car(scene, S, planet):
     lat_ob.scale = (4.9, 2.3, 1.6)
     lat_ob.hide_render = True
     lat_ob.shape_key_add(name="Basis")
-    for name, ztop, sx, sy, bulge in (("Squash", 0.62, 1.03, 1.06, 0.0), ("Pancake", 0.10, 1.15, 1.32, 0.0)):
+    for name, ztop, sx, sy, bulge in (("Squash", 0.62, 1.03, 1.06, 0.0), ("Pancake", 0.22, 1.12, 1.30, 0.0)):
         kb = lat_ob.shape_key_add(name=name, from_mix=False)
         for p, d in zip(lat.points, kb.data):
             co = p.co.copy()
@@ -1008,7 +1010,7 @@ def build_props(scene, S, planet):
     cone_me = bpy.data.meshes.new(PFX + "Cone_" + planet)
     cone_bm.to_mesh(cone_me); cone_bm.free()
     cone_me.materials.append(M["cone"])
-    for (cx, cy) in ((-RAMP_LEN - 1, -2.6), (-RAMP_LEN - 1, 2.6), (-RAMP_LEN - 6, -2.6),
+    for (cx, cy) in ((-RAMP_LEN - 1, 2.6), (-RAMP_LEN - 6, 2.6),
                      (GAP + LANDING_LENGTH - 1.2, -1.6), (GAP + LANDING_LENGTH - 1.2, 0.0),
                      (GAP + LANDING_LENGTH - 1.2, 1.6), (GAP + 0.8, -2.6), (GAP + 0.8, 2.6)):
         c = link(bpy.data.objects.new(PFX + "ConeObj_" + planet, cone_me), coll)
@@ -1275,7 +1277,7 @@ def build_scene(planet, S, preview):
     cam.rotation_euler = (math.radians(75), 0, 0)
     crushed = pred["verdict"] == "CRUSHED"
     DIST = 9.0 if crushed else 15.0     # get close to the pancake on the Sun
-    HGT = 3.2 if crushed else 5.0
+    HGT = 2.4 if crushed else 5.0
     cx = cz = None
     shake_events = [ev[k] for k in ("land", "wall", "floor", "crush") if k in ev]
     rnd = random.Random(3)
@@ -1387,9 +1389,9 @@ def main():
         results.append((p, sc, frames, ev, pred, tv))
         last = frames[-1]
         if "land" in ev:
-            simr = "landed x=%.2f m (pred %.2f), stopped x=%.1f" % (ev["land_x"], pred["range"], ev.get("stop_x", float("nan")))
+            simr = "front wheels touch x=%.2f m (centre range %.2f), stopped x=%.1f" % (ev["land_x"], pred["range"], ev.get("stop_x", float("nan")))
         elif "floor" in ev:
-            simr = "hit far wall z=%.2f m (pred %.2f), canyon floor t=%.2fs" % (ev["wall_z"], pred["z_far_wall"], ev["floor"])
+            simr = "nose hits far wall z=%.2f m (exact %.2f), canyon floor t=%.2fs" % (ev["wall_z"], pred["z_nose_wall"], ev["floor"])
         elif "crush" in ev:
             simr = "crushed at x=%.2f, slid %.2f m in %.3f s; can climb ramp: %s" % (
                 ev["crush_x"], ev.get("crush_slide", 0), ev.get("crush_stop", 0) - ev["crush"], pred["ramp_ok"])

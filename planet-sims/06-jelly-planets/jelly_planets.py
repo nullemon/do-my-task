@@ -665,23 +665,58 @@ def bake_scene(sc, jel):
     return time.time() - t0
 
 
-def measure(sc, jel):
+def capture(sc, jel):
+    """Read the baked cloth shape every frame (local coords, before subdivision) and
+    measure height / width / volume."""
     dg = sc.view_layers[0].depsgraph
-    rows = []
+    sub = jel.modifiers.get("Smooth")
+    if sub:
+        sub.show_viewport = False
+    frames, rows = [], []
+    mw = jel.matrix_world.copy()
     for f in range(FRAME_START, FRAME_END + 1):
         sc.frame_set(f)
         e = jel.evaluated_get(dg)
-        mw = e.matrix_world
+        me = e.to_mesh()
+        co = [v.co.copy() for v in me.vertices]
         bm = bmesh.new()
-        bm.from_mesh(e.to_mesh())
+        bm.from_mesh(me)
         bm.transform(mw)
         zs = [v.co.z for v in bm.verts]
         w = 2 * max(math.hypot(v.co.x, v.co.y) for v in bm.verts)
         vol = bm.calc_volume()
         bm.free()
         e.to_mesh_clear()
+        frames.append((f, co))
         rows.append(dict(f=f, zmin=min(zs), zmax=max(zs), h=max(zs) - min(zs), w=w, vol=vol))
-    return rows
+    if sub:
+        sub.show_viewport = True
+    return frames, rows
+
+
+def freeze_to_shapekeys(jel, frames):
+    """Store the baked cloth as one shape key per frame (keyed on/off).  Renders and
+    playback then never depend on the in-memory point cache (which Blender's render
+    depsgraph does not read when running headless).  The Cloth modifier is kept but
+    disabled so it can be re-enabled and re-baked by hand."""
+    me = jel.data
+    if me.shape_keys:
+        jel.shape_key_clear()
+    jel.shape_key_add(name="Basis", from_mix=False)
+    for f, co in frames:
+        if f < RELEASE_FRAME:
+            continue
+        kb = jel.shape_key_add(name="f%04d" % f, from_mix=False)
+        flat = [c for v in co for c in v]
+        kb.data.foreach_set("co", flat)
+        for ff, val in ((f - 1, 0.0), (f, 1.0), (f + 1, 0.0)):
+            kb.value = val
+            kb.keyframe_insert("value", frame=ff)
+        kb.value = 0.0
+    cl = jel.modifiers.get("Cloth")
+    if cl:
+        cl.show_viewport = False
+        cl.show_render = False
 
 
 def analyse(planet, rows):
@@ -746,7 +781,8 @@ def main():
             continue
         sc, jel = build_planet_scene(i, planet, PREVIEW and not RENDER)
         dt = bake_scene(sc, jel)
-        rows = measure(sc, jel)
+        frames, rows = capture(sc, jel)
+        freeze_to_shapekeys(jel, frames)
         res = analyse(planet, rows)
         res["bake_s"] = dt
         results.append(res)

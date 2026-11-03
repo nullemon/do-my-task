@@ -63,3 +63,5 @@
 [2026-11-03 12:03:09] encoding 1080p master
 [2026-11-03 12:13:29] 1080p done: 240.000000 s
 [2026-11-03 12:13:29] encoding 4K (lanczos upscale of the 1080p render)
+[2026-11-03 12:31:51] 4K done: 240.000000 s
+[2026-11-03 12:31:51] assembly complete

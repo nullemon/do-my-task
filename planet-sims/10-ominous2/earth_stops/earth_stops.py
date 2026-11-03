@@ -192,6 +192,16 @@ def new_scene(name):
     except TypeError:
         pass
     sc.cycles.device = "CPU"
+    if "--gpu" in argv:  # e.g. --gpu OPTIX / CUDA / HIP / METAL
+        try:
+            prefs = bpy.context.preferences.addons["cycles"].preferences
+            prefs.compute_device_type = _arg("--gpu", str, "OPTIX")
+            prefs.get_devices()
+            for d in prefs.devices:
+                d.use = True
+            sc.cycles.device = "GPU"
+        except Exception as ex:
+            print("[earth_stops] GPU setup failed, using CPU:", ex)
     if THREADS:
         sc.render.threads_mode = "FIXED"
         sc.render.threads = THREADS

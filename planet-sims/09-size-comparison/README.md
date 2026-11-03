@@ -50,7 +50,7 @@ WASP-17 ~1,300 ly, HAT-P-67 ~1,200 ly (rounded from Gaia distances).
 # test stills (look at them first)
 python size_comparison.py -- --out OUT --frames 60,300,700,1180,1400
 # all frames (resumable: existing PNGs are skipped), soundtrack, MP4
-python size_comparison.py -- --out OUT --render
+python size_comparison.py -- --out OUT --render            # add --step 2 for a half-rate draft
 python size_comparison.py -- --out OUT --audio --encode
 ```
 Use Blender as a Python module (`bpy`) or `blender -b -P size_comparison.py -- ...`. Flags:
@@ -93,6 +93,9 @@ blender -b -P size_comparison.py -- --out OUT --res 1080 --samples 128 --gpu --t
 
 ## Render used here
 540×960, 24 fps, 1438 frames (59.9 s). Cycles CPU, 2 threads, 8 spp adaptive, OpenImageDenoise
-(quality FAST, albedo + normal, no prefilter), persistent data. About 5–7 s/frame on a shared
-4-core box.
+(quality FAST, albedo + normal, no prefilter), persistent data. About 3.5–6 s/frame on a shared
+4-core box. To save time only the odd frames were rendered (`--render --step 2`, 719 frames;
+frames 1–340 were already rendered at full rate). `--encode --step 2` then blends them back to 24 fps
+with `minterpolate=mi_mode=blend`, so timing and audio sync stay exact. On a PC, leave out `--step`.
+Output: `size_comparison.mp4`, 59.8 s, 540×960, H.264 CRF 20 plus AAC, 27 MB.
 Preview stills are in `preview/`.

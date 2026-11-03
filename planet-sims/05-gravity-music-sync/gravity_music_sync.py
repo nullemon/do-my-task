@@ -98,6 +98,10 @@ if "--preview" in ARGS:
     PREVIEW = True
 if "--audio" in ARGS:
     AUDIO_PATH = ARGS[ARGS.index("--audio") + 1]
+if "--seconds" in ARGS:
+    SECONDS = float(ARGS[ARGS.index("--seconds") + 1])
+if "--engine" in ARGS:
+    ENGINE = ARGS[ARGS.index("--engine") + 1].upper()
 
 
 def script_dir():
@@ -1170,16 +1174,17 @@ def main():
         print("      t=%5.2fs %-7s  %.3f -> %.3f -> %.3f  (drop %.0f cm)" % (f0 / FPS, DROP_PLANET if drop else BEAT_PLANET,
               a, b, c, 100 * (a - c)))
     # quiet stretches
-    print("\n[gms] quiet (floating) stretches: mean height start -> end")
+    print("\n[gms] quiet (floating) stretches: mean height start -> peak")
     f = 0
     while f < n:
-        if g[f] > 0.05:
+        if states[f][0] == QUIET_PLANET:
             e = f
-            while e < n and g[e] > 0.05:
+            while e < n and states[e][0] == QUIET_PLANET:
                 e += 1
             if e - f >= 10:
-                print("      %5.2fs-%5.2fs  %.3f -> %.3f m  (+%.0f cm)" % (f / FPS, e / FPS, heights[f], heights[e - 1],
-                      100 * (heights[e - 1] - heights[f])))
+                pk = f + int(np.argmax(heights[f:e]))
+                print("      %5.2fs-%5.2fs  %.3f -> %.3f m at %.2fs  (+%.0f cm)" % (
+                      f / FPS, e / FPS, heights[f], heights[pk], pk / FPS, 100 * (heights[pk] - heights[f])))
             f = e
         else:
             f += 1

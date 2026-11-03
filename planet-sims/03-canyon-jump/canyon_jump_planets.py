@@ -99,7 +99,7 @@ LOOK = {  # ground, rock, sky_low, sky_high, sun strength, sun colour, stars, em
     "Neptune": dict(ground=(0.20, 0.30, 0.65), rock=(0.12, 0.17, 0.40), sky0=(0.35, 0.50, 0.95), sky1=(0.08, 0.15, 0.55), sun=1.4, sunc=(0.85, 0.9, 1.0), stars=False),
     "Saturn":  dict(ground=(0.70, 0.60, 0.40), rock=(0.45, 0.38, 0.25), sky0=(0.95, 0.85, 0.60), sky1=(0.65, 0.55, 0.35), sun=2.0, sunc=(1.0, 0.92, 0.75), stars=False),
     "Jupiter": dict(ground=(0.62, 0.42, 0.24), rock=(0.40, 0.24, 0.13), sky0=(0.90, 0.62, 0.38), sky1=(0.55, 0.32, 0.18), sun=2.6, sunc=(1.0, 0.85, 0.65), stars=False, bands=True),
-    "Sun":     dict(ground=(1.00, 0.45, 0.05), rock=(0.35, 0.05, 0.01), sky0=(0.80, 0.30, 0.05), sky1=(0.45, 0.08, 0.01), sun=1.5, sunc=(1.0, 0.7, 0.4), stars=False, emissive=True),
+    "Sun":     dict(ground=(0.70, 0.22, 0.02), rock=(0.35, 0.05, 0.01), sky0=(0.80, 0.30, 0.05), sky1=(0.45, 0.08, 0.01), sun=1.5, sunc=(1.0, 0.7, 0.4), stars=False, emissive=True),
 }
 
 VERDICT_STYLE = {
@@ -859,7 +859,8 @@ def import_car_model():
     norm = mathutils.Matrix.Scale(s, 4) @ mathutils.Matrix.Translation(-centre) @ R
     roots = [o for o in new if o.parent is None or o.parent not in new]
     for o in roots:
-        o.matrix_world = norm @ o.matrix_world
+        o.parent = None
+        o.matrix_basis = norm @ o.matrix_world
     return dict(objects=new, roots=roots, scale=s)
 
 
@@ -894,44 +895,48 @@ def build_car(scene, S, planet):
     wheels = []
     if S.imported:
         import mathutils
-        for o in S.imported["objects"]:
-            c = o.copy()
-            if c.data is not None and o.type == "MESH":
-                pass
-            link(c, coll)
-            c["src"] = o.name
-        mapping = {o.name: c for o in S.imported["objects"] for c in coll.objects if c.get("src") == o.name}
-        for o in S.imported["objects"]:
+        objs = S.imported["objects"]
+        def world(o):   # source objects live in no scene -> compose matrices by hand
+            if o.parent is None:
+                return o.matrix_basis.copy()
+            return world(o.parent) @ o.matrix_parent_inverse @ o.matrix_basis
+        def is_wheel(o):
+            return any(k in o.name.lower() for k in CAR_WHEEL_KEYWORDS)
+        mapping = {}
+        for o in objs:
+            c = link(o.copy(), coll)
+            c.name = o.name + "_" + planet
+            mapping[o.name] = c
+        for o in objs:
             c = mapping[o.name]
-            if o.parent in S.imported["objects"]:
+            if o.parent in objs:
                 c.parent = mapping[o.parent.name]
                 c.matrix_parent_inverse = o.matrix_parent_inverse.copy()
-        for o in S.imported["roots"]:
-            c = mapping[o.name]
-            mw = o.matrix_world.copy()
-            c.parent = susp
-            c.matrix_parent_inverse = mathutils.Matrix.Identity(4)
-            c.matrix_world = mw
-        for o in S.imported["objects"]:
-            c = mapping[o.name]
+            else:   # root of the model -> rides on the suspension (identity at build time)
+                c.parent = susp
+                c.matrix_parent_inverse = mathutils.Matrix.Identity(4)
+                c.matrix_basis = o.matrix_basis.copy()
             if c.type == "MESH":
                 mods_targets.append(c)
-            if any(k in o.name.lower() for k in CAR_WHEEL_KEYWORDS) and c.type == "MESH":
-                # spin around its own bbox centre, axis = car's Y
-                mw = o.matrix_world
-                pts = [mw @ mathutils.Vector(b) for b in o.bound_box]
-                cen = sum(pts, mathutils.Vector()) / 8
-                piv = link(bpy.data.objects.new(PFX + "WheelPivot_" + planet, None), coll)
-                piv.parent = root
-                piv.location = cen
-                piv.rotation_mode = "XYZ"
-                wmw = c.matrix_world.copy()
-                c.parent = piv
-                c.matrix_parent_inverse = mathutils.Matrix.Identity(4)
-                c.matrix_world = mathutils.Matrix.Translation(cen) @ (mathutils.Matrix.Translation(-cen) @ wmw)
-                c.matrix_parent_inverse = piv.matrix_world.inverted() if False else mathutils.Matrix.Translation(-cen)
-                c.matrix_basis = wmw
-                wheels.append(piv)
+        for o in objs:
+            anc, wheel_anc = o.parent, False
+            while anc is not None:
+                wheel_anc = wheel_anc or is_wheel(anc); anc = anc.parent
+            if not is_wheel(o) or wheel_anc or o.type not in ("MESH", "EMPTY"):
+                continue
+            # spin around its own bbox centre, axis = car's Y
+            mw = world(o)
+            pts = [mw @ mathutils.Vector(b) for b in o.bound_box] if o.type == "MESH" else [mw.translation]
+            cen = sum(pts, mathutils.Vector()) / len(pts)
+            piv = link(bpy.data.objects.new(PFX + "WheelPivot_" + planet, None), coll)
+            piv.parent = root
+            piv.location = cen
+            piv.rotation_mode = "XYZ"
+            c = mapping[o.name]
+            c.parent = piv
+            c.matrix_parent_inverse = mathutils.Matrix.Identity(4)
+            c.matrix_basis = mathutils.Matrix.Translation(-cen) @ mw
+            wheels.append(piv)
     else:
         P = S.car_parts
         for k in ("body", "glass", "roof", "lights"):
@@ -1176,6 +1181,11 @@ def build_hud(scene, cam, planet, pred, ev, sim_numbers, t_verdict, fps):
             sh.location = (x + 0.006, y - 0.006, -1.001)
         return ob
 
+    top_mat = emit_mat("HudTopPlate_" + planet, (0.0, 0.0, 0.0), 0.0, alpha=0.38)
+    bm = bmesh.new()
+    box(bm, (0, 0.53, -1.004), (0.86, 0.36, 0.001), 0)
+    tp = mesh_obj("TopPlate_" + planet, bm, (top_mat,), scene_coll=coll)
+    tp.parent = cam
     hud_text("Hook", HOOK_TEXT, 0.60, 2 * hw, 0.20)
     hud_text("Planet", planet.upper() + " \u00b7 %.2f m/s\u00b2" % GRAVITY[planet], 0.425, 2 * hw, 0.075)
     hud_text("Specs", "same car \u00b7 %d km/h \u00b7 %g\u00b0 ramp \u00b7 %g m gap" %
@@ -1187,7 +1197,7 @@ def build_hud(scene, cam, planet, pred, ev, sim_numbers, t_verdict, fps):
     # verdict card (pops in)
     card = link(bpy.data.objects.new(PFX + "VerdictCard_" + planet, None), coll)
     card.parent = cam
-    card.location = (0, 0.12, -1.0)
+    card.location = (0, 0.20, -1.0)
     bm = bmesh.new()
     box(bm, (0, 0, -0.004), (0.80, 0.30, 0.001), 0)
     plate = mesh_obj("VerdictPlate_" + planet, bm, (plate_mat,), scene_coll=coll)
@@ -1263,7 +1273,9 @@ def build_scene(planet, S, preview):
     cam = link(bpy.data.objects.new(PFX + "Cam_" + planet, cam_d), sc.collection)
     sc.camera = cam
     cam.rotation_euler = (math.radians(75), 0, 0)
-    DIST = 15.0
+    crushed = pred["verdict"] == "CRUSHED"
+    DIST = 9.0 if crushed else 15.0     # get close to the pancake on the Sun
+    HGT = 3.2 if crushed else 5.0
     cx = cz = None
     shake_events = [ev[k] for k in ("land", "wall", "floor", "crush") if k in ev]
     rnd = random.Random(3)
@@ -1283,7 +1295,7 @@ def build_scene(planet, S, preview):
             if 0 <= a < 0.6:
                 amp = 0.25 * math.exp(-a / 0.15)
                 sx += amp * rnd.uniform(-1, 1); sz += amp * rnd.uniform(-1, 1)
-        cam.location = (cx + sx, -DIST, cz + 5.0 + sz)
+        cam.location = (cx + sx, -DIST, cz + HGT + sz)
         key(cam, "location", i + 1)
 
     # numbers for the end card
@@ -1342,10 +1354,21 @@ def setup_render(sc, preview):
     r.image_settings.file_format = "PNG"
 
 
+def _render_ctx(sc):
+    """Render ops must run with the planet scene as *context* scene, otherwise the
+    frame/animation of the context scene is used (headless)."""
+    win = bpy.context.window
+    if win is not None:
+        win.scene = sc
+        return bpy.context.temp_override(window=win, scene=sc)
+    return bpy.context.temp_override(scene=sc)
+
+
 def render_still(sc, frame, path):
-    sc.frame_set(frame)
     sc.render.filepath = path
-    bpy.ops.render.render(write_still=True, scene=sc.name)
+    with _render_ctx(sc):
+        sc.frame_set(frame)
+        bpy.ops.render.render(write_still=True, scene=sc.name)
 
 
 # =============================================================================
@@ -1389,7 +1412,7 @@ def main():
         for p, sc, frames, ev, pred, tv in results:
             key_t = {"CLEARED": ev.get("land", 3) + 0.10, "FELL SHORT": ev.get("wall", 3) + 0.07,
                      "CRUSHED": ev.get("crush", 1.5) + 0.25, "OVERSHOT": ev.get("launch", 1.8) + 1.75,
-                     "LOST IN SPACE": ev.get("launch", 1.8) + 1.1}[pred["verdict"]]
+                     "LOST IN SPACE": ev.get("launch", 1.8) + (2.0 if p == "Pluto" else 1.3)}[pred["verdict"]]
             shots = [("key", int(key_t * FPS) + 1)]
             if p in ("Earth", "Sun"):
                 shots.append(("end", sc.frame_end))
@@ -1403,7 +1426,8 @@ def main():
             d = os.path.join(root, "%02d_%s" % (PLANETS.index(p) + 1, p))
             os.makedirs(d, exist_ok=True)
             sc.render.filepath = os.path.join(d, "frame_")
-            bpy.ops.render.render(animation=True, scene=sc.name)
+            with _render_ctx(sc):
+                bpy.ops.render.render(animation=True, scene=sc.name)
             print("[canyon] rendered", p, "->", d)
 
 

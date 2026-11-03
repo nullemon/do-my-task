@@ -334,8 +334,14 @@ def key_prop(ob, path, fv, index=-1):
         ob.keyframe_insert(path, frame=f, index=index)
 
 
+def off_grid(f):
+    """Visibility toggles land between rendered frames (1, 4, 7, ...): if a toggle falls inside a
+    rendered frame's motion-blur shutter, Cycles smears the object across the frame."""
+    return f + 1 if (f - 1) % 3 == 0 else f
+
+
 def visible(ob, f_in, f_out=None):
-    vals = [(1, True), (f_in, False)] + ([(f_out, True)] if f_out else [])
+    vals = [(1, True), (off_grid(f_in), False)] + ([(off_grid(f_out), True)] if f_out else [])
     for f, hide in vals:
         ob.hide_render = hide
         ob.keyframe_insert("hide_render", frame=f)
@@ -416,7 +422,7 @@ def black_card(cam, fv):
     card.cycles.use_motion_blur = False
     for f, hide in fv:
         card.hide_render = hide
-        card.keyframe_insert("hide_render", frame=f)
+        card.keyframe_insert("hide_render", frame=off_grid(f) if f > 1 else 1)
     return card
 
 

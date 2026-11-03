@@ -684,8 +684,8 @@ def build_star():
     sc = new_scene("grb_star")
     sky_world(sc, (0.7, 0.0, 0.71))
 
-    # the giant star: granulated blue-white emissive surface
-    star = link(sc, uv_sphere("star", 0.8, 96, 48))
+    # the giant star: blue-white granulated surface (voronoi cells x large-scale activity), limb darkened
+    star = link(sc, uv_sphere("star", 0.8, 128, 64))
     m = bpy.data.materials.new("star_m")
     m.use_nodes = True
     nt = m.node_tree
@@ -694,27 +694,45 @@ def build_star():
     tc = nt.nodes.new("ShaderNodeTexCoord")
     mp = nt.nodes.new("ShaderNodeMapping")
     nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
-    key_sock(mp.inputs["Location"], lambda f: (0.0, 0.0, f * 0.004), 1, END, 24)
-    gr = node(nt, "ShaderNodeTexNoise", Scale=9.0, Detail=6.0, Roughness=0.55)
-    nt.links.new(mp.outputs["Vector"], gr.inputs["Vector"])
+    key_sock(mp.inputs["Location"], lambda f: (0.0, 0.0, f * 0.003), 1, END, 24)
+    cells = nt.nodes.new("ShaderNodeTexVoronoi")
+    cells.feature = "DISTANCE_TO_EDGE"
+    cells.inputs["Scale"].default_value = 26.0
+    cells.inputs["Randomness"].default_value = 0.9
+    warp = node(nt, "ShaderNodeTexNoise", Scale=6.0, Detail=4.0)
+    nt.links.new(mp.outputs["Vector"], warp.inputs["Vector"])
+    wv = nt.nodes.new("ShaderNodeVectorMath")
+    wv.operation = "MULTIPLY_ADD"
+    wv.inputs[1].default_value = (0.04, 0.04, 0.04)
+    nt.links.new(warp.outputs["Color"], wv.inputs[0])
+    nt.links.new(mp.outputs["Vector"], wv.inputs[2])
+    nt.links.new(wv.outputs[0], cells.inputs["Vector"])
+    gran = maprange(nt, cells.outputs["Distance"], 0.0, 0.12, 0.45, 1.0)
+    act = node(nt, "ShaderNodeTexNoise", Scale=3.0, Detail=6.0, Roughness=0.6)
+    nt.links.new(mp.outputs["Vector"], act.inputs["Vector"])
+    actv = maprange(nt, act.outputs["Fac"], 0.35, 0.65, 0.7, 1.15)
+    lum = math_(nt, "MULTIPLY", gran, actv)
+    limb = math_(nt, "POWER", facing(nt), 0.55)
+    lum = math_(nt, "MULTIPLY", lum, limb)
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     el = ramp.color_ramp.elements
-    el[0].position, el[0].color = 0.3, (0.35, 0.45, 1.0, 1)
-    el[1].position, el[1].color = 0.75, (0.95, 0.97, 1.0, 1)
-    nt.links.new(gr.outputs["Fac"], ramp.inputs["Fac"])
+    el[0].position, el[0].color = 0.1, (0.05, 0.08, 0.45, 1)
+    el[1].position, el[1].color = 1.0, (1.0, 1.0, 1.0, 1)
+    el.new(0.45).color = (0.25, 0.38, 1.0, 1)
+    el.new(0.75).color = (0.62, 0.74, 1.0, 1)
+    nt.links.new(lum, ramp.inputs["Fac"])
     em = nt.nodes.new("ShaderNodeEmission")
     nt.links.new(ramp.outputs["Color"], em.inputs["Color"])
-    limbd = math_(nt, "ADD", math_(nt, "MULTIPLY", facing(nt), 0.6), 0.4)       # limb darkening
     sg = nt.nodes.new("ShaderNodeValue")
 
     def star_gain(f):
         if f < COLLAPSE - 70:
-            return 2.4 + 0.3 * math.sin(f / 9.0)
+            return 1.5 + 0.12 * math.sin(f / 9.0)
         if f < COLLAPSE:
-            return 2.4 + 25.0 * smoothstep(COLLAPSE - 70, COLLAPSE, f) ** 2
-        return 30.0
+            return 1.5 + 22.0 * smoothstep(COLLAPSE - 70, COLLAPSE, f) ** 2
+        return 25.0
     key_sock(sg.outputs[0], star_gain, 1, END, 1)
-    nt.links.new(math_(nt, "MULTIPLY", limbd, sg.outputs[0]), em.inputs["Strength"])
+    nt.links.new(math_(nt, "MULTIPLY", math_(nt, "ADD", lum, 0.15), sg.outputs[0]), em.inputs["Strength"])
     nt.links.new(em.outputs[0], out.inputs[0])
     star.data.materials.append(m)
     star.visible_shadow = False
@@ -724,79 +742,114 @@ def build_star():
             return 1.0
         if f < COLLAPSE - 6:
             return 1.0 + 0.12 * smoothstep(COLLAPSE - 70, COLLAPSE - 6, f)
-        return max(0.035, 1.12 * (1 - smoothstep(COLLAPSE - 6, COLLAPSE + 6, f)))
+        return max(0.03, 1.12 * (1 - smoothstep(COLLAPSE - 6, COLLAPSE + 6, f)))
     key_every_frame(star, "scale", -1, lambda f: [star_scale(f)] * 3, COLLAPSE - 80, COLLAPSE + 10)
 
-    # halo (big glow sphere, bright at the centre)
-    halo = link(sc, uv_sphere("halo", 2.6, 64, 32))
-    hm, hnt, hst = glow_material("halo_m", (0.55, 0.65, 1.0))
-    hg = hnt.nodes.new("ShaderNodeValue")
+    def glow_sphere(name, R, color, r0, w, gain_fn, streaks=0.0, every=1):
+        """Additive glow around the origin: emission ~ exp(-(b - r0)/w), b = ray's impact parameter."""
+        ob = link(sc, uv_sphere(name, R, 64, 32))
+        gm, gnt, gst = glow_material(name + "_m", color)
+        fc = facing(gnt)
+        b = math_(gnt, "MULTIPLY", math_(gnt, "SQRT", math_(gnt, "SUBTRACT", 1.0,
+                                                               math_(gnt, "MULTIPLY", fc, fc), clamp=True)), R)
+        x = math_(gnt, "MULTIPLY", math_(gnt, "MAXIMUM", math_(gnt, "SUBTRACT", b, r0), 0.0), -1.0 / w)
+        g = math_(gnt, "EXPONENT", x)
+        if streaks:
+            gtc = gnt.nodes.new("ShaderNodeTexCoord")
+            sn = node(gnt, "ShaderNodeTexNoise", Scale=4.0, Detail=5.0, Roughness=0.7)
+            gnt.links.new(gtc.outputs["Object"], sn.inputs["Vector"])
+            g = math_(gnt, "MULTIPLY", g, maprange(gnt, sn.outputs["Fac"], 0.3, 0.7, 1 - streaks, 1 + streaks))
+        gv = gnt.nodes.new("ShaderNodeValue")
+        key_sock(gv.outputs[0], gain_fn, 1, END, every)
+        gnt.links.new(math_(gnt, "MULTIPLY", g, gv.outputs[0]), gst)
+        ob.data.materials.append(gm)
+        ob.visible_shadow = False
+        return ob
 
-    def halo_gain(f):
+    def corona_gain(f):
         if f < COLLAPSE - 70:
-            return 0.35
+            return 0.55
         if f < COLLAPSE:
-            return 0.35 + 0.8 * smoothstep(COLLAPSE - 70, COLLAPSE, f)
+            return 0.55 + 1.5 * smoothstep(COLLAPSE - 70, COLLAPSE, f)
+        return 2.0 * math.exp(-((f - COLLAPSE) / FPS) / 0.35)
+    # corona: soft streaky blue glow hugging the limb, plus a faint wide glare
+    glow_sphere("corona", 2.4, (0.45, 0.6, 1.0), 0.8, 0.22, corona_gain, streaks=0.45)
+    glow_sphere("glare", 4.0, (0.4, 0.45, 1.0), 0.8, 1.1, lambda f: 0.25 * corona_gain(f) / 0.55 * 0.4)
+
+    # the source after the collapse: bright compact white-violet glow that flickers
+    def src_gain(f):
+        if f < COLLAPSE:
+            return 0.0
         s = (f - COLLAPSE) / FPS
-        return 3.0 * math.exp(-s / 0.4)
-    key_sock(hg.outputs[0], halo_gain, 1, END, 1)
-    hnt.links.new(math_(hnt, "MULTIPLY", math_(hnt, "POWER", facing(hnt), 24.0), hg.outputs[0]), hst)
-    halo.data.materials.append(hm)
-    halo.visible_shadow = False
+        flick = 1.0 + 0.12 * math.sin(f * 1.7) * math.sin(f * 0.53 + 1.0)
+        return (2.2 + 6.0 * math.exp(-s / 0.6) + 1.2 * smoothstep(SWING, S3, f)) * flick
+    glow_sphere("source", 0.9, (0.9, 0.88, 1.0), 0.0, 0.07, src_gain)
+    glow_sphere("source_glare", 3.0, (0.55, 0.45, 1.0), 0.0, 0.7,
+                lambda f: 0.0 if f < COLLAPSE else 0.18 * src_gain(f) / 2.2)
 
-    # remnant: a tiny violet-white knot where the black hole is feeding
-    knot = link(sc, uv_sphere("knot", 0.06, 24, 12))
-    km = mat_emit("knot_m", (0.8, 0.82, 1.0), 40.0)
-    knot.data.materials.append(km)
-    knot.visible_shadow = False
-    for f, hide in ((1, True), (COLLAPSE, False)):
-        knot.hide_render = hide
-        knot.keyframe_insert("hide_render", frame=f)
-
-    # jets: two narrow cones on a shared pivot
+    # jets: nested additive cones per side - wide violet glare, violet-blue sheath, hot white core.
+    # Brightness peaks on the axis (|N.I|^p), fades along the length, with streaming turbulence + flicker.
     import bmesh
-    me = bpy.data.meshes.new("jet")
+    base_me = bpy.data.meshes.new("jet")
     bm = bmesh.new()
     bmesh.ops.create_cone(bm, cap_ends=False, segments=48, radius1=0.0, radius2=1.0, depth=1.0)
     bmesh.ops.translate(bm, verts=bm.verts, vec=(0, 0, 0.5))
-    for fc in bm.faces:
-        fc.smooth = True
-    bm.to_mesh(me)
+    for fc_ in bm.faces:
+        fc_.smooth = True
+    bm.to_mesh(base_me)
     bm.free()
     pivot = link(sc, bpy.data.objects.new("jet_pivot", None))
-    jm, jnt, jst = glow_material("jet_m", (0.72, 0.8, 1.0))
-    jtc = jnt.nodes.new("ShaderNodeTexCoord")
-    jsep = jnt.nodes.new("ShaderNodeSeparateXYZ")
-    jnt.links.new(jtc.outputs["Object"], jsep.inputs[0])
-    along = math_(jnt, "POWER", math_(jnt, "SUBTRACT", 1.0, jsep.outputs["Z"], clamp=True), 1.6)
-    jmp = jnt.nodes.new("ShaderNodeMapping")
-    jmp.inputs["Scale"].default_value = (4.0, 4.0, 1.0)
-    jnt.links.new(jtc.outputs["Object"], jmp.inputs["Vector"])
-    key_sock(jmp.inputs["Location"], lambda f: (0.0, 0.0, -f * 0.035), 1, END, 12)
-    knots = node(jnt, "ShaderNodeTexNoise", Scale=5.0, Detail=3.0)
-    jnt.links.new(jmp.outputs["Vector"], knots.inputs["Vector"])
-    pulse = maprange(jnt, knots.outputs["Fac"], 0.3, 0.7, 0.5, 1.4)
-    core = math_(jnt, "POWER", facing(jnt), 2.0)
-    js = math_(jnt, "MULTIPLY", math_(jnt, "MULTIPLY", along, core), pulse)
-    jg = jnt.nodes.new("ShaderNodeValue")
-    key_sock(jg.outputs[0], lambda f: 0.0 if f < JETS - 3 else 9.0 * smoothstep(JETS - 3, JETS + 20, f)
-             + 10.0 * smoothstep(SWING, S3, f), 1, END, 1)
-    jnt.links.new(math_(jnt, "MULTIPLY", js, jg.outputs[0]), jst)
-    jet_len, jet_r = 13.0, 0.6
-    for i, rx in enumerate((0.0, 180.0)):
-        jet = link(sc, bpy.data.objects.new(f"jet{i}", me))
-        jet.data.materials.append(jm) if i == 0 else None
-        jet.parent = pivot
-        jet.rotation_euler = (math.radians(rx), 0, 0)
-        jet.visible_shadow = False
 
-        def jscale(f):
-            g = smoothstep(JETS - 3, JETS + 48, f) ** 0.7
-            return [jet_r * max(g, 0.02), jet_r * max(g, 0.02), max(jet_len * g, 0.001)]
-        key_every_frame(jet, "scale", -1, jscale, JETS - 6, JETS + 51)
-        for f, hide in ((1, True), (JETS - 3, False)):
-            jet.hide_render = hide
-            jet.keyframe_insert("hide_render", frame=f)
+    def jet_env(f):
+        if f < JETS - 3:
+            return 0.0
+        return smoothstep(JETS - 3, JETS + 20, f) * (1.0 + 0.9 * smoothstep(SWING, S3, f))
+
+    def jet_material(name, color, power, gain, fade, turb):
+        jm, jnt, jst = glow_material(name, color)
+        jtc = jnt.nodes.new("ShaderNodeTexCoord")
+        jsep = jnt.nodes.new("ShaderNodeSeparateXYZ")
+        jnt.links.new(jtc.outputs["Object"], jsep.inputs[0])
+        along = math_(jnt, "POWER", math_(jnt, "SUBTRACT", 1.0, jsep.outputs["Z"], clamp=True), fade)
+        jmp = jnt.nodes.new("ShaderNodeMapping")
+        jmp.inputs["Scale"].default_value = (3.0, 3.0, 7.0)
+        jnt.links.new(jtc.outputs["Object"], jmp.inputs["Vector"])
+        key_sock(jmp.inputs["Location"], lambda f: (0.0, 0.0, -f * 0.03), 1, END, 12)
+        tn = jnt.nodes.new("ShaderNodeTexNoise")
+        tn.noise_dimensions = "4D"
+        tn.inputs["Scale"].default_value = 1.6
+        tn.inputs["Detail"].default_value = 6.0
+        tn.inputs["Roughness"].default_value = 0.6
+        key_sock(tn.inputs["W"], lambda f: f * 0.05, 1, END, 6)
+        jnt.links.new(jmp.outputs["Vector"], tn.inputs["Vector"])
+        tv = maprange(jnt, tn.outputs["Fac"], 0.3, 0.7, 1.0 - turb, 1.0 + turb)
+        core = math_(jnt, "POWER", facing(jnt), power)
+        js = math_(jnt, "MULTIPLY", math_(jnt, "MULTIPLY", along, core), tv)
+        jg = jnt.nodes.new("ShaderNodeValue")
+        key_sock(jg.outputs[0], lambda f: gain * jet_env(f), 1, END, 1)
+        jnt.links.new(math_(jnt, "MULTIPLY", js, jg.outputs[0]), jst)
+        return jm
+
+    jet_len, jet_r = 13.0, 0.5
+    layers = [("glare", (0.42, 0.36, 1.0), 1.2, 0.22, 2.4, 0.5, 2.6),      # name, colour, power, gain,
+              ("sheath", (0.45, 0.55, 1.0), 2.5, 1.3, 1.6, 0.6, 1.0),      # fade, turbulence, radius x
+              ("core", (0.92, 0.95, 1.0), 6.0, 3.2, 1.2, 0.35, 0.32)]
+    for lname, col, pw, gn, fade, turb, rx_ in layers:
+        me = base_me.copy()
+        me.materials.append(jet_material("jet_" + lname, col, pw, gn, fade, turb))
+        for i, rx in enumerate((0.0, 180.0)):
+            jet = link(sc, bpy.data.objects.new(f"jet_{lname}{i}", me))
+            jet.parent = pivot
+            jet.rotation_euler = (math.radians(rx), 0, 0)
+            jet.visible_shadow = False
+
+            def jscale(f, rr=jet_r * rx_):
+                g = smoothstep(JETS - 3, JETS + 48, f) ** 0.7
+                return [rr * max(g, 0.02), rr * max(g, 0.02), max(jet_len * g, 0.001)]
+            key_every_frame(jet, "scale", -1, jscale, JETS - 6, JETS + 51)
+            for f, hide in ((1, True), (JETS - 3, False)):
+                jet.hide_render = hide
+                jet.keyframe_insert("hide_render", frame=f)
     # tilt: diagonal at first, then the upper jet swings round toward the camera
     key_every_frame(pivot, "rotation_euler", 1, lambda f: math.radians(-22 + 8 * smoothstep(SWING, S3, f)),
                     JETS - 6, S3 + 3)

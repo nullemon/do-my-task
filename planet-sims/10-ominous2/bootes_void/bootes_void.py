@@ -64,13 +64,14 @@ def sec(s):
 # ----------------------------------------------------------------------------- story timing
 # (text, start s, end s)
 CAPTIONS = [
-    ("What is the emptiest place\nwe have ever found?", 0.3, 4.8),
-    ("Galaxies gather in a vast web\nof walls and filaments.", 6.0, 11.5),
-    ("In 1981, astronomers found\na hole in it.", 13.0, 18.5),
-    ("The Boötes Void.\nAbout 330 million light-years across.", 20.0, 26.5),
-    ("Light would take 330 million years\nto cross it.", 28.0, 34.0),
-    ("Thousands of galaxies should be here.\nWe have found about 60.", 35.5, 42.0),
-    ("Had we been born at its centre, we might\nnot have known other galaxies existed\nuntil the 1960s.", 43.5, 50.0),
+    ("What is the emptiest\nplace we have\never found?", 0.3, 4.8),
+    ("Galaxies gather\nin a vast web of\nwalls and filaments.", 6.0, 11.5),
+    ("In 1981,\nastronomers found\na hole in it.", 13.0, 18.5),
+    ("The Boötes Void.\nAbout 330 million\nlight-years across.", 20.0, 26.5),
+    ("Light would take\n330 million years\nto cross it.", 28.0, 34.0),
+    ("Thousands of galaxies\nshould be here.\nWe have found about 60.", 35.5, 42.0),
+    ("Had we been born\nat its centre...", 43.3, 46.5),
+    ("...we might not have\nknown other galaxies\nexisted until the 1960s.", 46.8, 50.3),
     ("And most of space\nlooks like this.", 50.8, 55.5),
 ]
 BOOMS = [13.0, 20.0, 35.5, 55.5]   # key beats (s); the last one is the cut to black
@@ -152,7 +153,7 @@ def plane(name, size):
     return bpy.data.objects.new(name, me)
 
 
-def caption(sc, cam, text, f_in, f_out, y=-0.62, size=0.034, strength=1.3):
+def caption(sc, cam, text, f_in, f_out, y=-0.58, size=0.055, strength=1.3):
     """Thin white text fixed to the camera, auto-fit to <= 85% of the frame width."""
     cu = bpy.data.curves.new(f"cap_{f_in}", "FONT")
     cu.body = text
@@ -227,7 +228,7 @@ def make_web(seed=7, n_cand=4_000_000, n_seeds=520):
         wall = part[:, 1] - part[:, 0]
         fil = part[:, 2] - part[:, 0]
         node = part[:, 3] - part[:, 0]
-        prob = (0.10 * np.exp(-(wall / 9.0) ** 2) + 0.45 * np.exp(-(fil / 9.0) ** 2)
+        prob = (0.03 * np.exp(-(wall / 8.0) ** 2) + 0.75 * np.exp(-(fil / 7.0) ** 2)
                 + 1.0 * np.exp(-(node / 14.0) ** 2))
         k = rng.random(len(p)) < prob
         keep[i:i + ch] = k
@@ -370,7 +371,7 @@ def galaxy_colors(rng, n, bright):
     """Mix of warm ellipticals and blue-white spirals."""
     warm = np.array([1.0, 0.78, 0.55])
     cool = np.array([0.70, 0.82, 1.0])
-    t = rng.random(n)[:, None]
+    t = rng.random(n)[:, None] ** 0.55  # bias warm
     c = warm * t + cool * (1 - t)
     return c * bright[:, None]
 
@@ -439,8 +440,8 @@ def build():
     G, K = G[~near], K[~near]
     n = len(G)
     bright = np.exp(rng.normal(0, 0.55, n)) * (0.8 + 1.2 * K)
-    R = 0.05 * np.exp(rng.normal(0, 0.35, n)) * (1 + 0.8 * K)
-    C = galaxy_colors(rng, n, bright * 14.0)
+    R = 0.035 * np.exp(rng.normal(0, 0.35, n)) * (1 + 0.8 * K)
+    C = galaxy_colors(rng, n, bright * 24.0)
     web = link(sc, point_mesh("web", G, R, C))
     mat, gain, d0 = galaxy_material("galaxy_m", power=2.0)
     points_modifier(web, cam, mat)

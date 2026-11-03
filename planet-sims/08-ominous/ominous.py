@@ -1679,9 +1679,9 @@ def build_saturn_long():
         s = -1 + 2 * k / 63
         z = math.exp(-(s / 0.32) ** 2) if s < 0 else math.exp(-(s / 0.9) ** 2)
         prof.append((s - 0.22 * z * z, z))             # crest leans toward us
-    nx = 120
-    hx = [0.78 + 0.22 * noise.noise(Vector((i * 0.09, 0.5, 0.5))) + 0.08 * noise.noise(Vector((i * 0.5, 2.5, 0.5)))
-          for i in range(nx + 1)]                     # uneven crest along its length
+    nx = 480
+    hx = [0.8 + 0.2 * noise.noise(Vector((i * 0.035, 0.5, 0.5))) + 0.06 * noise.noise(Vector((i * 0.15, 2.5, 0.5)))
+          for i in range(nx + 1)]                     # smooth, uneven crest along its length
     wv = [(-1 + 2 * i / nx, s, z * hx[i]) for i in range(nx + 1) for s, z in prof]
     wf = [(i * 64 + k, i * 64 + k + 1, (i + 1) * 64 + k + 1, (i + 1) * 64 + k) for i in range(nx) for k in range(63)]
     wme.from_pydata(wv, [], wf)
@@ -1694,19 +1694,19 @@ def build_saturn_long():
     wb.inputs["IOR"].default_value = 1.33
     wtc = wnt.nodes.new("ShaderNodeTexCoord")
     wmp = wnt.nodes.new("ShaderNodeMapping")
-    wmp.inputs["Scale"].default_value = (1500.0, 30.0, 45.0)
+    wmp.inputs["Scale"].default_value = (90.0, 4.0, 5.0)
     wnt.links.new(wtc.outputs["Object"], wmp.inputs["Vector"])
     fn = wnt.nodes.new("ShaderNodeTexNoise")
-    fn.inputs["Scale"].default_value = 0.6
-    fn.inputs["Detail"].default_value = 8
+    fn.inputs["Scale"].default_value = 1.0
+    fn.inputs["Detail"].default_value = 3
     wnt.links.new(wmp.outputs["Vector"], fn.inputs["Vector"])
     wsep = wnt.nodes.new("ShaderNodeSeparateXYZ")
     wnt.links.new(wtc.outputs["Object"], wsep.inputs[0])
     crest = wnt.nodes.new("ShaderNodeMapRange")
-    crest.inputs["From Min"].default_value, crest.inputs["From Max"].default_value = 0.45, 0.9
+    crest.inputs["From Min"].default_value, crest.inputs["From Max"].default_value = 0.62, 0.92
     wnt.links.new(wsep.outputs["Z"], crest.inputs["Value"])
     foamn = wnt.nodes.new("ShaderNodeMapRange")
-    foamn.inputs["From Min"].default_value, foamn.inputs["From Max"].default_value = 0.42, 0.62
+    foamn.inputs["From Min"].default_value, foamn.inputs["From Max"].default_value = 0.35, 0.6
     wnt.links.new(fn.outputs["Fac"], foamn.inputs["Value"])
     foam = wnt.nodes.new("ShaderNodeMath")
     foam.operation = "MULTIPLY"
@@ -1717,11 +1717,21 @@ def build_saturn_long():
     fc.inputs[2].default_value = (0.85, 0.88, 0.9, 1)
     wnt.links.new(foam.outputs[0], fc.inputs["Fac"])
     wnt.links.new(fc.outputs[0], wb.inputs["Base Color"])
-    wb.inputs["Emission Color"].default_value = (0.75, 0.72, 0.65, 1)   # back-lit spray on the crest
+    # ring light shining through the thin top of the wall (fake translucency) + lit spray on the crest
+    glowz = wnt.nodes.new("ShaderNodeMapRange")
+    glowz.inputs["From Min"].default_value, glowz.inputs["From Max"].default_value = 0.35, 0.97
+    glowz.inputs["To Min"].default_value, glowz.inputs["To Max"].default_value = 0.0, 0.5
+    wnt.links.new(wsep.outputs["Z"], glowz.inputs["Value"])
+    ec = wnt.nodes.new("ShaderNodeMixRGB")
+    ec.inputs[1].default_value = (0.06, 0.12, 0.12, 1)
+    ec.inputs[2].default_value = (0.8, 0.76, 0.66, 1)
+    wnt.links.new(foam.outputs[0], ec.inputs["Fac"])
+    wnt.links.new(ec.outputs[0], wb.inputs["Emission Color"])
     fe = wnt.nodes.new("ShaderNodeMath")
-    fe.operation = "MULTIPLY"
-    fe.inputs[1].default_value = 0.35
+    fe.operation = "MULTIPLY_ADD"
+    fe.inputs[1].default_value = 0.9
     wnt.links.new(foam.outputs[0], fe.inputs[0])
+    wnt.links.new(glowz.outputs["Result"], fe.inputs[2])
     wnt.links.new(fe.outputs[0], wb.inputs["Emission Strength"])
     fr = wnt.nodes.new("ShaderNodeMapRange")
     fr.inputs["To Min"].default_value, fr.inputs["To Max"].default_value = 0.06, 0.85
@@ -1732,9 +1742,9 @@ def build_saturn_long():
 
     def wave_u(f):
         return min(max((f - w0) / (w1 - w0), 0.0), 1.0)
-    _key_every_frame(wave, "location", 1, lambda f: 3300.0 - 2850.0 * wave_u(f) ** 1.5, 1, end)
+    _key_every_frame(wave, "location", 1, lambda f: 3300.0 - 3000.0 * wave_u(f) ** 1.5, 1, end)
     _key_every_frame(wave, "location", 2, lambda f: _ease_pts(level, (f - 1) / FPS) - 1.0, 1, end)
-    _key_every_frame(wave, "scale", -1, lambda f: (8000.0, 110.0, 22.0 + 95.0 * wave_u(f) ** 1.3), 1, end)
+    _key_every_frame(wave, "scale", -1, lambda f: (8000.0, 130.0, 30.0 + 135.0 * wave_u(f) ** 1.3), 1, end)
     for f, hide in ((1, True), (w0, False)):
         wave.hide_render = hide
         wave.keyframe_insert("hide_render", frame=f)

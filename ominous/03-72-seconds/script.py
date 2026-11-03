@@ -1,12 +1,14 @@
 """
 OMINOUS #3 - 72 SECONDS
-A radio telescope on a fogbound ridge at night. A line-printer column scrolls
-past; the characters 6EQUJ5 are circled. "Wow!"  Never heard again.
+A radio telescope on a fogbound ridge at night. Days later, a printout under a
+desk lamp. A line-printer column scrolls past; 6EQUJ5 is circled. "Wow!"
+72 seconds. 1420 MHz. Searched again and again. Torn down in 1998.
+The sky, still listening. One green blip.
 
 Procedural only. Blender 4.2 - 5.x.
     blender -b -P script.py -- --render                  # full animation
     blender -b -P script.py -- --frames 1,120,300        # a few stills
-    options: --out DIR  --percent N  --samples N
+    options: --out DIR  --percent N  --samples N  --start N --end N --step N  --skip-existing
 Without the blender binary (bpy module):
     python -c "import sys; p='script.py'; sys.argv=['blender','--','--render']; exec(compile(open(p).read(),p,'exec'))"
 """
@@ -14,9 +16,9 @@ Without the blender binary (bpy module):
 # ============================== CONFIG ======================================
 CONFIG = dict(
     fps=24,
-    duration_s=26.0,                  # 624 frames
+    duration_s=55.0,                  # 1320 frames
     resolution=(1080, 1920),
-    resolution_percentage=53,         # -> 572x1018 (fast), set 100 for full
+    resolution_percentage=53,         # -> 572x1017 (fast), set 100 for full
     engine="CYCLES",
     samples=8,
     denoise=True,
@@ -42,14 +44,33 @@ FPS = CONFIG["fps"]
 NFRAMES = int(round(CONFIG["duration_s"] * FPS))
 
 
+_FOFF = 0   # frame offset applied to a block of beats (see TIMELINE)
+
+
 def F(sec):
-    """seconds -> frame number (frame 1 = t 0)"""
-    return int(round(sec * FPS)) + 1
+    """seconds -> frame number (frame 1 = t 0), plus the current block offset"""
+    return int(round(sec * FPS)) + 1 + _FOFF
+
+
+# ---------------------------------------------------------------- TIMELINE (55 s)
+#  S1  0.00-8.29   hook, date, place                     (Cam,  wide ridge)
+#  S2  8.29-14.29  "a few days later": printout + lamp   (CamDesk)
+#  S3 14.29-25.38  printout reveal, 6EQUJ5, Wow!, 72 s   (Cam; beats authored on the
+#                   v1 26 s timeline and shifted +138 frames = 5.75 s, via _FOFF)
+#  S4 25.38-31.50  narrowband, 1420 MHz, hydrogen line   (Cam2)
+#  S5 31.50-38.50  searched again; VLA 1995/96; nothing  (Cam2, sky turning)
+#  S6 38.50-44.50  1998: torn down for a golf course     (Cam2, dish dissolves)
+#  S7 44.50-55.00  empty ridge, tilt to the sky, still listening, one blip, black
+FR_S2, FR_S3, FR_S4 = 200, 344, 610
+S3_OFF = 138
+T_S4 = (FR_S4 - 1) / 24.0
+T_S5, T_S6, T_S7 = 31.5, 38.5, 44.5
+T_CUT = 54.6
 
 
 # ---------------------------------------------------------------- args
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
-ARGS = {"skip": False, "start": None, "step": None, "render": False, "frames": None, "out": None, "percent": None, "samples": None}
+ARGS = {"end": None, "skip": False, "start": None, "step": None, "render": False, "frames": None, "out": None, "percent": None, "samples": None}
 i = 0
 while i < len(argv):
     a = argv[i]
@@ -63,6 +84,8 @@ while i < len(argv):
         ARGS["percent"] = int(argv[i + 1]); i += 1
     elif a == "--skip-existing":
         ARGS["skip"] = True
+    elif a == "--end":
+        ARGS["end"] = int(argv[i + 1]); i += 1
     elif a == "--start":
         ARGS["start"] = int(argv[i + 1]); i += 1
     elif a == "--step":
@@ -125,13 +148,26 @@ def mat_emit_fade(name, color, strength=1.0):
     return m, mix.inputs[0], em
 
 
-def mat_diffuse(name, color, rough=0.6, metallic=0.0):
+VANISH = []   # mix factors that dissolve the telescope (S6)
+
+
+def mat_diffuse(name, color, rough=0.6, metallic=0.0, vanish=False):
     m = bpy.data.materials.new(name)
     use_nodes(m)
     b = m.node_tree.nodes.get("Principled BSDF")
     b.inputs["Base Color"].default_value = (*color, 1)
     b.inputs["Roughness"].default_value = rough
     b.inputs["Metallic"].default_value = metallic
+    if vanish:
+        nt = m.node_tree
+        out = nt.nodes.get("Material Output")
+        tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+        mx = nt.nodes.new("ShaderNodeMixShader")
+        nt.links.new(b.outputs[0], mx.inputs[1])
+        nt.links.new(tr.outputs[0], mx.inputs[2])
+        nt.links.new(mx.outputs[0], out.inputs["Surface"])
+        mx.inputs[0].default_value = 0.0
+        VANISH.append(mx.inputs[0])
     return m
 
 
@@ -159,7 +195,13 @@ try:
     vor.inputs["Randomness"].default_value = 1.0
 except Exception:
     pass
-wn.links.new(tc.outputs["Generated"], vor.inputs["Vector"])
+# the sky can turn (S5: nights passing) about a tilted pole (~40 deg N, Ohio)
+srot = wn.nodes.new("ShaderNodeVectorRotate")
+srot.rotation_type = "AXIS_ANGLE"
+srot.inputs["Axis"].default_value = (0.0, 0.77, 0.64)
+srot.inputs["Angle"].default_value = 0.0
+wn.links.new(tc.outputs["Generated"], srot.inputs["Vector"])
+wn.links.new(srot.outputs[0], vor.inputs["Vector"])
 star_mr = wn.nodes.new("ShaderNodeMapRange")
 star_mr.inputs["From Min"].default_value = 0.0
 star_mr.inputs["From Max"].default_value = 0.075
@@ -254,8 +296,8 @@ def ground_z(x, y):
 
 
 # ---------------------------------------------------------------- the dish
-metal = mat_diffuse("DishMetal", (0.32, 0.34, 0.35), rough=0.55, metallic=0.25)
-dark_metal = mat_diffuse("DarkMetal", (0.05, 0.055, 0.06), rough=0.6, metallic=0.3)
+metal = mat_diffuse("DishMetal", (0.32, 0.34, 0.35), rough=0.55, metallic=0.25, vanish=True)
+dark_metal = mat_diffuse("DarkMetal", (0.05, 0.055, 0.06), rough=0.6, metallic=0.3, vanish=True)
 
 
 def cyl_between(name, a, b, r, mat, verts=8):
@@ -408,41 +450,171 @@ moon.data.color = (0.62, 0.72, 0.85)
 moon.data.angle = math.radians(1.5)
 moon.rotation_euler = Euler((math.radians(64), 0, math.radians(200)), "XYZ")
 
-# ---------------------------------------------------------------- camera
-cam_data = bpy.data.cameras.new("Cam")
-cam_data.lens = 35
-cam_data.sensor_fit = "AUTO"
-cam_data.sensor_width = 36
-cam_data.clip_end = 3000
-cam = bpy.data.objects.new("Cam", cam_data)
-scene.collection.objects.link(cam)
+# ---------------------------------------------------------------- cameras
+def new_cam(name, lens=35):
+    cd = bpy.data.cameras.new(name)
+    cd.lens = lens
+    cd.sensor_fit = "AUTO"
+    cd.sensor_width = 36
+    cd.clip_start = 0.02
+    cd.clip_end = 3000
+    ob = bpy.data.objects.new(name, cd)
+    scene.collection.objects.link(ob)
+    return ob
+
+
+cam = new_cam("Cam")
+camD = new_cam("CamDesk", 45)
+cam2 = new_cam("Cam2")
 scene.camera = cam
-TARGET = Vector((0, 0, 11))
+for fr, c in [(1, cam), (FR_S2, camD), (FR_S3, cam), (FR_S4, cam2)]:
+    mk = scene.timeline_markers.new("shot%d" % fr, frame=fr)
+    mk.camera = c
 
 
-def cam_key(frame, loc, look, lens=None, roll=0.0):
-    cam.location = Vector(loc)
+def cam_key(c, frame, loc, look, lens=None, roll=0.0):
+    c.location = Vector(loc)
     d = Vector(look) - Vector(loc)
     q = d.to_track_quat("-Z", "Y")
     e = q.to_euler("XYZ")
     e.rotate_axis("Z", roll)
-    cam.rotation_euler = e
-    cam.keyframe_insert("location", frame=frame)
-    cam.keyframe_insert("rotation_euler", frame=frame)
+    c.rotation_euler = e
+    c.keyframe_insert("location", frame=frame)
+    c.keyframe_insert("rotation_euler", frame=frame)
     if lens:
-        cam_data.lens = lens
-        cam_data.keyframe_insert("lens", frame=frame)
+        c.data.lens = lens
+        c.data.keyframe_insert("lens", frame=frame)
 
 
-# Shot A 0.0 - 8.4 s : wide, low, slow push in
-cam_key(F(0.0), (-34, -96, 3.0), (2, 0, 15.5), 32)
-cam_key(F(8.4), (-27, -80, 2.4), (2, 0, 15.0), 34)
-# Shot B 8.45 - 22.3 s (mostly hidden by printout card until 16.2)
-cam_key(F(8.45), (-19, -38, 3.5), (0, 0, 17), 30)
-cam_key(F(22.3), (-12, -30, 4.5), (0, 0, 18.5), 30)
-# Shot C 22.35 - end : very wide, dish small above a sea of fog
-cam_key(F(22.35), (-60, -165, 6.0), (6, 0, 22.0), 40)
-cam_key(NFRAMES, (-57, -158, 6.0), (6, 0, 22.0), 40)
+# S1 shot A 0.0 - 8.3 s : wide, low, slow push in
+cam_key(cam, F(0.0), (-34, -96, 3.0), (2, 0, 15.5), 32)
+cam_key(cam, F(8.4), (-27, -80, 2.4), (2, 0, 15.0), 34)
+# S3 shot B (v1 times, shifted): under the dish, looking up
+cam_key(cam, F(8.45) + S3_OFF, (-19, -38, 3.5), (0, 0, 17), 30)
+cam_key(cam, F(22.3) + S3_OFF, (-12, -30, 4.5), (0, 0, 18.5), 30)
+# S4: in front of the reflector, looking into the bowl
+cam_key(cam2, F(T_S4), (-44, 30, 1.0), (0, 0, 19), 26)
+cam_key(cam2, F(T_S5) - 1, (-39, 25, 1.5), (0, 0, 19.5), 27)
+# S5: side-on, sky turning behind
+cam_key(cam2, F(T_S5), (70, -62, 0.0), (0, 0, 16), 28)
+cam_key(cam2, F(T_S6) - 1, (64, -57, 0.5), (0, 0, 16), 28)
+# S6: wide again (as the opening), the dish dissolves
+cam_key(cam2, F(T_S6), (-40, -112, 3.0), (2, 0, 14.5), 32)
+cam_key(cam2, F(T_S7) - 1, (-36, -104, 2.8), (2, 0, 14.5), 33)
+# S7: from the empty ridge top, tilt up into the sky
+cam_key(cam2, F(T_S7), (-6, -24, 1.0), (40, 160, 30), 24)
+cam_key(cam2, F(51.5), (-6, -24, 1.5), (34, 140, 80), 24)
+cam_key(cam2, F(55.0), (-6, -24, 1.5), (33, 136, 86), 24)
+
+# moon off while we're indoors (S2)
+for fr, en in [(1, 1.1), (FR_S2 - 1, 1.1), (FR_S2, 0.0), (FR_S3 - 1, 0.0), (FR_S3, 1.1)]:
+    moon.data.energy = en
+    moon.data.keyframe_insert("energy", frame=fr)
+
+# sky rotation during S5 (time-lapse: nights pass), slow drift after
+for fr, ang in [(1, 0.0), (F(T_S5), 0.0), (F(T_S6) - 1, 0.55), (F(55.0), 0.62)]:
+    key_socket(srot.inputs["Angle"], fr, ang)
+
+# telescope dissolves (S6); stays gone
+for fv in VANISH:
+    key_socket(fv, 1, 0.0)
+    key_socket(fv, F(40.6), 0.0)
+    key_socket(fv, F(43.4), 1.0)
+    key_socket(fv, F(55.0), 1.0)
+
+# ---------------------------------------------------------------- desk set (S2), far from the ridge
+DX = Vector((3000.0, 0.0, 0.0))
+
+
+def desk_set():
+    bpy.ops.mesh.primitive_plane_add(size=6.0, location=DX)
+    desk = bpy.context.active_object
+    desk.data.materials.append(mat_diffuse("Desk", (0.022, 0.02, 0.018), rough=0.75))
+    paper_m = mat_diffuse("Paper", (0.50, 0.50, 0.47), rough=0.92)
+    ink_m = mat_diffuse("Ink", (0.025, 0.025, 0.03), rough=0.7)
+    hole_m = mat_diffuse("Hole", (0.01, 0.01, 0.01), rough=0.9)
+    # an older sheet underneath, skewed
+    bpy.ops.mesh.primitive_plane_add(size=1.0, location=DX + Vector((0.03, 0.05, 0.0008)))
+    under = bpy.context.active_object
+    under.scale = (0.40, 1.6, 1); under.rotation_euler = (0, 0, math.radians(-4))
+    under.data.materials.append(paper_m)
+    # the fanfold strip being read
+    bpy.ops.mesh.primitive_plane_add(size=1.0, location=DX + Vector((0, 0, 0.0016)))
+    paper = bpy.context.active_object
+    paper.scale = (0.38, 1.6, 1)
+    paper.data.materials.append(paper_m)
+    # tractor-feed holes along both edges
+    for sx in (-1, 1):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=0.0022, depth=0.0004,
+                                            location=DX + Vector((sx * 0.178, -0.78, 0.0019)))
+        h = bpy.context.active_object
+        h.data.materials.append(hole_m)
+        arr = h.modifiers.new("arr", "ARRAY")
+        arr.count = 123
+        arr.use_relative_offset = False
+        arr.use_constant_offset = True
+        arr.constant_offset_displace = (0, 0.0127, 0)
+    # printed rows: 16 channels, same noise statistics as the overlay
+    prnd = random.Random(77)
+    nch, tgt = 16, 2
+    rows_d = []
+    for r_ in range(70):
+        ch = []
+        for _ in range(nch):
+            v = prnd.random()
+            ch.append(" " if v < 0.55 else ("1" if v < 0.88 else ("2" if v < 0.97 else "3")))
+        rows_d.append(ch)
+    tgt_row = 52
+    for k, c in enumerate("6EQUJ5"):
+        rows_d[tgt_row + k][tgt] = c
+        rows_d[tgt_row + k][tgt - 1] = " "
+        rows_d[tgt_row + k][tgt + 1] = " "
+    pitch = 0.0185
+    y0 = 0.70
+    for r_, ch in enumerate(rows_d):
+        cu = bpy.data.curves.new("prow", "FONT")
+        cu.body = " ".join(ch)
+        if font_mono_desk:
+            cu.font = font_mono_desk
+        cu.size = 0.0125
+        cu.align_x = "LEFT"
+        cu.materials.append(ink_m)
+        ob = bpy.data.objects.new("prow", cu)
+        scene.collection.objects.link(ob)
+        ob.location = DX + Vector((-0.15, y0 - r_ * pitch, 0.0021))
+    # a pen lying across the sheet
+    bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.0045, depth=0.14,
+                                        location=DX + Vector((0.13, -0.33, 0.0065)))
+    pen = bpy.context.active_object
+    pen.rotation_euler = (math.radians(90), 0, math.radians(62))
+    pen.data.materials.append(mat_diffuse("Pen", (0.015, 0.015, 0.017), rough=0.35))
+    # desk lamp: a warm, tight pool
+    bpy.ops.object.light_add(type="SPOT", location=DX + Vector((-0.30, 0.10, 0.62)))
+    lamp = bpy.context.active_object
+    lamp.data.energy = 5.0
+    lamp.data.color = (1.0, 0.86, 0.70)
+    lamp.data.spot_size = math.radians(95)
+    lamp.data.spot_blend = 0.85
+    lamp.data.shadow_soft_size = 0.05
+    d = (DX + Vector((0.0, -0.12, 0))) - lamp.location
+    lamp.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+    return tgt_row, y0, pitch
+
+
+font_mono_desk = load_font(FONT_MONO)
+_tr, _y0, _pt = desk_set()
+y_word = _y0 - (_tr + 2.5) * _pt          # middle of 6EQUJ5 on the sheet
+focus = bpy.data.objects.new("DeskFocus", None)
+scene.collection.objects.link(focus)
+camD.data.dof.use_dof = True
+camD.data.dof.focus_distance = 0.345   # fixed: sheet centre ~0.36 m, titles at 0.33 m
+camD.data.dof.aperture_fstop = 2.8
+# slide down the sheet, ending on the column that holds 6EQUJ5
+for fr, lk, off in [(F(8.29), 0.24, (0.10, -0.20, 0.30)), (F(14.3), y_word + 0.02, (0.08, -0.19, 0.29))]:
+    look = DX + Vector((-0.06, lk, 0.0))
+    focus.location = look
+    focus.keyframe_insert("location", frame=fr)
+    cam_key(camD, fr, look + Vector(off), look, 45)
 
 # ---------------------------------------------------------------- fake fog
 def fog_plane(name, loc, rot_z, w, h, density, color, speed, scale, seed, lift=0.0):
@@ -542,10 +714,19 @@ fog_plane("FogNear", (-20, -70, -15), 0.0, 520, 34, 0.9, (0.13, 0.155, 0.165), 0
 DEPTH = 3.0
 VIS_H = DEPTH * 36.0 / 30.0         # visible height at DEPTH for the smallest lens used (approx)
 
-rig = bpy.data.objects.new("OverlayRig", None)
-scene.collection.objects.link(rig)
-rig.parent = cam
-rig.location = (0, 0, -DEPTH)
+def make_rig(c, name, depth=DEPTH):
+    rg = bpy.data.objects.new(name, None)
+    scene.collection.objects.link(rg)
+    rg.parent = c
+    rg.location = (0, 0, -depth)
+    k = depth / DEPTH                 # same apparent size at any depth
+    rg.scale = (k, k, k)
+    return rg
+
+
+rig = make_rig(cam, "OverlayRig")
+rigD = make_rig(camD, "OverlayRigDesk", 0.33)   # on the focus plane, upper frame (paper is farther there)
+rig2 = make_rig(cam2, "OverlayRig2")
 
 font_title = load_font(FONT_TITLE)
 font_sub = load_font(FONT_SUB)
@@ -624,6 +805,17 @@ fade(fac, 5.5, 8.0, 0.7, 0.5, ob=t)
 t, fac = make_text("OHIO STATE UNIVERSITY", 0.042, -0.78, font_sub, spacing=1.7, max_w=MAXW, strength=0.75)
 fade(fac, 5.7, 8.0, 0.7, 0.5, ob=t)
 
+# --- S2: days later
+t, fac = make_text("A FEW DAYS LATER,", 0.075, 0.80, font_title, spacing=LS, max_w=MAXW, parent=rigD)
+fade(fac, 8.7, 13.8, 0.8, 0.45, ob=t)
+t, fac = make_text("ASTRONOMER JERRY EHMAN", 0.045, 0.67, font_sub, spacing=1.7, max_w=MAXW, strength=0.8, parent=rigD)
+fade(fac, 9.4, 13.8, 0.8, 0.45, ob=t)
+t, fac = make_text("WAS GOING THROUGH THE PRINTOUTS.", 0.045, 0.60, font_sub, spacing=1.7, max_w=MAXW, strength=0.8, parent=rigD)
+fade(fac, 9.6, 13.8, 0.8, 0.45, ob=t)
+
+# --- S3 (authored on the v1 timeline; every F() below is shifted by S3_OFF frames)
+_FOFF = S3_OFF
+
 # --- Beat 3: the printout
 card_m = bpy.data.materials.new("Card"); use_nodes(card_m)
 cn = card_m.node_tree; cn.nodes.clear()
@@ -648,18 +840,13 @@ except Exception:
 
 T_CARD_IN, T_CARD_OUT = 8.3, 15.9
 key_socket(card_fac, 1, 0.0)
-key_socket(card_fac, F(T_CARD_IN), 0.0)
+key_socket(card_fac, F(T_CARD_IN) - 1, 0.0)
 key_socket(card_fac, F(T_CARD_IN + 0.2), 1.0)
 key_socket(card_fac, F(T_CARD_OUT), 1.0)
 key_socket(card_fac, F(T_CARD_OUT + 0.6), 0.0)
-# end card: hard cut to black
-key_socket(card_fac, F(25.55), 0.0)
-key_socket(card_fac, F(25.6), 1.0)
-key_socket(card_fac, NFRAMES, 1.0)
 card.hide_render = True; card.keyframe_insert("hide_render", frame=1)
 card.hide_render = False; card.keyframe_insert("hide_render", frame=F(T_CARD_IN) - 1)
 card.hide_render = True; card.keyframe_insert("hide_render", frame=F(T_CARD_OUT + 0.6) + 1)
-card.hide_render = False; card.keyframe_insert("hide_render", frame=F(25.55) - 1)
 
 pr = bpy.data.objects.new("Printout", None)
 scene.collection.objects.link(pr)
@@ -841,36 +1028,122 @@ fade(fac, 16.9, 19.2, 0.8, 0.5, ob=t)
 t, fac = make_text("IT DRIFTED THROUGH THE BEAM.", 0.040, -0.135, font_sub, spacing=1.7, max_w=MAXW, strength=0.75)
 fade(fac, 17.1, 19.2, 0.8, 0.5, ob=t)
 
-# --- Beat 5
-t, fac = make_text("NEVER HEARD AGAIN.", 0.085, 0.0, font_title, spacing=LS, max_w=MAXW)
-fade(fac, 19.6, 22.0, 0.9, 0.35, ob=t)
+_FOFF = 0   # back to the 55 s timeline
 
-# --- Beat 6
-t, fac = make_text("WE'RE STILL LISTENING.", 0.075, -0.62, font_title, spacing=LS, max_w=MAXW)
-fade(fac, 22.6, 24.5, 1.0, 0.3, ob=t)
+# --- S4: narrowband, 1420 MHz
+t, fac = make_text("1420 MHz", 0.11, 0.55, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 25.8, 31.0, 0.9, 0.45, ob=t)
+t, fac = make_text("A NARROWBAND SIGNAL,", 0.042, 0.42, font_sub, spacing=1.7, max_w=MAXW, strength=0.8, parent=rig2)
+fade(fac, 26.4, 31.0, 0.8, 0.45, ob=t)
+t, fac = make_text("RIGHT BY THE HYDROGEN LINE", 0.042, 0.36, font_sub, spacing=1.7, max_w=MAXW, strength=0.8, parent=rig2)
+fade(fac, 26.6, 31.0, 0.8, 0.45, ob=t)
+t, fac = make_text("THE FREQUENCY SCIENTISTS HAD PROPOSED", 0.036, -0.70, font_sub, spacing=1.7, max_w=MAXW, strength=0.7, parent=rig2)
+fade(fac, 28.4, 31.0, 0.8, 0.45, ob=t)
+t, fac = make_text("FOR SIGNALS BETWEEN THE STARS.", 0.036, -0.755, font_sub, spacing=1.7, max_w=MAXW, strength=0.7, parent=rig2)
+fade(fac, 28.6, 31.0, 0.8, 0.45, ob=t)
 
-# --- the final blip: a single green point in the sky, then black
-bpy.context.view_layer.update()
+# a spectrum trace: noise floor + one narrow green spike
+spec = bpy.data.objects.new("Spectrum", None)
+scene.collection.objects.link(spec)
+spec.parent = rig2
+spec.location = (0, -0.52, 0)
+
+
+def poly_curve(name, pts, mat, depth=0.0028, parent=None):
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions = "3D"
+    sp_ = cu.splines.new("POLY")
+    sp_.points.add(len(pts) - 1)
+    for k, p in enumerate(pts):
+        sp_.points[k].co = (p[0], p[1], 0, 1)
+    cu.bevel_depth = depth
+    cu.bevel_resolution = 1
+    try:
+        cu.bevel_factor_mapping_end = "SPLINE"
+    except Exception:
+        pass
+    cu.materials.append(mat)
+    ob = bpy.data.objects.new(name, cu)
+    scene.collection.objects.link(ob)
+    ob.parent = parent
+    return ob, cu
+
+
+srnd = random.Random(1420)
+base_pts = [(-0.62 + 1.24 * k / 179, 0.012 * (srnd.random() - 0.5) + 0.008 * math.sin(k * 0.21)) for k in range(180)]
+base_m, base_fac, _ = mat_emit_fade("SpecBase", OFFWHITE, 0.55)
+base_ob, base_cu = poly_curve("SpecBase", base_pts, base_m, 0.0022, spec)
+base_cu.bevel_factor_end = 0.0
+base_cu.keyframe_insert("bevel_factor_end", frame=F(25.6))
+base_cu.bevel_factor_end = 1.0
+base_cu.keyframe_insert("bevel_factor_end", frame=F(27.0))
+fade(base_fac, 25.6, 31.0, 0.2, 0.45, ob=base_ob)
+spike_m, spike_fac, _ = mat_emit_fade("Spike", ACCENT, 2.2)
+spike_pts = [(-0.02, 0.0), (-0.006, 0.01), (-0.002, 0.16), (0.0, 0.2), (0.002, 0.16), (0.006, 0.01), (0.02, 0.0)]
+spike_ob, spike_cu = poly_curve("Spike", spike_pts, spike_m, 0.0030, spec)
+spike_ob.scale = (1, 0.0, 1); spike_ob.keyframe_insert("scale", frame=F(26.85))
+spike_ob.scale = (1, 1.15, 1); spike_ob.keyframe_insert("scale", frame=F(27.2))
+spike_ob.scale = (1, 1.0, 1); spike_ob.keyframe_insert("scale", frame=F(27.6))
+fade(spike_fac, 26.8, 31.0, 0.1, 0.45, ob=spike_ob)
+
+# --- S5: the searches
+t, fac = make_text("BIG EAR LOOKED AGAIN.", 0.075, 0.72, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 31.9, 34.3, 0.8, 0.4, ob=t)
+t, fac = make_text("AND AGAIN. AND AGAIN.", 0.042, 0.62, font_sub, spacing=1.7, max_w=MAXW, strength=0.8, parent=rig2)
+fade(fac, 32.7, 34.3, 0.7, 0.4, ob=t)
+t, fac = make_text("THE VERY LARGE ARRAY, 1995 AND 1996.", 0.042, 0.72, font_sub, spacing=1.7, max_w=MAXW, strength=0.85, parent=rig2)
+fade(fac, 34.7, 37.0, 0.7, 0.35, ob=t)
+t, fac = make_text("OTHER TELESCOPES SINCE.", 0.042, 0.66, font_sub, spacing=1.7, max_w=MAXW, strength=0.85, parent=rig2)
+fade(fac, 35.3, 37.0, 0.7, 0.35, ob=t)
+t, fac = make_text("NOTHING.", 0.10, 0.70, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 37.3, 38.3, 0.5, 0.2, ob=t)
+
+# --- S6: torn down
+t, fac = make_text("IN 1998, BIG EAR WAS TORN DOWN", 0.060, -0.58, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 39.0, 44.0, 0.9, 0.45, ob=t)
+t, fac = make_text("TO MAKE ROOM FOR A GOLF COURSE.", 0.042, -0.70, font_sub, spacing=1.7, max_w=MAXW, strength=0.8, parent=rig2)
+fade(fac, 40.0, 44.0, 0.9, 0.45, ob=t)
+
+# --- S7: still listening
+t, fac = make_text("THE SIGNAL WAS", 0.075, -0.50, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 45.4, 48.8, 1.0, 0.6, ob=t)
+t, fac = make_text("NEVER HEARD AGAIN.", 0.075, -0.63, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 45.8, 48.8, 1.0, 0.6, ob=t)
+t, fac = make_text("WE'RE STILL LISTENING.", 0.075, -0.55, font_title, spacing=LS, max_w=MAXW, parent=rig2)
+fade(fac, 49.6, 52.6, 1.2, 0.5, ob=t)
+
+# the final blip: a single green point in the sky, then black
 blip_m, blip_fac, blip_em = mat_emit_fade("Blip", ACCENT, 2.6)
 bpy.ops.mesh.primitive_uv_sphere_add(radius=0.006, segments=10, ring_count=6)
 blip = bpy.context.active_object
 blip.data.materials.append(blip_m)
-blip.parent = rig
-blip.location = (0.22, 0.62, 0.0)
+blip.parent = rig2
+blip.location = (0.10, 0.42, 0.0)
+vis_range(blip, 53.6, 54.5)
 key_socket(blip_fac, 1, 0.0)
-key_socket(blip_fac, F(24.95), 0.0)
-key_socket(blip_fac, F(25.0), 1.0)
-key_socket(blip_fac, F(25.25), 1.0)
-key_socket(blip_fac, F(25.4), 0.0)
-blip.scale = (1, 1, 1); blip.keyframe_insert("scale", frame=F(24.95))
-blip.scale = (1.6, 1.6, 1.6); blip.keyframe_insert("scale", frame=F(25.05))
-blip.scale = (1.2, 1.2, 1.2); blip.keyframe_insert("scale", frame=F(25.4))
+key_socket(blip_fac, F(53.70), 0.0)
+key_socket(blip_fac, F(53.76), 1.0)
+key_socket(blip_fac, F(54.05), 1.0)
+key_socket(blip_fac, F(54.35), 0.0)
+blip.scale = (1, 1, 1); blip.keyframe_insert("scale", frame=F(53.70))
+blip.scale = (1.7, 1.7, 1.7); blip.keyframe_insert("scale", frame=F(53.80))
+blip.scale = (1.1, 1.1, 1.1); blip.keyframe_insert("scale", frame=F(54.35))
 
-# ---------------------------------------------------------------- aviation light blink (1.5 s period)
+# end card: hard cut to black
+endc_m, endc_fac, endc_em = mat_emit_fade("EndCard", (0, 0, 0), 0.0)
+bpy.ops.mesh.primitive_plane_add(size=1.0)
+endc = bpy.context.active_object
+endc.data.materials.append(endc_m)
+endc.parent = rig2
+endc.location = (0, 0, -0.04)
+endc.scale = (8, 8, 1)
+vis_range(endc, T_CUT, 56.0)
+key_socket(endc_fac, 1, 1.0)
+
+# ---------------------------------------------------------------- aviation light blink (1.5 s period), gone with the dish
 period = 1.5
 t0 = 0.2
-k = 0
-while t0 < CONFIG["duration_s"]:
+while t0 < 40.4:
     key_socket(red_fac, F(t0), 0.0)
     key_socket(red_fac, F(t0 + 0.12), 1.0)
     key_socket(red_fac, F(t0 + 0.55), 1.0)
@@ -880,11 +1153,22 @@ while t0 < CONFIG["duration_s"]:
     key_socket(halo_amt, F(t0 + 0.55), 0.8)
     key_socket(halo_amt, F(t0 + 0.9), 0.0)
     t0 += period
+for o in (avl, halo):
+    o.hide_render = False; o.keyframe_insert("hide_render", frame=1)
+    o.hide_render = True; o.keyframe_insert("hide_render", frame=F(41.2))
 # halo always faces the camera
 con = halo.constraints.new("TRACK_TO")
 con.target = cam
 con.track_axis = "TRACK_Z"
 con.up_axis = "UP_Y"
+con2 = halo.constraints.new("TRACK_TO")      # after S4 the active camera is Cam2
+con2.target = cam2
+con2.track_axis = "TRACK_Z"
+con2.up_axis = "UP_Y"
+con2.influence = 0.0
+con2.keyframe_insert("influence", frame=FR_S4 - 1)
+con2.influence = 1.0
+con2.keyframe_insert("influence", frame=FR_S4)
 
 # ---------------------------------------------------------------- render settings
 r = scene.render
@@ -954,6 +1238,8 @@ elif ARGS["render"]:
     # --start/--step allow interleaved passes (e.g. odd frames first, then even)
     if ARGS["start"]:
         scene.frame_start = ARGS["start"]
+    if ARGS["end"]:
+        scene.frame_end = ARGS["end"]
     if ARGS["step"]:
         scene.frame_step = ARGS["step"]
     if ARGS["skip"]:

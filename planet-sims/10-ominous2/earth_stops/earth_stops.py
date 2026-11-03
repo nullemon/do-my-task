@@ -458,13 +458,12 @@ def build_world():
     ramp = N(nt, "ShaderNodeValToRGB")
     ramp.color_ramp.interpolation = "EASE"
     el = ramp.color_ramp.elements
-    el[0].position, el[0].color = 0.5, (0.10, 0.045, 0.03, 1)
-    el[1].position, el[1].color = 0.80, (0.004, 0.007, 0.022, 1)
-    el.new(0.515).color = (0.32, 0.12, 0.05, 1)
-    el.new(0.56).color = (0.09, 0.06, 0.08, 1)
-    el.new(0.64).color = (0.022, 0.03, 0.065, 1)
+    el[0].position, el[0].color = 0.0, (0.34, 0.13, 0.05, 1)
+    el[1].position, el[1].color = 0.5, (0.003, 0.006, 0.02, 1)
+    el.new(0.05).color = (0.13, 0.065, 0.07, 1)
+    el.new(0.16).color = (0.03, 0.035, 0.075, 1)
     nt.links.new(sep.outputs["Z"], ramp.inputs["Fac"])
-    west = N(nt, "ShaderNodeMapRange", **{"From Min": 0.5, "From Max": 0.0, "To Min": 0.35, "To Max": 1.6})
+    west = N(nt, "ShaderNodeMapRange", **{"From Min": 1.0, "From Max": -1.0, "To Min": 0.3, "To Max": 1.5})
     nt.links.new(sep.outputs["X"], west.inputs["Value"])
     skyw = N(nt, "ShaderNodeMixRGB", _blend_type="MULTIPLY", Fac=1.0)
     nt.links.new(ramp.outputs["Color"], skyw.inputs[1])
@@ -540,7 +539,8 @@ def window_material(name, wall, seed):
 
 
 def sea_material():
-    m = mat_pr("sea_m", (0.006, 0.012, 0.018), rough=0.06)
+    m = mat_pr("sea_m", (0.002, 0.004, 0.006), rough=0.1)
+    m.node_tree.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = 0.3
     nt = m.node_tree
     tc = nt.nodes.new("ShaderNodeTexCoord")
     mp = N(nt, "ShaderNodeMapping")
@@ -724,7 +724,7 @@ def build_town():
         car = box(f"car{i}", (1.9, 4.3, 1.4), (7.0, yy, 0.8), m_car[i % 4])
         loose.append((car, 1.2))
     m_junk = [mat_pr(f"junk{c}", col) for c, col in
-              enumerate([(0.15, 0.13, 0.1), (0.3, 0.25, 0.18), (0.08, 0.08, 0.08), (0.4, 0.38, 0.35)])]
+              enumerate([(0.35, 0.3, 0.24), (0.5, 0.42, 0.3), (0.25, 0.25, 0.25), (0.6, 0.58, 0.55)])]
     for i in range(70):
         s = rng.uniform(0.2, 1.2)
         ob = box(f"junk{i}", (s * rng.uniform(0.6, 1.6), s, s * rng.uniform(0.3, 1.0)),
@@ -761,7 +761,7 @@ def fling(loose, trunks):
         spin = Vector((rng.uniform(-8, 8), rng.uniform(-8, 8), rng.uniform(-8, 8))) / FPS
         key_prop(ob, "rotation_euler", [(1, rot0), (t0, rot0), (END, Vector(rot0) + spin * dur)])
     # a constant stream of debris blown in from the sea and the town upwind (west)
-    m = mat_pr("stream_m", (0.12, 0.1, 0.08))
+    m = mat_pr("stream_m", (0.4, 0.33, 0.25))
     for i in range(260):
         s = rng.uniform(0.12, 1.2)
         y = rng.uniform(3, 90)
@@ -776,11 +776,11 @@ def fling(loose, trunks):
         key_prop(ob, "rotation_euler", [(t0, (0, 0, 0)), (END, spin * (END - t0))])
         visible(ob, t0, None)
     # dust streaks: thin glowing grit that the long shutter turns into speed lines
-    ms = mat_emit("streak_m", (0.9, 0.55, 0.3), 1.2)
+    ms = mat_emit("streak_m", (0.9, 0.55, 0.3), 3.0)
     for i in range(160):
         y = rng.uniform(2.5, 45)
         z = rng.uniform(0.2, 9)
-        ob = box(f"streak{i}", (rng.uniform(0.6, 2.5), 0.025, 0.025), (-300, y, z), ms)
+        ob = box(f"streak{i}", (rng.uniform(0.6, 2.5), 0.05, 0.05), (-300, y, z), ms)
         ob.visible_shadow = False
         v = rng.uniform(40, 75) / FPS
         t0 = rng.randint(JOLT + 1, HIT)
@@ -832,13 +832,13 @@ def earth_material(sun_vec_keys):
     nt.links.new(tc.outputs["Object"], sep.inputs[0])
     absz = N(nt, "ShaderNodeMath", _operation="ABSOLUTE")
     nt.links.new(sep.outputs["Z"], absz.inputs[0])
-    coast = N(nt, "ShaderNodeTexNoise", Scale=2.2, Detail=8.0, Roughness=0.62)
+    coast = N(nt, "ShaderNodeTexNoise", Scale=1.6, Detail=8.0, Roughness=0.62)
     nt.links.new(tc.outputs["Object"], coast.inputs["Vector"])
     cn = N(nt, "ShaderNodeMath", _operation="MULTIPLY_ADD")
     nt.links.new(coast.outputs["Fac"], cn.inputs[0])
-    cn.inputs[1].default_value = 0.55
+    cn.inputs[1].default_value = 1.1
     nt.links.new(absz.outputs[0], cn.inputs[2])
-    sea = N(nt, "ShaderNodeMapRange", **{"From Min": 0.86, "From Max": 0.875, "To Min": 0.0, "To Max": 1.0})
+    sea = N(nt, "ShaderNodeMapRange", **{"From Min": 1.15, "From Max": 1.165, "To Min": 0.0, "To Max": 1.0})
     nt.links.new(cn.outputs[0], sea.inputs["Value"])
     land_n = N(nt, "ShaderNodeTexNoise", Scale=7.0, Detail=10.0, Roughness=0.6)
     nt.links.new(tc.outputs["Object"], land_n.inputs["Vector"])
@@ -875,45 +875,32 @@ def earth_material(sun_vec_keys):
     return m
 
 
-def atmo_material(sun_vec_keys):
-    """Thin blue rim, only on the sunlit side (normal . sun)."""
+def atmo_material():
+    """Thin blue haze at the limb, lit only by the Sun (diffuse), so the night side stays black."""
     m = bpy.data.materials.new("atmo_m")
     m.use_nodes = True
     nt = m.node_tree
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputMaterial")
-    lw = N(nt, "ShaderNodeLayerWeight", Blend=0.35)
-    geo = nt.nodes.new("ShaderNodeNewGeometry")
-    dot = N(nt, "ShaderNodeVectorMath", _operation="DOT_PRODUCT")
-    nt.links.new(geo.outputs["Normal"], dot.inputs[0])
-    key_sock(dot.inputs[1], sun_vec_keys)
-    lit = N(nt, "ShaderNodeMapRange", **{"From Min": -0.15, "From Max": 0.5, "To Min": 0.0, "To Max": 1.0})
-    nt.links.new(dot.outputs["Value"], lit.inputs["Value"])
+    lw = N(nt, "ShaderNodeLayerWeight", Blend=0.4)
     pw = N(nt, "ShaderNodeMath", _operation="POWER")
-    pw.inputs[1].default_value = 2.5
+    pw.inputs[1].default_value = 2.2
     nt.links.new(lw.outputs["Facing"], pw.inputs[0])
-    mul = N(nt, "ShaderNodeMath", _operation="MULTIPLY")
-    nt.links.new(pw.outputs[0], mul.inputs[0])
-    nt.links.new(lit.outputs["Result"], mul.inputs[1])
-    em = N(nt, "ShaderNodeEmission", Color=(0.25, 0.5, 1.0, 1), Strength=2.2)
+    dif = N(nt, "ShaderNodeBsdfDiffuse", Color=(0.25, 0.5, 1.0, 1))
     tr = nt.nodes.new("ShaderNodeBsdfTransparent")
-    add = nt.nodes.new("ShaderNodeAddShader")
-    emm = N(nt, "ShaderNodeMixShader")
-    blk = N(nt, "ShaderNodeEmission", Strength=0.0)
-    nt.links.new(mul.outputs[0], emm.inputs["Fac"])
-    nt.links.new(blk.outputs[0], emm.inputs[1])
-    nt.links.new(em.outputs[0], emm.inputs[2])
-    nt.links.new(tr.outputs[0], add.inputs[0])
-    nt.links.new(emm.outputs[0], add.inputs[1])
-    nt.links.new(add.outputs[0], out.inputs[0])
+    mix = N(nt, "ShaderNodeMixShader")
+    nt.links.new(pw.outputs[0], mix.inputs["Fac"])
+    nt.links.new(tr.outputs[0], mix.inputs[1])
+    nt.links.new(dif.outputs[0], mix.inputs[2])
+    nt.links.new(mix.outputs[0], out.inputs[0])
     return m
 
 
 def sun_dir(f):
     """Direction to the Sun (world). It creeps around the planet once per year: here a time-lapse."""
-    a0 = math.radians(-8)   # terminator just left of centre: one half baked, the other in night
+    a0 = math.radians(0)    # terminator through the centre: one half baked, the other in night
     u = smoothstep(YEAR0, YEAR1, f)
-    a = a0 + math.radians(70) * u
+    a = a0 + math.radians(45) * u
     return Vector((math.cos(a), -math.sin(a) * 0.9, 0.08)).normalized()
 
 
@@ -923,7 +910,7 @@ def build_space(cam):
     e = sphere("earth", 1.0, center, earth_material(keys), segs=128, rings=64)
     e.scale = (EARTH_R,) * 3
     e.rotation_euler = (math.radians(14), 0, 0)   # tip the north polar ocean toward us
-    a = sphere("atmo", 1.022, center, atmo_material(keys), segs=96, rings=48)
+    a = sphere("atmo", 1.022, center, atmo_material(), segs=96, rings=48)
     a.scale = (EARTH_R,) * 3
     a.visible_shadow = False
     li = bpy.data.lights.new("sun_space", "SUN")
@@ -966,7 +953,7 @@ def build():
     fill.color = (0.35, 0.45, 0.8)
     fo = link(bpy.data.objects.new("skyfill", fill))
     fo.rotation_euler = (math.radians(20), math.radians(-10), 0)
-    key_sock_obj(fill, [(1, 0.25), (CUT - 1, 0.25), (CUT, 0.0)])
+    key_sock_obj(fill, [(1, 0.6), (CUT - 1, 0.6), (CUT, 0.0)])
     loose, trunks, _ = build_town()
     fling(loose, trunks)
     build_wave()

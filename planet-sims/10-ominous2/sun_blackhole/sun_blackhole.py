@@ -183,10 +183,12 @@ def new_scene(name):
         sc.view_settings.view_transform = "AgX"
     except TypeError:
         sc.view_settings.view_transform = "Filmic"
-    try:
-        sc.view_settings.look = "AgX - Medium High Contrast"
-    except TypeError:
-        pass
+    for look in ("AgX - Punchy", "AgX - Medium High Contrast"):
+        try:
+            sc.view_settings.look = look
+            break
+        except TypeError:
+            pass
     sc.cycles.max_bounces = 2
     w = bpy.data.worlds.new(name + "_world")
     w.use_nodes = True
@@ -359,7 +361,8 @@ def caption(sc, cam, text, f_in, f_out, y=-0.62, size=0.062, color=(1, 1, 1), st
 SP = Vector((0.0, 0.0, 20000.0))   # the black hole (space set lives far above the sea set)
 ORBIT_R = 9.0                       # dramatised: Earth radius = 1
 BH_R = 0.5                          # dramatised size of the black "shadow"
-THETA_E = 0.075                     # dramatised Einstein-ring angle (radians) seen from the camera
+THETA_E = 0.11                      # dramatised Einstein-ring angle (radians) seen from the camera
+SHADOW = 0.6 * THETA_E              # angular radius of the black shadow
 
 
 def earth_phi(f):
@@ -429,14 +432,42 @@ def build_world(sc):
         s = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", core.outputs["Result"],
                                             math_op(nt, "POWER", bw.outputs[0], power)), gain)
         acc = s if acc is None else math_op(nt, "ADD", acc, s)
-    # faint glow hugging the Einstein ring (theta ~ sqrt(p2))
+    # faint star dust + a lensed galactic band: smooth textures make the warping obvious
+    dust = nt.nodes.new("ShaderNodeTexVoronoi")
+    dust.inputs["Scale"].default_value = 520
+    nt.links.new(D2, dust.inputs["Vector"])
+    dcore = node(nt, "ShaderNodeMapRange", **{"From Min": 0.0, "From Max": 0.22, "To Min": 1.0, "To Max": 0.0})
+    nt.links.new(dust.outputs["Distance"], dcore.inputs["Value"])
+    acc = math_op(nt, "ADD", acc, math_op(nt, "MULTIPLY", dcore.outputs["Result"], 6.0))
+    sep2 = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(D2, sep2.inputs[0])
+    band = math_op(nt, "EXPONENT", math_op(nt, "MULTIPLY", math_op(nt, "POWER",
+                   math_op(nt, "DIVIDE", math_op(nt, "SUBTRACT", sep2.outputs["Z"], 0.18), 0.22), 2.0), -1.0))
+    neb = node(nt, "ShaderNodeTexNoise", Scale=7.0, Detail=10.0, Roughness=0.62)
+    nt.links.new(D2, neb.inputs["Vector"])
+    nebm = node(nt, "ShaderNodeMapRange", **{"From Min": 0.42, "From Max": 0.75})
+    nt.links.new(neb.outputs["Fac"], nebm.inputs["Value"])
+    nebv = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", band, nebm.outputs["Result"]), 0.05)
+    # rings (theta ~ sqrt(p2)): a thin bright Einstein ring with a soft halo, and a faint photon ring
     th = math_op(nt, "SQRT", p2)
-    ring = math_op(nt, "DIVIDE", math_op(nt, "SUBTRACT", th, THETA_E * 1.02), THETA_E * 0.08)
-    ring = math_op(nt, "EXPONENT", math_op(nt, "MULTIPLY", math_op(nt, "POWER", ring, 2.0), -1.0))
+
+    def gauss(center, width, gain):
+        g = math_op(nt, "DIVIDE", math_op(nt, "SUBTRACT", th, center), width)
+        g = math_op(nt, "EXPONENT", math_op(nt, "MULTIPLY", math_op(nt, "POWER", g, 2.0), -1.0))
+        return math_op(nt, "MULTIPLY", g, gain)
+
+    ring = math_op(nt, "ADD", gauss(THETA_E, THETA_E * 0.035, 1.6), gauss(THETA_E, THETA_E * 0.22, 0.10))
+    ring = math_op(nt, "ADD", ring, gauss(SHADOW * 1.04, THETA_E * 0.025, 0.7))
     ringv = nt.nodes.new("ShaderNodeValue")
     ring = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", ring, front), ringv.outputs[0])
     stars = mix_rgb(nt, "MULTIPLY", acc, (0.86, 0.92, 1.0))
-    stars = mix_rgb(nt, "ADD", stars, mix_rgb(nt, "MULTIPLY", ring, (0.55, 0.7, 1.0)))
+    stars = mix_rgb(nt, "ADD", stars, mix_rgb(nt, "MULTIPLY", nebv, (0.55, 0.6, 1.0)))
+    stars = mix_rgb(nt, "ADD", stars, mix_rgb(nt, "MULTIPLY", ring, (0.8, 0.88, 1.0)))
+    # pure black shadow (only once the lens is on)
+    inside = math_op(nt, "MULTIPLY", math_op(nt, "LESS_THAN", th, SHADOW), front)
+    inside = math_op(nt, "MULTIPLY", inside, math_op(nt, "GREATER_THAN", lens.outputs[0], 0.0))
+    stars = mix_rgb(nt, "MIX", stars, (0.0, 0.0, 0.0))
+    nt.links.new(inside, stars.node.inputs["Fac"])
     lp = nt.nodes.new("ShaderNodeLightPath")
     cam_only = mix_rgb(nt, "MIX", (0.0, 0.0, 0.0), stars)
     nt.links.new(lp.outputs["Is Camera Ray"], cam_only.node.inputs["Fac"])
@@ -449,15 +480,16 @@ def build_world(sc):
     nt.links.new(sep.outputs["Z"], grad.inputs["Value"])
     sky = nt.nodes.new("ShaderNodeValToRGB")
     se = sky.color_ramp.elements
-    se[0].position, se[0].color = 0.0, (0.5, 0.62, 0.8, 1)
-    se[1].position, se[1].color = 1.0, (0.02, 0.07, 0.3, 1)
-    se.new(0.2).color = (0.12, 0.27, 0.6, 1)
+    se[0].position, se[0].color = 0.0, (0.32, 0.52, 0.85, 1)
+    se[1].position, se[1].color = 1.0, (0.008, 0.04, 0.26, 1)
+    se.new(0.12).color = (0.06, 0.2, 0.62, 1)
+    se.new(0.45).color = (0.02, 0.09, 0.42, 1)
     nt.links.new(grad.outputs["Result"], sky.inputs["Fac"])
     sd = vec_op(nt, "DOT_PRODUCT", D, None).outputs["Value"]
     sd.node.inputs[1].default_value = tuple(SDIR)
-    gl = node(nt, "ShaderNodeMapRange", **{"From Min": 0.985, "From Max": 1.0})
+    gl = node(nt, "ShaderNodeMapRange", **{"From Min": 0.996, "From Max": 1.0})
     nt.links.new(sd, gl.inputs["Value"])
-    glow = mix_rgb(nt, "MULTIPLY", math_op(nt, "POWER", gl.outputs["Result"], 4.0), (2.2, 1.9, 1.5))
+    glow = mix_rgb(nt, "MULTIPLY", math_op(nt, "POWER", gl.outputs["Result"], 4.0), (1.6, 1.5, 1.3))
     bg_sky = nt.nodes.new("ShaderNodeBackground")
     nt.links.new(mix_rgb(nt, "ADD", sky.outputs["Color"], glow), bg_sky.inputs["Color"])
     add = nt.nodes.new("ShaderNodeAddShader")
@@ -468,7 +500,7 @@ def build_world(sc):
     key_sock(bg_sky.inputs["Strength"], [(1, 0.55), (OFF - 1, 0.55), (OFF, 0.0)])
     key_sock(bg_st.inputs["Strength"], [(1, 0.0), (OFF + 6, 0.0), (OFF + 100, 1.0)])
     key_sock(lens.outputs[0], [(1, 0.0), (CUT_SPACE - 1, 0.0), (CUT_SPACE, THETA_E ** 2)])
-    key_sock(ringv.outputs[0], [(1, 0.0), (CUT_SPACE - 1, 0.0), (CUT_SPACE, 0.06)])
+    key_sock(ringv.outputs[0], [(1, 0.0), (CUT_SPACE - 1, 0.0), (CUT_SPACE, 1.0)])
     for f in range(1, END + 1):
         if f < CUT_SPACE and f not in (1, CUT_SPACE - 1):
             continue
@@ -483,7 +515,7 @@ def build_ground(sc):
     """Noon sea with low islands on the horizon, the Sun's disc and its light."""
     objs = []
     sea = link(sc, plane("sea", 30000))
-    m = mat_principled("sea_m", (0.004, 0.015, 0.035), rough=0.14)
+    m = mat_principled("sea_m", (0.002, 0.03, 0.07), rough=0.16)
     nt = m.node_tree
     tc = nt.nodes.new("ShaderNodeTexCoord")
     n = node(nt, "ShaderNodeTexNoise", Scale=0.35, Detail=8.0)
@@ -512,11 +544,11 @@ def build_ground(sc):
         sun.energy = v
         sun.keyframe_insert("energy", frame=f)
     disc = link(sc, uv_sphere("sun_disc", 1.0, 48, 24))
-    disc.data.materials.append(mat_emit("sun_disc_m", (1.0, 0.93, 0.8), 30.0))
+    disc.data.materials.append(mat_emit("sun_disc_m", (1.0, 0.95, 0.85), 60.0))
     disc.visible_shadow = False
     d = 50000
     disc.location = Vector((0, -30, 3.2)) + SDIR * d
-    disc.scale = [d * math.tan(math.radians(1.0))] * 3
+    disc.scale = [d * math.tan(math.radians(0.75))] * 3
     key_hide(disc, ((1, False), (OFF, True)))
     # faint starlight once the eyes adapt
     night = bpy.data.lights.new("starlight_g", "SUN")
@@ -563,10 +595,11 @@ def build_space(sc):
     nt.links.new(lat, wob.node.inputs[2])
     ice = nt.nodes.new("ShaderNodeMapRange")
     nt.links.new(wob, ice.inputs["Value"])
-    key_sock(ice.inputs["From Min"], [(1, 1.17), (FREEZE0, 1.17), (YEAR, 0.22)])
-    key_sock(ice.inputs["From Max"], [(1, 1.21), (FREEZE0, 1.21), (YEAR, 0.26)])
-    icem = mix_rgb(nt, "MIX", lc.outputs["Color"], (0.85, 0.9, 0.96))
-    nt.links.new(ice.outputs["Result"], icem.node.inputs["Fac"])
+    key_sock(ice.inputs["From Min"], [(1, 1.17), (FREEZE0, 1.17), (YEAR, 0.24)])
+    key_sock(ice.inputs["From Max"], [(1, 1.23), (FREEZE0, 1.23), (YEAR, 0.30)])
+    icef = ice.outputs["Result"]
+    icem = mix_rgb(nt, "MIX", lc.outputs["Color"], (0.9, 0.95, 1.0))
+    nt.links.new(icef, icem.node.inputs["Fac"])
     nt.links.new(icem, b.inputs["Base Color"])
     rr = node(nt, "ShaderNodeMapRange", **{"From Min": 0.535, "From Max": 0.545, "To Min": 0.3, "To Max": 0.92})
     nt.links.new(landn.outputs["Fac"], rr.inputs["Value"])
@@ -579,13 +612,18 @@ def build_space(sc):
     landm = node(nt, "ShaderNodeMapRange", **{"From Min": 0.545, "From Max": 0.6})
     nt.links.new(landn.outputs["Fac"], landm.inputs["Value"])
     lights = math_op(nt, "MULTIPLY", cm.outputs["Result"], landm.outputs["Result"])
-    noice = math_op(nt, "SUBTRACT", 1.0, ice.outputs["Result"])
-    lights = math_op(nt, "MULTIPLY", lights, noice)
+    lights = math_op(nt, "MULTIPLY", lights, math_op(nt, "SUBTRACT", 1.0, icef))
     lv = nt.nodes.new("ShaderNodeValue")
     key_sock(lv.outputs[0], [(1, 2.2), (FREEZE0, 2.2), (YEAR, 0.5), (END, 0.3)])
     lights = math_op(nt, "MULTIPLY", lights, lv.outputs[0])
+    # ice glows faintly pale blue (dramatised so it reads on a night-side planet), brighter at its edge
+    edge = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", icef, math_op(nt, "SUBTRACT", 1.0, icef)), 4.0)
+    glowi = math_op(nt, "ADD", math_op(nt, "MULTIPLY", icef, 0.10), math_op(nt, "MULTIPLY", edge, 0.9))
     b.inputs["Emission Color"].default_value = (1.0, 0.6, 0.26, 1)
-    nt.links.new(lights, b.inputs["Emission Strength"])
+    ecol = mix_rgb(nt, "MIX", (1.0, 0.6, 0.26), (0.7, 0.85, 1.0))
+    nt.links.new(icef, ecol.node.inputs["Fac"])
+    nt.links.new(ecol, b.inputs["Emission Color"])
+    nt.links.new(math_op(nt, "ADD", lights, glowi), b.inputs["Emission Strength"])
     earth.data.materials.append(m)
     earth.rotation_euler = (math.radians(23.4), 0, 0)
     key_every(earth, "location", earth_pos, CUT_SPACE, END)
@@ -620,7 +658,8 @@ def build_space(sc):
     for f, v in ((1, 0.0), (CUT_SPACE - 1, 0.0), (CUT_SPACE, 0.8)):
         starl.energy = v
         starl.keyframe_insert("energy", frame=f)
-    for ob in (hole, earth, atm):
+    hole.hide_render = True   # the shadow is drawn by the lensing world shader instead
+    for ob in (earth, atm):
         key_hide(ob, ((1, True), (CUT_SPACE, False)))
 
 

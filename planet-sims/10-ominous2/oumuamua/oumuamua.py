@@ -6,7 +6,7 @@ Self-contained Blender script (Cycles). Everything is procedural.
   blender -b -P oumuamua.py -- --render --step 3             # every 3rd frame (1, 4, 7, ...)
   blender -b -P oumuamua.py -- --render --frames 1,300,700   # test stills
   blender -b -P oumuamua.py -- --audio out.wav               # soundtrack only (numpy), no scene
-Options: --res 540|1080  --samples N  --threads N  --out DIR  --range FIRST,LAST
+Options: --gpu  --res 540|1080  --samples N  --threads N  --out DIR  --range FIRST,LAST
 
 Shots (seconds):
   A  0.0-17.5  wide: the Sun far off, the object swings round it on a hyperbolic arc (trail line)
@@ -204,6 +204,22 @@ def new_scene(name):
     sc = bpy.data.scenes.new(name)
     sc.render.engine = "CYCLES"
     sc.cycles.device = "CPU"
+    if "--gpu" in argv:   # uses whatever compute backend is enabled in Preferences (CUDA/OptiX/HIP/Metal)
+        try:
+            prefs = bpy.context.preferences.addons["cycles"].preferences
+            for be in ("OPTIX", "CUDA", "HIP", "METAL", "ONEAPI"):
+                try:
+                    prefs.compute_device_type = be
+                    prefs.get_devices()
+                    if any(d.type == be for d in prefs.devices):
+                        for d in prefs.devices:
+                            d.use = d.type == be
+                        sc.cycles.device = "GPU"
+                        break
+                except TypeError:
+                    continue
+        except Exception as exc:
+            print("[oumuamua] GPU setup failed, using CPU:", exc)
     sc.cycles.samples = SAMPLES
     sc.cycles.use_denoising = True
     try:

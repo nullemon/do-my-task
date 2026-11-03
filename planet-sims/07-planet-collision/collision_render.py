@@ -45,17 +45,18 @@ CONFIG = dict(
     # look
     TEMP_BANDS=(0.0, 0.25, 0.42, 0.58, 0.72, 0.86, 1.01),   # temperature band edges (temp is 0..1)
     TEMP_GAMMA=1.0,              # >1 = cooler overall, <1 = hotter
-    RADIUS_FACTOR=1.4,           # Points-to-Volume radius = h * this
+    RADIUS_FACTOR=1.4, 
+    MAX_RADIUS_H=2.0,            # cap volume radius at this * bulk h, so sparse ejecta stay thin filaments          # Points-to-Volume radius = h * this
     VOXEL_FACTOR=0.42,           # voxel size = median(h of bulk) * this (smaller = sharper, slower)
     MAX_VOXEL_SIZE=0.08,         # Earth radii
     MIN_VOXEL_SIZE=0.006,
     VOLUME_STEP_RATE=1.0,        # Cycles: >1 = faster, coarser volume ray marching
     SMOOTH_ITER=2,               # Blender 5.x only: grid blur passes on the density (0 = off)
     VOLUME_DENSITY=26.0,         # optical density of the molten bulk (higher = more solid surface)
-    EMISSION=4.0,                # overall glow strength of the bulk
+    EMISSION=1.0,                # overall glow strength of the bulk
     EMISSION_FLOOR=0.45,         # glow of the coolest material (molten bodies self-luminous)
     ALBEDO=(0.55, 0.22, 0.07),    # scattering colour (lit by the sun lamp -> day/night shading)
-    HAZE=True, HAZE_TEMP=0.55, HAZE_RADIUS=3.2, HAZE_DENSITY=0.10, HAZE_EMISSION=0.55,
+    HAZE=True, HAZE_TEMP=0.55, HAZE_RADIUS=3.2, HAZE_DENSITY=0.10, HAZE_EMISSION=5.0,
     SPARKLE=True,                # tiny emissive points for every particle (grain + debris)
     SPARKLE_RADIUS=0.22,         # * h
     SPARKLE_MAX_RADIUS=0.012,    # Earth radii
@@ -75,7 +76,7 @@ CONFIG = dict(
     CAM_AZIMUTH=-80.0,           # degrees, start
     CAM_ORBIT=18.0,              # degrees of slow orbit over the whole video
     CAM_ROLL=0.0,                # 90 puts the orbital plane vertical in the 9:16 frame
-    CAM_FIT_PERCENTILE=97.0,     # fraction of particles kept in frame
+    CAM_FIT_PERCENTILE=99.0,     # fraction of particles kept in frame
     CAM_MARGIN=1.25,
     CAM_MIN_EXTENT=1.6,          # Earth radii (half height of the view at least)
     CAM_SMOOTH_S=1.5,            # gaussian smoothing of auto-framing (seconds)
@@ -226,6 +227,8 @@ class Cache:
                      h=z["h"].astype(np.float32) if "h" in z else np.full(self.n, 0.05, np.float32),
                      mat=z["mat"].astype(np.int32) if "mat" in z else np.zeros(self.n, np.int32),
                      t=float(z["t"]) if "t" in z else None)
+            if "absorbed" in z:            # e.g. swallowed by Jupiter: hide from every layer
+                d["temp"] = np.where(z["absorbed"].astype(bool), -1.0, d["temp"]).astype(np.float32)
             if len(self._lru) > 6:
                 self._lru.pop(next(iter(self._lru)))
             self._lru[i] = d
@@ -388,8 +391,12 @@ def build_points_group():
         L.new(hh.outputs["Attribute"], isdeb.inputs[0]); L.new(gi.outputs["DebrisH"], isdeb.inputs[1])
         sw = N.new("GeometryNodeSwitch"); sw.input_type = "FLOAT"
         L.new(isdeb.outputs[0], sw.inputs[0]); L.new(radc.outputs[0], sw.inputs[1]); L.new(gi.outputs["DebrisRadius"], sw.inputs[2])
+        tt = N.new("GeometryNodeInputNamedAttribute"); tt.data_type = "FLOAT"; tt.inputs["Name"].default_value = "temp"
+        vis = N.new("FunctionNodeCompare"); vis.data_type = "FLOAT"; vis.operation = "GREATER_EQUAL"
+        L.new(tt.outputs["Attribute"], vis.inputs[0]); vis.inputs[1].default_value = 0.0
         m2p = N.new("GeometryNodeMeshToPoints")
         L.new(gi.outputs["Geometry"], m2p.inputs["Mesh"]); L.new(sw.outputs[0], m2p.inputs["Radius"])
+        L.new(vis.outputs[0], m2p.inputs["Selection"])
         sm = N.new("GeometryNodeSetMaterial")
         L.new(m2p.outputs[0], sm.inputs["Geometry"]); L.new(gi.outputs["Material"], sm.inputs["Material"])
         L.new(sm.outputs[0], go.inputs["Geometry"])
@@ -719,7 +726,7 @@ def pc_frame_change(scene, depsgraph=None):
     if len(me.vertices) != len(d["pos"]):
         return
     me.vertices.foreach_set("co", d["pos"].ravel())
-    t = np.clip(d["temp"], 0, 1) ** c["TEMP_GAMMA"]
+    t = np.where(d["temp"] < 0, -1.0, np.clip(d["temp"], 0, 1) ** c["TEMP_GAMMA"])
     me.attributes["temp"].data.foreach_set("value", t.astype(np.float32))
     me.attributes["h"].data.foreach_set("value", d["h"].astype(np.float32))
     me.update()
@@ -807,7 +814,7 @@ def build(preview=False):
         mod = o.modifiers.new("Volume", "NODES"); mod.node_group = vg
         set_mod_input(mod, vg, "TMin", float(t0)); set_mod_input(mod, vg, "TMax", float(t1))
         set_mod_input(mod, vg, "RadiusFactor", float(c["RADIUS_FACTOR"]))
-        set_mod_input(mod, vg, "MaxRadius", 0.6)
+        set_mod_input(mod, vg, "MaxRadius", float(hb * c["MAX_RADIUS_H"]))
         set_mod_input(mod, vg, "VoxelSize", vox)
         set_mod_input(mod, vg, "Density", 1.0)
         set_mod_input(mod, vg, "Material", m)
@@ -817,7 +824,7 @@ def build(preview=False):
         mod = o.modifiers.new("Haze", "NODES"); mod.node_group = vg
         set_mod_input(mod, vg, "TMin", float(c["HAZE_TEMP"])); set_mod_input(mod, vg, "TMax", 2.0)
         set_mod_input(mod, vg, "RadiusFactor", float(c["HAZE_RADIUS"]))
-        set_mod_input(mod, vg, "MaxRadius", 0.8)
+        set_mod_input(mod, vg, "MaxRadius", float(hb * c["MAX_RADIUS_H"] * 2.5))
         set_mod_input(mod, vg, "VoxelSize", float(np.clip(vox * 3, 0.02, 0.15)))
         set_mod_input(mod, vg, "Density", 1.0)
         set_mod_input(mod, vg, "Material", m)

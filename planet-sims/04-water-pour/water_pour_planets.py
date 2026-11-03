@@ -60,7 +60,7 @@ PREVIEW_SECONDS = 2.4
 PREVIEW_FRAME = 58               # (1.9 s) the still that is rendered for each planet
 PREVIEW_RES = (270, 480)
 PREVIEW_SAMPLES = 24
-PREVIEW_IMPACT_STILLS = ["Sun", "Moon"]   # also render these planets at the impact frame
+PREVIEW_IMPACT_STILLS = ["Sun", "Moon"]   # also render these planets 2 frames after impact
 
 HOOK_CAPTION = "POURING WATER ON"
 
@@ -903,7 +903,7 @@ def main():
             shots = [(min(PREVIEW_FRAME, sc.frame_end), f"{sc.name}.png")]
             hit = report.get(p, {}).get("water_hits_bowl_s")
             if p in PREVIEW_IMPACT_STILLS and hit is not None:     # extra still right after impact
-                shots.append((min(sc.frame_end, 1 + round(hit * FPS)), f"{sc.name}_impact.png"))
+                shots.append((min(sc.frame_end, 1 + round(hit * FPS) + 2), f"{sc.name}_impact.png"))
             for fr, name in shots:
                 sc.frame_set(fr)
                 sc.render.filepath = os.path.join(pdir, name)

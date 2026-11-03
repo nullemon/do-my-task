@@ -51,9 +51,9 @@ VIEW_KEYS = None
 CAM_TILT_DEG = 38.0              # 0 = straight down onto the orbital plane
 CAM_DRIFT_DEG = 30.0             # slow azimuth drift over the whole clip
 RADIUS_FACTOR = 0.75             # sphere radius = factor * SPH smoothing length h
-RADIUS_CAP = 2.0                 # x median initial h (far debris)
+RADIUS_CAP = 1.0                 # x median initial h (far debris stays small)
 GLOW = 1.0                       # compositor glare strength
-EMISSION = 6.0
+EMISSION = 1.7
 
 SCENE_NAME = "07_Collision"
 TAG = "pc07"
@@ -147,7 +147,7 @@ def view_keys(c):
     if VIEW_KEYS:
         return VIEW_KEYS
     tc = contact_hours(c)
-    return [(0.0, 8.5), (tc, 7.0), (tc + 1.5, 9.0), (tc + 5.0, 14.0), (24.0, 18.0)]
+    return [(0.0, 9.0), (tc, 8.5), (tc + 1.0, 12.0), (tc + 4.0, 17.0), (tc + 10.0, 22.0), (24.0, 24.0)]
 
 
 def frame_hours(c, frame):
@@ -370,6 +370,8 @@ def look_at(ob, eye, target, up):
 
 def build_compositor(sc, preview):
     glare_strength = GLOW
+    if bpy.app.background and hasattr(sc.render, "compositor_device"):
+        sc.render.compositor_device = "CPU"     # GPU compositor needs EGL -> abort when headless
     if hasattr(sc, "compositing_node_group"):        # Blender 5.x
         ng = tag(bpy.data.node_groups.new("PC07_Comp", "CompositorNodeTree"))
         ng.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
@@ -425,8 +427,8 @@ def build_compositor(sc, preview):
         return g.outputs[0]
 
     img = rl.outputs["Image"]
-    img = glare(img, "BLOOM", 8, 0.9 * glare_strength, 0.8)
-    img = glare(img, "FOG_GLOW", 7, 0.35 * glare_strength, 2.0)
+    img = glare(img, "BLOOM", 7, 0.6 * glare_strength, 0.95)
+    img = glare(img, "FOG_GLOW", 6, 0.25 * glare_strength, 1.5)
     links.new(img, out_in)
 
 
@@ -453,14 +455,9 @@ def setup_render(sc, preview, c):
             ee.taa_render_samples = EEVEE_SAMPLES
         if hasattr(ee, "use_bloom"):
             ee.use_bloom = False
-    try:
-        sc.view_settings.view_transform = "AgX"
-    except TypeError:
-        sc.view_settings.view_transform = "Filmic"
-    try:
-        sc.view_settings.look = "AgX - Punchy"
-    except TypeError:
-        pass
+    sc.view_settings.view_transform = "Standard"     # keeps the molten orange saturated
+    sc.view_settings.look = "None"
+    sc.view_settings.exposure = 0.0
     r.fps = FPS
     sc.frame_start = 1
     sc.frame_end = int(round(time_keys(c)[-1][0] * FPS)) or 1
@@ -535,8 +532,8 @@ def build(preview=False):
     sc.collection.objects.link(cam)
     sc.camera = cam
     tm = mat_text()
-    add_text(sc, cam, CAPTION, 0.052, 0.27, tm)
-    add_text(sc, cam, SUBCAPTION, 0.022, 0.225, tm)
+    add_text(sc, cam, CAPTION, 0.040, 0.27, tm)
+    add_text(sc, cam, SUBCAPTION, 0.020, 0.232, tm)
     clock = add_text(sc, cam, "Simulated: 0.0 h", 0.024, -0.30, tm)
     STATE.update(cache=c, ob=ob, cam=cam, clock=clock)
     build_compositor(sc, preview)

@@ -46,6 +46,7 @@ PREVIEW_RES = (270, 480)
 PREVIEW_SAMPLES = 24
 OUTPUT_DIR = "//renders/jelly_planets/"   # relative to .blend (or script dir when unsaved)
 HOOK_TEXT = "JELLY ON EVERY PLANET"
+LABEL_MAX_WIDTH = 0.85       # labels auto-shrink to fit this fraction of the frame width
 DROP_HEIGHT = 0.20            # m, gap between jelly bottom and plate at release
 JELLY_COLOR = (0.85, 0.03, 0.10)   # raspberry
 CHERRY = True
@@ -74,18 +75,18 @@ LOOKS = {
 # --- jelly material physics (identical on every planet) ---
 JELLY = dict(
     density=1050.0,           # kg/m^3 (gelatin dessert) -> cloth per-vertex mass = density*volume/verts
-    stiffness=0.6,            # tension / compression
+    stiffness=1.0,            # skin tension / compression
     shear=0.3,
-    bending=0.15,
-    internal=0.6,             # internal springs (gives the shell a "body")
+    bending=0.3,
+    internal=0.0,             # internal springs (0 = off; even 0.01 makes it rubber-hard)
     damping=0.0,              # spring damping (low = wobbly)
     air_damping=0.05,
-    pressure_factor=4.0,      # kPa, pulls volume back to the rest volume (near-incompressible)
+    pressure_factor=400.0,      # kPa, pulls volume back to the rest volume (near-incompressible)
     shell_fraction=0.3,       # share of the jelly mass carried by the cloth skin vertices...
     fluid_density=True,       # ...the rest is "fluid" weight via cloth hydrostatic pressure gradient
 )
 BASE_QUALITY = 10             # cloth substeps per frame at Earth gravity
-PLATE_FRICTION = 15.0       # plate grip (cloth collision friction)
+PLATE_FRICTION = 60.0       # plate grip (cloth collision friction)
 MAX_QUALITY = 80
 SELF_COLLISION = True       # stops the top punching through the bottom under Sun gravity
 
@@ -189,19 +190,17 @@ def mat_jelly():
     nt = m.node_tree
     b = nt.nodes.get("Principled BSDF")
     c = JELLY_COLOR
-    bsdf_set(b, "Base Color", (min(1, c[0] * 1.1), c[1] * 1.5 + 0.05, c[2] * 1.3 + 0.03, 1))
+    bsdf_set(b, "Base Color", (*c, 1))
     bsdf_set(b, "Roughness", 0.04)
     bsdf_set(b, "IOR", 1.36)
     bsdf_set(b, "Transmission Weight", 1.0)
     bsdf_set(b, "Coat Weight", 0.4)
     bsdf_set(b, "Coat Roughness", 0.02)
-    bsdf_set(b, "Subsurface Weight", 0.08)
-    bsdf_set(b, "Subsurface Radius", (0.3, 0.05, 0.05))
     # coloured depth: volume absorption inside the jelly
     out = nt.nodes.get("Material Output")
     va = nt.nodes.new("ShaderNodeVolumeAbsorption")
     va.inputs["Color"].default_value = (c[0], c[1] + 0.02, c[2] + 0.04, 1)
-    va.inputs["Density"].default_value = 2.5
+    va.inputs["Density"].default_value = 5.0
     nt.links.new(va.outputs[0], out.inputs["Volume"])
     # Eevee (Next) refraction
     if hasattr(m, "surface_render_method"):
@@ -423,6 +422,14 @@ def add_text(sc, cam, body, size, z_frac, mat, focus, extrude=0.0, bold=0.0):
     # place in the camera's focal plane (sharp under DOF); z_frac in [-0.5,0.5] of frame height
     half_h = focus * (cam.data.sensor_width / 2) / cam.data.lens
     o.location = (0, z_frac * 2 * half_h, -focus)
+    # auto-fit: shrink the text until it spans at most LABEL_MAX_WIDTH of the frame width
+    frame_w = 2 * half_h * sc.render.resolution_x / sc.render.resolution_y
+    for _ in range(3):
+        sc.view_layers[0].update()
+        w = o.dimensions.x
+        if w <= LABEL_MAX_WIDTH * frame_w or w <= 0:
+            break
+        cu.size *= 0.98 * LABEL_MAX_WIDTH * frame_w / w
     o.visible_shadow = False
     if hasattr(o, "visible_diffuse"):
         o.visible_diffuse = False
@@ -599,9 +606,11 @@ def build_planet_scene(idx, planet, preview):
         ch = new_obj(sc, "Cherry", cme)
         cme.materials.append(mat_principled("CherryMat", (0.55, 0.0, 0.03), rough=0.08, coat=1.0))
         ch.parent = jel
-        ch.parent_type = "VERTEX"
-        ch.parent_vertices = (top_idx, 0, 0)
-        ch.location = (0, 0, 0.072)
+        # VERTEX_3 on three points of the inner top ring: sits on the crown and tilts with it
+        ring = top_idx - 1 - 2 * SEG          # second ring from the top pole
+        ch.parent_type = "VERTEX_3"
+        ch.parent_vertices = (ring, ring + SEG // 3, ring + 2 * SEG // 3)
+        ch.location = (0, 0, 0.075)
         # stem
         cu = tag(bpy.data.curves.new(PREFIX + "Stem", "CURVE"))
         cu.dimensions = "3D"
@@ -640,7 +649,7 @@ def build_planet_scene(idx, planet, preview):
     camd.sensor_fit = "AUTO"
     cam = new_obj(sc, "Camera", camd)
     target = Vector((0, 0, 0.42))
-    cam_loc = Vector((0, -6.4, 2.25))
+    cam_loc = Vector((0, -5.7, 2.0))
     cam.location = cam_loc
     cam.rotation_euler = (target - cam_loc).to_track_quat("-Z", "Y").to_euler()
     focus = (target - cam_loc).length

@@ -60,7 +60,7 @@ PREVIEW_SECONDS = 2.4
 PREVIEW_FRAME = 58               # (1.9 s) the still that is rendered for each planet
 PREVIEW_RES = (270, 480)
 PREVIEW_SAMPLES = 24
-PREVIEW_IMPACT_STILLS = ["Sun", "Moon"]   # also render these planets 2 frames after impact
+PREVIEW_IMPACT_STILLS = ["Sun", "Moon"]   # also render these planets at the impact frame
 
 HOOK_CAPTION = "POURING WATER ON"
 
@@ -270,7 +270,7 @@ def mat_ground(planet):
     nt.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
     nt.links.new(ramp.outputs["Color"], b.inputs["Base Color"])
     pset(b, "Roughness", 0.75)
-    pset(b, ["Specular IOR Level", "Specular"], 0.25)
+    pset(b, ["Specular IOR Level", "Specular"], 0.0)   # matte: no grazing-angle glare
     if lk["emit"] > 0:
         nt.links.new(ramp.outputs["Color"], b.inputs["Emission Color"] if "Emission Color" in b.inputs else b.inputs["Emission"])
         pset(b, "Emission Strength", lk["emit"])
@@ -636,10 +636,14 @@ def build_scene(idx, planet, args, base, res, frames):
         o.location = loc
         o.rotation_euler = rot
         return o
+    # the strip lights only exist to draw highlights on glass and water: keep
+    # them off the diffuse table (otherwise they wash the table out to white)
     area("key", (-0.6, -0.7, 1.0), (math.radians(50), 0, math.radians(-38)), 0.8, 0.8, 45)
-    area("stripL", (-0.35, 0.35, 0.35), (math.radians(-90), math.radians(-35), 0), 0.08, 0.9, 25, spread=35)
-    area("stripR", (0.35, 0.35, 0.35), (math.radians(-90), math.radians(35), 0), 0.08, 0.9, 25, spread=35)
+    sl = area("stripL", (-0.35, 0.35, 0.35), (math.radians(-90), math.radians(-35), 0), 0.08, 0.9, 25, spread=35)
+    sr = area("stripR", (0.35, 0.35, 0.35), (math.radians(-90), math.radians(35), 0), 0.08, 0.9, 25, spread=35)
     area("top", (0.0, 0.0, 1.2), (0, 0, 0), 0.6, 0.3, 12)
+    for o in (sl, sr):
+        setp(o, "visible_diffuse", False)
 
     # --- camera --------------------------------------------------------------
     camd = bpy.data.cameras.new(TAG + "cam")
@@ -899,7 +903,7 @@ def main():
             shots = [(min(PREVIEW_FRAME, sc.frame_end), f"{sc.name}.png")]
             hit = report.get(p, {}).get("water_hits_bowl_s")
             if p in PREVIEW_IMPACT_STILLS and hit is not None:     # extra still right after impact
-                shots.append((min(sc.frame_end, 1 + round(hit * FPS) + 2), f"{sc.name}_impact.png"))
+                shots.append((min(sc.frame_end, 1 + round(hit * FPS)), f"{sc.name}_impact.png"))
             for fr, name in shots:
                 sc.frame_set(fr)
                 sc.render.filepath = os.path.join(pdir, name)

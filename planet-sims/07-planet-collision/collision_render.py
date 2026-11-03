@@ -45,14 +45,16 @@ CONFIG = dict(
     # look
     TEMP_BANDS=(0.0, 0.25, 0.42, 0.58, 0.72, 0.86, 1.01),   # temperature band edges (temp is 0..1)
     TEMP_GAMMA=1.0,              # >1 = cooler overall, <1 = hotter
-    RADIUS_FACTOR=1.05,          # Points-to-Volume radius = h * this
+    RADIUS_FACTOR=1.4,           # Points-to-Volume radius = h * this
     VOXEL_FACTOR=0.42,           # voxel size = median(h of bulk) * this (smaller = sharper, slower)
     MAX_VOXEL_SIZE=0.08,         # Earth radii
     MIN_VOXEL_SIZE=0.006,
+    VOLUME_STEP_RATE=1.0,        # Cycles: >1 = faster, coarser volume ray marching
     SMOOTH_ITER=2,               # Blender 5.x only: grid blur passes on the density (0 = off)
     VOLUME_DENSITY=26.0,         # optical density of the molten bulk (higher = more solid surface)
     EMISSION=4.0,                # overall glow strength of the bulk
-    ALBEDO=(1.0, 0.42, 0.12),    # scattering colour (lit by the sun lamp -> day/night shading)
+    EMISSION_FLOOR=0.45,         # glow of the coolest material (molten bodies self-luminous)
+    ALBEDO=(0.55, 0.22, 0.07),    # scattering colour (lit by the sun lamp -> day/night shading)
     HAZE=True, HAZE_TEMP=0.55, HAZE_RADIUS=3.2, HAZE_DENSITY=0.10, HAZE_EMISSION=0.55,
     SPARKLE=True,                # tiny emissive points for every particle (grain + debris)
     SPARKLE_RADIUS=0.22,         # * h
@@ -63,6 +65,7 @@ CONFIG = dict(
     SUN_STRENGTH=3.0, SUN_DIR=(-0.55, 0.35, 0.45),
     COMPOSITOR_CPU=False,        # force CPU compositing (always on in background mode)
     GLARE=True, BLOOM_SIZE=0.6, FOG_GLOW_MIX=0.35, GLARE_THRESHOLD=0.8,
+    VIEW_TRANSFORM="AgX",        # AgX | Filmic | Standard
     VIEW_LOOK="AgX - Medium High Contrast",   # falls back to plain AgX / Filmic if missing
     EXPOSURE=0.0,
     STARS=900, STAR_BRIGHTNESS=0.6,
@@ -122,13 +125,13 @@ PRESETS = {
 }
 
 # colour ramp used for the bands: temperature (0..1) -> emission colour (blackbody-like)
-RAMP = [(0.00, (0.20, 0.015, 0.004)),
-        (0.25, (0.55, 0.06, 0.010)),
-        (0.45, (1.00, 0.22, 0.030)),
-        (0.62, (1.00, 0.42, 0.080)),
-        (0.78, (1.00, 0.66, 0.250)),
-        (0.92, (1.00, 0.86, 0.580)),
-        (1.00, (1.00, 0.96, 0.880))]
+RAMP = [(0.00, (0.70, 0.130, 0.020)),
+        (0.25, (1.00, 0.260, 0.040)),
+        (0.45, (1.00, 0.380, 0.070)),
+        (0.62, (1.00, 0.500, 0.120)),
+        (0.78, (1.00, 0.680, 0.280)),
+        (0.92, (1.00, 0.860, 0.580)),
+        (1.00, (1.00, 0.960, 0.880))]
 
 PFX = "PC_"
 SCENE_NAME = "07_Collision"
@@ -407,7 +410,7 @@ def mat_volume(name, emis_col, emis_strength, density_scale, albedo, absorb_col=
     pv.inputs["Emission Color"].default_value = (*emis_col, 1)
     # Principled Volume emission is NOT scaled by density -> multiply by the density grid ourselves
     at = nt.nodes.new("ShaderNodeAttribute"); at.attribute_name = "density"
-    mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"; mul.inputs[1].default_value = emis_strength
+    mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"; mul.inputs[1].default_value = emis_strength * max(density_scale, 1e-3)   # radiance of a thick region ~ emission/extinction
     nt.links.new(at.outputs["Fac"], mul.inputs[0])
     nt.links.new(mul.outputs[0], pv.inputs["Emission Strength"])
     if "Anisotropy" in pv.inputs:
@@ -551,13 +554,13 @@ def setup_render(scene, preview):
         r.use_lock_interface = True
     r.image_settings.file_format = "PNG"
     vs = scene.view_settings
-    for vt in ("AgX", "Filmic"):
+    for vt in (c["VIEW_TRANSFORM"], "AgX", "Filmic"):
         try:
             vs.view_transform = vt
             break
         except Exception:
             pass
-    for lk in (c["VIEW_LOOK"], "AgX - Medium High Contrast", "Medium High Contrast", "None"):
+    for lk in (c["VIEW_LOOK"], c["VIEW_LOOK"].replace("AgX - ", ""), "None"):
         try:
             vs.look = lk
             break
@@ -568,10 +571,10 @@ def setup_render(scene, preview):
     cy.samples = c["SAMPLES_CYCLES"]
     cy.use_denoising = c["DENOISE"]
     cy.max_bounces = 4
-    cy.volume_bounces = 1
+    cy.volume_bounces = 0
     cy.transparent_max_bounces = 16
     if hasattr(cy, "volume_step_rate"):
-        cy.volume_step_rate = 1.0
+        cy.volume_step_rate = c["VOLUME_STEP_RATE"]
     if hasattr(cy, "volume_preview_step_rate"):
         cy.volume_preview_step_rate = 2.0
     if hasattr(cy, "use_adaptive_sampling"):
@@ -798,7 +801,7 @@ def build(preview=False):
         t0, t1 = edges[b], edges[b + 1]
         tm = min(1.0, 0.5 * (t0 + t1))
         col_e = ramp(tm)
-        strength = c["EMISSION"] * (0.08 + 1.4 * tm ** 2.2)
+        strength = c["EMISSION"] * (c["EMISSION_FLOOR"] + 1.5 * tm ** 1.6)
         m = mat_volume("Band%d" % b, col_e, strength, c["VOLUME_DENSITY"], c["ALBEDO"])
         o = new_obj("Band%d" % b, me, col)
         mod = o.modifiers.new("Volume", "NODES"); mod.node_group = vg

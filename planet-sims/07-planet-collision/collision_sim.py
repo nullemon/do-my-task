@@ -55,7 +55,7 @@ CONFIG = dict(
     h_max_factor=5.0,        # cap: H <= factor * median initial H (keeps far debris cheap)
     theta=0.6,               # Barnes-Hut opening angle
     soft_factor=0.5,         # gravitational softening = factor * median initial h (h = H/2)
-    courant=0.3,
+    courant=0.35,
     av_alpha=1.5, av_beta=3.0,
     mantle_material="granite",   # granite | basalt
     T_initial_K=2000.0,      # initial temperature of all material (molten-ish surface)
@@ -65,7 +65,7 @@ CONFIG = dict(
     start_sep_contact=3.0,   # initial centre distance in units of (R_target + R_impactor)
     checkpoint_every=20,     # frames
     threads=0,               # 0 = numba default (all cores)
-    neigh_every=3,           # rebuild kd-tree neighbour lists every n steps (distances refreshed each step)
+    neigh_every=4,           # rebuild kd-tree neighbour lists every n steps (distances refreshed each step)
     neigh_extra=10,          # extra candidates kept in the lists between rebuilds
 )
 
@@ -253,7 +253,7 @@ def tillotson(rho, u, mat_idx, tab):
             p = 0.0
         P[i] = p
         k = A + 2.0 * B * max(mu, 0.0)
-        c2 = max(k, 0.25 * A) / rho0 + (a + b) * e + (1.0 + a) * p / r
+        c2 = max(k, 0.25 * A) / rho0 + (a + b) * e
         c[i] = math.sqrt(c2)
     return P, c
 
@@ -457,6 +457,21 @@ def tree_walk(ps, ms, n, nstart, nend, nmass, ncom, nsize, ndelta, nnext, leaf, 
         ph = 0.0
         k = 0
         while k < n:
+            dx = ncom[k, 0] - xi
+            dy = ncom[k, 1] - yi
+            dz = ncom[k, 2] - zi
+            r2 = dx * dx + dy * dy + dz * dz
+            d = math.sqrt(r2) - ndelta[k]
+            if d > 0.0 and nsize[k] < theta * d:
+                r2 += eps2
+                ir = 1.0 / math.sqrt(r2)
+                f = nmass[k] * ir * ir * ir
+                ax += f * dx
+                ay += f * dy
+                az += f * dz
+                ph -= nmass[k] * ir
+                k = nnext[k]
+                continue
             if leaf[k]:
                 for j in range(nstart[k], nend[k]):
                     if j == i:
@@ -472,21 +487,6 @@ def tree_walk(ps, ms, n, nstart, nend, nmass, ncom, nsize, ndelta, nnext, leaf, 
                     az += f * dz
                     ph -= ms[j] * ir
                 k = nnext[k]
-                continue
-            dx = ncom[k, 0] - xi
-            dy = ncom[k, 1] - yi
-            dz = ncom[k, 2] - zi
-            r2 = dx * dx + dy * dy + dz * dz
-            d = math.sqrt(r2) - ndelta[k]
-            if d > 0.0 and nsize[k] < theta * d:
-                r2 += eps2
-                ir = 1.0 / math.sqrt(r2)
-                f = nmass[k] * ir * ir * ir
-                ax += f * dx
-                ay += f * dy
-                az += f * dz
-                ph -= nmass[k] * ir
-                k = nnext[k]
             else:
                 k += 1
         acc[i, 0] = ax
@@ -496,7 +496,7 @@ def tree_walk(ps, ms, n, nstart, nend, nmass, ncom, nsize, ndelta, nnext, leaf, 
     return acc, phi
 
 
-def gravity(pos, m, theta, eps, leaf_size=16):
+def gravity(pos, m, theta, eps, leaf_size=8):
     lo = pos.min(axis=0)
     size = float((pos.max(axis=0) - lo).max()) * 1.0001 + 1e-9
     keys = morton_keys(pos, lo, size)

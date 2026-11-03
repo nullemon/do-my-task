@@ -642,6 +642,51 @@ def make_stars(col):
     return o
 
 
+def make_external_body(col, b):
+    import bmesh
+    r = float(b.get("radius_RE", 1.0))
+    me = bpy.data.meshes.new(PFX + b.get("name", "Ext"))
+    bm = bmesh.new()
+    bmesh.ops.create_uvsphere(bm, u_segments=96, v_segments=48, radius=r)
+    for f in bm.faces:
+        f.smooth = True
+    bm.to_mesh(me); bm.free()
+    o = new_obj(b.get("name", "Ext"), me, col)
+    o.location = tuple(b.get("pos", (0, 0, 0)))
+    o.rotation_euler = (math.radians(3), 0, 0)
+    m = bpy.data.materials.new(PFX + b.get("name", "Ext") + "Mat"); m.use_nodes = True
+    nt = m.node_tree; nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputMaterial")
+    bsdf = nt.nodes.new("ShaderNodeBsdfPrincipled")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nz = nt.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 2.5
+    nz.inputs["Detail"].default_value = 8.0
+    mad = nt.nodes.new("ShaderNodeMath"); mad.operation = "MULTIPLY_ADD"
+    mad.inputs[1].default_value = 0.12
+    mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"; mul.inputs[1].default_value = 11.0
+    sn = nt.nodes.new("ShaderNodeMath"); sn.operation = "SINE"
+    cr = nt.nodes.new("ShaderNodeValToRGB")
+    el = cr.color_ramp.elements
+    el[0].color = (0.42, 0.22, 0.10, 1); el[1].color = (0.92, 0.80, 0.62, 1)
+    e = el.new(0.5); e.color = (0.78, 0.50, 0.28, 1)
+    nt.links.new(tc.outputs["Object"], sep.inputs[0])
+    nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
+    nt.links.new(nz.outputs["Fac"], mad.inputs[0])
+    sz = nt.nodes.new("ShaderNodeMath"); sz.operation = "DIVIDE"; sz.inputs[1].default_value = r
+    nt.links.new(sep.outputs["Z"], sz.inputs[0]); nt.links.new(sz.outputs[0], mad.inputs[2])
+    nt.links.new(mad.outputs[0], mul.inputs[0]); nt.links.new(mul.outputs[0], sn.inputs[0])
+    rm = nt.nodes.new("ShaderNodeMapRange")
+    nt.links.new(sn.outputs[0], rm.inputs["Value"])
+    rm.inputs["From Min"].default_value = -1.0
+    nt.links.new(rm.outputs[0], cr.inputs[0])
+    nt.links.new(cr.outputs[0], bsdf.inputs["Base Color"])
+    bsdf.inputs["Roughness"].default_value = 0.9
+    nt.links.new(bsdf.outputs[0], out.inputs["Surface"])
+    me.materials.append(m)
+    return o
+
+
 # ----------------------------------------------------------------------------- camera
 def camera_track(cache, frames, scene, cam):
     """Pre-compute a smoothed auto-framing camera path and keyframe it."""
@@ -867,6 +912,11 @@ def build(preview=False):
 
     if c["STARS"]:
         make_stars(col)
+
+    # external bodies that are not particles (e.g. Jupiter as a fixed softened sphere)
+    for b in cache.meta.get("bodies", []):
+        if str(b.get("role", "")).startswith("external"):
+            make_external_body(col, b)
 
     # camera
     cd = bpy.data.cameras.new(PFX + "Camera")

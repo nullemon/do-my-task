@@ -941,7 +941,7 @@ def build_paledot():
     sc.render.use_persistent_data = True
     _look(sc)
     end = sc.frame_end
-    _sky_world(sc, stars=[(150, 0.13, 1.6), (55, 0.08, 3.0)])
+    _sky_world(sc, stars=[(150, 0.13, 0.9), (55, 0.08, 2.0)])
     to_sun = (-0.92, -0.22, 0.30)
     _sun(sc, "sun", to_sun, 4.5, color=(1.0, 0.97, 0.92))
     sun_v = np.array(to_sun) / np.linalg.norm(to_sun)
@@ -1152,11 +1152,11 @@ def build_paledot():
     dot.data.materials.append(mat_emit("pale_dot_m", (0.55, 0.7, 1.0), 1.0))
     dot.visible_shadow = False
     dem = dot.data.materials[0].node_tree.nodes["Emission"].inputs["Strength"]
-    for f, v in ((1, 3.0), (PALEDOT_GONE - 12, 3.0), (PALEDOT_GONE, 0.0)):
+    for f, v in ((1, 9.0), (PALEDOT_GONE - 12, 9.0), (PALEDOT_GONE, 0.0)):
         dem.default_value = v
         dem.keyframe_insert("default_value", frame=f)
     px = math.radians(21.8) / RES_X                                # ~ angular size of one pixel
-    _key_every_frame(dot, "scale", -1, lambda f: [max(0.3, 1.1 * px * math.exp(logd(f)))] * 3, 1, end)
+    _key_every_frame(dot, "scale", -1, lambda f: [max(0.3, 1.4 * px * math.exp(logd(f)))] * 3, 1, end)
     caption(sc, cam, "This is everything\nyou have ever known.", 10, 92)
     caption(sc, cam, "Every person who ever lived.\nEvery war. Every love.", 98, 176)
     caption(sc, cam, "From far enough away…", 184, 250)

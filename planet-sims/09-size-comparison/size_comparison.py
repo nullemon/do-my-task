@@ -24,7 +24,7 @@ from mathutils import Vector
 # ----------------------------------------------------------------------------- CONFIG
 FPS = 24
 RES_X = 540                  # 1080 for final
-SAMPLES = 12                 # Cycles: 64-128 for final; Eevee: 64
+SAMPLES = 8                  # Cycles: 64-128 for final; Eevee: 64
 THREADS = 2                  # 0 = all cores
 ENGINE = "cycles"            # or "eevee"
 GPU = False
@@ -77,7 +77,7 @@ for p in PLANETS + [SUN]:
 # ----------------------------------------------------------------------------- TIMELINE (seconds)
 # per stage: (transition-in, hold, caption during hold, caption during transition)
 STAGES = [
-    ("mercury", 0.0, 3.0, "Start with the smallest.", None),
+    ("mercury", 0.0, 2.7, "Start with the smallest.", None),
     ("mars", 1.4, 2.0, None, None),
     ("venus", 1.4, 2.0, None, None),
     ("earth", 1.5, 2.9, "Earth feels big.", None),
@@ -108,9 +108,9 @@ def layout():
             p["x"] = 0.0
         else:
             span_prev = spans[-1]
-            gap = max(0.55 * p["e"], 0.24 * span_prev)
+            gap = max(0.95 * p["r"], 0.26 * span_prev)
             if p is SUN:
-                gap = 0.18 * p["r"]
+                gap = 0.35 * p["r"]
             p["x"] = prev["x"] + prev["e"] + gap + p["e"]
         # framing span for this planet: previous globe (left) .. this planet's extent (right)
         left = (prev["x"] - prev["r"]) if prev else p["x"] - p["e"]
@@ -130,12 +130,12 @@ def framing(key):
         b = PLANETS[-1]["x"] + PLANETS[-1]["e"]
         return (a + b) / 2 + 0.02 * (b - a), (b - a) * 1.10
     if key == "sun":
-        a = PLANETS[0]["x"] - PLANETS[0]["e"]
+        a = PLANETS[-1]["x"] - PLANETS[-1]["e"]
         b = SUN["x"] + SUN["r"]
-        return (a + b) / 2, (b - a) * 1.08
+        return (a + b) / 2, (b - a) * 1.12
     p = BY_KEY[key]
     if key == "mercury":
-        return p["x"], 2 * p["e"] / 0.42
+        return p["x"], 2 * p["e"] / 0.50
     a, b = p["left"], p["x"] + p["e"]
     w = max((b - a) * 1.18, 2 * p["e"] / 0.80)
     return (a + b) / 2, w
@@ -268,7 +268,7 @@ def obj_coords(nt):
 def bands(nt, scale=3.0, distortion=3.0, detail=4.0, warp=0.15, warp_scale=2.5):
     """Wave bands along Z, warped by noise (gas-giant look). Returns Fac socket."""
     co = obj_coords(nt)
-    nz = N(nt, "ShaderNodeTexNoise", Scale=warp_scale, Detail=6.0)
+    nz = N(nt, "ShaderNodeTexNoise", Scale=warp_scale, Detail=4.0)
     L(nt, co, nz.inputs["Vector"])
     sub = N(nt, "ShaderNodeVectorMath", _operation="SUBTRACT")
     L(nt, nz.outputs["Color"], sub.inputs[0])
@@ -332,7 +332,7 @@ def shell_glow(name, radius, color, strength, stops):
 # ----------------------------------------------------------------------------- PLANET LOOKS
 def look_mercury(nt, out):
     co = obj_coords(nt)
-    n = N(nt, "ShaderNodeTexNoise", Scale=5.0, Detail=10.0, Roughness=0.6)
+    n = N(nt, "ShaderNodeTexNoise", Scale=5.0, Detail=6.0, Roughness=0.6)
     L(nt, co, n.inputs["Vector"])
     col = ramp(nt, n.outputs["Fac"], [(0.3, grey(0.10)), (0.5, grey(0.22)), (0.7, (0.36, 0.34, 0.32))])
     vor = N(nt, "ShaderNodeTexVoronoi", Scale=7.0)
@@ -354,7 +354,7 @@ def look_mercury(nt, out):
 
 def look_mars(nt, out):
     co = obj_coords(nt)
-    n = N(nt, "ShaderNodeTexNoise", Scale=2.6, Detail=9.0, Roughness=0.62)
+    n = N(nt, "ShaderNodeTexNoise", Scale=2.6, Detail=6.0, Roughness=0.62)
     L(nt, co, n.inputs["Vector"])
     col = ramp(nt, n.outputs["Fac"], [(0.35, (0.16, 0.05, 0.025)), (0.5, (0.45, 0.14, 0.05)), (0.62, (0.62, 0.3, 0.14))])
     sepz = N(nt, "ShaderNodeSeparateXYZ")
@@ -372,14 +372,14 @@ def look_mars(nt, out):
 
 
 def look_venus(nt, out):
-    fac, _ = bands(nt, scale=1.6, distortion=9.0, detail=6.0, warp=0.5, warp_scale=1.5)
-    col = ramp(nt, fac, [(0.0, (0.62, 0.48, 0.25)), (0.5, (0.86, 0.74, 0.48)), (1.0, (0.95, 0.88, 0.66))])
+    fac, _ = bands(nt, scale=0.5, distortion=2.0, detail=4.0, warp=0.6, warp_scale=1.3)
+    col = ramp(nt, fac, [(0.0, (0.72, 0.58, 0.34)), (0.5, (0.86, 0.75, 0.50)), (1.0, (0.93, 0.86, 0.64))])
     bsdf(nt, out, col.outputs["Color"], rough=1.0)
 
 
 def look_earth(nt, out):
     co = obj_coords(nt)
-    n = N(nt, "ShaderNodeTexNoise", Scale=1.9, Detail=10.0, Roughness=0.62)
+    n = N(nt, "ShaderNodeTexNoise", Scale=1.9, Detail=7.0, Roughness=0.62)
     L(nt, co, n.inputs["Vector"])
     land = ramp(nt, n.outputs["Fac"], [(0.53, grey(0.0)), (0.545, grey(1.0))])
     n2 = N(nt, "ShaderNodeTexNoise", Scale=6.0, Detail=6.0)
@@ -432,7 +432,7 @@ def look_gas(stops, scale=3.0, distortion=2.5, warp=0.12, em=None, em_strength=0
             s.inputs[1].default_value = (1.0, 1.0, 2.1)
             ln = N(nt, "ShaderNodeVectorMath", _operation="LENGTH")
             L(nt, s.outputs[0], ln.inputs[0])
-            mk = ramp(nt, ln.outputs["Value"], [(0.0, grey(1.0)), (0.10, grey(0.9)), (0.16, grey(0.0))])
+            mk = ramp(nt, ln.outputs["Value"], [(0.0, grey(1.0)), (0.15, grey(0.9)), (0.24, grey(0.0))])
             mx = N(nt, "ShaderNodeMix", _data_type="RGBA")
             L(nt, mk.outputs["Color"], mx.inputs["Factor"])
             L(nt, csock, mx.inputs["A"])
@@ -454,14 +454,14 @@ def look_sun(nt, out):
     m = N(nt, "ShaderNodeMath", _operation="MULTIPLY")
     L(nt, n.outputs["Fac"], m.inputs[0])
     L(nt, n2.outputs["Fac"], m.inputs[1])
-    col = ramp(nt, m.outputs[0], [(0.1, (1.0, 0.22, 0.02)), (0.25, (1.0, 0.45, 0.08)), (0.4, (1.0, 0.75, 0.35))])
+    col = ramp(nt, m.outputs[0], [(0.1, (1.0, 0.12, 0.01)), (0.25, (1.0, 0.30, 0.03)), (0.4, (1.0, 0.55, 0.15))])
     lw = N(nt, "ShaderNodeLayerWeight", Blend=0.5)
-    limb = ramp(nt, lw.outputs["Facing"], [(0.0, grey(1.0)), (0.75, grey(0.55)), (1.0, grey(0.2))])
+    limb = ramp(nt, lw.outputs["Facing"], [(0.0, grey(1.0)), (0.6, grey(0.6)), (1.0, grey(0.15))])
     mul = N(nt, "ShaderNodeMix", _data_type="RGBA", _blend_type="MULTIPLY")
     mul.inputs["Factor"].default_value = 1.0
     L(nt, col.outputs["Color"], mul.inputs["A"])
     L(nt, limb.outputs["Color"], mul.inputs["B"])
-    em = N(nt, "ShaderNodeEmission", Strength=7.0)
+    em = N(nt, "ShaderNodeEmission", Strength=1.5)
     L(nt, mul.outputs["Result"], em.inputs["Color"])
     L(nt, em.outputs[0], out.inputs["Surface"])
 
@@ -488,32 +488,32 @@ def build_planet(p):
         look_earth(nt, out)
         tilt = (math.radians(-23.4), 0)
     elif k == "neptune":
-        look_gas([(0.0, (0.01, 0.03, 0.18)), (0.5, (0.03, 0.09, 0.42)), (1.0, (0.10, 0.22, 0.62))],
-                 scale=2.2, distortion=1.5, warp=0.08)(nt, out)
+        look_gas([(0.0, (0.03, 0.08, 0.36)), (0.5, (0.04, 0.10, 0.44)), (1.0, (0.07, 0.16, 0.52))],
+                 scale=0.9, distortion=0.5, warp=0.08)(nt, out)
     elif k == "uranus":
-        look_gas([(0.0, (0.30, 0.58, 0.64)), (1.0, (0.45, 0.74, 0.78))], scale=1.5, distortion=0.8, warp=0.03, rough=1.0)(nt, out)
+        look_gas([(0.0, (0.30, 0.58, 0.64)), (1.0, (0.45, 0.74, 0.78))], scale=0.6, distortion=0.3, warp=0.03, rough=1.0)(nt, out)
         tilt = (0, math.radians(82))
     elif k == "saturn":
         look_gas([(0.0, (0.55, 0.42, 0.24)), (0.35, (0.78, 0.64, 0.40)), (0.6, (0.70, 0.55, 0.33)), (1.0, (0.88, 0.78, 0.56))],
-                 scale=3.2, distortion=1.6, warp=0.05)(nt, out)
-        tilt = (math.radians(-22), math.radians(-6))
+                 scale=1.5, distortion=0.4, warp=0.04)(nt, out)
+        tilt = (math.radians(24), math.radians(-7))
     elif k == "jupiter":
         ta = next(s["ta"] for s in TL if s["key"] == "jupiter")
-        lon = -math.pi / 2 + math.radians(28) - SPIN * (ta + 1.2)  # faces camera, right side, at arrival
-        spot = (0.92 * math.cos(lon), 0.92 * math.sin(lon), -0.37)
-        look_gas([(0.0, (0.38, 0.22, 0.13)), (0.3, (0.70, 0.52, 0.34)), (0.55, (0.88, 0.82, 0.70)),
-                  (0.8, (0.62, 0.42, 0.26)), (1.0, (0.92, 0.88, 0.80))],
-                 scale=4.2, distortion=2.4, warp=0.10, spot=spot)(nt, out)
+        lon = -math.pi / 2 + math.radians(12) - SPIN * (ta + 1.2)  # faces camera, right side, at arrival
+        spot = (0.92 * math.cos(lon), 0.92 * math.sin(lon), -0.38)
+        look_gas([(0.0, (0.30, 0.15, 0.08)), (0.25, (0.62, 0.38, 0.20)), (0.5, (0.90, 0.80, 0.64)),
+                  (0.75, (0.70, 0.46, 0.26)), (1.0, (0.95, 0.90, 0.80))],
+                 scale=1.7, distortion=0.6, warp=0.06, spot=spot)(nt, out)
     elif k == "kelt9":  # ultra-hot: glows from its own heat
-        look_gas([(0.0, (0.5, 0.12, 0.02)), (1.0, (0.9, 0.45, 0.12))], scale=2.6, distortion=3.0, warp=0.15,
+        look_gas([(0.0, (0.5, 0.12, 0.02)), (1.0, (0.9, 0.45, 0.12))], scale=1.1, distortion=0.8, warp=0.2,
                  em=[(0.0, (1.0, 0.18, 0.01)), (0.6, (1.0, 0.42, 0.06)), (1.0, (1.0, 0.72, 0.30))], em_strength=2.2)(nt, out)
     elif k == "wasp17":  # dark, bloated
-        look_gas([(0.0, (0.012, 0.008, 0.012)), (0.5, (0.05, 0.03, 0.035)), (1.0, (0.10, 0.06, 0.06))],
-                 scale=2.8, distortion=3.5, warp=0.18,
-                 em=[(0.0, (0.0, 0.0, 0.0)), (0.7, (0.04, 0.0, 0.0)), (1.0, (0.35, 0.05, 0.02))], em_strength=0.6)(nt, out)
+        look_gas([(0.0, (0.008, 0.006, 0.008)), (0.5, (0.025, 0.018, 0.022)), (1.0, (0.05, 0.035, 0.04))],
+                 scale=1.0, distortion=0.6, warp=0.25,
+                 em=[(0.0, (0.0, 0.0, 0.0)), (0.8, (0.0, 0.0, 0.0)), (1.0, (0.18, 0.02, 0.01))], em_strength=0.5)(nt, out)
     elif k == "hatp67":  # the puffiest: hazy amber giant
         look_gas([(0.0, (0.42, 0.20, 0.12)), (0.4, (0.72, 0.44, 0.28)), (0.7, (0.86, 0.62, 0.42)), (1.0, (0.95, 0.80, 0.62))],
-                 scale=2.2, distortion=4.0, warp=0.22,
+                 scale=0.8, distortion=0.4, warp=0.3,
                  em=[(0.0, (0.25, 0.04, 0.0)), (1.0, (0.6, 0.2, 0.05))], em_strength=0.25)(nt, out)
     elif k == "sun":
         look_sun(nt, out)
@@ -528,24 +528,24 @@ def build_planet(p):
         look_clouds(cnt, cout)
         c.data.materials.append(cm)
         extras.append((c, 1.35))
-        atm = shell_glow("earth_atm", 1.035, (0.25, 0.5, 1.0), 1.4,
-                         [(0.0, grey(0.0)), (0.30, grey(0.03)), (0.47, grey(0.9)), (0.62, grey(0.25)), (1.0, grey(0.0))])
+        atm = shell_glow("earth_atm", 1.03, (0.25, 0.5, 1.0), 1.4,  # limb of the globe sits at facing ~0.76
+                         [(0.0, grey(0.0)), (0.62, grey(0.0)), (0.74, grey(0.25)), (0.78, grey(1.0)), (0.9, grey(0.25)), (1.0, grey(0.0))])
         extras.append((atm, None))
     if k == "neptune":
-        extras.append((shell_glow("nep_atm", 1.03, (0.2, 0.35, 1.0), 0.6,
-                                  [(0.0, grey(0.0)), (0.40, grey(0.05)), (0.5, grey(0.8)), (1.0, grey(0.0))]), None))
+        extras.append((shell_glow("nep_atm", 1.03, (0.2, 0.35, 1.0), 0.8,
+                                  [(0.0, grey(0.0)), (0.66, grey(0.0)), (0.77, grey(0.8)), (0.9, grey(0.15)), (1.0, grey(0.0))]), None))
     if k == "kelt9":
         extras.append((shell_glow("kelt_halo", 1.30, (1.0, 0.35, 0.06), 1.2,
-                                  [(0.0, grey(0.05)), (0.55, grey(0.35)), (0.75, grey(0.08)), (1.0, grey(0.0))]), None))
+                                  [(0.0, grey(0.06)), (0.36, grey(0.45)), (0.6, grey(0.10)), (1.0, grey(0.0))]), None))
     if k == "wasp17":
-        extras.append((shell_glow("wasp_haze", 1.06, (0.45, 0.25, 0.6), 0.7,
-                                  [(0.0, grey(0.0)), (0.45, grey(0.05)), (0.62, grey(0.7)), (1.0, grey(0.0))]), None))
+        extras.append((shell_glow("wasp_haze", 1.05, (0.40, 0.22, 0.55), 0.35,
+                                  [(0.0, grey(0.0)), (0.6, grey(0.03)), (0.71, grey(0.7)), (0.85, grey(0.1)), (1.0, grey(0.0))]), None))
     if k == "hatp67":
         extras.append((shell_glow("hat_haze", 1.10, (1.0, 0.55, 0.3), 0.9,
-                                  [(0.0, grey(0.02)), (0.45, grey(0.10)), (0.62, grey(0.8)), (0.85, grey(0.1)), (1.0, grey(0.0))]), None))
+                                  [(0.0, grey(0.02)), (0.45, grey(0.10)), (0.6, grey(0.8)), (0.8, grey(0.12)), (1.0, grey(0.0))]), None))
     if k == "sun":
         extras.append((shell_glow("corona", 1.12, (1.0, 0.45, 0.1), 2.5,
-                                  [(0.0, grey(0.3)), (0.6, grey(0.5)), (0.8, grey(0.1)), (1.0, grey(0.0))]), None))
+                                  [(0.0, grey(0.0)), (0.5, grey(0.1)), (0.56, grey(0.6)), (0.75, grey(0.12)), (1.0, grey(0.0))]), None))
     if k == "saturn":
         rg = annulus("saturn_rings", 1.24, 2.27)
         rm, rnt, rout = new_mat("rings_m")
@@ -584,12 +584,12 @@ def build_planet(p):
         mr = N(rnt, "ShaderNodeMapRange", **{"From Min": 1.62, "From Max": 2.02})
         L(rnt, ln.outputs["Value"], mr.inputs["Value"])
         alpha = ramp(rnt, mr.outputs["Result"], [
-            (0.0, grey(0.0)), (0.05, grey(0.25)), (0.10, grey(0.0)), (0.45, grey(0.0)), (0.5, grey(0.2)), (0.55, grey(0.0)),
-            (0.9, grey(0.0)), (0.95, grey(0.55)), (1.0, grey(0.0))])
-        em = N(rnt, "ShaderNodeEmission", Strength=0.6)
+            (0.0, grey(0.0)), (0.05, grey(0.12)), (0.10, grey(0.0)), (0.45, grey(0.0)), (0.5, grey(0.10)), (0.55, grey(0.0)),
+            (0.9, grey(0.0)), (0.95, grey(0.35)), (1.0, grey(0.0))])
+        em = N(rnt, "ShaderNodeEmission", Strength=0.12)
         em.inputs["Color"].default_value = (0.7, 0.8, 0.85, 1)
         df = N(rnt, "ShaderNodeBsdfDiffuse")
-        df.inputs["Color"].default_value = (0.6, 0.65, 0.7, 1)
+        df.inputs["Color"].default_value = (0.35, 0.38, 0.42, 1)
         ad = N(rnt, "ShaderNodeAddShader")
         L(rnt, em.outputs[0], ad.inputs[0])
         L(rnt, df.outputs[0], ad.inputs[1])
@@ -607,11 +607,12 @@ def build_planet(p):
         e.scale = ob.scale
         e.rotation_euler = ob.rotation_euler
         if e.name in ("uranus_ring",):
-            e.rotation_euler = (0, math.radians(90), math.radians(14))
+            e.rotation_mode = "ZYX"
+            e.rotation_euler = (0, math.radians(82), math.radians(-12))
     # slow spin (keyframed linear)
     spinners = [(ob, 1.0)] + [(e, s) for e, s in extras if s]
     for o, mult in spinners:
-        o.rotation_mode = "XYZ"
+        o.rotation_mode = "ZYX"  # spin about the planet's own (tilted) axis
         base = list(o.rotation_euler)
         for f, tt in ((1, 0.0), (F_END + 1, DURATION)):
             o.rotation_euler = (base[0], base[1], base[2] + SPIN * mult * tt)
@@ -639,6 +640,50 @@ def set_linear(o):
 
 
 # ----------------------------------------------------------------------------- WORLD, LIGHTS, CAMERA
+def star_image():
+    """Screen-space star backdrop made with numpy (the camera never rotates, so stars are
+    fixed in screen space anyway; an image lookup is ~20x cheaper than a procedural sky)."""
+    import numpy as np
+    W, H = RES_X, RES_Y
+    rng = np.random.default_rng(42)
+    img = np.zeros((H, W, 3), np.float32)
+    k = W / 540.0
+    n = int(1400 * k * k)
+    xs, ys = rng.uniform(0, W, n), rng.uniform(0, H, n)
+    mag = rng.pareto(2.2, n) * 0.06 + 0.02
+    mag = np.minimum(mag, 1.6)
+    tint = np.stack([np.ones(n), 0.9 + 0.1 * rng.random(n), 0.75 + 0.3 * rng.random(n)], 1)
+    tint[rng.random(n) < 0.25] = (1.0, 0.82, 0.65)
+    rad = 2 + int(2 * k)
+    gy, gx = np.mgrid[-rad:rad + 1, -rad:rad + 1]
+    for x, y, m, c in zip(xs, ys, mag, tint):
+        sig = (0.45 + 0.5 * min(m, 1.0)) * k
+        spl = np.exp(-((gx + (int(x) - x)) ** 2 + (gy + (int(y) - y)) ** 2) / (2 * sig * sig)) * m
+        x0, y0 = int(x) - rad, int(y) - rad
+        xa, ya = max(x0, 0), max(y0, 0)
+        xb, yb = min(x0 + 2 * rad + 1, W), min(y0 + 2 * rad + 1, H)
+        img[ya:yb, xa:xb] += spl[ya - y0:yb - y0, xa - x0:xb - x0, None] * c
+    # faint cold nebula: smooth noise from upsampled random grids
+    neb = np.zeros((H, W), np.float32)
+    for cells, amp in ((4, 1.0), (9, 0.5), (20, 0.25)):
+        g = rng.random((cells * 2 + 2, cells + 2)).astype(np.float32)
+        yi = np.linspace(0, g.shape[0] - 2, H)
+        xi = np.linspace(0, g.shape[1] - 2, W)
+        y0i, x0i = yi.astype(int), xi.astype(int)
+        fy, fx = (yi - y0i)[:, None], (xi - x0i)[None, :]
+        fy, fx = fy * fy * (3 - 2 * fy), fx * fx * (3 - 2 * fx)
+        v = (g[y0i][:, x0i] * (1 - fx) + g[y0i][:, x0i + 1] * fx) * (1 - fy) + \
+            (g[y0i + 1][:, x0i] * (1 - fx) + g[y0i + 1][:, x0i + 1] * fx) * fy
+        neb += amp * v
+    neb = np.clip(neb / 1.75 - 0.45, 0, 1) ** 2
+    img += neb[:, :, None] * np.array([0.020, 0.010, 0.035], np.float32)
+    im = bpy.data.images.new("stars", W, H, float_buffer=True)
+    rgba = np.concatenate([img, np.ones((H, W, 1), np.float32)], 2)[::-1]  # Blender rows go bottom-up
+    im.pixels.foreach_set(rgba.ravel())
+    im.pack()
+    return im
+
+
 def build_world():
     w = bpy.data.worlds.new("space")
     w.use_nodes = True
@@ -647,34 +692,14 @@ def build_world():
     nt.nodes.clear()
     out = nt.nodes.new("ShaderNodeOutputWorld")
     tc = N(nt, "ShaderNodeTexCoord")
-    mp = N(nt, "ShaderNodeMapping")
-    L(nt, tc.outputs["Generated"], mp.inputs["Vector"])
-    mp.inputs["Rotation"].default_value = (0, 0, math.radians(20))
-    try:
-        w.cycles.sampling_method = "NONE"  # world is black for lighting; skip importance map
-    except Exception:
-        pass
-    vor = N(nt, "ShaderNodeTexVoronoi", Scale=260.0)
-    L(nt, mp.outputs["Vector"], vor.inputs["Vector"])
-    st = ramp(nt, vor.outputs["Distance"], [(0.0, grey(1.0)), (0.045, grey(0.0))])
-    nz = N(nt, "ShaderNodeTexNoise", Scale=40.0, Detail=2.0)
-    L(nt, mp.outputs["Vector"], nz.inputs["Vector"])
-    br = ramp(nt, nz.outputs["Fac"], [(0.35, grey(0.0)), (0.75, grey(1.0))])
-    mul = N(nt, "ShaderNodeMix", _data_type="RGBA", _blend_type="MULTIPLY")
-    mul.inputs["Factor"].default_value = 1.0
-    L(nt, st.outputs["Color"], mul.inputs["A"])
-    L(nt, br.outputs["Color"], mul.inputs["B"])
-    # faint cold nebula haze
-    neb = N(nt, "ShaderNodeTexNoise", Scale=1.4, Detail=6.0)
-    L(nt, mp.outputs["Vector"], neb.inputs["Vector"])
-    nc = ramp(nt, neb.outputs["Fac"], [(0.45, grey(0.0)), (0.75, (0.010, 0.006, 0.020))])
-    add = N(nt, "ShaderNodeMix", _data_type="RGBA", _blend_type="ADD")
-    add.inputs["Factor"].default_value = 1.0
-    L(nt, mul.outputs["Result"], add.inputs["A"])
-    L(nt, nc.outputs["Color"], add.inputs["B"])
-    bg = N(nt, "ShaderNodeBackground", Strength=2.5)
-    L(nt, add.outputs["Result"], bg.inputs["Color"])
-    # stars only to camera; planets get no ambient from them
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = star_image()
+    tex.interpolation = "Closest"
+    tex.extension = "EXTEND"
+    L(nt, tc.outputs["Window"], tex.inputs["Vector"])
+    bg = N(nt, "ShaderNodeBackground", Strength=1.0)
+    L(nt, tex.outputs["Color"], bg.inputs["Color"])
+    # stars only to camera; planets get (almost) no ambient from them
     lp = N(nt, "ShaderNodeLightPath")
     dark = N(nt, "ShaderNodeBackground", Strength=1.0)
     dark.inputs["Color"].default_value = (0.0015, 0.002, 0.004, 1)
@@ -683,6 +708,10 @@ def build_world():
     L(nt, dark.outputs[0], mx.inputs[1])
     L(nt, bg.outputs[0], mx.inputs[2])
     L(nt, mx.outputs[0], out.inputs["Surface"])
+    try:
+        w.cycles.sampling_method = "NONE"  # world is black for lighting; skip importance map
+    except Exception:
+        pass
 
 
 def sun_lamp(name, frm, energy, color, angle=0.6):
@@ -814,7 +843,7 @@ def build_text(cam):
                 hud_text(cam, f"{p['r_rj']:.2f}× JUPITER   ·   {p['note']}", -0.755, 0.016, fi + 8, fo,
                          "Inter-Medium.otf", color=(1.0, 0.62, 0.38), strength=0.9, spacing=1.08)
             if k == "hatp67":
-                hud_text(cam, "largest precisely measured planet radius (Wang et al. 2025)", -0.81, 0.0125,
+                hud_text(cam, "largest precisely measured planet radius (Wang et al. 2025)", -0.815, 0.0145,
                          fi + 12, fo, "Inter-Light.otf", color=(0.6, 0.6, 0.65), strength=0.8)
         if st["cap"]:
             cs = st["ta"] + 0.35 if k != "mercury" else 0.5
@@ -861,11 +890,12 @@ def setup_render():
     c = sc.cycles
     c.samples = SAMPLES
     c.use_adaptive_sampling = True
-    c.adaptive_threshold = 0.03
+    c.adaptive_threshold = 0.05
     c.use_denoising = True
     try:
-        c.denoising_prefilter = "FAST"
+        c.denoising_prefilter = "NONE"
         c.denoising_input_passes = "RGB_ALBEDO_NORMAL"
+        c.denoising_quality = "FAST" if SAMPLES <= 32 else "HIGH"  # OIDN HIGH costs ~2 s/frame on 2 threads
     except Exception:
         pass
     try:

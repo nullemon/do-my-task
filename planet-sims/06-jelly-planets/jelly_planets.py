@@ -80,7 +80,9 @@ JELLY = dict(
     internal=0.6,             # internal springs (gives the shell a "body")
     damping=0.0,              # spring damping (low = wobbly)
     air_damping=0.05,
-    pressure_factor=4.0,      # pulls volume back to the rest volume
+    pressure_factor=4.0,      # kPa, pulls volume back to the rest volume (near-incompressible)
+    shell_fraction=0.3,       # share of the jelly mass carried by the cloth skin vertices...
+    fluid_density=True,       # ...the rest is "fluid" weight via cloth hydrostatic pressure gradient
 )
 BASE_QUALITY = 10             # cloth substeps per frame at Earth gravity
 PLATE_FRICTION = 15.0       # plate grip (cloth collision friction)
@@ -545,7 +547,10 @@ def build_planet_scene(idx, planet, preview):
     bmv.from_mesh(me)
     rest_vol = bmv.calc_volume()
     bmv.free()
-    s.mass = JELLY["density"] * rest_vol / len(me.vertices)
+    s.mass = JELLY["shell_fraction"] * JELLY["density"] * rest_vol / len(me.vertices)
+    if JELLY["fluid_density"] and hasattr(s, "fluid_density"):
+        # hydrostatic pressure gradient = weight of the jelly's interior under this planet's g
+        s.fluid_density = (1.0 - JELLY["shell_fraction"]) * JELLY["density"] / 1000.0
     sc["jelly_mass_kg"] = JELLY["density"] * rest_vol
     s.tension_stiffness = s.compression_stiffness = JELLY["stiffness"]
     s.shear_stiffness = JELLY["shear"]

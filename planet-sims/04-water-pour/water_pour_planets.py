@@ -56,8 +56,8 @@ OUTPUT_DIR = "//renders/water_pour"
 # --- preview (headless verification) -----------------------------------------
 PREVIEW = False                  # same as --preview
 PREVIEW_RESOLUTION = 48
-PREVIEW_SECONDS = 2.2
-PREVIEW_FRAME = 50               # the still that is rendered for each planet
+PREVIEW_SECONDS = 2.4
+PREVIEW_FRAME = 58               # (1.9 s) the still that is rendered for each planet
 PREVIEW_RES = (270, 480)
 PREVIEW_SAMPLES = 24
 
@@ -94,12 +94,16 @@ GLASS_H = 0.125          # height
 GLASS_WALL = 0.004
 GLASS_BASE = 0.012
 FILL = 0.62              # fraction of inner height filled with water
-LIP = Vector((-0.035, 0.0, 0.36))      # pour lip = rotation pivot (world)
-TILT_START_S = 0.25      # hand starts tilting (seconds)
-TILT_DUR_S = 1.0         # takes 1 s to reach TILT_DEG (same hand on every planet)
-TILT_DEG = 120.0
-DOMAIN_MIN = Vector((-0.30, -0.17, 0.0))   # table top is z = 0 (domain floor)
-DOMAIN_MAX = Vector((0.30, 0.17, 0.46))
+LIP = Vector((-0.05, 0.0, 0.30))      # pour lip = rotation pivot (world)
+TILT_START_S = 0.20      # hand starts tipping the glass (seconds)
+TILT_DUR_S = 0.40        # quick tip, same hand on every planet
+TILT_DEG = 100.0         # final pour angle; the glass is then held still
+BOWL_X = 0.07            # bowl centre (the stream lands ~0.12 m right of the lip on every planet)
+BOWL_R = 0.105           # bowl rim radius
+BOWL_H = 0.060           # bowl height
+BOWL_WALL = 0.006
+DOMAIN_MIN = Vector((-0.21, -0.14, 0.0))   # table top is z = 0 (domain floor)
+DOMAIN_MAX = Vector((0.21, 0.14, 0.42))
 TAG = "wp_"              # prefix of everything this script creates
 
 # =============================================================================
@@ -241,6 +245,15 @@ def mat_glass():
     return m
 
 
+def mat_bowl():
+    m = node_mat("bowl")
+    b = principled(m)
+    pset(b, "Base Color", (0.035, 0.04, 0.05, 1))      # dark glazed ceramic: water reads well in it
+    pset(b, "Roughness", 0.12)
+    pset(b, ["Coat Weight", "Clearcoat"], 0.6)
+    return m
+
+
 def mat_ground(planet):
     lk = LOOKS[planet]
     m = node_mat("ground_" + planet)
@@ -255,7 +268,8 @@ def mat_ground(planet):
     ramp.color_ramp.elements[1].color = (min(1, c[0] * 1.15), min(1, c[1] * 1.15), min(1, c[2] * 1.15), 1)
     nt.links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
     nt.links.new(ramp.outputs["Color"], b.inputs["Base Color"])
-    pset(b, "Roughness", 0.42)
+    pset(b, "Roughness", 0.75)
+    pset(b, ["Specular IOR Level", "Specular"], 0.25)
     if lk["emit"] > 0:
         nt.links.new(ramp.outputs["Color"], b.inputs["Emission Color"] if "Emission Color" in b.inputs else b.inputs["Emission"])
         pset(b, "Emission Strength", lk["emit"])
@@ -278,7 +292,7 @@ def mat_backdrop(planet):
     ramp.color_ramp.elements[1].position = 0.85
     ramp.color_ramp.elements[1].color = (*lk["high"], 1)
     em = nt.nodes.new("ShaderNodeEmission")
-    em.inputs["Strength"].default_value = 1.0
+    em.inputs["Strength"].default_value = 0.7
     nt.links.new(tc.outputs["Generated"], sep.inputs[0])
     nt.links.new(sep.outputs["Z"], ramp.inputs["Fac"])
     nt.links.new(ramp.outputs["Color"], em.inputs["Color"])
@@ -312,22 +326,45 @@ def glass_mesh(extra=0.0, name="glass"):
     prof = [(0.0, 0.0), (R - 0.004, 0.0), (R - 0.0012, 0.0006), (R, 0.004), (R, H - 0.0015),
             (R - 0.0008, H), (ri + 0.0008, H), (ri, H - 0.0015), (ri, tb + 0.003),
             (ri - 0.003, tb), (0.0, tb)]
+    # origin at the lip: shift so (R, 0, H) -> (0, 0, 0)
+    return lathe_mesh(prof, name, offset=(-GLASS_R, 0.0, -H))
+
+
+def lathe_mesh(prof, name, offset=(0, 0, 0), steps=48):
+    """Revolve an (r, z) profile that starts and ends on the axis -> closed mesh."""
     me = bpy.data.meshes.new(TAG + name)
     bm = bmesh.new()
     vs = [bm.verts.new((r, 0.0, z)) for r, z in prof]
     for a, b in zip(vs[:-1], vs[1:]):
         bm.edges.new((a, b))
     bmesh.ops.spin(bm, geom=bm.verts[:] + bm.edges[:], cent=(0, 0, 0), axis=(0, 0, 1),
-                   angle=math.tau, steps=48, use_duplicate=False)
+                   angle=math.tau, steps=steps, use_duplicate=False)
     bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    # origin at the lip: shift so (R, 0, H) -> (0, 0, 0)
-    bmesh.ops.translate(bm, verts=bm.verts[:], vec=(-GLASS_R, 0.0, -H))
+    bmesh.ops.translate(bm, verts=bm.verts[:], vec=offset)
     bm.to_mesh(me)
     bm.free()
     for p in me.polygons:
         p.use_smooth = True
     return me
+
+
+def bowl_mesh(extra=0.0, name="bowl"):
+    """Round bowl standing on the table (origin = centre of its foot, z = 0).
+    extra > 0 thickens it outwards (hidden collision version)."""
+    R, H, w = BOWL_R, BOWL_H, BOWL_WALL
+    n = 12
+    outer = []
+    for i in range(n + 1):                 # quarter ellipse from foot to rim
+        a = (math.pi / 2) * i / n
+        outer.append((0.045 + (R - 0.045) * math.sin(a) + extra * math.sin(a),
+                      (H) * (1 - math.cos(a)) - extra * math.cos(a)))
+    inner = []
+    for i in range(n, -1, -1):
+        a = (math.pi / 2) * i / n
+        inner.append((0.040 + (R - w - 0.040) * math.sin(a), w + (H - w) * (1 - math.cos(a))))
+    prof = [(0.0, -extra)] + outer + [(R - w * 0.5, H + 0.002)] + inner + [(0.0, w)]
+    return lathe_mesh(prof, name, offset=(0, 0, 0), steps=64)
 
 
 COLLIDER_STAVES = 16
@@ -474,14 +511,26 @@ def build_scene(idx, planet, args, base, res, frames):
             kp.interpolation = "BEZIER"
             kp.easing = "AUTO"
 
-    # --- the water at rest inside the glass (initial liquid geometry) -----
+    # --- water ---------------------------------------------------------------
+    # The liquid simulation starts the moment the tip is finished (frame f1);
+    # during the tip a still water mesh rides inside the glass.  From f1 on the
+    # glass is held still, so the collider is a static obstacle (see README:
+    # Mantaflow loses liquid that sits inside a *moving* closed container).
     ri = GLASS_R - GLASS_WALL
-    zb = LIP.z - GLASS_H + GLASS_BASE + 0.002
-    zt = LIP.z - GLASS_H + GLASS_BASE + FILL * (GLASS_H - GLASS_BASE)
+    zb = -GLASS_H + GLASS_BASE + 0.002            # glass-local (origin = lip)
+    zt = -GLASS_H + GLASS_BASE + FILL * (GLASS_H - GLASS_BASE)
+    pose = Matrix.Translation(LIP) @ Matrix.Rotation(math.radians(TILT_DEG), 4, "Y")
     water0 = new_obj("water_init_" + planet,
-                     cylinder_mesh("water_init", ri - 0.0015, zb, zt, cx=LIP.x - GLASS_R), coll)
+                     cylinder_mesh("water_init", ri - 0.0015, zb, zt, cx=-GLASS_R), coll)
+    water0.matrix_world = pose
     water0.display_type = "WIRE"
     water0.hide_render = True
+    intro = new_obj("water_intro_" + planet,
+                    cylinder_mesh("water_intro", ri - 0.0003, zb - 0.0015, zt, cx=-GLASS_R, segs=48), coll)
+    intro.parent = glass
+    for p_ in intro.data.polygons:
+        p_.use_smooth = True
+    intro.data.materials.append(mat_water())
 
     # --- fluid domain ------------------------------------------------------
     dom = new_obj("domain_" + planet, box_mesh("domain", DOMAIN_MIN, DOMAIN_MAX), coll)
@@ -518,8 +567,17 @@ def build_scene(idx, planet, args, base, res, frames):
     d.timesteps_min = int(max(1, min(d.timesteps_max, math.ceil(steps / 3))))
     d.time_scale = 1.0
     d.cache_type = "ALL"
-    d.cache_frame_start = 1
+    d.cache_frame_start = f1
     d.cache_frame_end = frames
+    sc[TAG + "sim_start"] = f1
+    # before the sim starts: show the intro water, hide the (unbaked) domain box
+    for ob, vis_before in ((dom, False), (intro, True)):
+        for fr, vis in ((1, vis_before), (f1 - 1, vis_before), (f1, not vis_before)):
+            ob.hide_render = not vis
+            ob.keyframe_insert("hide_render", frame=fr)
+            if ob is intro:             # (the domain must stay enabled for baking)
+                ob.hide_viewport = not vis
+                ob.keyframe_insert("hide_viewport", frame=fr)
     d.cache_data_format = "OPENVDB" if "OPENVDB" in d.bl_rna.properties["cache_data_format"].enum_items.keys() else d.cache_data_format
     cdir = os.path.join(resolve(CACHE_DIR, base), f"{idx:02d}_{planet}_r{res}")
     d.cache_directory = cdir
@@ -539,16 +597,15 @@ def build_scene(idx, planet, args, base, res, frames):
     f.volume_density = 1.0
 
     # collision obstacle = hidden convex pieces (a base puck + COLLIDER_STAVES wall
-    # staves), each its own effector, all parented to the glass.  Why not the glass
-    # mesh itself: Blender decides "inside an effector" by casting 26 rays and
-    # calling a cell inside when every ray hits the mesh.  Inside a deep tumbler
-    # that is tilted by more than ~15 deg every ray hits the glass, so the whole
-    # cavity turns into obstacle and the water is deleted.  Convex pieces avoid it.
+    # staves), each its own static effector at the held pour pose.  Why not the
+    # glass mesh itself: Blender decides "inside an effector" by casting 26 rays
+    # and calls a cell inside when every ray hits the mesh -- inside a deep tilted
+    # tumbler every ray hits the glass, so the cavity would become obstacle.
     # Walls are >= 1.5 cells thick so nothing leaks on a coarse preview grid.
     thick = max(GLASS_WALL, 1.5 * dx)
     for k, me in enumerate(collider_meshes(thick)):
         part = new_obj(f"glass_collider{k:02d}_{planet}", me, coll)
-        part.parent = glass
+        part.matrix_world = pose
         part.display_type = "WIRE"
         part.hide_render = True
         em = part.modifiers.new("Fluid", "FLUID")
@@ -558,6 +615,19 @@ def build_scene(idx, planet, args, base, res, frames):
         e.use_plane_init = False
         e.surface_distance = 0.0
         e.subframes = 1
+
+    # --- the bowl on the table (visual + thicker static collider) ----------
+    bowl = new_obj("bowl_" + planet, bowl_mesh(), coll)
+    bowl.location = (BOWL_X, 0.0, 0.0)
+    bowl.data.materials.append(mat_bowl())
+    bcol = new_obj("bowl_collider_" + planet, bowl_mesh(max(0.0, 1.5 * dx - BOWL_WALL), "bowl_collider"), coll)
+    bcol.location = bowl.location
+    bcol.display_type = "WIRE"
+    bcol.hide_render = True
+    em = bcol.modifiers.new("Fluid", "FLUID")
+    em.fluid_type = "EFFECTOR"
+    em.effector_settings.effector_type = "COLLISION"
+    em.effector_settings.use_plane_init = False
 
     # --- lights: big soft key, two strip lights behind for glass/water edges
     def area(name, loc, rot, size, size_y, power, color=(1, 1, 1)):
@@ -570,10 +640,10 @@ def build_scene(idx, planet, args, base, res, frames):
         o.location = loc
         o.rotation_euler = rot
         return o
-    area("key", (-0.6, -0.7, 1.0), (math.radians(50), 0, math.radians(-38)), 0.8, 0.8, 90)
+    area("key", (-0.6, -0.7, 1.0), (math.radians(50), 0, math.radians(-38)), 0.8, 0.8, 45)
     area("stripL", (-0.35, 0.35, 0.35), (math.radians(-90), math.radians(-35), 0), 0.08, 0.9, 40)
     area("stripR", (0.35, 0.35, 0.35), (math.radians(-90), math.radians(35), 0), 0.08, 0.9, 40)
-    area("top", (0.0, 0.0, 1.2), (0, 0, 0), 0.6, 0.3, 25)
+    area("top", (0.0, 0.0, 1.2), (0, 0, 0), 0.6, 0.3, 12)
 
     # --- camera --------------------------------------------------------------
     camd = bpy.data.cameras.new(TAG + "cam")
@@ -582,8 +652,8 @@ def build_scene(idx, planet, args, base, res, frames):
     camd.sensor_height = 36
     camd.clip_start = 0.05
     cam = new_obj("camera_" + planet, camd, coll)
-    cam.location = (0.0, -1.20, 0.30)
-    cam.rotation_euler = (math.radians(88), 0, 0)
+    cam.location = (0.0, -1.15, 0.36)
+    cam.rotation_euler = (math.radians(87.5), 0, 0)
     sc.camera = cam
 
     # --- labels (parented to camera so they always sit in the top third) ---
@@ -712,7 +782,7 @@ def measure(sc, dom, glass, frames):
     res = dict(first_out=None, first_table=None, impact_xy=None, splash_z=0.0,
                splash_frame=None, spread_end=0.0, vol0=None, vol_on_table=0.0,
                vol_end=0.0, low_z=None, n_end=0)
-    for fr in range(1, frames + 1):
+    for fr in range(sc[TAG + "sim_start"], frames + 1):
         pts, vol = liquid_points(sc, dom, fr)
         if res["vol0"] is None and pts:
             res["vol0"] = vol
@@ -797,16 +867,17 @@ def main():
             report[p] = dict(g=g, bake_s=round(dt, 1), first_leaves_glass_s=sec(m["first_out"]),
                              first_hits_table_s=sec(m["first_table"]), stream_fall_s=fall,
                              ideal_freefall_from_lip_s=round(math.sqrt(2 * lip_h / g), 3),
-                             splash_max_z_m=round(m["splash_z"], 3), splash_peak_s=sec(m["splash_frame"]),
+                             splash_max_z_m=round(m["splash_z"], 3),
+                             impact_x_m=round(m["impact_xy"][0], 3) if m["impact_xy"] else None, splash_peak_s=sec(m["splash_frame"]),
                              spread_radius_end_m=round(m["spread_end"], 3),
                              volume_start_l=round((m["vol0"] or 0) * 1000, 3),
-                             volume_end_l=round((m["vol_end"] or 0) * 1000, 3),
                              )
             r = report[p]
             print(f"[water_pour] {p:8s} g={g:7.2f}  bake {r['bake_s']:6.1f}s | leaves glass {r['first_leaves_glass_s']}s"
                   f" | hits table {r['first_hits_table_s']}s (stream fall {fall}s, ideal free fall from lip {r['ideal_freefall_from_lip_s']}s)"
+                  f" | impact x {r['impact_x_m']}"
                   f" | splash max z {r['splash_max_z_m']} m @ {r['splash_peak_s']}s | spread {r['spread_radius_end_m']} m"
-                  f" | volume {r['volume_start_l']} -> {r['volume_end_l']} L")
+                  f" | water {r['volume_start_l']} L")
             if r["splash_max_z_m"] > lip_h + 0.02:
                 print(f"[water_pour] WARNING {p}: splash higher than the lip -> sim unstable, raise timesteps/lower CFL")
         os.makedirs(out_root, exist_ok=True)

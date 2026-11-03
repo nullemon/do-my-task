@@ -83,6 +83,8 @@ JELLY = dict(
     pressure_factor=4.0,      # pulls volume back to the rest volume
 )
 BASE_QUALITY = 10             # cloth substeps per frame at Earth gravity
+PLATE_FRICTION = 15.0       # plate grip (cloth collision friction)
+MAX_QUALITY = 80
 
 TAG = "jelly_planets"         # custom property put on everything we create
 PREFIX = "JP_"
@@ -331,21 +333,22 @@ def build_lathe(name, prof, seg=96, close_center=True):
     """revolve (r,z) profile; first point at r=0 if close_center."""
     bm = bmesh.new()
     rings = []
-    center = None
+    centers = []
     for (r, z) in prof:
         if r == 0:
-            center = bm.verts.new((0, 0, z))
+            centers.append(bm.verts.new((0, 0, z)))
             rings.append(None)
             continue
+        centers.append(None)
         rings.append([bm.verts.new((r * math.cos(2 * math.pi * i / seg), r * math.sin(2 * math.pi * i / seg), z)) for i in range(seg)])
     for k in range(len(rings) - 1):
         a, b = rings[k], rings[k + 1]
         for i in range(seg):
             j = (i + 1) % seg
             if a is None:
-                bm.faces.new((center, b[i], b[j]))
+                bm.faces.new((centers[k], b[i], b[j]))
             elif b is None:
-                bm.faces.new((a[i], a[j], center))
+                bm.faces.new((a[i], a[j], centers[k + 1]))
             else:
                 bm.faces.new((a[i], a[j], b[j], b[i]))
     bm.normal_update()
@@ -522,7 +525,7 @@ def build_planet_scene(idx, planet, preview):
     cs = col.collision
     cs.thickness_outer = PLATE_TOP
     cs.thickness_inner = 0.2
-    cs.cloth_friction = 15.0
+    cs.cloth_friction = PLATE_FRICTION
     cs.damping = 0.1
     if hasattr(cs, "use_culling"):
         cs.use_culling = False
@@ -535,7 +538,7 @@ def build_planet_scene(idx, planet, preview):
     clm = jel.modifiers.new("Cloth", "CLOTH")
     s = clm.settings
     q = int(math.ceil(BASE_QUALITY * math.sqrt(max(g, 1.0) / 9.81)))
-    q = max(BASE_QUALITY, min(80, q))
+    q = max(BASE_QUALITY, min(MAX_QUALITY, q))
     s.quality = q
     bmv = bmesh.new()
     bmv.from_mesh(me)
@@ -806,7 +809,8 @@ def main():
             sc.frame_set(res["squash_frame"])
             sc.render.filepath = os.path.join(pdir, f"{sc.name}_f{res['squash_frame']:03d}.png")
             t0 = time.time()
-            bpy.ops.render.render(write_still=True, scene=sc.name)
+            with bpy.context.temp_override(scene=sc):   # render must see this scene's frame
+                bpy.ops.render.render(write_still=True)
             print("preview", sc.render.filepath, "%.1fs" % (time.time() - t0))
     if RENDER:
         for sc, res in scenes:
@@ -814,7 +818,8 @@ def main():
             os.makedirs(d, exist_ok=True)
             sc.render.filepath = os.path.join(d, "frame_")
             t0 = time.time()
-            bpy.ops.render.render(animation=True, scene=sc.name)
+            with bpy.context.temp_override(scene=sc):
+                bpy.ops.render.render(animation=True)
             print("rendered", d, "%.0fs" % (time.time() - t0))
         print("renders in", root)
     print("total %.1fs" % (time.time() - t_all))

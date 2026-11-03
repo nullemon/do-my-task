@@ -330,6 +330,28 @@ def glass_mesh(extra=0.0, name="glass"):
     return me
 
 
+COLLIDER_STAVES = 16
+
+
+def collider_meshes(thick):
+    """Convex closed pieces approximating the tumbler (glass-local, origin at lip)."""
+    cx = -GLASS_R
+    ri = GLASS_R - GLASS_WALL
+    zb = -GLASS_H                      # outer bottom
+    zi = -GLASS_H + GLASS_BASE         # inner bottom
+    out = [cylinder_mesh("glass_col_base", ri + thick, zb - max(0.0, thick - GLASS_BASE), zi,
+                         cx=cx, segs=COLLIDER_STAVES * 2)]
+    n = COLLIDER_STAVES
+    half_w = (ri + thick) * math.tan(math.pi / n) * 1.25     # overlap between staves
+    for i in range(n):
+        a = math.tau * i / n
+        me = box_mesh(f"glass_col_stave{i:02d}", (ri, -half_w, zb), (ri + thick, half_w, 0.0))
+        rot = Matrix.Rotation(a, 4, "Z")
+        me.transform(Matrix.Translation((cx, 0, 0)) @ rot)
+        out.append(me)
+    return out
+
+
 def cylinder_mesh(name, r, z0, z1, cx=0.0, segs=32):
     me = bpy.data.meshes.new(TAG + name)
     bm = bmesh.new()
@@ -516,20 +538,26 @@ def build_scene(idx, planet, args, base, res, frames):
     f.surface_distance = 0.0
     f.volume_density = 1.0
 
-    # collision proxy: same tumbler with walls >= 1.5 cells thick so the liquid
-    # cannot leak through a 4 mm wall on a coarse grid (hidden in renders)
-    extra = max(0.0, 1.5 * dx - GLASS_WALL)
-    proxy = new_obj("glass_collider_" + planet, glass_mesh(extra, "glass_collider"), coll)
-    proxy.parent = glass
-    proxy.display_type = "WIRE"
-    proxy.hide_render = True
-    em = proxy.modifiers.new("Fluid", "FLUID")
-    em.fluid_type = "EFFECTOR"
-    e = em.effector_settings
-    e.effector_type = "COLLISION"
-    e.use_plane_init = False
-    e.surface_distance = 0.0
-    e.subframes = 2
+    # collision obstacle = hidden convex pieces (a base puck + COLLIDER_STAVES wall
+    # staves), each its own effector, all parented to the glass.  Why not the glass
+    # mesh itself: Blender decides "inside an effector" by casting 26 rays and
+    # calling a cell inside when every ray hits the mesh.  Inside a deep tumbler
+    # that is tilted by more than ~15 deg every ray hits the glass, so the whole
+    # cavity turns into obstacle and the water is deleted.  Convex pieces avoid it.
+    # Walls are >= 1.5 cells thick so nothing leaks on a coarse preview grid.
+    thick = max(GLASS_WALL, 1.5 * dx)
+    for k, me in enumerate(collider_meshes(thick)):
+        part = new_obj(f"glass_collider{k:02d}_{planet}", me, coll)
+        part.parent = glass
+        part.display_type = "WIRE"
+        part.hide_render = True
+        em = part.modifiers.new("Fluid", "FLUID")
+        em.fluid_type = "EFFECTOR"
+        e = em.effector_settings
+        e.effector_type = "COLLISION"
+        e.use_plane_init = False
+        e.surface_distance = 0.0
+        e.subframes = 1
 
     # --- lights: big soft key, two strip lights behind for glass/water edges
     def area(name, loc, rot, size, size_y, power, color=(1, 1, 1)):

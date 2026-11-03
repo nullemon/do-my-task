@@ -196,6 +196,7 @@ def new_scene(name):
     except TypeError:
         pass
     sc.cycles.max_bounces = 3
+    sc.cycles.transparent_max_bounces = 64   # many nested additive glow shells
     w = bpy.data.worlds.new(name + "_world")
     w.use_nodes = True
     sc.world = w
@@ -727,9 +728,9 @@ def build_star():
 
     def star_gain(f):
         if f < COLLAPSE - 70:
-            return 1.5 + 0.12 * math.sin(f / 9.0)
+            return 0.9 + 0.08 * math.sin(f / 9.0)
         if f < COLLAPSE:
-            return 1.5 + 22.0 * smoothstep(COLLAPSE - 70, COLLAPSE, f) ** 2
+            return 0.9 + 22.0 * smoothstep(COLLAPSE - 70, COLLAPSE, f) ** 2
         return 25.0
     key_sock(sg.outputs[0], star_gain, 1, END, 1)
     nt.links.new(math_(nt, "MULTIPLY", math_(nt, "ADD", lum, 0.15), sg.outputs[0]), em.inputs["Strength"])
@@ -768,13 +769,13 @@ def build_star():
 
     def corona_gain(f):
         if f < COLLAPSE - 70:
-            return 0.55
+            return 0.3
         if f < COLLAPSE:
-            return 0.55 + 1.5 * smoothstep(COLLAPSE - 70, COLLAPSE, f)
+            return 0.3 + 1.5 * smoothstep(COLLAPSE - 70, COLLAPSE, f)
         return 2.0 * math.exp(-((f - COLLAPSE) / FPS) / 0.35)
     # corona: soft streaky blue glow hugging the limb, plus a faint wide glare
-    glow_sphere("corona", 2.4, (0.45, 0.6, 1.0), 0.8, 0.22, corona_gain, streaks=0.45)
-    glow_sphere("glare", 4.0, (0.4, 0.45, 1.0), 0.8, 1.1, lambda f: 0.25 * corona_gain(f) / 0.55 * 0.4)
+    glow_sphere("corona", 2.0, (0.45, 0.6, 1.0), 0.8, 0.13, corona_gain, streaks=0.5)
+    glow_sphere("glare", 4.0, (0.4, 0.45, 1.0), 0.8, 0.55, lambda f: 0.12 * corona_gain(f))
 
     # the source after the collapse: bright compact white-violet glow that flickers
     def src_gain(f):
@@ -784,7 +785,7 @@ def build_star():
         flick = 1.0 + 0.12 * math.sin(f * 1.7) * math.sin(f * 0.53 + 1.0)
         return (2.2 + 6.0 * math.exp(-s / 0.6) + 1.2 * smoothstep(SWING, S3, f)) * flick
     glow_sphere("source", 0.9, (0.9, 0.88, 1.0), 0.0, 0.07, src_gain)
-    glow_sphere("source_glare", 3.0, (0.55, 0.45, 1.0), 0.0, 0.7,
+    glow_sphere("source_glare", 3.0, (0.55, 0.45, 1.0), 0.0, 0.42,
                 lambda f: 0.0 if f < COLLAPSE else 0.18 * src_gain(f) / 2.2)
 
     # jets: nested additive cones per side - wide violet glare, violet-blue sheath, hot white core.

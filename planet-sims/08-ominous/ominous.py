@@ -1608,7 +1608,7 @@ def build_saturn_long():
             0.0, D * math.cos(math.radians(elev(f))), H + D * math.sin(math.radians(elev(f))))[i], 1, end)
 
     # --- camera: follow the rise, hold, then tilt down to the emptied seabed and the returning wave
-    pitch = [(0, 91.5), (18, 98.5), (27, 99.3), (39, 87.6), (52.5, 86.8)]
+    pitch = [(0, 91.5), (18, 98.5), (27, 99.3), (39, 87.6), (46, 87.4), (52.5, 92.5)]  # look up at the wall
     _key_every_frame(cam, "rotation_euler", 0, lambda f: math.radians(_ease_pts(pitch, (f - 1) / FPS)), 1, end)
     _key_every_frame(cam, "rotation_euler", 2, lambda f: math.radians(0.8 * math.sin((f - 1) / end * math.pi)), 1, end)
 
@@ -1732,6 +1732,27 @@ def build_saturn_long():
     fe.inputs[1].default_value = 0.9
     wnt.links.new(foam.outputs[0], fe.inputs[0])
     wnt.links.new(glowz.outputs["Result"], fe.inputs[2])
+    # water sheeting down the face: streaky bump + streaky translucency
+    smp = wnt.nodes.new("ShaderNodeMapping")
+    smp.inputs["Scale"].default_value = (500.0, 2.0, 2.5)
+    wnt.links.new(wtc.outputs["Object"], smp.inputs["Vector"])
+    stk = wnt.nodes.new("ShaderNodeTexNoise")
+    stk.inputs["Scale"].default_value = 1.0
+    stk.inputs["Detail"].default_value = 8
+    stk.inputs["Distortion"].default_value = 0.6
+    wnt.links.new(smp.outputs["Vector"], stk.inputs["Vector"])
+    sbump = wnt.nodes.new("ShaderNodeBump")
+    sbump.inputs["Strength"].default_value = 0.45
+    wnt.links.new(stk.outputs["Fac"], sbump.inputs["Height"])
+    wnt.links.new(sbump.outputs["Normal"], wb.inputs["Normal"])
+    smod = wnt.nodes.new("ShaderNodeMapRange")
+    smod.inputs["To Min"].default_value, smod.inputs["To Max"].default_value = 0.3, 1.8
+    wnt.links.new(stk.outputs["Fac"], smod.inputs["Value"])
+    gmul = wnt.nodes.new("ShaderNodeMath")
+    gmul.operation = "MULTIPLY"
+    wnt.links.new(glowz.outputs["Result"], gmul.inputs[0])
+    wnt.links.new(smod.outputs["Result"], gmul.inputs[1])
+    wnt.links.new(gmul.outputs[0], fe.inputs[2])
     wnt.links.new(fe.outputs[0], wb.inputs["Emission Strength"])
     fr = wnt.nodes.new("ShaderNodeMapRange")
     fr.inputs["To Min"].default_value, fr.inputs["To Max"].default_value = 0.06, 0.85
@@ -1742,12 +1763,18 @@ def build_saturn_long():
 
     def wave_u(f):
         return min(max((f - w0) / (w1 - w0), 0.0), 1.0)
-    _key_every_frame(wave, "location", 1, lambda f: 3300.0 - 3000.0 * wave_u(f) ** 1.5, 1, end)
+    _key_every_frame(wave, "location", 1, lambda f: 3300.0 - 3080.0 * wave_u(f) ** 0.9, 1, end)
     _key_every_frame(wave, "location", 2, lambda f: _ease_pts(level, (f - 1) / FPS) - 1.0, 1, end)
-    _key_every_frame(wave, "scale", -1, lambda f: (8000.0, 130.0, 30.0 + 135.0 * wave_u(f) ** 1.3), 1, end)
+    _key_every_frame(wave, "scale", -1, lambda f: (8000.0, 150.0, 40.0 + 220.0 * wave_u(f) ** 1.2), 1, end)
     for f, hide in ((1, True), (w0, False)):
         wave.hide_render = hide
         wave.keyframe_insert("hide_render", frame=f)
+    # faint high fill (the ring light scattered by the night sky), on the wave only, so its glossy face reads
+    fill = _sun(sc, "wave_fill", (0.2, -0.6, 0.75), 0.35, color=(0.75, 0.85, 1.0), angle_deg=10)
+    fill.visible_glossy = False
+    wcol = bpy.data.collections.new("wave_lit")
+    wcol.objects.link(wave)
+    fill.light_linking.receiver_collection = wcol
 
     caption(sc, cam, "What if Saturn\nreplaced the Moon?", _sec(1.0), _sec(6.5))
     caption(sc, cam, "It would fill\na third of the sky.", _sec(8.0), _sec(12.5))

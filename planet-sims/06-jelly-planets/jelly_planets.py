@@ -85,6 +85,7 @@ JELLY = dict(
 BASE_QUALITY = 10             # cloth substeps per frame at Earth gravity
 PLATE_FRICTION = 15.0       # plate grip (cloth collision friction)
 MAX_QUALITY = 80
+SELF_COLLISION = True       # stops the top punching through the bottom under Sun gravity
 
 TAG = "jelly_planets"         # custom property put on everything we create
 PREFIX = "JP_"
@@ -566,7 +567,9 @@ def build_planet_scene(idx, planet, preview):
     cc.use_collision = True
     cc.distance_min = 0.006
     cc.collision_quality = 2 if g < 30 else 6
-    cc.use_self_collision = False
+    cc.use_self_collision = SELF_COLLISION
+    cc.self_distance_min = 0.01
+    cc.self_friction = 5.0
     pc = clm.point_cache
     pc.frame_start = RELEASE_FRAME
     pc.frame_end = FRAME_END

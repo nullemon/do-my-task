@@ -46,6 +46,7 @@ GPU = "--gpu" in argv
 HERE = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else bpy.path.abspath("//")
 OUT_DIR = arg("--out", os.path.join(HERE, "renders"))
 FRAMES_ONLY = [int(x) for x in arg("--frames", "").split(",") if x]
+STEP = arg("--step", 1, int)  # 2 = render odd frames only; --encode blends them back to FPS
 RES_Y = RES_X * 16 // 9
 KM = 1000.0  # km per Blender unit
 R_EARTH = 6371.0
@@ -1055,7 +1056,19 @@ def encode():
     wav = os.path.join(OUT_DIR, "soundtrack.wav")
     mp4 = os.path.join(OUT_DIR, "size_comparison.mp4")
     vf = "vignette=angle=PI/5,noise=alls=5:allf=t,fade=t=in:st=0:d=1.2,fade=t=out:st=%.2f:d=1.4" % (DURATION - 1.5)
-    cmd = ["ffmpeg", "-y", "-framerate", str(FPS), "-i", os.path.join(OUT_DIR, "frames", "f_%04d.png")]
+    src = os.path.join(OUT_DIR, "frames", "f_%04d.png")
+    rate = FPS
+    if STEP > 1:  # half-rate render: link every STEP-th frame into a contiguous sequence, blend back up
+        seq = os.path.join(OUT_DIR, f"frames_step{STEP}")
+        os.makedirs(seq, exist_ok=True)
+        for i, f in enumerate(range(1, F_END + 1, STEP)):
+            dst = os.path.join(seq, f"f_{i + 1:04d}.png")
+            if not os.path.exists(dst):
+                os.symlink(frame_path(f), dst)
+        src = os.path.join(seq, "f_%04d.png")
+        rate = FPS / STEP
+        vf = f"minterpolate=fps={FPS}:mi_mode=blend," + vf
+    cmd = ["ffmpeg", "-y", "-framerate", str(rate), "-i", src]
     if os.path.exists(wav):
         cmd += ["-i", wav]
     cmd += ["-vf", vf, "-c:v", "libx264", "-preset", "slow", "-crf", "20", "-pix_fmt", "yuv420p", "-movflags", "+faststart"]
@@ -1090,7 +1103,7 @@ def main():
         elif "--render" in argv:
             s = arg("--start", 1, int)
             e = arg("--end", F_END, int)
-            render_frames(range(s, e + 1))
+            render_frames(range(s, e + 1, STEP))
     if "--encode" in argv:
         encode()
 

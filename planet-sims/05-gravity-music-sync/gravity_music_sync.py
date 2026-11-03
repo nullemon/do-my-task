@@ -60,6 +60,7 @@ DROP_STRENGTH = 0.80       # hits with bass punch >= this fraction of the max ..
 DROP_AFTER_GAP_S = 1.5     # ... that also follow >= this many seconds without hits are "drops"
 QUIET_LEVEL = 0.30         # normalised loudness below this = fully quiet (float)
 LOUD_LEVEL = 0.80          # normalised loudness above this = fully loud (Earth)
+DYNAMIC_RANGE_DB = 24.0    # loudness scale: 'fully quiet' = this many dB below the loudest parts
 FLOAT_PERIOD_S = 6.0       # quiet gravity breathes: up for ~1/4 of this, then a gentle sink ...
 FLOAT_SINK = 0.35          # ... at this fraction of the quiet strength, then up again
 BEAT_HOLD_FRAMES = 7       # frames gravity stays at BEAT_PLANET after a hit
@@ -247,7 +248,8 @@ def analyse(path, fps, seconds, offset):
     rel = math.exp(-1.0 / (0.12 * fps))
     for f in range(1, nframes):
         env[f] = db[f] if db[f] > env[f - 1] else rel * env[f - 1] + (1 - rel) * db[f]
-    lo, hi = np.percentile(env, 8), np.percentile(env, 97)
+    hi = np.percentile(env, 97)
+    lo = max(np.percentile(env, 5), hi - DYNAMIC_RANGE_DB)
     loud = np.clip((env - lo) / max(1e-6, hi - lo), 0, 1)
 
     # --- onset strength: log-spectral flux, kick band weighted x3

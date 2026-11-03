@@ -34,11 +34,11 @@ sc.frame_step = step
 if first: sc.frame_start = first
 if last: sc.frame_end = last
 os.makedirs(out, exist_ok=True)
-sc.render.image_settings.file_format = "PNG"
 try:
-    sc.render.image_settings.media_type = "IMAGE"
+    sc.render.image_settings.media_type = "IMAGE"  # Blender 5.x
 except Exception:
     pass
+sc.render.image_settings.file_format = "PNG"
 sc.render.filepath = os.path.join(out, "f_")
 print("RENDER", sc.frame_start, sc.frame_end, step, sc.render.resolution_x, res)
 bpy.ops.render.render(animation=True)

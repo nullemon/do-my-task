@@ -284,10 +284,10 @@ def smooth_all(ob):
 
 # ----------------------------------------------------------------------------- 1. rogue planet
 def _star_layers(nt, tc, layers):
-    """Point stars large enough (~1-2 px) to survive the denoiser. layers = [(scale, radius, gain)].
+    """Point stars large enough (~1-2 px) to survive the denoiser. layers = [(scale, radius, gain, power)].
     Returns a color socket (additive star light)."""
     acc = None
-    for scale, radius, gain in layers:
+    for scale, radius, gain, power in layers:
         vor = nt.nodes.new("ShaderNodeTexVoronoi")
         vor.inputs["Scale"].default_value = scale
         nt.links.new(tc.outputs["Generated"], vor.inputs["Vector"])
@@ -301,7 +301,7 @@ def _star_layers(nt, tc, layers):
         nt.links.new(vor.outputs["Color"], bw.inputs["Color"])
         pw = nt.nodes.new("ShaderNodeMath")
         pw.operation = "POWER"
-        pw.inputs[1].default_value = 5.0
+        pw.inputs[1].default_value = power
         nt.links.new(bw.outputs[0], pw.inputs[0])
         m1 = nt.nodes.new("ShaderNodeMath")
         m1.operation = "MULTIPLY"
@@ -367,7 +367,7 @@ def build_rogue():
     nt.nodes.clear()
     wout = nt.nodes.new("ShaderNodeOutputWorld")
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    stars = _star_layers(nt, tc, [(110, 0.17, 140.0), (230, 0.2, 60.0)])
+    stars = _star_layers(nt, tc, [(110, 0.17, 300.0, 20.0), (230, 0.2, 90.0, 22.0)])
     glow = _horizon_glow(nt, tc, (0.010, 0.016, 0.030), height=0.16, power=3.0)
     bg = nt.nodes.new("ShaderNodeBackground")
     nt.links.new(_add_rgb(nt, stars, glow), bg.inputs["Color"])
@@ -375,6 +375,10 @@ def build_rogue():
     # glassy night sea that faintly mirrors the stars
     so = sea(sc, color=(0.002, 0.003, 0.006), rough=0.035)
     snt = so.data.materials[0].node_tree
+    try:
+        snt.nodes["Principled BSDF"].inputs["Specular IOR Level"].default_value = 0.22
+    except KeyError:
+        pass
     for n in snt.nodes:
         if n.type == "BUMP":
             n.inputs["Strength"].default_value = 0.06
@@ -452,17 +456,17 @@ def build_sunout():
     nt.links.new(sep.outputs["Z"], grad.inputs["Value"])
     sky = nt.nodes.new("ShaderNodeValToRGB")
     se = sky.color_ramp.elements
-    se[0].position, se[0].color = 0.0, (1.0, 0.42, 0.12, 1)
-    se[1].position, se[1].color = 1.0, (0.08, 0.16, 0.42, 1)
-    se.new(0.12).color = (0.85, 0.45, 0.22, 1)
-    se.new(0.4).color = (0.32, 0.30, 0.42, 1)
+    se[0].position, se[0].color = 0.0, (0.9, 0.28, 0.05, 1)
+    se[1].position, se[1].color = 1.0, (0.03, 0.07, 0.22, 1)
+    se.new(0.10).color = (0.6, 0.22, 0.08, 1)
+    se.new(0.4).color = (0.16, 0.13, 0.22, 1)
     nt.links.new(grad.outputs["Result"], sky.inputs["Fac"])
     dot = nt.nodes.new("ShaderNodeVectorMath")
     dot.operation = "DOT_PRODUCT"
     dot.inputs[1].default_value = sdir
     nt.links.new(tc.outputs["Generated"], dot.inputs[0])
     gl = nt.nodes.new("ShaderNodeMapRange")
-    gl.inputs["From Min"].default_value = 0.93
+    gl.inputs["From Min"].default_value = 0.96
     gl.inputs["From Max"].default_value = 1.0
     nt.links.new(dot.outputs["Value"], gl.inputs["Value"])
     glp = nt.nodes.new("ShaderNodeMath")
@@ -472,7 +476,7 @@ def build_sunout():
     glc = nt.nodes.new("ShaderNodeMixRGB")
     glc.blend_type = "MULTIPLY"
     glc.inputs["Fac"].default_value = 1.0
-    glc.inputs[2].default_value = (4.0, 1.9, 0.6, 1)
+    glc.inputs[2].default_value = (3.0, 1.1, 0.25, 1)
     nt.links.new(glp.outputs[0], glc.inputs[1])
     bg_sky = nt.nodes.new("ShaderNodeBackground")
     nt.links.new(_add_rgb(nt, sky.outputs["Color"], glc.outputs[0]), bg_sky.inputs["Color"])
@@ -480,9 +484,15 @@ def build_sunout():
     bg_sky.inputs["Strength"].keyframe_insert("default_value", frame=off - 1)
     bg_sky.inputs["Strength"].default_value = 0.0
     bg_sky.inputs["Strength"].keyframe_insert("default_value", frame=off)
-    stars = _star_layers(nt, tc, [(110, 0.17, 140.0), (230, 0.2, 60.0)])
+    stars = _star_layers(nt, tc, [(110, 0.17, 300.0, 20.0), (230, 0.2, 90.0, 22.0)])
+    lp = nt.nodes.new("ShaderNodeLightPath")  # stars seen, but they don't light the sand
+    cam_only = nt.nodes.new("ShaderNodeMixRGB")
+    cam_only.blend_type = "MIX"
+    cam_only.inputs[1].default_value = (0.0, 0.0, 0.0, 1)
+    nt.links.new(stars, cam_only.inputs[2])
+    nt.links.new(lp.outputs["Is Camera Ray"], cam_only.inputs["Fac"])
     bg_st = nt.nodes.new("ShaderNodeBackground")
-    nt.links.new(stars, bg_st.inputs["Color"])
+    nt.links.new(cam_only.outputs[0], bg_st.inputs["Color"])
     for f, v in ((1, 0.0), (off + 6, 0.0), (off + 50, 1.0)):
         bg_st.inputs["Strength"].default_value = v
         bg_st.inputs["Strength"].keyframe_insert("default_value", frame=f)
@@ -498,7 +508,7 @@ def build_sunout():
     import bmesh
     me = bpy.data.meshes.new("dunes")
     bm = bmesh.new()
-    bmesh.ops.create_grid(bm, x_segments=260, y_segments=260, size=1200)
+    bmesh.ops.create_grid(bm, x_segments=400, y_segments=400, size=1200)
     bm.to_mesh(me)
     bm.free()
     dunes = link(sc, bpy.data.objects.new("dunes", me))
@@ -515,7 +525,12 @@ def build_sunout():
     d2.texture, d2.strength, d2.mid_level = t2, -22, 0.5
     for p in me.polygons:
         p.use_smooth = True
-    sand = mat_principled("sand", (0.78, 0.47, 0.22), rough=0.85)
+    try:
+        dunes.shadow_terminator_geometry_offset = 0.6
+        dunes.shadow_terminator_shading_offset = 0.15
+    except AttributeError:
+        pass
+    sand = mat_principled("sand", (0.8, 0.38, 0.13), rough=0.85)
     snt = sand.node_tree
     stc = snt.nodes.new("ShaderNodeTexCoord")
     wave = snt.nodes.new("ShaderNodeTexWave")  # wind ripples
@@ -531,27 +546,28 @@ def build_sunout():
     cam = camera(sc, (0, -300, 48), (87, 0, 0), lens=26)
     sun = bpy.data.lights.new("sun", "SUN")
     sun.angle = math.radians(1.0)
-    sun.color = (1.0, 0.72, 0.45)
+    sun.color = (1.0, 0.6, 0.3)
     sun_ob = link(sc, bpy.data.objects.new("sun", sun))
     # light travels along -sdir
     sun_ob.rotation_euler = (math.pi / 2 - sun_el, 0, math.pi - sun_az)
-    sun.energy = 5.0
+    sun.energy = 6.0
     sun.keyframe_insert("energy", frame=off - 1)
     sun.energy = 0.0
     sun.keyframe_insert("energy", frame=off)
     # visible sun disc, low over the dunes
     disc = link(sc, uv_sphere("sun_disc", 1.0, 48, 24))
-    disc.data.materials.append(mat_emit("sun_disc_m", (1.0, 0.78, 0.5), 25))
+    disc.data.materials.append(mat_emit("sun_disc_m", (1.0, 0.62, 0.3), 14))
     disc.visible_shadow = False
     d = 50000
     disc.location = (d * sdir[0], -300 + d * sdir[1], 48 + d * sdir[2])
     disc.scale = [d * math.tan(math.radians(1.1))] * 3
     key(disc, "hide_render", [(1, False), (off, True)])
     # countdown text driven per frame
-    cnt = caption(sc, cam, "08:20", 70, off, y=0.62, size=0.12, name="countdown")
-    caption(sc, cam, "If the Sun vanished right now…", 8, 70)
-    caption(sc, cam, "you'd still see it shining for\n8 minutes and 20 seconds.", 72, 150)
-    caption(sc, cam, "Its last light is already\non the way.", 152, off)
+    cnt = caption(sc, cam, "08:20", 70, off, y=0.62, size=0.12, color=(1, 0.97, 0.92), strength=5.0,
+                  name="countdown")
+    caption(sc, cam, "If the Sun vanished right now…", 8, 70, strength=3.0)
+    caption(sc, cam, "you'd still see it shining for\n8 minutes and 20 seconds.", 72, 150, strength=3.0)
+    caption(sc, cam, "Its last light is already\non the way.", 152, off, strength=3.0)
     caption(sc, cam, "Then darkness.", off + 6, off + 50, y=0.0, size=0.09)
     caption(sc, cam, "Then the cold.", off + 56, end + 1, y=0.0, size=0.09)
 
@@ -570,40 +586,238 @@ def build_sunout():
 
 
 # ----------------------------------------------------------------------------- 3. saturn rises
-def build_saturn():
-    sc = new_scene("ominous_saturn", 13)
-    end = sc.frame_end
-    star_world(sc, density=0.03, strength=4)
-    sea(sc, color=(0.005, 0.008, 0.015))
-    cam = camera(sc, (0, 0, 2.0), (90, 0, 0), lens=17)
-    # Real proportions at the Moon's distance (scaled: 1 unit = 384.4 km).
-    D = 1000.0
-    R = D * math.tan(math.radians(17.8 / 2))
-    ring_in, ring_out = R * 74658 / 60268, R * 136775 / 60268
-    sat = link(sc, uv_sphere("saturn", R, 128, 64))
-    sat.scale = (1, 1, 0.902)  # Saturn is visibly flattened
-    m = mat_principled("saturn_m", (0.8, 0.7, 0.5), rough=0.8)
-    nt = m.node_tree
+def _sky_world(sc, stars, sky_stops=None, star_fade=None):
+    """World for saturn/paledot. stars = [(voronoi scale, core radius, gain)] - point stars ~1-2 px so
+    they survive the denoiser. sky_stops = [(z 0..1, rgb)] vertical gradient (dusk sky).
+    star_fade = (z0, z1): stars fade in between those heights (haze near the horizon)."""
+    nt = sc.world.node_tree
+    nt.nodes.clear()
+    out = nt.nodes.new("ShaderNodeOutputWorld")
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    wave = nt.nodes.new("ShaderNodeTexWave")
-    wave.bands_direction = "Z"
-    wave.inputs["Scale"].default_value = 3.0
-    wave.inputs["Distortion"].default_value = 2.0
-    wave.inputs["Detail"].default_value = 4
-    ramp = nt.nodes.new("ShaderNodeValToRGB")
-    el = ramp.color_ramp.elements
-    el[0].color = (0.55, 0.42, 0.26, 1)
-    el[1].color = (0.92, 0.84, 0.66, 1)
-    el.new(0.5).color = (0.75, 0.6, 0.4, 1)
-    nt.links.new(tc.outputs["Object"], wave.inputs["Vector"])
-    nt.links.new(wave.outputs["Fac"], ramp.inputs["Fac"])
-    nt.links.new(ramp.outputs["Color"], nt.nodes["Principled BSDF"].inputs["Base Color"])
-    sat.data.materials.append(m)
-    # rings: annulus mesh with radial banding + transparency
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+    acc = None
+    for scale, radius, gain in stars:
+        vor = nt.nodes.new("ShaderNodeTexVoronoi")
+        vor.inputs["Scale"].default_value = scale
+        nt.links.new(tc.outputs["Generated"], vor.inputs["Vector"])
+        core = nt.nodes.new("ShaderNodeMapRange")
+        core.inputs["From Min"].default_value = 0.0
+        core.inputs["From Max"].default_value = radius
+        core.inputs["To Min"].default_value = 1.0
+        core.inputs["To Max"].default_value = 0.0
+        nt.links.new(vor.outputs["Distance"], core.inputs["Value"])
+        bw = nt.nodes.new("ShaderNodeRGBToBW")
+        nt.links.new(vor.outputs["Color"], bw.inputs["Color"])
+        pw = nt.nodes.new("ShaderNodeMath")
+        pw.operation = "POWER"
+        pw.inputs[1].default_value = 6.0
+        nt.links.new(bw.outputs[0], pw.inputs[0])
+        m1 = nt.nodes.new("ShaderNodeMath")
+        m1.operation = "MULTIPLY"
+        nt.links.new(core.outputs["Result"], m1.inputs[0])
+        nt.links.new(pw.outputs[0], m1.inputs[1])
+        m2 = nt.nodes.new("ShaderNodeMath")
+        m2.operation = "MULTIPLY"
+        m2.inputs[1].default_value = gain
+        nt.links.new(m1.outputs[0], m2.inputs[0])
+        if acc is None:
+            acc = m2.outputs[0]
+        else:
+            add = nt.nodes.new("ShaderNodeMath")
+            add.operation = "ADD"
+            nt.links.new(acc, add.inputs[0])
+            nt.links.new(m2.outputs[0], add.inputs[1])
+            acc = add.outputs[0]
+    if star_fade:
+        fade = nt.nodes.new("ShaderNodeMapRange")
+        fade.inputs["From Min"].default_value, fade.inputs["From Max"].default_value = star_fade
+        nt.links.new(sep.outputs["Z"], fade.inputs["Value"])
+        mf = nt.nodes.new("ShaderNodeMath")
+        mf.operation = "MULTIPLY"
+        nt.links.new(acc, mf.inputs[0])
+        nt.links.new(fade.outputs["Result"], mf.inputs[1])
+        acc = mf.outputs[0]
+    tint = nt.nodes.new("ShaderNodeMixRGB")
+    tint.blend_type = "MULTIPLY"
+    tint.inputs["Fac"].default_value = 1.0
+    tint.inputs[2].default_value = (0.88, 0.93, 1.0, 1)
+    nt.links.new(acc, tint.inputs[1])
+    col = tint.outputs[0]
+    if sky_stops:
+        ramp = nt.nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.interpolation = "EASE"
+        el = ramp.color_ramp.elements
+        el[0].position, el[0].color = sky_stops[0][0], (*sky_stops[0][1], 1)
+        el[1].position, el[1].color = sky_stops[-1][0], (*sky_stops[-1][1], 1)
+        for pos, c in sky_stops[1:-1]:
+            el.new(pos).color = (*c, 1)
+        nt.links.new(sep.outputs["Z"], ramp.inputs["Fac"])
+        add = nt.nodes.new("ShaderNodeMixRGB")
+        add.blend_type = "ADD"
+        add.inputs["Fac"].default_value = 1.0
+        nt.links.new(col, add.inputs[1])
+        nt.links.new(ramp.outputs["Color"], add.inputs[2])
+        col = add.outputs[0]
+    bg = nt.nodes.new("ShaderNodeBackground")
+    nt.links.new(col, bg.inputs["Color"])
+    nt.links.new(bg.outputs[0], out.inputs[0])
+
+
+def _key_every_frame(ob, path, index, fn, f0, f1):
+    """Sample fn(frame) onto every frame (exact, no Bezier overshoot)."""
+    for f in range(f0, f1 + 1):
+        v = fn(f)
+        if index >= 0:
+            getattr(ob, path)[index] = v
+        else:
+            setattr(ob, path, v)
+        ob.keyframe_insert(path, frame=f, index=index)
+
+
+def _smoothstep(a, b, x):
+    t = min(1.0, max(0.0, (x - a) / (b - a)))
+    return t * t * (3 - 2 * t)
+
+
+def _sun(sc, name, to_sun, energy, color=(1, 1, 1), angle_deg=0.5):
+    from mathutils import Vector
+    li = bpy.data.lights.new(name, "SUN")
+    li.energy = energy
+    li.color = color
+    li.angle = math.radians(angle_deg)
+    ob = link(sc, bpy.data.objects.new(name, li))
+    ob.rotation_mode = "QUATERNION"
+    ob.rotation_quaternion = (-Vector(to_sun).normalized()).to_track_quat("-Z", "Y")
+    return ob
+
+
+def _look(sc):
+    try:
+        sc.view_settings.look = "AgX - Medium High Contrast"
+    except TypeError:
+        try:
+            sc.view_settings.look = "Medium High Contrast"
+        except TypeError:
+            pass
+
+
+SATURN_CLEAR = 192   # frame Saturn's disc fully clears the horizon (soundtrack boom)
+
+
+def build_saturn():
     import bmesh
+    sc = new_scene("ominous_saturn", 13)
+    sc.render.use_persistent_data = True
+    _look(sc)
+    end = sc.frame_end
+    _sky_world(sc, stars=[(140, 0.14, 1.2), (60, 0.09, 2.5)],
+               sky_stops=[(0.0, (0.11, 0.07, 0.10)), (0.05, (0.05, 0.045, 0.08)),
+                          (0.18, (0.014, 0.018, 0.045)), (0.55, (0.003, 0.005, 0.014))],
+               star_fade=(0.04, 0.35))
+    # --- calm dusk sea: dark, glossy, slow anisotropic swell (animated 4D noise), casts no shadow
+    sea_ob = sea(sc, color=(0.002, 0.003, 0.006), rough=0.035)
+    sea_ob.visible_shadow = False
+    snt = sea_ob.data.materials[0].node_tree
+    for nd in list(snt.nodes):
+        if nd.type in ("TEX_NOISE", "BUMP", "TEX_COORD"):
+            snt.nodes.remove(nd)
+    bsdf = snt.nodes["Principled BSDF"]
+    bsdf.inputs["IOR"].default_value = 1.33
+    tc = snt.nodes.new("ShaderNodeTexCoord")
+    mp = snt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (0.18, 0.55, 1.0)  # long crests running across the view
+    snt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    nz = snt.nodes.new("ShaderNodeTexNoise")
+    nz.noise_dimensions = "4D"
+    nz.inputs["Scale"].default_value = 1.0
+    nz.inputs["Detail"].default_value = 6
+    nz.inputs["Roughness"].default_value = 0.55
+    snt.links.new(mp.outputs["Vector"], nz.inputs["Vector"])
+    nz.inputs["W"].default_value = 0.0
+    nz.inputs["W"].keyframe_insert("default_value", frame=1)
+    nz.inputs["W"].default_value = 1.6
+    nz.inputs["W"].keyframe_insert("default_value", frame=end)
+    for fc in (snt.animation_data.action.fcurves if hasattr(snt.animation_data.action, "fcurves") else []):
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    bump = snt.nodes.new("ShaderNodeBump")
+    bump.inputs["Strength"].default_value = 0.35
+    bump.inputs["Distance"].default_value = 0.25
+    snt.links.new(nz.outputs["Fac"], bump.inputs["Height"])
+    snt.links.new(bump.outputs["Normal"], bsdf.inputs["Normal"])
+
+    H = 2.0  # eye height above the water
+    cam = camera(sc, (0, 0, H), (90, 0, 0), lens=14.5)   # ~50° wide: rings (39°) just fit
+    cam.data.clip_start = 0.5
+    cam.data.clip_end = 5e4
+
+    # --- Saturn at the Moon's distance. Scale: D = 1000 units; real angular sizes.
+    D = 1000.0
+    R = D * math.tan(math.radians(17.8 / 2))           # equatorial radius -> 17.8° disc
+    ring_in, ring_out = R * 74658 / 60268, R * 136775 / 60268   # C ring inner .. A ring outer (~39°)
+    sat = link(sc, uv_sphere("saturn", R, 192, 96))
+    sat.scale = (1, 1, 0.902)                          # oblate
+    m = mat_principled("saturn_m", (0.8, 0.7, 0.5), rough=0.92)
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    for nm in ("Specular IOR Level", "Specular"):
+        if nm in b.inputs:
+            b.inputs[nm].default_value = 0.15
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    sepz = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Object"], sepz.inputs[0])
+    lat = nt.nodes.new("ShaderNodeMapRange")            # z/R -> 0..1 (south..north)
+    lat.inputs["From Min"].default_value, lat.inputs["From Max"].default_value = -R, R
+    nt.links.new(sepz.outputs["Z"], lat.inputs["Value"])
+    turb = nt.nodes.new("ShaderNodeTexNoise")           # zonal turbulence: wobble the band edges
+    turb.inputs["Scale"].default_value = 3.0 / R
+    turb.inputs["Detail"].default_value = 8
+    turb.inputs["Distortion"].default_value = 1.5
+    nt.links.new(tc.outputs["Object"], turb.inputs["Vector"])
+    tw = nt.nodes.new("ShaderNodeMapRange")
+    tw.inputs["To Min"].default_value, tw.inputs["To Max"].default_value = -0.018, 0.018
+    nt.links.new(turb.outputs["Fac"], tw.inputs["Value"])
+    lsum = nt.nodes.new("ShaderNodeMath")
+    lsum.operation = "ADD"
+    nt.links.new(lat.outputs["Result"], lsum.inputs[0])
+    nt.links.new(tw.outputs["Result"], lsum.inputs[1])
+    bands = nt.nodes.new("ShaderNodeValToRGB")
+    bands.color_ramp.interpolation = "EASE"
+    stops = [(0.0, (0.30, 0.34, 0.38)), (0.07, (0.42, 0.40, 0.36)), (0.13, (0.58, 0.47, 0.33)),
+             (0.20, (0.80, 0.68, 0.49)), (0.27, (0.64, 0.51, 0.35)), (0.34, (0.86, 0.76, 0.58)),
+             (0.41, (0.69, 0.54, 0.35)), (0.46, (0.90, 0.80, 0.62)), (0.50, (0.95, 0.88, 0.70)),
+             (0.54, (0.88, 0.76, 0.56)), (0.585, (0.66, 0.52, 0.34)), (0.64, (0.87, 0.77, 0.58)),
+             (0.70, (0.62, 0.50, 0.35)), (0.77, (0.80, 0.70, 0.52)), (0.85, (0.55, 0.48, 0.38)),
+             (0.93, (0.42, 0.43, 0.44)), (1.0, (0.32, 0.36, 0.42))]
+    el = bands.color_ramp.elements
+    el[0].position, el[0].color = stops[0][0], (*stops[0][1], 1)
+    el[1].position, el[1].color = stops[-1][0], (*stops[-1][1], 1)
+    for pos, c in stops[1:-1]:
+        el.new(pos).color = (*c, 1)
+    nt.links.new(lsum.outputs[0], bands.inputs["Fac"])
+    fine = nt.nodes.new("ShaderNodeTexWave")            # thin belts on top of the broad zones
+    fine.wave_type = "BANDS"
+    fine.bands_direction = "Z"
+    fine.inputs["Scale"].default_value = 9.0 / R
+    fine.inputs["Distortion"].default_value = 1.2
+    fine.inputs["Detail"].default_value = 3
+    nt.links.new(tc.outputs["Object"], fine.inputs["Vector"])
+    fr = nt.nodes.new("ShaderNodeMapRange")
+    fr.inputs["To Min"].default_value, fr.inputs["To Max"].default_value = 0.88, 1.0
+    nt.links.new(fine.outputs["Fac"], fr.inputs["Value"])
+    mul = nt.nodes.new("ShaderNodeMixRGB")
+    mul.blend_type = "MULTIPLY"
+    mul.inputs["Fac"].default_value = 1.0
+    nt.links.new(bands.outputs["Color"], mul.inputs[1])
+    nt.links.new(fr.outputs["Result"], mul.inputs[2])
+    nt.links.new(mul.outputs[0], b.inputs["Base Color"])
+    sat.data.materials.append(m)
+
+    # --- rings: annulus, radial opacity profile (C, B, Cassini division, A, Encke gap) + ringlets
     me = bpy.data.meshes.new("rings")
     bm = bmesh.new()
-    n = 256
+    n = 384
     vin = [bm.verts.new((ring_in * math.cos(2 * math.pi * i / n), ring_in * math.sin(2 * math.pi * i / n), 0)) for i in range(n)]
     vout = [bm.verts.new((ring_out * math.cos(2 * math.pi * i / n), ring_out * math.sin(2 * math.pi * i / n), 0)) for i in range(n)]
     for i in range(n):
@@ -619,117 +833,334 @@ def build_saturn():
     tc2 = rnt.nodes.new("ShaderNodeTexCoord")
     length = rnt.nodes.new("ShaderNodeVectorMath")
     length.operation = "LENGTH"
+    rnt.links.new(tc2.outputs["Object"], length.inputs[0])
     rng = rnt.nodes.new("ShaderNodeMapRange")
     rng.inputs["From Min"].default_value = ring_in
     rng.inputs["From Max"].default_value = ring_out
-    alpha = rnt.nodes.new("ShaderNodeValToRGB")
-    a = alpha.color_ramp.elements
-    a[0].position, a[0].color = 0.0, (0.15, 0.15, 0.15, 1)    # faint C ring
+    rnt.links.new(length.outputs["Value"], rng.inputs["Value"])
+    op = rnt.nodes.new("ShaderNodeValToRGB")             # opacity vs radius (0 = inner C edge)
+    a = op.color_ramp.elements
+    a[0].position, a[0].color = 0.0, (0.10, 0.10, 0.10, 1)
     a[1].position, a[1].color = 1.0, (0.0, 0.0, 0.0, 1)
-    for pos, v in ((0.2, 0.25), (0.28, 0.9), (0.55, 0.95), (0.58, 0.0), (0.62, 0.0), (0.66, 0.75), (0.9, 0.6), (0.97, 0.0)):
+    for pos, v in ((0.25, 0.22), (0.278, 0.55), (0.30, 0.85), (0.45, 0.97), (0.60, 0.95), (0.68, 0.85),
+                   (0.69, 0.06), (0.745, 0.08), (0.755, 0.72), (0.93, 0.62), (0.935, 0.05), (0.945, 0.05),
+                   (0.95, 0.6), (0.985, 0.55), (0.995, 0.0)):
         e = a.new(pos)
         e.color = (v, v, v, 1)
+    rnt.links.new(rng.outputs["Result"], op.inputs["Fac"])
+    col = rnt.nodes.new("ShaderNodeValToRGB")            # tint vs radius: grey C, creamy B, beige A
+    c = col.color_ramp.elements
+    c[0].position, c[0].color = 0.0, (0.45, 0.43, 0.40, 1)
+    c[1].position, c[1].color = 1.0, (0.70, 0.64, 0.55, 1)
+    c.new(0.30).color = (0.80, 0.72, 0.58, 1)
+    c.new(0.55).color = (0.92, 0.84, 0.70, 1)
+    c.new(0.76).color = (0.78, 0.71, 0.60, 1)
+    rnt.links.new(rng.outputs["Result"], col.inputs["Fac"])
+    rl = rnt.nodes.new("ShaderNodeTexNoise")             # ringlets: 1D noise along radius
+    rl.noise_dimensions = "1D"
+    rl.inputs["Scale"].default_value = 1.0
+    rl.inputs["Detail"].default_value = 6
+    rlm = rnt.nodes.new("ShaderNodeMath")
+    rlm.operation = "MULTIPLY"
+    rlm.inputs[1].default_value = 140.0
+    rnt.links.new(rng.outputs["Result"], rlm.inputs[0])
+    rnt.links.new(rlm.outputs[0], rl.inputs["W"])
+    rlr = rnt.nodes.new("ShaderNodeMapRange")
+    rlr.inputs["From Min"].default_value, rlr.inputs["From Max"].default_value = 0.3, 0.7
+    rlr.inputs["To Min"].default_value, rlr.inputs["To Max"].default_value = 0.55, 1.0
+    rnt.links.new(rl.outputs["Fac"], rlr.inputs["Value"])
+    opm = rnt.nodes.new("ShaderNodeMath")
+    opm.operation = "MULTIPLY"
+    rnt.links.new(op.outputs["Color"], opm.inputs[0])
+    rnt.links.new(rlr.outputs["Result"], opm.inputs[1])
     diff = rnt.nodes.new("ShaderNodeBsdfDiffuse")
-    diff.inputs["Color"].default_value = (0.85, 0.78, 0.65, 1)
+    trl = rnt.nodes.new("ShaderNodeBsdfTranslucent")
+    rnt.links.new(col.outputs["Color"], diff.inputs["Color"])
+    rnt.links.new(col.outputs["Color"], trl.inputs["Color"])
+    dt = rnt.nodes.new("ShaderNodeMixShader")
+    dt.inputs["Fac"].default_value = 0.3
+    rnt.links.new(diff.outputs[0], dt.inputs[1])
+    rnt.links.new(trl.outputs[0], dt.inputs[2])
     tr = rnt.nodes.new("ShaderNodeBsdfTransparent")
     mix = rnt.nodes.new("ShaderNodeMixShader")
-    rnt.links.new(tc2.outputs["Object"], length.inputs[0])
-    rnt.links.new(length.outputs["Value"], rng.inputs["Value"])
-    rnt.links.new(rng.outputs["Result"], alpha.inputs["Fac"])
-    rnt.links.new(alpha.outputs["Color"], mix.inputs["Fac"])
+    rnt.links.new(opm.outputs[0], mix.inputs["Fac"])
     rnt.links.new(tr.outputs[0], mix.inputs[1])
-    rnt.links.new(diff.outputs[0], mix.inputs[2])
+    rnt.links.new(dt.outputs[0], mix.inputs[2])
     rnt.links.new(mix.outputs[0], out.inputs[0])
     rings.data.materials.append(rm)
     rings.parent = sat
     rings.scale = (1, 1, 1 / 0.902)
-    sat.rotation_euler = (math.radians(70), math.radians(18), 0)
-    # rise from below the horizon to ~18° up
-    for f, elev in ((1, -12), (int(end * 0.55), 6), (end, 18)):
-        e = math.radians(elev)
-        sat.location = (D * 0.15, D * math.cos(e), 2.0 + D * math.sin(e))
-        sat.keyframe_insert("location", frame=f)
-    smooth_all(sat)
-    sun = bpy.data.lights.new("sun", "SUN")
-    sun.energy = 3.0
-    sun.color = (1.0, 0.95, 0.88)
-    link(sc, bpy.data.objects.new("sun", sun)).rotation_euler = (math.radians(95), 0, math.radians(-60))
-    # slow camera tilt up as it rises
-    key(cam, "rotation_euler", [(1, math.radians(88)), (end, math.radians(96))], index=0)
-    caption(sc, cam, "What if Saturn replaced the Moon?", 10, 90)
-    caption(sc, cam, "It would fill a third of the sky.\nIts rings, nearly half.", 96, 180)
-    caption(sc, cam, "And at first…\nyou wouldn't feel a thing.", 186, end + 1)
+    # ring plane opened ~24° toward us (we see its sunlit north face), rolled a little
+    sat.rotation_euler = (math.radians(24), math.radians(-14), 0)
+    key(sat, "rotation_euler", [(1, 0.0), (end, math.radians(4))], index=2)  # slow spin: bands drift
+
+    # --- rise: centre elevation from below the horizon to clear by SATURN_CLEAR, then keeps easing up
+    from mathutils import Euler, Vector
+    rot = Euler(sat.rotation_euler).to_matrix()
+    lowest = min([-R * 0.91] + [(rot @ Vector((ring_out * 0.99 * math.cos(t), ring_out * 0.99 * math.sin(t), 0))).z
+                                for t in [2 * math.pi * k / 360 for k in range(360)]])
+    clear_elev = math.degrees(math.atan(-lowest / D)) + 0.4    # planet AND rings just clear the horizon
+
+    def elev(f):
+        if f <= SATURN_CLEAR:
+            t = (f - 1) / (SATURN_CLEAR - 1)
+            t = t * t * (3 - 2 * t) * 0.35 + t * 0.65        # steady, slightly eased
+            return -11.0 + (clear_elev + 11.0) * t
+        u = (f - SATURN_CLEAR) / (end - SATURN_CLEAR)
+        slope = (clear_elev + 11.0) / (SATURN_CLEAR - 1) * 1.0  # keep velocity, then ease out
+        return clear_elev + slope * (end - SATURN_CLEAR) * (u - 0.45 * u * u)
+
+    az = math.radians(-2.0)
+
+    def loc(f, i):
+        e = math.radians(elev(f))
+        return (D * math.sin(az) * math.cos(e), D * math.cos(az) * math.cos(e), H + D * math.sin(e))[i]
+
+    for i in range(3):
+        _key_every_frame(sat, "location", i, lambda f, i=i: loc(f, i), 1, end)
+    # dusk: the Sun has just set behind us, low on the left -> gibbous Saturn, terminator on the right
+    _sun(sc, "sun", (-0.86, -0.50, 0.07), 3.4, color=(1.0, 0.86, 0.70))
+    # --- camera: slow tilt-up following the rise, tiny drift
+    _key_every_frame(cam, "rotation_euler", 0,
+                     lambda f: math.radians(91.5 + 9.5 * _smoothstep(1, end + 30, f)), 1, end)
+    _key_every_frame(cam, "rotation_euler", 2,
+                     lambda f: math.radians(0.6 * math.sin(f / end * math.pi)), 1, end)
+    caption(sc, cam, "What if Saturn replaced the Moon?", 10, 95)
+    caption(sc, cam, "It would fill a third of the sky.\nIts rings, nearly half.", 101, 188)
+    caption(sc, cam, "And at first…\nyou wouldn't feel a thing.", 200, end + 1)
     return sc
 
 
 # ----------------------------------------------------------------------------- 4. pale dot
+PALEDOT_GONE = 256   # "it's gone." (soundtrack boom)
+
+
 def build_paledot():
+    import numpy as np
     sc = new_scene("ominous_paledot", 13)
+    sc.render.use_persistent_data = True
+    _look(sc)
     end = sc.frame_end
-    star_world(sc, density=0.03, strength=6)
-    earth = link(sc, uv_sphere("earth", 1.0, 160, 80))
+    _sky_world(sc, stars=[(150, 0.13, 1.6), (55, 0.08, 3.0)])
+    to_sun = (-0.92, -0.22, 0.30)
+    _sun(sc, "sun", to_sun, 4.5, color=(1.0, 0.97, 0.92))
+    sun_v = np.array(to_sun) / np.linalg.norm(to_sun)
+
+    def vec_const(nt, v):
+        cv = nt.nodes.new("ShaderNodeCombineXYZ")
+        cv.inputs[0].default_value, cv.inputs[1].default_value, cv.inputs[2].default_value = (float(x) for x in v)
+        return cv.outputs[0]
+
+    def sun_dot(nt, lo, hi):
+        """0..1 mask: map_range(dot(world normal, sun dir), lo, hi)."""
+        geo = nt.nodes.new("ShaderNodeNewGeometry")
+        dot = nt.nodes.new("ShaderNodeVectorMath")
+        dot.operation = "DOT_PRODUCT"
+        nt.links.new(geo.outputs["Normal"], dot.inputs[0])
+        nt.links.new(vec_const(nt, sun_v), dot.inputs[1])
+        mr = nt.nodes.new("ShaderNodeMapRange")
+        mr.inputs["From Min"].default_value, mr.inputs["From Max"].default_value = lo, hi
+        nt.links.new(dot.outputs["Value"], mr.inputs["Value"])
+        return mr.outputs["Result"]
+
+    # --- Earth surface
+    earth = link(sc, uv_sphere("earth", 1.0, 192, 96))
     m = mat_principled("earth_m", (0.02, 0.08, 0.25), rough=0.6)
     nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
     tc = nt.nodes.new("ShaderNodeTexCoord")
     land = nt.nodes.new("ShaderNodeTexNoise")
-    land.inputs["Scale"].default_value = 1.6
-    land.inputs["Detail"].default_value = 10
-    lr = nt.nodes.new("ShaderNodeValToRGB")
-    e = lr.color_ramp.elements
-    e[0].position, e[0].color = 0.53, (0.015, 0.06, 0.2, 1)
-    e[1].position, e[1].color = 0.56, (0.16, 0.22, 0.08, 1)
-    e.new(0.66).color = (0.42, 0.33, 0.2, 1)
-    cloud = nt.nodes.new("ShaderNodeTexNoise")
-    cloud.inputs["Scale"].default_value = 4.0
-    cloud.inputs["Detail"].default_value = 12
-    cr = nt.nodes.new("ShaderNodeValToRGB")
-    c = cr.color_ramp.elements
-    c[0].position, c[0].color = 0.52, (0, 0, 0, 1)
-    c[1].position, c[1].color = 0.7, (1, 1, 1, 1)
-    mixc = nt.nodes.new("ShaderNodeMixRGB")
-    mixc.inputs[2].default_value = (0.95, 0.95, 0.95, 1)
-    for a_, b_ in ((tc.outputs["Object"], land.inputs["Vector"]), (land.outputs["Fac"], lr.inputs["Fac"]),
-                   (tc.outputs["Object"], cloud.inputs["Vector"]), (cloud.outputs["Fac"], cr.inputs["Fac"]),
-                   (cr.outputs["Color"], mixc.inputs["Fac"]), (lr.outputs["Color"], mixc.inputs[1]),
-                   (mixc.outputs[0], nt.nodes["Principled BSDF"].inputs["Base Color"])):
-        nt.links.new(a_, b_)
+    land.inputs["Scale"].default_value = 1.15
+    land.inputs["Detail"].default_value = 14
+    land.inputs["Roughness"].default_value = 0.62
+    land.inputs["Distortion"].default_value = 0.35
+    nt.links.new(tc.outputs["Object"], land.inputs["Vector"])
+    lc = nt.nodes.new("ShaderNodeValToRGB")              # ocean depth -> coast -> lowland -> desert -> highland
+    e = lc.color_ramp.elements
+    e[0].position, e[0].color = 0.35, (0.002, 0.008, 0.035, 1)
+    e[1].position, e[1].color = 0.80, (0.42, 0.38, 0.32, 1)
+    for pos, col in ((0.50, (0.004, 0.018, 0.06)), (0.535, (0.012, 0.06, 0.11)), (0.545, (0.09, 0.13, 0.05)),
+                     (0.58, (0.07, 0.12, 0.04)), (0.62, (0.20, 0.18, 0.09)), (0.66, (0.52, 0.38, 0.21)),
+                     (0.72, (0.36, 0.28, 0.18))):
+        e.new(pos).color = (*col, 1)
+    nt.links.new(land.outputs["Fac"], lc.inputs["Fac"])
+    # ice caps: by latitude (object z), wobbled
+    sepz = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Object"], sepz.inputs[0])
+    absz = nt.nodes.new("ShaderNodeMath")
+    absz.operation = "ABSOLUTE"
+    nt.links.new(sepz.outputs["Z"], absz.inputs[0])
+    wob = nt.nodes.new("ShaderNodeMath")
+    wob.operation = "MULTIPLY_ADD"
+    wob.inputs[1].default_value = 0.12
+    nt.links.new(land.outputs["Fac"], wob.inputs[0])
+    nt.links.new(absz.outputs[0], wob.inputs[2])
+    ice = nt.nodes.new("ShaderNodeMapRange")
+    ice.inputs["From Min"].default_value, ice.inputs["From Max"].default_value = 0.93, 0.97
+    nt.links.new(wob.outputs[0], ice.inputs["Value"])
+    icem = nt.nodes.new("ShaderNodeMixRGB")
+    icem.inputs[2].default_value = (0.75, 0.80, 0.86, 1)
+    nt.links.new(ice.outputs["Result"], icem.inputs["Fac"])
+    nt.links.new(lc.outputs["Color"], icem.inputs[1])
+    nt.links.new(icem.outputs[0], b.inputs["Base Color"])
+    # glossy ocean (sun glint), matte land
+    rr = nt.nodes.new("ShaderNodeMapRange")
+    rr.inputs["From Min"].default_value, rr.inputs["From Max"].default_value = 0.535, 0.545
+    rr.inputs["To Min"].default_value, rr.inputs["To Max"].default_value = 0.32, 0.92
+    nt.links.new(land.outputs["Fac"], rr.inputs["Value"])
+    nt.links.new(rr.outputs["Result"], b.inputs["Roughness"])
+    # city lights on the night side only
+    city = nt.nodes.new("ShaderNodeTexNoise")
+    city.inputs["Scale"].default_value = 60.0
+    city.inputs["Detail"].default_value = 4
+    nt.links.new(tc.outputs["Object"], city.inputs["Vector"])
+    cm = nt.nodes.new("ShaderNodeMapRange")
+    cm.inputs["From Min"].default_value, cm.inputs["From Max"].default_value = 0.58, 0.72
+    nt.links.new(city.outputs["Fac"], cm.inputs["Value"])
+    landm = nt.nodes.new("ShaderNodeMapRange")
+    landm.inputs["From Min"].default_value, landm.inputs["From Max"].default_value = 0.545, 0.6
+    nt.links.new(land.outputs["Fac"], landm.inputs["Value"])
+    night = sun_dot(nt, 0.0, -0.2)
+    m1 = nt.nodes.new("ShaderNodeMath")
+    m1.operation = "MULTIPLY"
+    nt.links.new(cm.outputs["Result"], m1.inputs[0])
+    nt.links.new(landm.outputs["Result"], m1.inputs[1])
+    m2 = nt.nodes.new("ShaderNodeMath")
+    m2.operation = "MULTIPLY"
+    m2.inputs[1].default_value = 0.9
+    nt.links.new(m1.outputs[0], m2.inputs[0])
+    m3 = nt.nodes.new("ShaderNodeMath")
+    m3.operation = "MULTIPLY"
+    nt.links.new(m2.outputs[0], m3.inputs[0])
+    nt.links.new(night, m3.inputs[1])
+    b.inputs["Emission Color"].default_value = (1.0, 0.62, 0.28, 1)
+    nt.links.new(m3.outputs[0], b.inputs["Emission Strength"])
     earth.data.materials.append(m)
     earth.rotation_euler = (math.radians(23.4), 0, 0)
-    key(earth, "rotation_euler", [(1, 0.0), (end, math.radians(40))], index=2)
-    atm = link(sc, uv_sphere("atmosphere", 1.025, 128, 64))
+    key(earth, "rotation_euler", [(1, math.radians(-30)), (end, math.radians(2))], index=2)
+
+    # --- cloud shell
+    clouds = link(sc, uv_sphere("clouds", 1.006, 192, 96))
+    cmat = bpy.data.materials.new("clouds_m")
+    cmat.use_nodes = True
+    cnt = cmat.node_tree
+    cnt.nodes.clear()
+    cout = cnt.nodes.new("ShaderNodeOutputMaterial")
+    ctc = cnt.nodes.new("ShaderNodeTexCoord")
+    cmap = cnt.nodes.new("ShaderNodeMapping")
+    cmap.inputs["Scale"].default_value = (1.0, 1.0, 1.6)  # zonal streaks
+    cnt.links.new(ctc.outputs["Object"], cmap.inputs["Vector"])
+    cn = cnt.nodes.new("ShaderNodeTexNoise")
+    cn.inputs["Scale"].default_value = 2.6
+    cn.inputs["Detail"].default_value = 12
+    cn.inputs["Roughness"].default_value = 0.6
+    cn.inputs["Distortion"].default_value = 0.9
+    cnt.links.new(cmap.outputs["Vector"], cn.inputs["Vector"])
+    cr = cnt.nodes.new("ShaderNodeMapRange")
+    cr.inputs["From Min"].default_value, cr.inputs["From Max"].default_value = 0.52, 0.68
+    cnt.links.new(cn.outputs["Fac"], cr.inputs["Value"])
+    cdiff = cnt.nodes.new("ShaderNodeBsdfDiffuse")
+    cdiff.inputs["Color"].default_value = (0.92, 0.93, 0.95, 1)
+    ctr = cnt.nodes.new("ShaderNodeBsdfTransparent")
+    cmix = cnt.nodes.new("ShaderNodeMixShader")
+    cnt.links.new(cr.outputs["Result"], cmix.inputs["Fac"])
+    cnt.links.new(ctr.outputs[0], cmix.inputs[1])
+    cnt.links.new(cdiff.outputs[0], cmix.inputs[2])
+    cnt.links.new(cmix.outputs[0], cout.inputs[0])
+    clouds.data.materials.append(cmat)
+    clouds.rotation_euler = (math.radians(23.4), 0, 0)
+    key(clouds, "rotation_euler", [(1, math.radians(-20)), (end, math.radians(18))], index=2)
+
+    # --- thin atmosphere: emissive limb glow on the day side only
+    atm = link(sc, uv_sphere("atmosphere", 1.022, 160, 80))
     am = bpy.data.materials.new("atm_m")
     am.use_nodes = True
     ant = am.node_tree
     ant.nodes.clear()
-    out = ant.nodes.new("ShaderNodeOutputMaterial")
-    lw = ant.nodes.new("ShaderNodeLayerWeight")
-    lw.inputs["Blend"].default_value = 0.25
+    aout = ant.nodes.new("ShaderNodeOutputMaterial")
+    geo = ant.nodes.new("ShaderNodeNewGeometry")
+    nd = ant.nodes.new("ShaderNodeVectorMath")
+    nd.operation = "DOT_PRODUCT"
+    ant.links.new(geo.outputs["Normal"], nd.inputs[0])
+    ant.links.new(geo.outputs["Incoming"], nd.inputs[1])
+    ab = ant.nodes.new("ShaderNodeMath")
+    ab.operation = "ABSOLUTE"
+    ant.links.new(nd.outputs["Value"], ab.inputs[0])
+    inv = ant.nodes.new("ShaderNodeMath")
+    inv.operation = "SUBTRACT"
+    inv.inputs[0].default_value = 1.0
+    ant.links.new(ab.outputs[0], inv.inputs[1])
+    pw = ant.nodes.new("ShaderNodeMath")
+    pw.operation = "POWER"
+    pw.inputs[1].default_value = 6.0
+    ant.links.new(inv.outputs[0], pw.inputs[0])
+    lit = sun_dot(ant, -0.35, 0.35)
+    mm = ant.nodes.new("ShaderNodeMath")
+    mm.operation = "MULTIPLY"
+    ant.links.new(pw.outputs[0], mm.inputs[0])
+    ant.links.new(lit, mm.inputs[1])
+    base = ant.nodes.new("ShaderNodeMath")             # faint blue haze over the whole day side
+    base.operation = "MULTIPLY_ADD"
+    base.inputs[1].default_value = 0.012
+    ant.links.new(lit, base.inputs[0])
+    ant.links.new(mm.outputs[0], base.inputs[2])
+    st = ant.nodes.new("ShaderNodeMath")
+    st.operation = "MULTIPLY"
+    st.inputs[1].default_value = 2.6
+    ant.links.new(base.outputs[0], st.inputs[0])
     em = ant.nodes.new("ShaderNodeEmission")
-    em.inputs["Color"].default_value = (0.25, 0.5, 1.0, 1)
-    em.inputs["Strength"].default_value = 1.2
+    em.inputs["Color"].default_value = (0.22, 0.48, 1.0, 1)
+    ant.links.new(st.outputs[0], em.inputs["Strength"])
     tr = ant.nodes.new("ShaderNodeBsdfTransparent")
-    mix = ant.nodes.new("ShaderNodeMixShader")
-    ant.links.new(lw.outputs["Facing"], mix.inputs["Fac"])
-    ant.links.new(tr.outputs[0], mix.inputs[1])
-    ant.links.new(em.outputs[0], mix.inputs[2])
-    ant.links.new(mix.outputs[0], out.inputs[0])
+    add = ant.nodes.new("ShaderNodeAddShader")
+    ant.links.new(tr.outputs[0], add.inputs[0])
+    ant.links.new(em.outputs[0], add.inputs[1])
+    ant.links.new(add.outputs[0], aout.inputs[0])
     atm.data.materials.append(am)
-    sun = bpy.data.lights.new("sun", "SUN")
-    sun.energy = 4.0
-    link(sc, bpy.data.objects.new("sun", sun)).rotation_euler = (math.radians(80), 0, math.radians(-50))
-    cam = camera(sc, (0, -3.2, 0), (90, 0, 0), lens=35)
-    # exponential pull-back: 3.2 Earth radii -> 60,000 radii
-    steps = 24
-    for i in range(steps + 1):
-        f = 1 + round((end - 1) * i / steps)
-        t = i / steps
-        ease = t * t * (3 - 2 * t) * 0.35 + t * 0.65
-        cam.location = (0, -3.2 * (60000 / 3.2) ** ease, 0)
-        cam.keyframe_insert("location", frame=f)
-    caption(sc, cam, "This is everything\nyou have ever known.", 10, 90)
-    caption(sc, cam, "Every person who ever lived.\nEvery war. Every love.", 96, 176)
-    caption(sc, cam, "From far enough away…", 182, 250)
-    caption(sc, cam, "it's gone.", 256, end + 1, y=0.0, size=0.09)
+    atm.visible_shadow = False
+
+    # --- camera: slow drift for ~40%, then exponential pull-back to a dot, then nothing.
+    cam = camera(sc, (0, -5.6, 0), (88.5, 0, 0), lens=35)
+    cam.data.clip_start = 0.01
+    cam.data.clip_end = 1e7
+    # log-distance control points (Earth radii), monotone cubic between them
+    pts = [(1, 6.4), (60, 6.8), (125, 7.8), (150, 9.5), (176, 22), (205, 120), (235, 1100),
+           (250, 3200), (PALEDOT_GONE, 6500), (275, 4e4), (end, 4e5)]
+    xs = np.array([p[0] for p in pts], float)
+    ys = np.log([p[1] for p in pts])
+    h = np.diff(xs)
+    dl = np.diff(ys) / h
+    dk = np.zeros_like(ys)  # Fritsch-Carlson slopes
+    for k in range(1, len(xs) - 1):
+        if dl[k - 1] * dl[k] > 0:
+            w1, w2 = 2 * h[k] + h[k - 1], h[k] + 2 * h[k - 1]
+            dk[k] = (w1 + w2) / (w1 / dl[k - 1] + w2 / dl[k])
+    dk[0], dk[-1] = dl[0], dl[-1]
+
+    def logd(f):
+        k = min(max(np.searchsorted(xs, f) - 1, 0), len(xs) - 2)
+        t = (f - xs[k]) / h[k]
+        h00, h10, h01, h11 = 2 * t ** 3 - 3 * t ** 2 + 1, t ** 3 - 2 * t ** 2 + t, -2 * t ** 3 + 3 * t ** 2, t ** 3 - t ** 2
+        return h00 * ys[k] + h10 * h[k] * dk[k] + h01 * ys[k + 1] + h11 * h[k] * dk[k + 1]
+
+    _key_every_frame(cam, "location", 1, lambda f: -float(math.exp(logd(f))), 1, end)
+    _key_every_frame(cam, "location", 0, lambda f: -0.15 + 0.3 * _smoothstep(1, 150, f), 1, end)
+    # The pale dot: once Earth shrinks below ~2 px it would just vanish in the denoiser, so a tiny
+    # emissive point (hidden inside Earth while Earth is bigger) keeps it a single pale-blue pixel
+    # until it fades out at "it's gone".
+    dot = link(sc, uv_sphere("pale_dot", 1.0, 24, 12))
+    dot.data.materials.append(mat_emit("pale_dot_m", (0.55, 0.7, 1.0), 1.0))
+    dot.visible_shadow = False
+    dem = dot.data.materials[0].node_tree.nodes["Emission"].inputs["Strength"]
+    for f, v in ((1, 3.0), (PALEDOT_GONE - 12, 3.0), (PALEDOT_GONE, 0.0)):
+        dem.default_value = v
+        dem.keyframe_insert("default_value", frame=f)
+    px = math.radians(21.8) / RES_X                                # ~ angular size of one pixel
+    _key_every_frame(dot, "scale", -1, lambda f: [max(0.3, 1.1 * px * math.exp(logd(f)))] * 3, 1, end)
+    caption(sc, cam, "This is everything\nyou have ever known.", 10, 92)
+    caption(sc, cam, "Every person who ever lived.\nEvery war. Every love.", 98, 176)
+    caption(sc, cam, "From far enough away…", 184, 250)
+    caption(sc, cam, "it's gone.", PALEDOT_GONE, end + 1, y=0.0, size=0.09)
     return sc
 
 

@@ -183,15 +183,52 @@ def camera(sc, loc, rot_deg, lens=24):
 
 
 def caption(sc, cam, text, f_in, f_out, y=-0.62, size=0.075, color=(1, 1, 1), strength=1.4, name=None):
-    """Text fixed to the camera. y is -1..1 of the frame height. Visible f_in..f_out."""
+    """Text fixed to the camera. y is -1..1 of the frame height. Visible f_in..f_out.
+    Auto-fits: the text block is shrunk (and, if it would get too small, re-wrapped)
+    so it is at most ~85% of the frame width."""
     cu = bpy.data.curves.new(name or f"cap_{f_in}", "FONT")
     cu.body = text
     cu.align_x = "CENTER"
     cu.align_y = "CENTER"
     d = 2.0
     half_h = d * math.tan(math.atan(cam.data.sensor_height / 2 / cam.data.lens))
-    cu.size = size * 2 * half_h
+    half_w = half_h * sc.render.resolution_x / sc.render.resolution_y
+    max_w = 0.85 * 2 * half_w
+    want = size * 2 * half_h
     ob = link(sc, bpy.data.objects.new(cu.name, cu))
+
+    def text_width():  # width of the text block at cu.size == 1
+        cu.size = 1.0
+        try:
+            sc.view_layers[0].update()
+            xs = [v[0] for v in ob.bound_box]
+            w = max(xs) - min(xs)
+            if w > 0:
+                return w
+        except Exception:
+            pass
+        return 0.5 * max(len(s) for s in cu.body.split("\n"))
+
+    w1 = text_width()
+    min_size = 0.65 * want
+    if w1 * min_size > max_w:  # even shrunk it won't fit: re-wrap words into more lines
+        per_char = w1 / max(len(s) for s in cu.body.split("\n"))
+        limit = max(8, int(max_w / (per_char * min_size)))
+        lines = []
+        for para in text.split("\n"):  # keep author's breaks; split long ones evenly
+            k = max(1, math.ceil(len(para) / limit))
+            target = len(para) / k
+            cur = ""
+            for wd in para.split():
+                if cur and len(cur) + 1 + len(wd) / 2 > target and len(lines) < 99:
+                    lines.append(cur)
+                    cur = wd
+                else:
+                    cur = (cur + " " + wd).strip()
+            lines.append(cur)
+        cu.body = "\n".join(lines)
+        w1 = text_width()
+    cu.size = min(want, max_w / w1)
     ob.data.materials.append(mat_emit(cu.name + "_m", color, strength))
     ob.parent = cam
     ob.location = (0, y * half_h, -d)
@@ -246,44 +283,146 @@ def smooth_all(ob):
 
 
 # ----------------------------------------------------------------------------- 1. rogue planet
+def _star_layers(nt, tc, layers):
+    """Point stars large enough (~1-2 px) to survive the denoiser. layers = [(scale, radius, gain)].
+    Returns a color socket (additive star light)."""
+    acc = None
+    for scale, radius, gain in layers:
+        vor = nt.nodes.new("ShaderNodeTexVoronoi")
+        vor.inputs["Scale"].default_value = scale
+        nt.links.new(tc.outputs["Generated"], vor.inputs["Vector"])
+        core = nt.nodes.new("ShaderNodeMapRange")
+        core.inputs["From Min"].default_value = 0.0
+        core.inputs["From Max"].default_value = radius
+        core.inputs["To Min"].default_value = 1.0
+        core.inputs["To Max"].default_value = 0.0
+        nt.links.new(vor.outputs["Distance"], core.inputs["Value"])
+        bw = nt.nodes.new("ShaderNodeRGBToBW")
+        nt.links.new(vor.outputs["Color"], bw.inputs["Color"])
+        pw = nt.nodes.new("ShaderNodeMath")
+        pw.operation = "POWER"
+        pw.inputs[1].default_value = 5.0
+        nt.links.new(bw.outputs[0], pw.inputs[0])
+        m1 = nt.nodes.new("ShaderNodeMath")
+        m1.operation = "MULTIPLY"
+        nt.links.new(core.outputs["Result"], m1.inputs[0])
+        nt.links.new(pw.outputs[0], m1.inputs[1])
+        m2 = nt.nodes.new("ShaderNodeMath")
+        m2.operation = "MULTIPLY"
+        m2.inputs[1].default_value = gain
+        nt.links.new(m1.outputs[0], m2.inputs[0])
+        if acc is None:
+            acc = m2.outputs[0]
+        else:
+            add = nt.nodes.new("ShaderNodeMath")
+            add.operation = "ADD"
+            nt.links.new(acc, add.inputs[0])
+            nt.links.new(m2.outputs[0], add.inputs[1])
+            acc = add.outputs[0]
+    tint = nt.nodes.new("ShaderNodeMixRGB")  # slightly blue-white stars
+    tint.blend_type = "MULTIPLY"
+    tint.inputs["Fac"].default_value = 1.0
+    tint.inputs[2].default_value = (0.85, 0.92, 1.0, 1)
+    nt.links.new(acc, tint.inputs[1])
+    return tint.outputs[0]
+
+
+def _horizon_glow(nt, tc, color, height=0.18, power=3.0):
+    """Color socket: a soft glow band hugging the horizon (world direction z ~ 0)."""
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+    mr = nt.nodes.new("ShaderNodeMapRange")
+    mr.inputs["From Min"].default_value = -0.01
+    mr.inputs["From Max"].default_value = height
+    mr.inputs["To Min"].default_value = 1.0
+    mr.inputs["To Max"].default_value = 0.0
+    nt.links.new(sep.outputs["Z"], mr.inputs["Value"])
+    pw = nt.nodes.new("ShaderNodeMath")
+    pw.operation = "POWER"
+    pw.inputs[1].default_value = power
+    nt.links.new(mr.outputs["Result"], pw.inputs[0])
+    col = nt.nodes.new("ShaderNodeMixRGB")
+    col.blend_type = "MULTIPLY"
+    col.inputs["Fac"].default_value = 1.0
+    col.inputs[2].default_value = (*color, 1)
+    nt.links.new(pw.outputs[0], col.inputs[1])
+    return col.outputs[0]
+
+
+def _add_rgb(nt, a, b):
+    add = nt.nodes.new("ShaderNodeMixRGB")
+    add.blend_type = "ADD"
+    add.inputs["Fac"].default_value = 1.0
+    nt.links.new(a, add.inputs[1])
+    nt.links.new(b, add.inputs[2])
+    return add.outputs[0]
+
+
 def build_rogue():
     sc = new_scene("ominous_rogue", 11)
-    star_world(sc, density=0.04, strength=8)
-    sea(sc)
-    cam = camera(sc, (0, 0, 1.6), (93, 0, 0), lens=22)
-    # The planet: black, faint dark-red rim, approaching from far away.
+    sc.render.use_persistent_data = True
+    end = sc.frame_end
+    # world: visible stars + a faint moonlit band along the horizon
+    nt = sc.world.node_tree
+    nt.nodes.clear()
+    wout = nt.nodes.new("ShaderNodeOutputWorld")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    stars = _star_layers(nt, tc, [(110, 0.17, 140.0), (230, 0.2, 60.0)])
+    glow = _horizon_glow(nt, tc, (0.010, 0.016, 0.030), height=0.16, power=3.0)
+    bg = nt.nodes.new("ShaderNodeBackground")
+    nt.links.new(_add_rgb(nt, stars, glow), bg.inputs["Color"])
+    nt.links.new(bg.outputs[0], wout.inputs[0])
+    # glassy night sea that faintly mirrors the stars
+    so = sea(sc, color=(0.002, 0.003, 0.006), rough=0.035)
+    snt = so.data.materials[0].node_tree
+    for n in snt.nodes:
+        if n.type == "BUMP":
+            n.inputs["Strength"].default_value = 0.06
+        if n.type == "TEX_NOISE":
+            n.inputs["Scale"].default_value = 0.35
+    cam = camera(sc, (0, 0, 1.6), (100, 0, 0), lens=22)
+    # The planet: a near-black disc with only a thin, faint dark-red rim.
     pl = link(sc, uv_sphere("rogue", 1.0, 128, 64))
     m = bpy.data.materials.new("rogue_m")
     m.use_nodes = True
-    nt = m.node_tree
-    nt.nodes.clear()
-    out = nt.nodes.new("ShaderNodeOutputMaterial")
-    lw = nt.nodes.new("ShaderNodeLayerWeight")
-    lw.inputs["Blend"].default_value = 0.08
-    em = nt.nodes.new("ShaderNodeEmission")
-    em.inputs["Color"].default_value = (0.6, 0.06, 0.02, 1)
-    em.inputs["Strength"].default_value = 2.5
-    dark = nt.nodes.new("ShaderNodeBsdfDiffuse")
-    dark.inputs["Color"].default_value = (0.002, 0.002, 0.002, 1)
-    mix = nt.nodes.new("ShaderNodeMixShader")
-    nt.links.new(lw.outputs["Facing"], mix.inputs["Fac"])
-    nt.links.new(dark.outputs[0], mix.inputs[1])
-    nt.links.new(em.outputs[0], mix.inputs[2])
-    nt.links.new(mix.outputs[0], out.inputs[0])
+    mnt = m.node_tree
+    mnt.nodes.clear()
+    out = mnt.nodes.new("ShaderNodeOutputMaterial")
+    lw = mnt.nodes.new("ShaderNodeLayerWeight")
+    lw.inputs["Blend"].default_value = 0.5
+    ramp = mnt.nodes.new("ShaderNodeValToRGB")
+    el = ramp.color_ramp.elements
+    el[0].position, el[0].color = 0.86, (0, 0, 0, 1)
+    el[1].position, el[1].color = 1.0, (0.30, 0.025, 0.008, 1)
+    el.new(0.96).color = (0.10, 0.008, 0.003, 1)
+    nt_link = mnt.links.new
+    nt_link(lw.outputs["Facing"], ramp.inputs["Fac"])
+    em = mnt.nodes.new("ShaderNodeEmission")
+    em.inputs["Strength"].default_value = 0.9
+    nt_link(ramp.outputs["Color"], em.inputs["Color"])
+    dark = mnt.nodes.new("ShaderNodeBsdfDiffuse")
+    dark.inputs["Color"].default_value = (0.004, 0.004, 0.004, 1)
+    addsh = mnt.nodes.new("ShaderNodeAddShader")
+    nt_link(dark.outputs[0], addsh.inputs[0])
+    nt_link(em.outputs[0], addsh.inputs[1])
+    nt_link(addsh.outputs[0], out.inputs[0])
     pl.data.materials.append(m)
-    # Fixed size, moving closer: angular size grows from a dot to most of the sky.
+    pl.visible_shadow = False
+    # Fixed size, approaching: angular size grows exponentially from a speck to most of the sky.
     R = 600.0
-    elev = math.radians(14)
-    end = sc.frame_end
-    dists = [(1, 400000), (int(end * 0.45), 60000), (int(end * 0.8), 9000), (end, 2600)]
-    for f, d in dists:
+    pl.scale = (R, R, R)
+    elev = math.radians(28)
+    d0, d1 = 300000.0, 1350.0
+    for f in range(1, end + 1, 3):
+        t = (f - 1) / (end - 1)
+        d = d0 * (d1 / d0) ** (t ** 1.15)
         pl.location = (0, d * math.cos(elev), 1.6 + d * math.sin(elev))
         pl.keyframe_insert("location", frame=f)
-    pl.scale = (R, R, R)
-    smooth_all(pl)
+    pl.location = (0, d1 * math.cos(elev), 1.6 + d1 * math.sin(elev))
+    pl.keyframe_insert("location", frame=end)
     # faint moonlight so the sea reads
     sun = bpy.data.lights.new("rogue_moonlight", "SUN")
-    sun.energy = 0.08
+    sun.energy = 0.06
     sun.color = (0.6, 0.7, 1.0)
     link(sc, bpy.data.objects.new("moonlight", sun)).rotation_euler = (math.radians(70), 0, math.radians(30))
     caption(sc, cam, "There are more rogue planets\nthan stars in our galaxy.", 12, 92)
@@ -295,49 +434,126 @@ def build_rogue():
 # ----------------------------------------------------------------------------- 2. the sun goes out
 def build_sunout():
     sc = new_scene("ominous_sunout", 13)
+    sc.render.use_persistent_data = True
     end = sc.frame_end
     off = 200  # frame the Sun's light stops
-    star_world(sc, density=0.035, strength=7, sky=(0.18, 0.36, 0.75),
-               mix_key=[(1, 1.0), (off - 1, 1.0), (off + 10, 0.0)])
-    # desert dunes
+    sun_el, sun_az = math.radians(8.5), math.radians(7)   # sun direction (az from +Y toward +X)
+    sdir = (math.sin(sun_az) * math.cos(sun_el), math.cos(sun_az) * math.cos(sun_el), math.sin(sun_el))
+    # world: golden-hour sky gradient + glow around the sun; cuts to black, then stars fade in
+    nt = sc.world.node_tree
+    nt.nodes.clear()
+    wout = nt.nodes.new("ShaderNodeOutputWorld")
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(tc.outputs["Generated"], sep.inputs[0])
+    grad = nt.nodes.new("ShaderNodeMapRange")
+    grad.inputs["From Min"].default_value = 0.0
+    grad.inputs["From Max"].default_value = 0.45
+    nt.links.new(sep.outputs["Z"], grad.inputs["Value"])
+    sky = nt.nodes.new("ShaderNodeValToRGB")
+    se = sky.color_ramp.elements
+    se[0].position, se[0].color = 0.0, (1.0, 0.42, 0.12, 1)
+    se[1].position, se[1].color = 1.0, (0.08, 0.16, 0.42, 1)
+    se.new(0.12).color = (0.85, 0.45, 0.22, 1)
+    se.new(0.4).color = (0.32, 0.30, 0.42, 1)
+    nt.links.new(grad.outputs["Result"], sky.inputs["Fac"])
+    dot = nt.nodes.new("ShaderNodeVectorMath")
+    dot.operation = "DOT_PRODUCT"
+    dot.inputs[1].default_value = sdir
+    nt.links.new(tc.outputs["Generated"], dot.inputs[0])
+    gl = nt.nodes.new("ShaderNodeMapRange")
+    gl.inputs["From Min"].default_value = 0.93
+    gl.inputs["From Max"].default_value = 1.0
+    nt.links.new(dot.outputs["Value"], gl.inputs["Value"])
+    glp = nt.nodes.new("ShaderNodeMath")
+    glp.operation = "POWER"
+    glp.inputs[1].default_value = 3.0
+    nt.links.new(gl.outputs["Result"], glp.inputs[0])
+    glc = nt.nodes.new("ShaderNodeMixRGB")
+    glc.blend_type = "MULTIPLY"
+    glc.inputs["Fac"].default_value = 1.0
+    glc.inputs[2].default_value = (4.0, 1.9, 0.6, 1)
+    nt.links.new(glp.outputs[0], glc.inputs[1])
+    bg_sky = nt.nodes.new("ShaderNodeBackground")
+    nt.links.new(_add_rgb(nt, sky.outputs["Color"], glc.outputs[0]), bg_sky.inputs["Color"])
+    bg_sky.inputs["Strength"].default_value = 1.0
+    bg_sky.inputs["Strength"].keyframe_insert("default_value", frame=off - 1)
+    bg_sky.inputs["Strength"].default_value = 0.0
+    bg_sky.inputs["Strength"].keyframe_insert("default_value", frame=off)
+    stars = _star_layers(nt, tc, [(110, 0.17, 140.0), (230, 0.2, 60.0)])
+    bg_st = nt.nodes.new("ShaderNodeBackground")
+    nt.links.new(stars, bg_st.inputs["Color"])
+    for f, v in ((1, 0.0), (off + 6, 0.0), (off + 50, 1.0)):
+        bg_st.inputs["Strength"].default_value = v
+        bg_st.inputs["Strength"].keyframe_insert("default_value", frame=f)
+    addw = nt.nodes.new("ShaderNodeAddShader")
+    nt.links.new(bg_sky.outputs[0], addw.inputs[0])
+    nt.links.new(bg_st.outputs[0], addw.inputs[1])
+    nt.links.new(addw.outputs[0], wout.inputs[0])
+    if nt.animation_data and nt.animation_data.action:
+        for fc in getattr(nt.animation_data.action, "fcurves", []) or []:
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
+    # desert dunes: broad swells + sharp-crested ridges, grazing golden light
     import bmesh
     me = bpy.data.meshes.new("dunes")
     bm = bmesh.new()
-    bmesh.ops.create_grid(bm, x_segments=160, y_segments=160, size=1200)
+    bmesh.ops.create_grid(bm, x_segments=260, y_segments=260, size=1200)
     bm.to_mesh(me)
     bm.free()
     dunes = link(sc, bpy.data.objects.new("dunes", me))
-    tex = bpy.data.textures.new("dune_tex", "CLOUDS")
-    tex.noise_scale = 160
-    disp = dunes.modifiers.new("disp", "DISPLACE")
-    disp.texture = tex
-    disp.strength = 28
-    disp.mid_level = 0.5
+    dunes.location = (0, 800, 0)
+    t1 = bpy.data.textures.new("dune_swell", "CLOUDS")
+    t1.noise_scale = 260
+    d1 = dunes.modifiers.new("swell", "DISPLACE")
+    d1.texture, d1.strength, d1.mid_level = t1, 40, 0.5
+    t2 = bpy.data.textures.new("dune_ridge", "CLOUDS")
+    t2.noise_type = "HARD_NOISE"
+    t2.noise_scale = 90
+    t2.noise_depth = 1
+    d2 = dunes.modifiers.new("ridge", "DISPLACE")
+    d2.texture, d2.strength, d2.mid_level = t2, -22, 0.5
     for p in me.polygons:
         p.use_smooth = True
-    dunes.data.materials.append(mat_principled("sand", (0.62, 0.42, 0.22), rough=0.9))
-    cam = camera(sc, (0, -300, 30), (84, 0, 0), lens=26)
+    sand = mat_principled("sand", (0.78, 0.47, 0.22), rough=0.85)
+    snt = sand.node_tree
+    stc = snt.nodes.new("ShaderNodeTexCoord")
+    wave = snt.nodes.new("ShaderNodeTexWave")  # wind ripples
+    wave.inputs["Scale"].default_value = 0.35
+    wave.inputs["Distortion"].default_value = 6.0
+    wave.inputs["Detail"].default_value = 2
+    sb = snt.nodes.new("ShaderNodeBump")
+    sb.inputs["Strength"].default_value = 0.25
+    snt.links.new(stc.outputs["Object"], wave.inputs["Vector"])
+    snt.links.new(wave.outputs["Fac"], sb.inputs["Height"])
+    snt.links.new(sb.outputs["Normal"], snt.nodes["Principled BSDF"].inputs["Normal"])
+    dunes.data.materials.append(sand)
+    cam = camera(sc, (0, -300, 48), (87, 0, 0), lens=26)
     sun = bpy.data.lights.new("sun", "SUN")
-    sun.energy = 4.0
-    sun.angle = math.radians(0.6)
+    sun.angle = math.radians(1.0)
+    sun.color = (1.0, 0.72, 0.45)
     sun_ob = link(sc, bpy.data.objects.new("sun", sun))
-    sun_ob.rotation_euler = (math.radians(70), 0, math.radians(180))
-    key(sun, "energy", [(1, 4.0), (off - 1, 4.0), (off, 0.0)])
-    # visible sun disc in the sky
+    # light travels along -sdir
+    sun_ob.rotation_euler = (math.pi / 2 - sun_el, 0, math.pi - sun_az)
+    sun.energy = 5.0
+    sun.keyframe_insert("energy", frame=off - 1)
+    sun.energy = 0.0
+    sun.keyframe_insert("energy", frame=off)
+    # visible sun disc, low over the dunes
     disc = link(sc, uv_sphere("sun_disc", 1.0, 48, 24))
-    disc_m = mat_emit("sun_disc_m", (1.0, 0.92, 0.75), 30)
-    disc.data.materials.append(disc_m)
+    disc.data.materials.append(mat_emit("sun_disc_m", (1.0, 0.78, 0.5), 25))
+    disc.visible_shadow = False
     d = 50000
-    disc.location = (0, -300 + d * math.cos(math.radians(20)), 30 + d * math.sin(math.radians(20)))
-    disc.scale = [d * math.tan(math.radians(0.53))] * 3
+    disc.location = (d * sdir[0], -300 + d * sdir[1], 48 + d * sdir[2])
+    disc.scale = [d * math.tan(math.radians(1.1))] * 3
     key(disc, "hide_render", [(1, False), (off, True)])
     # countdown text driven per frame
-    cnt = caption(sc, cam, "08:20", 70, off, y=0.55, size=0.12, name="countdown")
+    cnt = caption(sc, cam, "08:20", 70, off, y=0.62, size=0.12, name="countdown")
     caption(sc, cam, "If the Sun vanished right now…", 8, 70)
     caption(sc, cam, "you'd still see it shining for\n8 minutes and 20 seconds.", 72, 150)
     caption(sc, cam, "Its last light is already\non the way.", 152, off)
-    caption(sc, cam, "Then darkness.", off + 6, off + 40, y=0.0, size=0.09)
-    caption(sc, cam, "Then the cold.", off + 44, end + 1, y=0.0, size=0.09)
+    caption(sc, cam, "Then darkness.", off + 6, off + 50, y=0.0, size=0.09)
+    caption(sc, cam, "Then the cold.", off + 56, end + 1, y=0.0, size=0.09)
 
     def tick(scene, *_):
         if scene.name != sc.name:
@@ -530,9 +746,14 @@ def render(sc, name):
         path = os.path.join(out, f"frame_{f:04d}.png")
         if FRAMES_ONLY is None and os.path.exists(path):
             continue  # resumable
-        sc.frame_set(f)
-        sc.render.filepath = path
-        bpy.ops.render.render(write_still=True, scene=sc.name)
+        # Headless bpy has no window, so sc is not the context scene: frame_set() then
+        # never evaluates its animation and the render uses stale transforms (identity
+        # camera sitting in the sea plane -> black frames, captions stuck hidden).
+        # Overriding the context scene makes frame_set/render evaluate sc properly.
+        with bpy.context.temp_override(scene=sc):
+            sc.frame_set(f)
+            sc.render.filepath = path
+            bpy.ops.render.render(write_still=True, scene=sc.name)
         print(f"[ominous] {name} {f}/{sc.frame_end}", flush=True)
 
 

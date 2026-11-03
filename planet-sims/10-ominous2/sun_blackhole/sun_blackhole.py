@@ -438,16 +438,15 @@ def build_world(sc):
     nt.links.new(D2, dust.inputs["Vector"])
     dcore = node(nt, "ShaderNodeMapRange", **{"From Min": 0.0, "From Max": 0.22, "To Min": 1.0, "To Max": 0.0})
     nt.links.new(dust.outputs["Distance"], dcore.inputs["Value"])
-    acc = math_op(nt, "ADD", acc, math_op(nt, "MULTIPLY", dcore.outputs["Result"], 0.25))
     sep2 = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(D2, sep2.inputs[0])
     band = math_op(nt, "EXPONENT", math_op(nt, "MULTIPLY", math_op(nt, "POWER",
                    math_op(nt, "DIVIDE", math_op(nt, "SUBTRACT", sep2.outputs["Z"], 0.18), 0.22), 2.0), -1.0))
-    neb = node(nt, "ShaderNodeTexNoise", Scale=7.0, Detail=10.0, Roughness=0.62)
+    neb = node(nt, "ShaderNodeTexNoise", Scale=4.0, Detail=2.0, Roughness=0.5)
     nt.links.new(D2, neb.inputs["Vector"])
     nebm = node(nt, "ShaderNodeMapRange", **{"From Min": 0.42, "From Max": 0.75})
     nt.links.new(neb.outputs["Fac"], nebm.inputs["Value"])
-    nebv = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", band, nebm.outputs["Result"]), 0.012)
+    nebv = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", band, nebm.outputs["Result"]), 0.008)
     # rings (theta ~ sqrt(p2)): a thin bright Einstein ring with a soft halo, and a faint photon ring
     th = math_op(nt, "SQRT", p2)
 

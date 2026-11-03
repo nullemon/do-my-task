@@ -611,14 +611,14 @@ def build_earth():
     bd = sun_dot(ont, star_dir, -1.0, 1.0)                        # 0..1, 1 = facing the burst
     v = math_(ont, "ADD", on.outputs["Fac"], math_(ont, "MULTIPLY", bd, 0.45))
     thr_n = ont.nodes.new("ShaderNodeValue")
-    key_sock(thr_n.outputs[0], lambda f: 2.0 - 1.16 * smoothstep(TEAR0, TEAR1, f) ** 0.8, 1, END, 3)
+    key_sock(thr_n.outputs[0], lambda f: 2.0 - 1.25 * smoothstep(TEAR0, TEAR1, f) ** 0.8, 1, END, 3)
     dd = math_(ont, "SUBTRACT", v, thr_n.outputs[0])
     keep = maprange(ont, dd, -0.025, 0.02, 1.0, 0.0)
-    edge = maprange(ont, math_(ont, "ABSOLUTE", dd), 0.0, 0.03, 1.0, 0.0)
+    edge = maprange(ont, math_(ont, "ABSOLUTE", dd), 0.0, 0.018, 1.0, 0.0)
     edge = math_(ont, "MULTIPLY", edge, maprange(ont, thr_n.outputs[0], 1.6, 1.5))   # only once tearing
     olimb = math_(ont, "POWER", math_(ont, "SUBTRACT", 1.0, facing(ont)), 5.0)
     base = math_(ont, "ADD", math_(ont, "MULTIPLY", olimb, 1.0), 0.03)
-    s = math_(ont, "ADD", math_(ont, "MULTIPLY", base, keep), math_(ont, "MULTIPLY", edge, 0.6))
+    s = math_(ont, "ADD", math_(ont, "MULTIPLY", base, keep), math_(ont, "MULTIPLY", edge, 1.4))
     gain = ont.nodes.new("ShaderNodeValue")
 
     def oz_gain(f):

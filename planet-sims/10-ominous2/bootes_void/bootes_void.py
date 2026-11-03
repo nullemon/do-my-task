@@ -451,7 +451,7 @@ def build():
         gain.inputs[1].default_value = v
         gain.inputs[1].keyframe_insert("default_value", frame=sec(t))
     # apparent-brightness falloff tightens: the walls recede into darkness
-    for t, v in [(0, 90.0), (16, 85.0), (30, 45.0), (42, 28.0), (CUT_S, 20.0)]:
+    for t, v in [(0, 90.0), (16, 85.0), (30, 55.0), (42, 34.0), (CUT_S, 22.0)]:
         d0.inputs[1].default_value = v
         d0.inputs[1].keyframe_insert("default_value", frame=sec(t))
 
@@ -480,7 +480,7 @@ def build():
         for f, hide in ((1, True), (sec(t0) - 2, False), (sec(t1) + 2, True)):
             hob.hide_render = hide
             hob.keyframe_insert("hide_render", frame=f)
-    for t, v in [(0, 0.0), (29, 0.0), (31.5, 0.7), (40, 0.7), (43, 0.5), (54, 0.3)]:
+    for t, v in [(0, 0.0), (29, 0.0), (31.5, 0.38), (40, 0.38), (43, 0.3), (54, 0.18)]:
         hgain.inputs[1].default_value = v
         hgain.inputs[1].keyframe_insert("default_value", frame=sec(t))
 

@@ -298,6 +298,42 @@ def star_layers(nt, tc, layers):
     return acc
 
 
+def add_glare(sc):
+    """Bloom on the brightest parts (shell, flash). Blender 5.x node-group compositor or 4.x scene tree."""
+    if hasattr(sc, "compositing_node_group"):
+        ng = bpy.data.node_groups.new("supernova_comp", "CompositorNodeTree")
+        ng.interface.new_socket("Image", in_out="OUTPUT", socket_type="NodeSocketColor")
+        rl = ng.nodes.new("CompositorNodeRLayers")
+        out = ng.nodes.new("NodeGroupOutput")
+        sc.compositing_node_group = ng
+        nt = ng
+    else:
+        sc.use_nodes = True
+        nt = sc.node_tree
+        nt.nodes.clear()
+        rl = nt.nodes.new("CompositorNodeRLayers")
+        out = nt.nodes.new("CompositorNodeComposite")
+    g = nt.nodes.new("CompositorNodeGlare")
+    settings = {"Type": "Bloom", "Quality": "Medium", "Threshold": 2.0, "Strength": 0.6, "Size": 0.7}
+    for k, v in settings.items():
+        if k in g.inputs:
+            try:
+                g.inputs[k].default_value = v
+            except Exception:
+                pass
+    if "Type" not in g.inputs:  # 4.x: properties
+        g.glare_type = "BLOOM" if "BLOOM" in [i.identifier for i in g.bl_rna.properties["glare_type"].enum_items] else "FOG_GLOW"
+        g.quality = "MEDIUM"
+        g.threshold = 2.0
+        if hasattr(g, "mix"):
+            g.mix = -0.4
+        if hasattr(g, "size"):
+            g.size = 8
+    nt.links.new(rl.outputs["Image"], g.inputs["Image"])
+    nt.links.new(g.outputs["Image"], out.inputs[0])
+    print("[supernova] glare on", flush=True)
+
+
 # ----------------------------------------------------------------------------- the scene
 SUN_EL = math.radians(27.0)
 SDIR = (0.0, math.cos(SUN_EL), math.sin(SUN_EL))      # ground set: direction to the Sun
@@ -458,7 +494,7 @@ def build():
     ent.links.new(cl.outputs["Fac"], clm.inputs["Value"])
     # the clouds burn off as the planet heats
     heat = ent.nodes.new("ShaderNodeValue")
-    heat_fn = lambda f: ease_pts([(CUT, 0.0), (S(40.0), 0.0), (S(45.5), 0.6), (ENGULF, 3.0), (WHITE2[0], 8.0)], f)
+    heat_fn = lambda f: ease_pts([(CUT, 0.0), (S(38.5), 0.0), (S(42.0), 1.0), (S(45.5), 2.0), (ENGULF, 4.5), (WHITE2[0], 10.0)], f)
     anim_sock(heat.outputs[0], heat_fn)
     cloud_amt = math_node(nt=ent, op="MULTIPLY", a=clm.outputs["Result"],
                           b=math_node(ent, "MAXIMUM", math_node(ent, "SUBTRACT", 1.0, math_node(ent, "MULTIPLY", heat.outputs[0], 0.6)), 0.0))
@@ -481,15 +517,15 @@ def build():
     glowv = math_node(ent, "MULTIPLY", math_node(ent, "MULTIPLY", day, lav), heat.outputs[0])
     hot = ent.nodes.new("ShaderNodeValToRGB")
     he = hot.color_ramp.elements
-    he[0].position, he[0].color = 0.0, (0.5, 0.05, 0.0, 1)
+    he[0].position, he[0].color = 0.0, (0.9, 0.08, 0.0, 1)
     he[1].position, he[1].color = 1.0, (1.0, 0.95, 0.85, 1)
     he.new(0.4).color = (1.0, 0.35, 0.05, 1)
-    nt_l(math_node(ent, "MULTIPLY", glowv, 0.18), hot.inputs["Fac"])
+    nt_l(math_node(ent, "MULTIPLY", glowv, 0.12), hot.inputs["Fac"])
     for nm in ("Emission Color", "Emission"):
         if nm in eb.inputs:
             nt_l(hot.outputs["Color"], eb.inputs[nm])
             break
-    nt_l(math_node(ent, "MULTIPLY", glowv, 2.5), eb.inputs["Emission Strength"])
+    nt_l(math_node(ent, "MULTIPLY", glowv, 4.0), eb.inputs["Emission Strength"])
     earth.data.materials.append(em_)
     show_between(earth, CUT, BLACK)
 
@@ -497,7 +533,7 @@ def build():
     plume = link(sc, uv_sphere("plume", 1.0, 96, 48))
     plume.rotation_mode = "QUATERNION"
     plume.rotation_quaternion = (-u).to_track_quat("X", "Z")
-    pk = lambda f: smoothstep(S(45.0), WHITE2[0], f)
+    pk = lambda f: smoothstep(S(42.0), WHITE2[0], f)
     anim(plume, "scale", lambda f: (R_E * (1.05 + 1.8 * pk(f) ** 1.3), R_E * (1.05 + 0.18 * pk(f)), R_E * (1.05 + 0.18 * pk(f))))
     anim(plume, "location", lambda f: tuple(O + (-u) * (R_E * 1.3 * pk(f) ** 1.3)))
     pm = bpy.data.materials.new("plume_m")
@@ -512,14 +548,17 @@ def build():
     pn.inputs["Scale"].default_value = 3.0
     pn.inputs["Detail"].default_value = 8
     pn.inputs["Distortion"].default_value = 1.5
-    pnt.links.new(ptc.outputs["Object"], pn.inputs["Vector"])
+    pmap = node(pnt, "ShaderNodeMapping")
+    pmap.inputs["Scale"].default_value = (0.35, 4.0, 4.0)   # streaks along the outflow
+    pnt.links.new(ptc.outputs["Object"], pmap.inputs["Vector"])
+    pnt.links.new(pmap.outputs["Vector"], pn.inputs["Vector"])
     anim_sock(pn.inputs["W"], lambda f: 0.004 * f)
     pstr = pnt.nodes.new("ShaderNodeValue")
-    anim_sock(pstr.outputs[0], lambda f: 0.15 * smoothstep(CUT, S(39), f) + 4.0 * pk(f))
+    anim_sock(pstr.outputs[0], lambda f: 0.3 * smoothstep(CUT, S(39), f) + 14.0 * pk(f) ** 0.7)
     edge = math_node(pnt, "POWER", math_node(pnt, "SUBTRACT", 1.0, lw.outputs["Facing"]), 2.0)
     pv = math_node(pnt, "MULTIPLY", math_node(pnt, "MULTIPLY", edge, math_node(pnt, "MULTIPLY", math_node(pnt, "POWER", pn.outputs["Fac"], 3.0), 4.0)),
                    pstr.outputs[0])
-    pemi = node(pnt, "ShaderNodeEmission", Color=(1.0, 0.45, 0.12, 1))
+    pemi = node(pnt, "ShaderNodeEmission", Color=(1.0, 0.55, 0.16, 1))
     pnt.links.new(pv, pemi.inputs["Strength"])
     ptr = pnt.nodes.new("ShaderNodeBsdfTransparent")
     padd = pnt.nodes.new("ShaderNodeAddShader")
@@ -539,9 +578,10 @@ def build():
     n_r, n_a = 220, 256
     centre = O + u * D_SHELL
     for i, (off, col, gain, alpha) in enumerate((
-            (0.0, (1.0, 0.72, 0.38), 5.0, 0.35),
-            (140.0, (1.0, 0.40, 0.10), 3.5, 0.35),
-            (420.0, (0.9, 0.20, 0.04), 2.5, 0.8))):
+            (0.0, (1.0, 0.42, 0.08), 10.0, 0.45),     # leading edge: orange
+            (140.0, (1.0, 0.82, 0.50), 22.0, 0.4),    # yellow-white
+            (420.0, (0.80, 0.88, 1.0), 45.0, 1.0),    # white-blue hot core
+            (-110.0, (1.0, 0.55, 0.18), 1.6, 0.0))):  # soft glow haze ahead of the front (glare)
         me = bpy.data.meshes.new(f"shell{i}")
         bm = bmesh.new()
         tip = bm.verts.new(tuple(a))
@@ -583,19 +623,24 @@ def build():
         mt.links.new(mtc.outputs["Object"], n1.inputs["Vector"])
         anim_sock(n1.inputs["W"], lambda f, i=i: 0.002 * f + 3.1 * i)
         fil = node(mt, "ShaderNodeMapRange")
-        fil.inputs["From Min"].default_value, fil.inputs["From Max"].default_value = 0.38, 0.72
+        fil.inputs["From Min"].default_value, fil.inputs["From Max"].default_value = 0.42, 0.70
         mt.links.new(n1.outputs["Fac"], fil.inputs["Value"])
-        fil_v = math_node(mt, "POWER", fil.outputs["Result"], 1.8)
+        fil_v = math_node(mt, "POWER", fil.outputs["Result"], 2.2)
         lw2 = node(mt, "ShaderNodeLayerWeight", Blend=0.5)
         limb = math_node(mt, "ADD", 0.35, math_node(mt, "MULTIPLY", math_node(mt, "POWER", math_node(
             mt, "SUBTRACT", 1.0, lw2.outputs["Facing"]), 3.0), 3.0))
-        strength = math_node(mt, "MULTIPLY", math_node(mt, "MULTIPLY", math_node(mt, "ADD", fil_v, 0.12), limb), gain)
+        strength = math_node(mt, "MULTIPLY", math_node(mt, "MULTIPLY", math_node(mt, "ADD", fil_v, 0.18 + 0.3 * (i == 2)), limb), gain)
         emi = node(mt, "ShaderNodeEmission", Color=(*col, 1))
         mt.links.new(strength, emi.inputs["Strength"])
         tr = mt.nodes.new("ShaderNodeBsdfTransparent")
         mix = mt.nodes.new("ShaderNodeMixShader")
-        mt.links.new(math_node(mt, "MINIMUM", math_node(mt, "MULTIPLY", math_node(mt, "ADD", fil_v, 0.35), alpha), 1.0),
-                     mix.inputs["Fac"])
+        if i == 3:   # haze: smooth, additive, mostly transparent
+            strength = math_node(mt, "MULTIPLY", limb, gain)
+            mt.links.new(strength, emi.inputs["Strength"])
+            mix.inputs["Fac"].default_value = 0.35
+        else:
+            mt.links.new(math_node(mt, "MINIMUM", math_node(mt, "MULTIPLY", math_node(mt, "ADD", fil_v, 0.35), alpha), 1.0),
+                         mix.inputs["Fac"])
         mt.links.new(tr.outputs[0], mix.inputs[1])
         mt.links.new(emi.outputs[0], mix.inputs[2])
         mt.links.new(mix.outputs[0], mout.inputs[0])
@@ -662,6 +707,47 @@ def build():
     blk.location = (0, 0, -2.5)
     blk.visible_shadow = False
     show_between(blk, BLACK, END + 2)
+
+    # ---------------- subtle dark gradient behind the bottom captions in the bright space shots
+    gd = 2.3
+    hh = gd * 12.0 / 34.0                      # half frame height at that distance (space lens 34 mm)
+    gme = bpy.data.meshes.new("cap_grad")
+    y0, y1 = -1.05 * hh, -0.05 * hh
+    gme.from_pydata([(-hh, y0, 0), (hh, y0, 0), (hh, y1, 0), (-hh, y1, 0)], [], [(0, 1, 2, 3)])
+    grad_ob = link(sc, bpy.data.objects.new("cap_grad", gme))
+    gm = bpy.data.materials.new("cap_grad_m")
+    gm.use_nodes = True
+    gnt = gm.node_tree
+    gnt.nodes.clear()
+    gout = gnt.nodes.new("ShaderNodeOutputMaterial")
+    gtc = gnt.nodes.new("ShaderNodeTexCoord")
+    gsep = gnt.nodes.new("ShaderNodeSeparateXYZ")
+    gnt.links.new(gtc.outputs["Generated"], gsep.inputs[0])
+    gfac = math_node(gnt, "MULTIPLY", math_node(gnt, "POWER", math_node(gnt, "SUBTRACT", 1.0, gsep.outputs["Y"]), 1.6), 0.72)
+    gblk = node(gnt, "ShaderNodeEmission", Color=(0, 0, 0, 1), Strength=0.0)
+    gtr = gnt.nodes.new("ShaderNodeBsdfTransparent")
+    gmix = gnt.nodes.new("ShaderNodeMixShader")
+    gnt.links.new(gfac, gmix.inputs["Fac"])
+    gnt.links.new(gtr.outputs[0], gmix.inputs[1])
+    gnt.links.new(gblk.outputs[0], gmix.inputs[2])
+    gnt.links.new(gmix.outputs[0], gout.inputs[0])
+    grad_ob.data.materials.append(gm)
+    grad_ob.parent = cam
+    grad_ob.location = (0, 0, -gd)
+    grad_ob.visible_shadow = False
+    try:
+        grad_ob.visible_diffuse = grad_ob.visible_glossy = grad_ob.visible_transmission = False
+    except AttributeError:
+        pass
+    show_between(grad_ob, WHITE_OUT[0], WHITE2[0])
+
+    # ---------------- glare / bloom in the compositor (best effort across Blender versions)
+    # (compositing needs a GPU/EGL context in Blender 5 headless: opt-in with --glare on GPU machines)
+    try:
+        if "--glare" in argv:
+            add_glare(sc)
+    except Exception as e:  # noqa: BLE001
+        print(f"[supernova] glare skipped: {e}", flush=True)
 
     # ---------------- captions (fitted for the lens in use when each is shown)
     def cap(text, span, **kw):

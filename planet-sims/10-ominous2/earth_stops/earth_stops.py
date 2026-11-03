@@ -120,7 +120,8 @@ def make_audio(path, sr=44100):
         cres = 0.22 * ramp(tj - 4.5, tj - 0.05) ** 3 * (1 - ramp(tj - 0.05, tj))
         mix[ch] += nz * (sw + cres)
     # supersonic wind roar between the jolt and the wave hit (louder as the wave nears)
-    gust = np.interp(t, np.arange(0, DURATION + 1, 0.4), rng.uniform(0.6, 1.0, int(DURATION / 0.4) + 2))
+    gx = np.arange(0, DURATION + 1, 0.4)
+    gust = np.interp(t, gx, rng.uniform(0.6, 1.0, len(gx)))
     for ch in range(2):
         roar = filt(rng.standard_normal(n), lo=90, hi=2200) * 0.30 + filt(rng.standard_normal(n), hi=120) * 0.6
         env = ramp(tj, tj + 0.35) * (1 - ramp(th - 0.02, th)) * gust * (0.75 + 0.6 * ramp(th - 7, th))

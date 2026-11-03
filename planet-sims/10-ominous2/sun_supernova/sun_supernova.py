@@ -517,7 +517,7 @@ def build():
     glowv = math_node(ent, "MULTIPLY", math_node(ent, "MULTIPLY", day, lav), heat.outputs[0])
     hot = ent.nodes.new("ShaderNodeValToRGB")
     he = hot.color_ramp.elements
-    he[0].position, he[0].color = 0.0, (0.9, 0.08, 0.0, 1)
+    he[0].position, he[0].color = 0.0, (1.0, 0.18, 0.01, 1)
     he[1].position, he[1].color = 1.0, (1.0, 0.95, 0.85, 1)
     he.new(0.4).color = (1.0, 0.35, 0.05, 1)
     nt_l(math_node(ent, "MULTIPLY", glowv, 0.12), hot.inputs["Fac"])
@@ -534,8 +534,8 @@ def build():
     plume.rotation_mode = "QUATERNION"
     plume.rotation_quaternion = (-u).to_track_quat("X", "Z")
     pk = lambda f: smoothstep(S(42.0), WHITE2[0], f)
-    anim(plume, "scale", lambda f: (R_E * (1.05 + 1.8 * pk(f) ** 1.3), R_E * (1.05 + 0.18 * pk(f)), R_E * (1.05 + 0.18 * pk(f))))
-    anim(plume, "location", lambda f: tuple(O + (-u) * (R_E * 1.3 * pk(f) ** 1.3)))
+    anim(plume, "scale", lambda f: (R_E * (1.04 + 1.2 * pk(f) ** 1.3), R_E * (1.05 + 0.18 * pk(f)), R_E * (1.05 + 0.18 * pk(f))))
+    anim(plume, "location", lambda f: tuple(O + (-u) * (R_E * 0.9 * pk(f) ** 1.3)))
     pm = bpy.data.materials.new("plume_m")
     pm.use_nodes = True
     pnt = pm.node_tree
@@ -549,13 +549,13 @@ def build():
     pn.inputs["Detail"].default_value = 8
     pn.inputs["Distortion"].default_value = 1.5
     pmap = node(pnt, "ShaderNodeMapping")
-    pmap.inputs["Scale"].default_value = (0.35, 4.0, 4.0)   # streaks along the outflow
+    pmap.inputs["Scale"].default_value = (0.5, 2.5, 2.5)   # streaks along the outflow
     pnt.links.new(ptc.outputs["Object"], pmap.inputs["Vector"])
     pnt.links.new(pmap.outputs["Vector"], pn.inputs["Vector"])
     anim_sock(pn.inputs["W"], lambda f: 0.004 * f)
     pstr = pnt.nodes.new("ShaderNodeValue")
-    anim_sock(pstr.outputs[0], lambda f: 0.3 * smoothstep(CUT, S(39), f) + 14.0 * pk(f) ** 0.7)
-    edge = math_node(pnt, "POWER", math_node(pnt, "SUBTRACT", 1.0, lw.outputs["Facing"]), 2.0)
+    anim_sock(pstr.outputs[0], lambda f: 0.3 * smoothstep(CUT, S(39), f) + 3.5 * pk(f) ** 0.7)
+    edge = math_node(pnt, "POWER", math_node(pnt, "SUBTRACT", 1.0, lw.outputs["Facing"]), 3.0)
     pv = math_node(pnt, "MULTIPLY", math_node(pnt, "MULTIPLY", edge, math_node(pnt, "MULTIPLY", math_node(pnt, "POWER", pn.outputs["Fac"], 3.0), 4.0)),
                    pstr.outputs[0])
     pemi = node(pnt, "ShaderNodeEmission", Color=(1.0, 0.55, 0.16, 1))
@@ -578,10 +578,10 @@ def build():
     n_r, n_a = 220, 256
     centre = O + u * D_SHELL
     for i, (off, col, gain, alpha) in enumerate((
-            (0.0, (1.0, 0.42, 0.08), 10.0, 0.45),     # leading edge: orange
-            (140.0, (1.0, 0.82, 0.50), 22.0, 0.4),    # yellow-white
-            (420.0, (0.80, 0.88, 1.0), 45.0, 1.0),    # white-blue hot core
-            (-110.0, (1.0, 0.55, 0.18), 1.6, 0.0))):  # soft glow haze ahead of the front (glare)
+            (0.0, (1.0, 0.38, 0.06), 2.2, 0.5),       # leading edge: orange
+            (140.0, (1.0, 0.80, 0.45), 5.0, 0.45),    # yellow-white
+            (420.0, (0.92, 0.95, 1.0), 10.0, 0.9),     # white-blue hot core
+            (-110.0, (1.0, 0.50, 0.15), 0.35, 0.0))):  # soft glow haze ahead of the front (glare)  # soft glow haze ahead of the front (glare)
         me = bpy.data.meshes.new(f"shell{i}")
         bm = bmesh.new()
         tip = bm.verts.new(tuple(a))
@@ -627,9 +627,9 @@ def build():
         mt.links.new(n1.outputs["Fac"], fil.inputs["Value"])
         fil_v = math_node(mt, "POWER", fil.outputs["Result"], 2.2)
         lw2 = node(mt, "ShaderNodeLayerWeight", Blend=0.5)
-        limb = math_node(mt, "ADD", 0.35, math_node(mt, "MULTIPLY", math_node(mt, "POWER", math_node(
-            mt, "SUBTRACT", 1.0, lw2.outputs["Facing"]), 3.0), 3.0))
-        strength = math_node(mt, "MULTIPLY", math_node(mt, "MULTIPLY", math_node(mt, "ADD", fil_v, 0.18 + 0.3 * (i == 2)), limb), gain)
+        limb = math_node(mt, "ADD", 0.5, math_node(mt, "MULTIPLY", math_node(mt, "POWER", math_node(
+            mt, "SUBTRACT", 1.0, lw2.outputs["Facing"]), 3.0), 1.5))
+        strength = math_node(mt, "MULTIPLY", math_node(mt, "MULTIPLY", math_node(mt, "ADD", fil_v, 0.06 + 0.12 * (i == 2)), limb), gain)
         emi = node(mt, "ShaderNodeEmission", Color=(*col, 1))
         mt.links.new(strength, emi.inputs["Strength"])
         tr = mt.nodes.new("ShaderNodeBsdfTransparent")
@@ -723,7 +723,7 @@ def build():
     gtc = gnt.nodes.new("ShaderNodeTexCoord")
     gsep = gnt.nodes.new("ShaderNodeSeparateXYZ")
     gnt.links.new(gtc.outputs["Generated"], gsep.inputs[0])
-    gfac = math_node(gnt, "MULTIPLY", math_node(gnt, "POWER", math_node(gnt, "SUBTRACT", 1.0, gsep.outputs["Y"]), 1.6), 0.72)
+    gfac = math_node(gnt, "MULTIPLY", math_node(gnt, "POWER", math_node(gnt, "SUBTRACT", 1.0, gsep.outputs["Y"]), 1.4), 0.85)
     gblk = node(gnt, "ShaderNodeEmission", Color=(0, 0, 0, 1), Strength=0.0)
     gtr = gnt.nodes.new("ShaderNodeBsdfTransparent")
     gmix = gnt.nodes.new("ShaderNodeMixShader")

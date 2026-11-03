@@ -70,11 +70,11 @@ CAPTIONS = [
     ("The Boötes Void.\nAbout 330 million light-years across.", 20.0, 26.5),
     ("Light would take 330 million years\nto cross it.", 28.0, 34.0),
     ("Thousands of galaxies should be here.\nWe have found about 60.", 35.5, 42.0),
-    ("Had we been born at its centre, we might\nnot have known other galaxies existed\nuntil the 1960s.", 43.5, 50.5),
-    ("And most of space\nlooks like this.", 52.0, 56.5),
+    ("Had we been born at its centre, we might\nnot have known other galaxies existed\nuntil the 1960s.", 43.5, 50.0),
+    ("And most of space\nlooks like this.", 50.8, 55.5),
 ]
-BOOMS = [13.0, 20.0, 35.5, 56.5]   # key beats (s); the last one is the cut to black
-CUT_S = 56.5
+BOOMS = [13.0, 20.0, 35.5, 55.5]   # key beats (s); the last one is the cut to black
+CUT_S = 55.5
 
 
 # ----------------------------------------------------------------------------- helpers
@@ -524,7 +524,7 @@ def write_wav(path, sr=48000):
         return y / np.abs(y).max()
 
     swell = env([(0, 0), (4, 0.25), (9, 0.6), (13, 0.15), (17, 0.5), (20, 0.15), (27, 0.55),
-                 (35.5, 0.2), (42, 0.55), (46, 0.35), (52, 0.7), (cut, 0.9), (cut + 0.02, 0), (SECONDS, 0)])
+                 (35.5, 0.2), (42, 0.55), (46, 0.35), (51, 0.7), (cut, 0.9), (cut + 0.02, 0), (SECONDS, 0)])
     L += 0.10 * swell * lowpass_noise(60, 420, 11)
     Rr += 0.10 * swell * lowpass_noise(60, 420, 12)
 
@@ -548,7 +548,7 @@ def write_wav(path, sr=48000):
     L += last
     Rr += last
     # fade to true silence after the last boom
-    tail = env([(0, 1), (cut + 3.5, 1), (SECONDS - 0.3, 0), (SECONDS, 0)])
+    tail = env([(0, 1), (cut + 1.0, 1), (SECONDS - 0.5, 0), (SECONDS, 0)])
     L *= tail
     Rr *= tail
     st = np.stack([L, Rr], 1)

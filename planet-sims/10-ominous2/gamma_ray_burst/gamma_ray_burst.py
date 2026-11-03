@@ -146,7 +146,7 @@ def write_audio(out):
     y = np.stack([L, R], 1) * master[:, None]
     y = np.tanh(1.4 * y / np.abs(y).max()) / np.tanh(1.4) * 0.89
     # hard silence after the last boom's tail
-    y[t > t_cut + 1.6] *= np.clip(1 - (t[t > t_cut + 1.6] - t_cut - 1.6) / 0.25, 0, 1)[:, None]
+    y[t > t_cut + 1.3] *= np.clip(1 - (t[t > t_cut + 1.3] - t_cut - 1.3) / 0.25, 0, 1)[:, None]
     with wave.open(out, "wb") as w:
         w.setnchannels(2)
         w.setsampwidth(2)

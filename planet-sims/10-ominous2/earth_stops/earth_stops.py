@@ -157,7 +157,7 @@ def make_audio(path, sr=44100):
         out[ch] = 0.75 * mix[ch] + 0.4 * wet
     out = np.tanh(out / np.max(np.abs(out)) * 1.5)
     out *= 0.89 / np.max(np.abs(out))
-    out *= 1 - ramp(tf + 1.3, tf + 1.9)   # silence after the last boom's tail
+    out *= 1 - ramp(tf + 0.9, tf + 1.5)   # silence after the last boom's tail
     pcm = (out.T * 32767).astype(np.int16)
     with wave.open(path, "wb") as w:
         w.setnchannels(2)
@@ -400,6 +400,7 @@ def caption(cam, text, f_in, f_out, y=-0.60, size=0.062):
     ob.parent = cam
     ob.location = (0, y * half_h, -d)
     ob.visible_shadow = False
+    ob.cycles.use_motion_blur = False   # a blurred camera-child that just un-hid smears across the frame
     visible(ob, f_in, f_out)
     return ob
 
@@ -412,6 +413,7 @@ def black_card(cam, fv):
     card.parent = cam
     card.location = (0, 0, -0.5)
     card.visible_shadow = False
+    card.cycles.use_motion_blur = False
     for f, hide in fv:
         card.hide_render = hide
         card.keyframe_insert("hide_render", frame=f)
@@ -763,12 +765,12 @@ def fling(loose, trunks):
         key_prop(ob, "rotation_euler", [(1, rot0), (t0, rot0), (END, Vector(rot0) + spin * dur)])
     # a constant stream of debris blown in from the sea and the town upwind (west)
     m = mat_pr("stream_m", (0.4, 0.33, 0.25))
-    for i in range(320):
+    for i in range(600):
         s = rng.uniform(0.15, 1.3)
-        y = rng.uniform(3, 30) if i % 2 else rng.uniform(3, 90)
+        y = rng.uniform(3, 25) if i % 3 else rng.uniform(3, 90)
         z = rng.uniform(0.3, 18)
         ob = box(f"stream{i}", (s * rng.uniform(0.6, 2), s, s * rng.uniform(0.2, 1)), (-300, y, z), m)
-        v = rng.uniform(22, 50) / FPS
+        v = rng.uniform(15, 45) / FPS
         t0 = rng.randint(JOLT + 2, HIT)
         x0 = -15 - y * 1.2                       # just outside the frame's left edge at that depth
         key_prop(ob, "location", [(1, (-300, y, z)), (t0 - 3, (-300, y, z)), (t0 - 2, (x0 - 2 * v, y, z)),
@@ -778,8 +780,8 @@ def fling(loose, trunks):
         visible(ob, t0, None)
     # dust streaks: thin glowing grit that the long shutter turns into speed lines
     ms = mat_emit("streak_m", (0.9, 0.55, 0.3), 3.0)
-    for i in range(160):
-        y = rng.uniform(2.5, 45)
+    for i in range(300):
+        y = rng.uniform(2.5, 30)
         z = rng.uniform(0.2, 9)
         ob = box(f"streak{i}", (rng.uniform(0.6, 2.5), 0.05, 0.05), (-300, y, z), ms)
         ob.visible_shadow = False

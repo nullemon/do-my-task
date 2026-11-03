@@ -1579,6 +1579,7 @@ def build_saturn_long():
     R = D * math.tan(math.radians(17.8 / 2))
     ring_out = R * 136775 / 60268
     shine = _sun(sc, "saturnshine", (-0.02, 1.0, 0.42), 0.0, color=(1.0, 0.88, 0.70), angle_deg=18)
+    shine.visible_glossy = False   # light only; Saturn's own reflection comes from the real planet
     for f, v in ((1, 0.03), (_sec(16), 0.05), (_sec(30), 0.55), (end, 0.6)):
         shine.data.energy = v
         shine.data.keyframe_insert("energy", frame=f)
@@ -1622,14 +1623,15 @@ def build_saturn_long():
     for iu in range(nu):
         y = 0.6 + 700.0 * (iu / (nu - 1)) ** 2.3
         half = 0.58 * y + 14.0
-        amp = 0.55 + y / 140.0
+        amp = 0.8 + y / 140.0
         for iv in range(nv):
             x = -half + 2 * half * iv / (nv - 1)
             base = -0.22 - 0.0105 * y - 1.2e-5 * y * y
             und = 0.35 * noise.noise(Vector((x * 0.012, y * 0.012, 1.7))) * (1 + y / 200)
             rk = noise.noise(Vector((x * 0.11, y * 0.11, 0.4)))
-            rock = max(0.0, rk - 0.28) * 2.4 * amp
-            verts.append((x, y, base + und + rock))
+            rock = max(0.0, rk - 0.12) * 2.2 * amp
+            pebble = max(0.0, noise.noise(Vector((x * 0.6, y * 0.6, 3.1))) - 0.35) * 0.9 * min(1.0, 8.0 / (y + 1))
+            verts.append((x, y, base + und + rock + pebble))
     for iu in range(nu - 1):
         for iv in range(nv - 1):
             a = iu * nv + iv
@@ -1648,24 +1650,24 @@ def build_saturn_long():
     bnt.links.new(btc.outputs["Object"], patch.inputs["Vector"])
     pc = bnt.nodes.new("ShaderNodeValToRGB")          # sand <-> dark weed-covered rock
     pe = pc.color_ramp.elements
-    pe[0].position, pe[0].color = 0.42, (0.11, 0.09, 0.07, 1)
+    pe[0].position, pe[0].color = 0.42, (0.17, 0.14, 0.105, 1)
     pe[1].position, pe[1].color = 0.62, (0.018, 0.02, 0.018, 1)
     bnt.links.new(patch.outputs["Fac"], pc.inputs["Fac"])
     bnt.links.new(pc.outputs["Color"], bb.inputs["Base Color"])
     wet = bnt.nodes.new("ShaderNodeMapRange")           # glossy wet film in patches (reflects Saturn)
-    wet.inputs["To Min"].default_value, wet.inputs["To Max"].default_value = 0.08, 0.5
+    wet.inputs["To Min"].default_value, wet.inputs["To Max"].default_value = 0.14, 0.55
     bnt.links.new(patch.outputs["Fac"], wet.inputs["Value"])
     bnt.links.new(wet.outputs["Result"], bb.inputs["Roughness"])
     rip = bnt.nodes.new("ShaderNodeTexWave")            # sand ripples
     rip.wave_type = "BANDS"
     rip.bands_direction = "Y"
-    rip.inputs["Scale"].default_value = 0.35
-    rip.inputs["Distortion"].default_value = 6.0
+    rip.inputs["Scale"].default_value = 1.6
+    rip.inputs["Distortion"].default_value = 9.0
     rip.inputs["Detail"].default_value = 2
     bnt.links.new(btc.outputs["Object"], rip.inputs["Vector"])
     bump = bnt.nodes.new("ShaderNodeBump")
-    bump.inputs["Strength"].default_value = 0.25
-    bump.inputs["Distance"].default_value = 0.05
+    bump.inputs["Strength"].default_value = 0.12
+    bump.inputs["Distance"].default_value = 0.03
     bnt.links.new(rip.outputs["Fac"], bump.inputs["Height"])
     bnt.links.new(bump.outputs["Normal"], bb.inputs["Normal"])
     bed.data.materials.append(bm_)
@@ -1678,19 +1680,21 @@ def build_saturn_long():
         z = math.exp(-(s / 0.32) ** 2) if s < 0 else math.exp(-(s / 0.9) ** 2)
         prof.append((s - 0.22 * z * z, z))             # crest leans toward us
     nx = 120
-    wv = [(-1 + 2 * i / nx, s, z) for i in range(nx + 1) for s, z in prof]
+    hx = [0.78 + 0.22 * noise.noise(Vector((i * 0.09, 0.5, 0.5))) + 0.08 * noise.noise(Vector((i * 0.5, 2.5, 0.5)))
+          for i in range(nx + 1)]                     # uneven crest along its length
+    wv = [(-1 + 2 * i / nx, s, z * hx[i]) for i in range(nx + 1) for s, z in prof]
     wf = [(i * 64 + k, i * 64 + k + 1, (i + 1) * 64 + k + 1, (i + 1) * 64 + k) for i in range(nx) for k in range(63)]
     wme.from_pydata(wv, [], wf)
     for p in wme.polygons:
         p.use_smooth = True
     wave = link(sc, bpy.data.objects.new("wave", wme))
-    wm = mat_principled("wave_m", (0.003, 0.006, 0.010), rough=0.06)
+    wm = mat_principled("wave_m", (0.003, 0.006, 0.010), rough=0.14)
     wnt = wm.node_tree
     wb = wnt.nodes["Principled BSDF"]
     wb.inputs["IOR"].default_value = 1.33
     wtc = wnt.nodes.new("ShaderNodeTexCoord")
     wmp = wnt.nodes.new("ShaderNodeMapping")
-    wmp.inputs["Scale"].default_value = (1800.0, 25.0, 5.0)
+    wmp.inputs["Scale"].default_value = (1500.0, 30.0, 45.0)
     wnt.links.new(wtc.outputs["Object"], wmp.inputs["Vector"])
     fn = wnt.nodes.new("ShaderNodeTexNoise")
     fn.inputs["Scale"].default_value = 0.6
@@ -1699,7 +1703,7 @@ def build_saturn_long():
     wsep = wnt.nodes.new("ShaderNodeSeparateXYZ")
     wnt.links.new(wtc.outputs["Object"], wsep.inputs[0])
     crest = wnt.nodes.new("ShaderNodeMapRange")
-    crest.inputs["From Min"].default_value, crest.inputs["From Max"].default_value = 0.55, 0.95
+    crest.inputs["From Min"].default_value, crest.inputs["From Max"].default_value = 0.45, 0.9
     wnt.links.new(wsep.outputs["Z"], crest.inputs["Value"])
     foamn = wnt.nodes.new("ShaderNodeMapRange")
     foamn.inputs["From Min"].default_value, foamn.inputs["From Max"].default_value = 0.42, 0.62
@@ -1710,9 +1714,15 @@ def build_saturn_long():
     wnt.links.new(foamn.outputs["Result"], foam.inputs[1])
     fc = wnt.nodes.new("ShaderNodeMixRGB")
     fc.inputs[1].default_value = (0.003, 0.006, 0.010, 1)
-    fc.inputs[2].default_value = (0.55, 0.6, 0.65, 1)
+    fc.inputs[2].default_value = (0.85, 0.88, 0.9, 1)
     wnt.links.new(foam.outputs[0], fc.inputs["Fac"])
     wnt.links.new(fc.outputs[0], wb.inputs["Base Color"])
+    wb.inputs["Emission Color"].default_value = (0.75, 0.72, 0.65, 1)   # back-lit spray on the crest
+    fe = wnt.nodes.new("ShaderNodeMath")
+    fe.operation = "MULTIPLY"
+    fe.inputs[1].default_value = 0.35
+    wnt.links.new(foam.outputs[0], fe.inputs[0])
+    wnt.links.new(fe.outputs[0], wb.inputs["Emission Strength"])
     fr = wnt.nodes.new("ShaderNodeMapRange")
     fr.inputs["To Min"].default_value, fr.inputs["To Max"].default_value = 0.06, 0.85
     wnt.links.new(foam.outputs[0], fr.inputs["Value"])
@@ -1729,13 +1739,13 @@ def build_saturn_long():
         wave.hide_render = hide
         wave.keyframe_insert("hide_render", frame=f)
 
-    caption(sc, cam, "What if Saturn replaced the Moon?", _sec(1.0), _sec(6.5))
-    caption(sc, cam, "It would fill a third of the sky.", _sec(8.0), _sec(12.5))
-    caption(sc, cam, "Its rings, nearly half.", _sec(13.5), _sec(18.0))
-    caption(sc, cam, "You wouldn't feel a thing…", _sec(21.0), _sec(27.0))
-    caption(sc, cam, "…but the oceans would.", _sec(29.0), _sec(34.5))
-    caption(sc, cam, "Its tidal pull: about\n7,700 times the Moon's.", _sec(36.5), _sec(43.0))
-    caption(sc, cam, "And this was the SAFE distance.", _sec(46.5), SATURN_LONG_CUT)
+    caption(sc, cam, "What if Saturn\nreplaced the Moon?", _sec(1.0), _sec(6.5))
+    caption(sc, cam, "It would fill\na third of the sky.", _sec(8.0), _sec(12.5))
+    caption(sc, cam, "Its rings,\nnearly half.", _sec(13.5), _sec(18.0))
+    caption(sc, cam, "You wouldn't\nfeel a thing…", _sec(21.0), _sec(27.0))
+    caption(sc, cam, "…but the\noceans would.", _sec(29.0), _sec(34.5))
+    caption(sc, cam, "Its tidal pull:\nabout 7,700 times\nthe Moon's.", _sec(36.5), _sec(43.0))
+    caption(sc, cam, "And this was\nthe SAFE distance.", _sec(46.5), SATURN_LONG_CUT)
     _blackout(sc, cam, SATURN_LONG_CUT)
     return sc
 
@@ -1763,7 +1773,7 @@ def build_paledot_long():
                        (S(26.5), 78), (S(29.5), 115), (S(33), 300), (S(37), 900), (S(41), 2600),
                        (S(45.5), 8000), (PALEDOT_LONG_GONE, 40000), (S(55), 2e5)])
     _key_every_frame(cam, "location", 1, lambda f: -dist(f), 1, end)
-    _key_every_frame(cam, "location", 0, lambda f: -0.15 + 0.3 * _smoothstep(1, S(15), f), 1, end)
+    _key_every_frame(cam, "location", 0, lambda f: -0.06 + 0.12 * _smoothstep(1, S(15), f), 1, end)
     px = math.radians(21.8) / RES_X
     _key_every_frame(dot, "scale", -1, lambda f: [max(0.3, 1.4 * px * dist(f))] * 3, 1, end)
     _key_value(dem, [(1, 9.0), (PALEDOT_LONG_GONE - FPS, 9.0), (PALEDOT_LONG_GONE, 0.0)])
@@ -1838,20 +1848,32 @@ def build_paledot_long():
     g.links.new(perp.outputs["Value"], pab.inputs[0])
     beam = g.nodes.new("ShaderNodeMapRange")
     beam.interpolation_type = "SMOOTHSTEP"
-    beam.inputs["From Min"].default_value, beam.inputs["From Max"].default_value = 0.0, 0.11
+    beam.inputs["From Min"].default_value, beam.inputs["From Max"].default_value = 0.0, 0.065
     beam.inputs["To Min"].default_value, beam.inputs["To Max"].default_value = 1.0, 0.0
     g.links.new(pab.outputs[0], beam.inputs["Value"])
     gk = g.nodes.new("ShaderNodeValue")
     bk = g.nodes.new("ShaderNodeValue")
     _key_value(gk.outputs[0], [(1, 0.0), (S(26), 0.0), (S(36), 1.0), (S(48), 1.15), (PALEDOT_LONG_GONE, 0.9)])
-    _key_value(bk.outputs[0], [(1, 0.0), (S(31), 0.0), (S(38), 0.16), (S(48), 0.18), (PALEDOT_LONG_GONE + FPS, 0.1)])
+    _key_value(bk.outputs[0], [(1, 0.0), (S(31), 0.0), (S(38), 0.08), (S(48), 0.09), (PALEDOT_LONG_GONE + FPS, 0.05)])
     a1 = g.nodes.new("ShaderNodeMath")
     a1.operation = "MULTIPLY"
     g.links.new(glow.outputs[0], a1.inputs[0])
     g.links.new(gk.outputs[0], a1.inputs[1])
+    along = g.nodes.new("ShaderNodeVectorMath")        # beam fades away from the Sun
+    along.operation = "DOT_PRODUCT"
+    along.inputs[1].default_value = (ux, uy, 0)
+    g.links.new(rel.outputs[0], along.inputs[0])
+    afade = g.nodes.new("ShaderNodeMapRange")
+    afade.inputs["From Min"].default_value, afade.inputs["From Max"].default_value = 0.0, 2.0 * dl
+    afade.inputs["To Min"].default_value, afade.inputs["To Max"].default_value = 1.6, 0.2
+    g.links.new(along.outputs["Value"], afade.inputs["Value"])
+    bfa = g.nodes.new("ShaderNodeMath")
+    bfa.operation = "MULTIPLY"
+    g.links.new(beam.outputs["Result"], bfa.inputs[0])
+    g.links.new(afade.outputs["Result"], bfa.inputs[1])
     a2 = g.nodes.new("ShaderNodeMath")
     a2.operation = "MULTIPLY"
-    g.links.new(beam.outputs["Result"], a2.inputs[0])
+    g.links.new(bfa.outputs[0], a2.inputs[0])
     g.links.new(bk.outputs[0], a2.inputs[1])
     a3 = g.nodes.new("ShaderNodeMath")
     a3.operation = "ADD"
@@ -1867,12 +1889,12 @@ def build_paledot_long():
     g.links.new(add.outputs[0], gout.inputs[0])
     card.data.materials.append(gm)
 
-    caption(sc, cam, "This is everything\nyou have ever known.", S(1.0), S(6.0))
-    caption(sc, cam, "Every person who ever lived…", S(7.5), S(12.5))
+    caption(sc, cam, "This is everything\nyou have\never known.", S(1.0), S(6.0))
+    caption(sc, cam, "Every person\nwho ever lived…", S(7.5), S(12.5))
     caption(sc, cam, "Every empire, every war,\nevery love.", S(14.0), S(19.5))
-    caption(sc, cam, "All on a speck of dust…", S(30.0), S(35.5))
-    caption(sc, cam, "…suspended in a sunbeam.", S(37.0), S(42.5))
-    caption(sc, cam, "From far enough away…", S(44.5), S(49.5))
+    caption(sc, cam, "All on a speck\nof dust…", S(30.0), S(35.5))
+    caption(sc, cam, "…suspended\nin a sunbeam.", S(37.0), S(42.5))
+    caption(sc, cam, "From far\nenough away…", S(44.5), S(49.5))
     caption(sc, cam, "it's gone.", PALEDOT_LONG_GONE, end + 1, y=0.0, size=0.09)
     return sc
 

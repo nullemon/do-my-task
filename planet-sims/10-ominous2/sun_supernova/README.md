@@ -43,6 +43,6 @@ blender -b -P sun_supernova.py -- --audio renders/sun_supernova.wav
 ffmpeg -framerate 24 -i renders/frames/frame_%04d.png -i renders/sun_supernova.wav \
   -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a aac -b:a 192k -shortest sun_supernova.mp4
 ```
-To enable the GPU, set `scene.cycles.device = "GPU"` and choose CUDA/OptiX/Metal in Preferences → System. With a GPU, render every frame (no frame blending needed).
+Add `--glare` on a GPU machine for compositor bloom (headless Blender 5 without EGL crashes in the compositor, so it is off by default). To enable the GPU, set `scene.cycles.device = "GPU"` and choose CUDA/OptiX/Metal in Preferences → System. With a GPU, render every frame (no frame blending needed).
 The CPU preview build here renders every 3rd frame at 540×960 and blends them to 24 fps with `minterpolate=mi_mode=blend`
 (see the queue job `01_sun_supernova.sh`). Flags: `--every N --first A --last B` select frames, rendering is resumable (existing PNGs are skipped), and `--threads N` sets the CPU threads.

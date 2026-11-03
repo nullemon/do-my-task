@@ -262,9 +262,13 @@ class Track:
         x0, x1 = self.s0, self.s1
         for i in range(n + 1):
             x = x0 + (x1 - x0) * i / n
-            y = amp * math.sin(math.pi * half_waves * x / lx) if 0 <= x <= lx else (
-                0.0 if x < 0 else amp * math.sin(math.pi * half_waves))
-            # smooth ramp-in/out of the curve so tangents are continuous at ends
+            k = math.pi * half_waves / lx
+            if x < 0:      # straight run-in along the start tangent
+                y = amp * k * x
+            elif x > lx:   # straight run-out along the end tangent
+                y = amp * math.sin(k * lx) + amp * k * math.cos(k * lx) * (x - lx)
+            else:
+                y = amp * math.sin(k * x)
             pts.append(Vector((x, y, 0.0)))
         # cumulative arc length, zero at x = 0
         s = [0.0]

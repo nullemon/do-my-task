@@ -38,7 +38,7 @@ CYCLES_SAMPLES = 256             # final Cycles samples (water looks best in Cyc
 EEVEE_SAMPLES = 64
 
 # --- fluid quality ---------------------------------------------------------
-RESOLUTION = 160                 # domain divisions along the longest side (48 preview, 128-192 final)
+RESOLUTION = 128                 # domain divisions along the longest side (48 preview, 128-192 final)
 MESH_UPRES = 2                   # liquid mesh upres ("mesh_scale"), 1 = off
 MESH_SMOOTH_POS = 2              # liquid mesh smoothing (positive / negative)
 MESH_SMOOTH_NEG = 2
@@ -60,6 +60,7 @@ PREVIEW_SECONDS = 2.4
 PREVIEW_FRAME = 58               # (1.9 s) the still that is rendered for each planet
 PREVIEW_RES = (270, 480)
 PREVIEW_SAMPLES = 24
+PREVIEW_IMPACT_STILLS = ["Sun", "Moon"]   # also render these planets 2 frames after impact
 
 HOOK_CAPTION = "POURING WATER ON"
 
@@ -414,14 +415,8 @@ def sweep_mesh(name, width=4.0, depth=2.2, height=2.5, radius=0.6, y0=0.25, z0=-
     """Curved studio backdrop (cyclorama) behind the table."""
     me = bpy.data.meshes.new(TAG + name)
     bm = bmesh.new()
-    pts = []
-    pts.append((-depth, z0))  # front (towards camera, y negative)
     n = 10
-    for i in range(n + 1):
-        a = -math.pi / 2 + (math.pi / 2) * i / n
-        pts.append((y0 + radius * math.cos(a + math.pi / 2) * 0 + radius * math.sin(a + math.pi / 2) * 0 + radius * math.cos(a), 0))
-    # simpler explicit profile
-    pts = [(-depth, z0), (y0, z0)]
+    pts = [(-depth, z0), (y0, z0)]       # floor (y, z) from the camera side backwards
     for i in range(1, n + 1):
         a = (math.pi / 2) * i / n
         pts.append((y0 + radius * math.sin(a), z0 + radius * (1 - math.cos(a))))
@@ -563,7 +558,7 @@ def build_scene(idx, planet, args, base, res, frames):
     steps = v_max / (FPS * dx * cfl)
     d.use_adaptive_timesteps = True
     d.cfl_condition = cfl
-    d.timesteps_max = int(min(200, max(4, math.ceil(1.5 * steps))))
+    d.timesteps_max = int(min(250, max(4, math.ceil(1.5 * steps))))
     d.timesteps_min = int(max(1, min(d.timesteps_max, math.ceil(steps / 3))))
     d.time_scale = 1.0
     d.cache_type = "ALL"
@@ -630,8 +625,9 @@ def build_scene(idx, planet, args, base, res, frames):
     em.effector_settings.use_plane_init = False
 
     # --- lights: big soft key, two strip lights behind for glass/water edges
-    def area(name, loc, rot, size, size_y, power, color=(1, 1, 1)):
+    def area(name, loc, rot, size, size_y, power, color=(1, 1, 1), spread=180):
         L = bpy.data.lights.new(TAG + name, "AREA")
+        setp(L, "spread", math.radians(spread))
         L.shape = "RECTANGLE"
         L.size, L.size_y = size, size_y
         L.energy = power
@@ -641,8 +637,8 @@ def build_scene(idx, planet, args, base, res, frames):
         o.rotation_euler = rot
         return o
     area("key", (-0.6, -0.7, 1.0), (math.radians(50), 0, math.radians(-38)), 0.8, 0.8, 45)
-    area("stripL", (-0.35, 0.35, 0.35), (math.radians(-90), math.radians(-35), 0), 0.08, 0.9, 40)
-    area("stripR", (0.35, 0.35, 0.35), (math.radians(-90), math.radians(35), 0), 0.08, 0.9, 40)
+    area("stripL", (-0.35, 0.35, 0.35), (math.radians(-90), math.radians(-35), 0), 0.08, 0.9, 25, spread=35)
+    area("stripR", (0.35, 0.35, 0.35), (math.radians(-90), math.radians(35), 0), 0.08, 0.9, 25, spread=35)
     area("top", (0.0, 0.0, 1.2), (0, 0, 0), 0.6, 0.3, 12)
 
     # --- camera --------------------------------------------------------------
@@ -666,7 +662,6 @@ def build_scene(idx, planet, args, base, res, frames):
                     mat_text((1.0, 0.85, 0.35), 4.0, "hook_mat_" + planet), size=0.03, extrude=0.001)
     for o, frac_w, y in ((lab, 0.86, 0.62), (hook, 0.62, 0.80)):
         o.parent = cam
-        bpy.context.view_layer.update() if False else None
         # approximate glyph width ~0.62 * size per character (Bfont)
         n = len(o.data.body)
         o.data.size = (2 * half_w * frac_w) / (0.62 * n)
@@ -779,9 +774,10 @@ def _seg_dist_xz(p, a, b):
 def measure(sc, dom, glass, frames):
     """Per-frame liquid metrics from the baked liquid mesh."""
     lip = Vector(sc[TAG + "lip"])
-    res = dict(first_out=None, first_table=None, impact_xy=None, splash_z=0.0,
+    res = dict(front_speed=None, first_out=None, first_table=None, impact_xy=None, splash_z=0.0,
                splash_frame=None, spread_end=0.0, vol0=None, vol_on_table=0.0,
                vol_end=0.0, low_z=None, n_end=0)
+    front = {}
     for fr in range(sc[TAG + "sim_start"], frames + 1):
         pts, vol = liquid_points(sc, dom, fr)
         if res["vol0"] is None and pts:
@@ -798,9 +794,16 @@ def measure(sc, dom, glass, frames):
                 outside.append(p)
         if outside and res["first_out"] is None:
             res["first_out"] = fr
+        if outside:
+            front[fr] = min(p.z for p in outside)
         on_table = [p for p in outside if p.z < 0.02]
         if on_table and res["first_table"] is None:
             res["first_table"] = fr
+            # measured speed of the falling front just before it lands
+            if fr - 1 in front and fr - 2 in front:
+                res["front_speed"] = (front[fr - 2] - front[fr - 1]) * FPS
+            elif fr - 1 in front:     # left the glass and landed within ~1 frame
+                res["front_speed"] = (front[fr - 1] - on_table[0].z) * FPS
             res["impact_xy"] = (sum(p.x for p in on_table) / len(on_table),
                                 sum(p.y for p in on_table) / len(on_table))
         if res["impact_xy"] is not None:
@@ -864,20 +867,25 @@ def main():
             fall = None
             if m["first_out"] and m["first_table"]:
                 fall = sec(m["first_table"]) - sec(m["first_out"])
-            report[p] = dict(g=g, bake_s=round(dt, 1), first_leaves_glass_s=sec(m["first_out"]),
-                             first_hits_table_s=sec(m["first_table"]), stream_fall_s=fall,
-                             ideal_freefall_from_lip_s=round(math.sqrt(2 * lip_h / g), 3),
-                             splash_max_z_m=round(m["splash_z"], 3),
-                             impact_x_m=round(m["impact_xy"][0], 3) if m["impact_xy"] else None, splash_peak_s=sec(m["splash_frame"]),
-                             spread_radius_end_m=round(m["spread_end"], 3),
-                             volume_start_l=round((m["vol0"] or 0) * 1000, 3),
-                             )
+            bowl_floor = BOWL_WALL
+            report[p] = dict(
+                g=g, bake_s=round(dt, 1),
+                water_leaves_glass_s=sec(m["first_out"]),
+                water_hits_bowl_s=sec(m["first_table"]),
+                stream_fall_time_s=None if fall is None else round(fall, 3),
+                front_speed_at_impact_ms=None if m["front_speed"] is None else round(m["front_speed"], 2),
+                ideal_speed_after_free_fall_from_lip_ms=round(math.sqrt(2 * g * (lip_h - bowl_floor)), 2),
+                splash_max_z_m=round(m["splash_z"], 3),
+                splash_peak_s=sec(m["splash_frame"]),
+                splash_rise_after_impact_s=(None if m["splash_frame"] is None or m["first_table"] is None
+                                            else round((m["splash_frame"] - m["first_table"]) / FPS, 3)),
+                spread_radius_end_m=round(m["spread_end"], 3),
+            )
             r = report[p]
-            print(f"[water_pour] {p:8s} g={g:7.2f}  bake {r['bake_s']:6.1f}s | leaves glass {r['first_leaves_glass_s']}s"
-                  f" | hits table {r['first_hits_table_s']}s (stream fall {fall}s, ideal free fall from lip {r['ideal_freefall_from_lip_s']}s)"
-                  f" | impact x {r['impact_x_m']}"
-                  f" | splash max z {r['splash_max_z_m']} m @ {r['splash_peak_s']}s | spread {r['spread_radius_end_m']} m"
-                  f" | water {r['volume_start_l']} L")
+            print(f"[water_pour] {p:8s} g={g:7.2f} bake {r['bake_s']:6.1f}s | leaves glass {r['water_leaves_glass_s']}s"
+                  f" | hits bowl {r['water_hits_bowl_s']}s (fall {r['stream_fall_time_s']}s)"
+                  f" | front speed {r['front_speed_at_impact_ms']} m/s (free-fall from lip {r['ideal_speed_after_free_fall_from_lip_ms']})"
+                  f" | splash top z {r['splash_max_z_m']} m, {r['splash_rise_after_impact_s']}s after impact")
             if r["splash_max_z_m"] > lip_h + 0.02:
                 print(f"[water_pour] WARNING {p}: splash higher than the lip -> sim unstable, raise timesteps/lower CFL")
         os.makedirs(out_root, exist_ok=True)
@@ -888,11 +896,16 @@ def main():
         pdir = os.path.join(out_root, "preview")
         os.makedirs(pdir, exist_ok=True)
         for sc, dom, p, out_dir in built:
-            sc.frame_set(min(PREVIEW_FRAME, sc.frame_end))
-            sc.render.filepath = os.path.join(pdir, f"{sc.name}.png")
-            t = time.time()
-            bpy.ops.render.render(write_still=True, scene=sc.name)
-            print(f"[water_pour] preview still {sc.render.filepath} ({time.time() - t:.1f}s)")
+            shots = [(min(PREVIEW_FRAME, sc.frame_end), f"{sc.name}.png")]
+            hit = report.get(p, {}).get("water_hits_bowl_s")
+            if p in PREVIEW_IMPACT_STILLS and hit is not None:     # extra still right after impact
+                shots.append((min(sc.frame_end, 1 + round(hit * FPS) + 2), f"{sc.name}_impact.png"))
+            for fr, name in shots:
+                sc.frame_set(fr)
+                sc.render.filepath = os.path.join(pdir, name)
+                t = time.time()
+                bpy.ops.render.render(write_still=True, scene=sc.name)
+                print(f"[water_pour] preview still {sc.render.filepath} frame {fr} ({time.time() - t:.1f}s)")
     elif args["render"]:
         for sc, dom, p, out_dir in built:
             os.makedirs(out_dir, exist_ok=True)

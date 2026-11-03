@@ -49,6 +49,7 @@ CONFIG = dict(
     VOXEL_FACTOR=0.42,           # voxel size = median(h of bulk) * this (smaller = sharper, slower)
     MAX_VOXEL_SIZE=0.08,         # Earth radii
     MIN_VOXEL_SIZE=0.006,
+    SMOOTH_ITER=2,               # Blender 5.x only: grid blur passes on the density (0 = off)
     VOLUME_DENSITY=26.0,         # optical density of the molten bulk (higher = more solid surface)
     EMISSION=4.0,                # overall glow strength of the bulk
     ALBEDO=(1.0, 0.42, 0.12),    # scattering colour (lit by the sun lamp -> day/night shading)
@@ -60,6 +61,7 @@ CONFIG = dict(
     DEBRIS_H=0.12,               # particles with h above this count as isolated debris (bigger dots)
     DEBRIS_RADIUS=0.018,
     SUN_STRENGTH=3.0, SUN_DIR=(-0.55, 0.35, 0.45),
+    COMPOSITOR_CPU=False,        # force CPU compositing (always on in background mode)
     GLARE=True, BLOOM_SIZE=0.6, FOG_GLOW_MIX=0.35, GLARE_THRESHOLD=0.8,
     VIEW_LOOK="AgX - Medium High Contrast",   # falls back to plain AgX / Filmic if missing
     EXPOSURE=0.0,
@@ -129,6 +131,7 @@ RAMP = [(0.00, (0.20, 0.015, 0.004)),
         (1.00, (1.00, 0.96, 0.880))]
 
 PFX = "PC_"
+SCENE_NAME = "07_Collision"
 STATE = {}
 
 
@@ -342,8 +345,25 @@ def build_volume_group():
         L.new(radc.outputs[0], ptv.inputs["Radius"])
         L.new(gi.outputs["VoxelSize"], ptv.inputs["Voxel Size"])
         L.new(gi.outputs["Density"], ptv.inputs["Density"])
+        vol_out = ptv.outputs[0]
+        it = int(CONFIG["SMOOTH_ITER"])
+        if it > 0 and hasattr(bpy.types, "GeometryNodeGridMean"):
+            # Blender 5.x: blur the density grid -> smooth molten surface instead of a union of spheres
+            gg = N.new("GeometryNodeGetNamedGrid"); gg.data_type = "FLOAT"
+            gg.inputs["Name"].default_value = "density"
+            dil = N.new("GeometryNodeGridDilateAndErode"); dil.data_type = "FLOAT"
+            dil.inputs["Steps"].default_value = it + 1
+            mean = N.new("GeometryNodeGridMean"); mean.data_type = "FLOAT"
+            mean.inputs["Width"].default_value = 1
+            mean.inputs["Iterations"].default_value = it
+            st = N.new("GeometryNodeStoreNamedGrid"); st.data_type = "FLOAT"
+            st.inputs["Name"].default_value = "density"
+            L.new(ptv.outputs[0], gg.inputs["Volume"])
+            L.new(gg.outputs["Grid"], dil.inputs["Grid"]); L.new(dil.outputs["Grid"], mean.inputs["Grid"])
+            L.new(gg.outputs["Volume"], st.inputs["Volume"]); L.new(mean.outputs["Grid"], st.inputs["Grid"])
+            vol_out = st.outputs[0]
         sm = N.new("GeometryNodeSetMaterial")
-        L.new(ptv.outputs[0], sm.inputs["Geometry"]); L.new(gi.outputs["Material"], sm.inputs["Material"])
+        L.new(vol_out, sm.inputs["Geometry"]); L.new(gi.outputs["Material"], sm.inputs["Material"])
         L.new(sm.outputs[0], go.inputs["Geometry"])
     return gn_group("BandVolume", b)
 
@@ -385,7 +405,11 @@ def mat_volume(name, emis_col, emis_strength, density_scale, albedo, absorb_col=
     if absorb_col is not None and "Absorption Color" in pv.inputs:
         pv.inputs["Absorption Color"].default_value = (*absorb_col, 1)
     pv.inputs["Emission Color"].default_value = (*emis_col, 1)
-    pv.inputs["Emission Strength"].default_value = emis_strength
+    # Principled Volume emission is NOT scaled by density -> multiply by the density grid ourselves
+    at = nt.nodes.new("ShaderNodeAttribute"); at.attribute_name = "density"
+    mul = nt.nodes.new("ShaderNodeMath"); mul.operation = "MULTIPLY"; mul.inputs[1].default_value = emis_strength
+    nt.links.new(at.outputs["Fac"], mul.inputs[0])
+    nt.links.new(mul.outputs[0], pv.inputs["Emission Strength"])
     if "Anisotropy" in pv.inputs:
         pv.inputs["Anisotropy"].default_value = 0.2
     nt.links.new(pv.outputs[0], out.inputs["Volume"])
@@ -488,6 +512,8 @@ def setup_compositor(scene):
         out = ng.nodes.new("CompositorNodeComposite")
     if hasattr(scene.render, "use_compositing"):
         scene.render.use_compositing = True
+    if hasattr(scene.render, "compositor_device") and (bpy.app.background or CONFIG["COMPOSITOR_CPU"]):
+        scene.render.compositor_device = "CPU"     # GPU compositor needs an OpenGL context
     rl = ng.nodes.new("CompositorNodeRLayers")
     img = rl.outputs["Image"]
     if c["GLARE"]:
@@ -723,7 +749,12 @@ def find_cache():
 def build(preview=False):
     c = CONFIG
     clean()
-    scene = bpy.context.scene
+    scene = bpy.data.scenes.get(SCENE_NAME) or bpy.data.scenes.new(SCENE_NAME)
+    try:
+        if bpy.context.window is not None:
+            bpy.context.window.scene = scene
+    except Exception:
+        pass
     cache = Cache(find_cache())
     print("cache:", cache.dir, cache.n, "particles,", len(cache), "frames")
     cs = c["CACHE_FRAME_START"]
@@ -831,12 +862,17 @@ def build(preview=False):
     half_w = half_h * res[0] / res[1]
     pre = PRESETS.get(c["PRESET"], PRESETS["theia"])
     fps = c["FPS"]
-    caps = pre["captions"]
+    caps = list(c.get("CAPTIONS") or pre["captions"])
     size = c["CAPTION_SIZE"] * 2 * half_h
+    dur = (scene.frame_end - scene.frame_start + 1) / fps
+    span = caps[-1][0] + 3.0 if caps else 1
+    k = dur / span if (caps and span > dur) else 1.0     # squeeze caption times into a short cache
     for i, (ts, txt) in enumerate(caps):
-        te = caps[i + 1][0] if i + 1 < len(caps) else (scene.frame_end + 999) / fps
+        te = caps[i + 1][0] * k if i + 1 < len(caps) else dur + 10
+        f0 = scene.frame_start + ts * k * fps
+        f1 = scene.frame_start + te * fps
         o, m = make_text("Cap%d" % i, wrap(txt, 30), col, rig, size, -half_h * 0.70)
-        fade_keys(m, ts * fps, te * fps, c["FADE_S"] * fps, scene.frame_end)
+        fade_keys(m, f0, f1, min(c["FADE_S"] * fps, (f1 - f0) / 3))
     if pre.get("title"):
         o, m = make_text("Title", wrap(pre["title"], 22), col, rig, size * 1.6, half_h * 0.62)
     if c["SHOW_CLOCK"]:
@@ -862,13 +898,33 @@ def wrap(txt, n):
     return "\n".join(lines)
 
 
-def fade_keys(m, f0, f1, fl, fend):
+def fade_keys(m, f0, f1, fl):
     mx = m.node_tree.nodes["fade"].inputs[0]
-    for f, v in ((0, 0.0), (f0, 0.0), (f0 + fl, 1.0), (f1 - fl, 1.0), (f1, 0.0)):
-        if f < 0 or (f > fend + 1 and v == 0.0 and f != 0):
-            continue
+    keys = [(min(0, f0 - 1), 0.0), (f0, 0.0), (f0 + fl, 1.0), (f1 - fl, 1.0), (f1, 0.0)]
+    for f, v in keys:
         mx.default_value = v
         mx.keyframe_insert("default_value", frame=f)
+    ad = m.node_tree.animation_data
+    if ad and ad.action:
+        for fc in all_fcurves(ad):
+            for kp in fc.keyframe_points:
+                kp.interpolation = "LINEAR"
+
+
+def all_fcurves(ad):
+    """fcurves of an animation_data in 4.x (action.fcurves) and 5.x (layered actions)."""
+    act = ad.action
+    if hasattr(act, "fcurves") and len(getattr(act, "fcurves", [])):
+        return list(act.fcurves)
+    out = []
+    try:
+        for layer in act.layers:
+            for strip in layer.strips:
+                for cb in strip.channelbags:
+                    out.extend(cb.fcurves)
+    except Exception:
+        pass
+    return out
 
 
 # ----------------------------------------------------------------------------- render
@@ -886,7 +942,7 @@ def render_frames(scene, frames, tag="frame"):
         t0 = time.time()
         scene.frame_set(f)
         scene.render.filepath = os.path.join(d, "%s_%04d.png" % (tag, f))
-        bpy.ops.render.render(write_still=True)
+        bpy.ops.render.render(write_still=True, scene=scene.name)
         times.append(time.time() - t0)
         print("rendered %s  %.1fs" % (scene.render.filepath, times[-1]), flush=True)
     if times:

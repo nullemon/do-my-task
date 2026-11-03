@@ -520,7 +520,9 @@ def build_planet_scene(idx, planet, preview):
     bev = plate.modifiers.new("Sub", "SUBSURF")
     bev.levels = 1
     bev.render_levels = 2
-    col_me = build_lathe("Collider", [(0, 0.0), (0.95, 0.0)], seg=48)
+    # collider follows the plate's top surface incl. the rim (catches a splat), offset down by
+    # PLATE_TOP so the collision shell lines up with the visible porcelain
+    col_me = build_lathe("Collider", [(0, 0.0), (0.80, 0.0), (0.92, 0.012), (1.02, 0.05), (1.08, 0.075)], seg=48)
     col = new_obj(sc, "PlateCollider", col_me)
     col.hide_render = True
     col.display_type = "WIRE"

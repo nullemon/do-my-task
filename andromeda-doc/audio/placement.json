@@ -1,0 +1,276 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "ch": 1,
+   "off": 2.0,
+   "start": 2.0,
+   "dur": 3.322,
+   "text": "Look up on a dark autumn night, far from city lights.",
+   "tempo": 1.0,
+   "end": 5.322
+  },
+  {
+   "i": 1,
+   "ch": 1,
+   "off": 7.5,
+   "start": 7.5,
+   "dur": 5.713,
+   "text": "Near the constellation Andromeda, there's a faint smudge. Most people never notice it.",
+   "tempo": 1.0,
+   "end": 13.213
+  },
+  {
+   "i": 2,
+   "ch": 1,
+   "off": 15.0,
+   "start": 15.0,
+   "dur": 6.668,
+   "text": "It isn't a cloud. It isn't a star. It's another galaxy \u2014 a spiral of perhaps a trillion suns.",
+   "tempo": 1.0,
+   "end": 21.668
+  },
+  {
+   "i": 3,
+   "ch": 1,
+   "off": 24.0,
+   "start": 24.0,
+   "dur": 6.493,
+   "text": "If your eyes could gather enough light, it would stretch across the sky, about six full Moons wide.",
+   "tempo": 1.0,
+   "end": 30.493
+  },
+  {
+   "i": 4,
+   "ch": 1,
+   "off": 33.0,
+   "start": 33.0,
+   "dur": 5.647,
+   "text": "The light you're seeing left it two and a half million years ago \u2014 before our species existed.",
+   "tempo": 1.0,
+   "end": 38.648
+  },
+  {
+   "i": 5,
+   "ch": 1,
+   "off": 43.0,
+   "start": 43.0,
+   "dur": 4.306,
+   "text": "It is the farthest thing most of us will ever see with our own eyes.",
+   "tempo": 1.0,
+   "end": 47.306
+  },
+  {
+   "i": 6,
+   "ch": 1,
+   "off": 51.0,
+   "start": 51.0,
+   "dur": 1.696,
+   "text": "And it is coming toward us.",
+   "tempo": 1.0,
+   "end": 52.696
+  },
+  {
+   "i": 7,
+   "ch": 2,
+   "off": 1.0,
+   "start": 61.0,
+   "dur": 6.728,
+   "text": "In 1912, astronomer Vesto Slipher measured its light \u2014 and found it shifted toward blue.",
+   "tempo": 1.0,
+   "end": 67.728
+  },
+  {
+   "i": 8,
+   "ch": 2,
+   "off": 9.0,
+   "start": 69.0,
+   "dur": 7.012,
+   "text": "Andromeda was approaching. Today we know it's closing at about a hundred and ten kilometres every second.",
+   "tempo": 1.0,
+   "end": 76.012
+  },
+  {
+   "i": 9,
+   "ch": 2,
+   "off": 18.5,
+   "start": 78.5,
+   "dur": 5.161,
+   "text": "Four hundred thousand kilometres every hour. Roughly the distance to the Moon.",
+   "tempo": 1.0,
+   "end": 83.661
+  },
+  {
+   "i": 10,
+   "ch": 2,
+   "off": 26.0,
+   "start": 86.0,
+   "dur": 3.936,
+   "text": "For decades, astronomers thought a head-on collision was certain.",
+   "tempo": 1.0,
+   "end": 89.936
+  },
+  {
+   "i": 11,
+   "ch": 2,
+   "off": 32.0,
+   "start": 92.0,
+   "dur": 3.792,
+   "text": "But measuring its sideways drift is extraordinarily hard.",
+   "tempo": 1.0,
+   "end": 95.792
+  },
+  {
+   "i": 12,
+   "ch": 2,
+   "off": 37.5,
+   "start": 97.5,
+   "dur": 11.9,
+   "text": "Recent studies using the Hubble and Gaia spacecraft disagree: some give it a coin-flip chance of merging within ten billion years; newer work puts it closer to ninety percent.",
+   "tempo": 1.0105,
+   "end": 109.4
+  },
+  {
+   "i": 13,
+   "ch": 2,
+   "off": 50.0,
+   "start": 110.0,
+   "dur": 2.406,
+   "text": "So let's follow the version where it comes.",
+   "tempo": 1.0,
+   "end": 112.406
+  },
+  {
+   "i": 14,
+   "ch": 3,
+   "off": 1.0,
+   "start": 121.0,
+   "dur": 3.749,
+   "text": "In about two billion years, it would no longer be a smudge.",
+   "tempo": 1.0,
+   "end": 124.749
+  },
+  {
+   "i": 15,
+   "ch": 3,
+   "off": 8.0,
+   "start": 128.0,
+   "dur": 5.617,
+   "text": "Night after night, nothing would seem to change. But over millions of years, it would swell.",
+   "tempo": 1.0,
+   "end": 133.617
+  },
+  {
+   "i": 16,
+   "ch": 3,
+   "off": 17.0,
+   "start": 137.0,
+   "dur": 6.739,
+   "text": "Its spiral arms, its dark lanes of dust, its glowing core \u2014 all visible to the naked eye.",
+   "tempo": 1.0,
+   "end": 143.739
+  },
+  {
+   "i": 17,
+   "ch": 3,
+   "off": 26.0,
+   "start": 146.0,
+   "dur": 6.89,
+   "text": "Some four billion years from now, it could fill the sky \u2014 a second galaxy, hanging over the horizon.",
+   "tempo": 1.0,
+   "end": 152.89
+  },
+  {
+   "i": 18,
+   "ch": 3,
+   "off": 37.0,
+   "start": 157.0,
+   "dur": 5.779,
+   "text": "Then our own Milky Way would begin to bend, pulled out of shape by the gravity of its neighbour.",
+   "tempo": 1.0,
+   "end": 162.779
+  },
+  {
+   "i": 19,
+   "ch": 3,
+   "off": 47.0,
+   "start": 167.0,
+   "dur": 5.517,
+   "text": "Two galaxies, a hundred billion stars and more each, falling into one another.",
+   "tempo": 1.0,
+   "end": 172.517
+  },
+  {
+   "i": 20,
+   "ch": 4,
+   "off": 1.0,
+   "start": 181.0,
+   "dur": 5.769,
+   "text": "And yet, almost no stars would collide. The space between them is simply too vast.",
+   "tempo": 1.0,
+   "end": 186.769
+  },
+  {
+   "i": 21,
+   "ch": 4,
+   "off": 9.5,
+   "start": 189.5,
+   "dur": 6.879,
+   "text": "But the clouds of gas would. They'd crash together and ignite, lighting the sky with newborn stars.",
+   "tempo": 1.0,
+   "end": 196.379
+  },
+  {
+   "i": 22,
+   "ch": 4,
+   "off": 19.0,
+   "start": 199.0,
+   "dur": 6.707,
+   "text": "Over billions of years, the two spirals would settle into one great, glowing elliptical galaxy.",
+   "tempo": 1.0,
+   "end": 205.707
+  },
+  {
+   "i": 23,
+   "ch": 4,
+   "off": 28.0,
+   "start": 208.0,
+   "dur": 3.359,
+   "text": "Astronomers already have a name for it: Milkomeda.",
+   "tempo": 1.0,
+   "end": 211.359
+  },
+  {
+   "i": 24,
+   "ch": 4,
+   "off": 34.0,
+   "start": 214.0,
+   "dur": 5.815,
+   "text": "Our Sun would likely survive \u2014 perhaps flung to a new orbit, far from where it is today.",
+   "tempo": 1.0,
+   "end": 219.815
+  },
+  {
+   "i": 25,
+   "ch": 4,
+   "off": 42.0,
+   "start": 222.0,
+   "dur": 7.143,
+   "text": "But no one on Earth will see it. Long before then, the Sun will have grown too bright for oceans, or for us.",
+   "tempo": 1.0,
+   "end": 229.143
+  },
+  {
+   "i": 26,
+   "ch": 4,
+   "off": 52.0,
+   "start": 232.0,
+   "dur": 3.146,
+   "text": "Someone, somewhere, may be watching. It won't be us.",
+   "tempo": 1.0,
+   "end": 235.145
+  }
+ ]
+}

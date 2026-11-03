@@ -9,11 +9,14 @@ settings, only gravity (and solver substeps) change:
     Jupiter-> hard squash
     Sun    -> SPLAT
 
-The jelly is a Blender *cloth* shell with volume-preserving pressure and
-internal springs (tested against the Soft Body modifier: soft body was far
-slower here and sank through the plate, cloth+pressure stayed on the plate and
-kept its volume).  Cloth gravity = scene.gravity x effector_weights.gravity, so
-each planet scene gets its own scene.gravity and weight 1.0.
+The jelly is a Blender *cloth* shell with volume-preserving pressure, a
+hydrostatic "fluid density" (the interior's weight), weak internal springs and
+self-collision.  Soft Body was tested too: 25x slower and it stayed rigid while
+sinking 6 cm into the plate, so cloth won.  Cloth gravity = scene.gravity x
+effector_weights.gravity, so each planet scene gets its own scene.gravity and
+weight 1.0.  After baking, the cloth result is frozen into one shape key per
+frame (keyed on/off) so playback and every render engine are deterministic; the
+Cloth modifier stays on the object (disabled) if you want to tweak and re-bake.
 
 Run:
   * In Blender: Scripting tab -> open this file -> Run (builds all scenes,

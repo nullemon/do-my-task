@@ -59,7 +59,7 @@ CONFIG = dict(
     av_alpha=1.5, av_beta=3.0,
     mantle_material="granite",   # granite | basalt
     T_initial_K=2000.0,      # initial temperature of all material (molten-ish surface)
-    T_cold_K=2000.0, T_hot_K=12000.0,   # fixed temp normalisation (log scale) -> temp 0..1
+    T_cold_K=2000.0, T_hot_K=30000.0,   # fixed temp normalisation (log scale) -> temp 0..1
     relax_time=10.0,         # code time units (~805 s each) of damped relaxation per body
     relax_check=2.0,         # undamped stability check after relaxation
     start_sep_contact=3.0,   # initial centre distance in units of (R_target + R_impactor)
@@ -901,6 +901,22 @@ def write_frame(path, pos, vel, u, rho, H, mat, cv, cfg, center, absorbed):
     )
 
 
+def retemp(rdir, cfg):
+    """Re-write the normalised `temp` field of an existing cache with the CONFIG mapping."""
+    files = sorted(f for f in os.listdir(rdir) if f.startswith("frame_") and f.endswith(".npz"))
+    for fn in files:
+        p = os.path.join(rdir, fn)
+        z = dict(np.load(p))
+        z["temp"] = temp_norm(z["T_K"], cfg)
+        np.savez_compressed(p + ".tmp.npz", **z)
+        os.replace(p + ".tmp.npz", p)
+    mp = os.path.join(rdir, "meta.json")
+    meta = json.load(open(mp))
+    meta["temp_mapping"] = dict(T_cold_K=cfg["T_cold_K"], T_hot_K=cfg["T_hot_K"], scale="log")
+    json.dump(meta, open(mp, "w"), indent=1)
+    print(f"[retemp] {len(files)} frames in {rdir}")
+
+
 def run(cfg):
     if cfg["threads"]:
         numba.set_num_threads(cfg["threads"])
@@ -1062,6 +1078,7 @@ def main():
     ap.add_argument("--threads", type=int)
     ap.add_argument("--fresh", action="store_true")
     ap.add_argument("--list", action="store_true")
+    ap.add_argument("--retemp", help="re-normalise temp in an existing run dir (after changing T_cold/T_hot)")
     ap.add_argument("--bench", type=str, help="comma list of N for timing, e.g. 50000,200000")
     a = ap.parse_args()
     cfg = dict(CONFIG)
@@ -1075,6 +1092,9 @@ def main():
         for k, v in SCENARIOS.items():
             print(k, v)
         print("speed_series variants:", SPEED_SERIES)
+        return
+    if a.retemp:
+        retemp(a.retemp, cfg)
         return
     if a.bench:
         bench([int(x) for x in a.bench.split(",")], cfg)

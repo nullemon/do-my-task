@@ -54,20 +54,21 @@ CONFIG = dict(
     SMOOTH_ITER=2,               # Blender 5.x only: grid blur passes on the density (0 = off)
     VOLUME_DENSITY=26.0,         # optical density of the molten bulk (higher = more solid surface)
     EMISSION=1.0,                # overall glow strength of the bulk
-    EMISSION_FLOOR=0.45,         # glow of the coolest material (molten bodies self-luminous)
+    EMISSION_FLOOR=0.45,
+    EMISSION_HOT=0.8,            # extra glow of the hottest material (too high -> clipped white)         # glow of the coolest material (molten bodies self-luminous)
     ALBEDO=(0.55, 0.22, 0.07),    # scattering colour (lit by the sun lamp -> day/night shading)
     HAZE=True, HAZE_TEMP=0.55, HAZE_RADIUS=3.2, HAZE_DENSITY=0.10, HAZE_EMISSION=5.0,
     SPARKLE=True,                # tiny emissive points for every particle (grain + debris)
     SPARKLE_RADIUS=0.22,         # * h
     SPARKLE_MAX_RADIUS=0.012,    # Earth radii
-    SPARKLE_EMISSION=6.0,
-    DEBRIS_H=0.12,               # particles with h above this count as isolated debris (bigger dots)
-    DEBRIS_RADIUS=0.018,
+    SPARKLE_EMISSION=3.0,
+    DEBRIS_H=2.2,                # particles with h > this * bulk h are sparse debris: drawn as glowing dots, not volume
+    DEBRIS_RADIUS=0.30,          # debris dot radius (* bulk h)
     SUN_STRENGTH=3.0, SUN_DIR=(-0.55, 0.35, 0.45),
     COMPOSITOR_CPU=False,        # force CPU compositing (always on in background mode)
     GLARE=True, BLOOM_SIZE=0.6, FOG_GLOW_MIX=0.35, GLARE_THRESHOLD=0.8,
-    VIEW_TRANSFORM="AgX",        # AgX | Filmic | Standard
-    VIEW_LOOK="AgX - Medium High Contrast",   # falls back to plain AgX / Filmic if missing
+    VIEW_TRANSFORM="Standard",   # Standard keeps the saturated NASA orange; AgX/Filmic wash hot areas to pink-white
+    VIEW_LOOK="None",   # falls back to plain AgX / Filmic if missing
     EXPOSURE=0.0,
     STARS=900, STAR_BRIGHTNESS=0.6,
     # camera
@@ -76,7 +77,7 @@ CONFIG = dict(
     CAM_AZIMUTH=-80.0,           # degrees, start
     CAM_ORBIT=18.0,              # degrees of slow orbit over the whole video
     CAM_ROLL=0.0,                # 90 puts the orbital plane vertical in the 9:16 frame
-    CAM_FIT_PERCENTILE=99.0,     # fraction of particles kept in frame
+    CAM_FIT_PERCENTILE=99.5,     # fraction of particles kept in frame
     CAM_MARGIN=1.25,
     CAM_MIN_EXTENT=1.6,          # Earth radii (half height of the view at least)
     CAM_SMOOTH_S=1.5,            # gaussian smoothing of auto-framing (seconds)
@@ -129,10 +130,10 @@ PRESETS = {
 RAMP = [(0.00, (0.70, 0.130, 0.020)),
         (0.25, (1.00, 0.260, 0.040)),
         (0.45, (1.00, 0.380, 0.070)),
-        (0.62, (1.00, 0.500, 0.120)),
-        (0.78, (1.00, 0.680, 0.280)),
-        (0.92, (1.00, 0.860, 0.580)),
-        (1.00, (1.00, 0.960, 0.880))]
+        (0.62, (1.00, 0.490, 0.110)),
+        (0.78, (1.00, 0.620, 0.220)),
+        (0.92, (1.00, 0.760, 0.420)),
+        (1.00, (1.00, 0.860, 0.620))]
 
 PFX = "PC_"
 SCENE_NAME = "07_Collision"
@@ -326,6 +327,7 @@ def build_volume_group():
         add_socket(ng, "TMax", "NodeSocketFloat", 1.0)
         add_socket(ng, "RadiusFactor", "NodeSocketFloat", 1.0)
         add_socket(ng, "MaxRadius", "NodeSocketFloat", 1.0)
+        add_socket(ng, "MaxH", "NodeSocketFloat", 100.0)
         add_socket(ng, "VoxelSize", "NodeSocketFloat", 0.03)
         add_socket(ng, "Density", "NodeSocketFloat", 1.0)
         add_socket(ng, "Material", "NodeSocketMaterial")
@@ -337,8 +339,12 @@ def build_volume_group():
         lt = N.new("FunctionNodeCompare"); lt.data_type = "FLOAT"; lt.operation = "LESS_THAN"
         L.new(temp.outputs["Attribute"], ge.inputs[0]); L.new(gi.outputs["TMin"], ge.inputs[1])
         L.new(temp.outputs["Attribute"], lt.inputs[0]); L.new(gi.outputs["TMax"], lt.inputs[1])
+        band0 = N.new("FunctionNodeBooleanMath"); band0.operation = "AND"
+        L.new(ge.outputs[0], band0.inputs[0]); L.new(lt.outputs[0], band0.inputs[1])
+        dense = N.new("FunctionNodeCompare"); dense.data_type = "FLOAT"; dense.operation = "LESS_THAN"
+        L.new(hh.outputs["Attribute"], dense.inputs[0]); L.new(gi.outputs["MaxH"], dense.inputs[1])
         band = N.new("FunctionNodeBooleanMath"); band.operation = "AND"
-        L.new(ge.outputs[0], band.inputs[0]); L.new(lt.outputs[0], band.inputs[1])
+        L.new(band0.outputs[0], band.inputs[0]); L.new(dense.outputs[0], band.inputs[1])
         sep = N.new("GeometryNodeSeparateGeometry"); sep.domain = "POINT"
         L.new(gi.outputs["Geometry"], sep.inputs["Geometry"]); L.new(band.outputs[0], sep.inputs["Selection"])
         rad = N.new("ShaderNodeMath"); rad.operation = "MULTIPLY"
@@ -666,6 +672,10 @@ def camera_track(cache, frames, scene, cam):
             stats_by_cache[ci] = p
         p = stats_by_cache[ci]
         m = np.median(p, axis=0)
+        hs = cache.get(ci)["h"][sub]
+        dense = hs < np.percentile(hs, 30) * c["DEBRIS_H"]      # ignore sparse debris when framing
+        if dense.sum() > 50:
+            p = p[dense]
         q = p - m
         ex = np.percentile(np.abs(q @ right), c["CAM_FIT_PERCENTILE"])
         ey = np.percentile(np.abs(q @ up), c["CAM_FIT_PERCENTILE"])
@@ -682,6 +692,8 @@ def camera_track(cache, frames, scene, cam):
         if a.ndim == 1:
             return np.convolve(pad, ker, mode="valid")
         return np.stack([np.convolve(pad[:, j], ker, mode="valid") for j in range(a.shape[1])], 1)
+    w = int(sig)
+    dist = np.array([dist[max(0, k - w):k + w + 1].max() for k in range(nf)])
     cen, dist = sm(cen), sm(dist)
     # never zoom in faster than a slow drift: use running max-ish blend for comfort
     dist *= (1 - c["CAM_PUSH"] * np.linspace(0, 1, nf))
@@ -808,13 +820,14 @@ def build(preview=False):
         t0, t1 = edges[b], edges[b + 1]
         tm = min(1.0, 0.5 * (t0 + t1))
         col_e = ramp(tm)
-        strength = c["EMISSION"] * (c["EMISSION_FLOOR"] + 1.5 * tm ** 1.6)
+        strength = c["EMISSION"] * (c["EMISSION_FLOOR"] + c["EMISSION_HOT"] * tm ** 1.6)
         m = mat_volume("Band%d" % b, col_e, strength, c["VOLUME_DENSITY"], c["ALBEDO"])
         o = new_obj("Band%d" % b, me, col)
         mod = o.modifiers.new("Volume", "NODES"); mod.node_group = vg
         set_mod_input(mod, vg, "TMin", float(t0)); set_mod_input(mod, vg, "TMax", float(t1))
         set_mod_input(mod, vg, "RadiusFactor", float(c["RADIUS_FACTOR"]))
         set_mod_input(mod, vg, "MaxRadius", float(hb * c["MAX_RADIUS_H"]))
+        set_mod_input(mod, vg, "MaxH", float(hb * c["DEBRIS_H"]))
         set_mod_input(mod, vg, "VoxelSize", vox)
         set_mod_input(mod, vg, "Density", 1.0)
         set_mod_input(mod, vg, "Material", m)
@@ -836,8 +849,8 @@ def build(preview=False):
         mod = o.modifiers.new("Sparkle", "NODES"); mod.node_group = pg
         set_mod_input(mod, pg, "RadiusFactor", float(c["SPARKLE_RADIUS"]))
         set_mod_input(mod, pg, "MaxRadius", float(c["SPARKLE_MAX_RADIUS"]))
-        set_mod_input(mod, pg, "DebrisH", float(c["DEBRIS_H"]))
-        set_mod_input(mod, pg, "DebrisRadius", float(c["DEBRIS_RADIUS"]))
+        set_mod_input(mod, pg, "DebrisH", float(hb * c["DEBRIS_H"]))
+        set_mod_input(mod, pg, "DebrisRadius", float(hb * c["DEBRIS_RADIUS"]))
         set_mod_input(mod, pg, "Material", m)
         no_secondary(o)
 
@@ -948,13 +961,26 @@ def out_dir():
 def render_frames(scene, frames, tag="frame"):
     d = out_dir()
     times = []
+    try:
+        import resource                     # not on Windows
+    except ImportError:
+        resource = None
+
+    def cpu_s():
+        if resource is None:
+            return time.process_time()
+        r = resource.getrusage(resource.RUSAGE_SELF)
+        return r.ru_utime + r.ru_stime
+    cpu = []
     for f in frames:
         t0 = time.time()
+        c0 = cpu_s()
         scene.frame_set(f)
         scene.render.filepath = os.path.join(d, "%s_%04d.png" % (tag, f))
         bpy.ops.render.render(write_still=True, scene=scene.name)
         times.append(time.time() - t0)
-        print("rendered %s  %.1fs" % (scene.render.filepath, times[-1]), flush=True)
+        cpu.append(cpu_s() - c0)
+        print("rendered %s  %.1fs wall  %.0f cpu-s" % (scene.render.filepath, times[-1], cpu[-1]), flush=True)
     if times:
         print("avg %.1fs/frame" % (sum(times) / len(times)))
 

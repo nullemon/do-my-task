@@ -589,7 +589,7 @@ def render_preview(sc, c, outdir=None):
 
 
 def main():
-    global CACHE_DIR, PREVIEW_RES, PREVIEW_SAMPLES
+    global CACHE_DIR, PREVIEW_RES, PREVIEW_SAMPLES, PREVIEW_HOURS
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     do_render = RENDER or "--render" in argv
     do_prev = PREVIEW or "--preview" in argv
@@ -599,6 +599,8 @@ def main():
     if "--res" in argv:
         w, h = argv[argv.index("--res") + 1].split("x")
         PREVIEW_RES = (int(w), int(h))
+    if "--hours" in argv:
+        PREVIEW_HOURS = [float(x) for x in argv[argv.index("--hours") + 1].split(",")]
     if "--samples" in argv:
         PREVIEW_SAMPLES = int(argv[argv.index("--samples") + 1])
     sc, c = build(preview=do_prev and not do_render)

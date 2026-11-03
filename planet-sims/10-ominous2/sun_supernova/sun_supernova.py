@@ -517,7 +517,7 @@ def build():
     pstr = pnt.nodes.new("ShaderNodeValue")
     anim_sock(pstr.outputs[0], lambda f: 0.15 * smoothstep(CUT, S(39), f) + 4.0 * pk(f))
     edge = math_node(pnt, "POWER", math_node(pnt, "SUBTRACT", 1.0, lw.outputs["Facing"]), 2.0)
-    pv = math_node(pnt, "MULTIPLY", math_node(pnt, "MULTIPLY", edge, math_node(pnt, "ADD", pn.outputs["Fac"], 0.1)),
+    pv = math_node(pnt, "MULTIPLY", math_node(pnt, "MULTIPLY", edge, math_node(pnt, "MULTIPLY", math_node(pnt, "POWER", pn.outputs["Fac"], 3.0), 4.0)),
                    pstr.outputs[0])
     pemi = node(pnt, "ShaderNodeEmission", Color=(1.0, 0.45, 0.12, 1))
     pnt.links.new(pv, pemi.inputs["Strength"])

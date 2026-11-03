@@ -507,7 +507,7 @@ def flash_curve(f):
     if f < FLASH:
         return 0.0
     s = (f - FLASH) / FPS
-    return math.exp(-s / 0.9) * 0.85 + 0.15 * math.exp(-s / 4.0)
+    return math.exp(-s / 0.9) * 0.96 + 0.04 * math.exp(-s / 3.0)
 
 
 def build_earth():
@@ -617,7 +617,7 @@ def build_earth():
     edge = maprange(ont, math_(ont, "ABSOLUTE", dd), 0.0, 0.03, 1.0, 0.0)
     edge = math_(ont, "MULTIPLY", edge, maprange(ont, thr_n.outputs[0], 1.6, 1.5))   # only once tearing
     olimb = math_(ont, "POWER", math_(ont, "SUBTRACT", 1.0, facing(ont)), 5.0)
-    base = math_(ont, "ADD", math_(ont, "MULTIPLY", olimb, 1.0), 0.012)
+    base = math_(ont, "ADD", math_(ont, "MULTIPLY", olimb, 1.0), 0.03)
     s = math_(ont, "ADD", math_(ont, "MULTIPLY", base, keep), math_(ont, "MULTIPLY", edge, 0.6))
     gain = ont.nodes.new("ShaderNodeValue")
 
@@ -709,9 +709,9 @@ def build_star():
 
     def star_gain(f):
         if f < COLLAPSE - 70:
-            return 6.0 + 0.6 * math.sin(f / 9.0)
+            return 2.4 + 0.3 * math.sin(f / 9.0)
         if f < COLLAPSE:
-            return 6.0 + 22.0 * smoothstep(COLLAPSE - 70, COLLAPSE, f) ** 2
+            return 2.4 + 25.0 * smoothstep(COLLAPSE - 70, COLLAPSE, f) ** 2
         return 30.0
     key_sock(sg.outputs[0], star_gain, 1, END, 1)
     nt.links.new(math_(nt, "MULTIPLY", limbd, sg.outputs[0]), em.inputs["Strength"])
@@ -738,9 +738,9 @@ def build_star():
         if f < COLLAPSE:
             return 0.35 + 0.8 * smoothstep(COLLAPSE - 70, COLLAPSE, f)
         s = (f - COLLAPSE) / FPS
-        return 0.12 + 3.0 * math.exp(-s / 0.5)
+        return 3.0 * math.exp(-s / 0.4)
     key_sock(hg.outputs[0], halo_gain, 1, END, 1)
-    hnt.links.new(math_(hnt, "MULTIPLY", math_(hnt, "POWER", facing(hnt), 14.0), hg.outputs[0]), hst)
+    hnt.links.new(math_(hnt, "MULTIPLY", math_(hnt, "POWER", facing(hnt), 24.0), hg.outputs[0]), hst)
     halo.data.materials.append(hm)
     halo.visible_shadow = False
 
@@ -806,12 +806,12 @@ def build_star():
 
     cam = camera(sc, (0, -10, -0.9), (90, 0, 0), lens=40)
     key_every_frame(cam, "location", 1, lambda f: -10.0 + 1.6 * smoothstep(S2, S3, f), S2 - 3, S3 + 3)
-    key_every_frame(cam, "location", 0, lambda f: 0.5 - 1.0 * smoothstep(S2, S3, f), S2 - 3, S3 + 3)
-    key_every_frame(cam, "rotation_euler", 2, lambda f: math.radians(-2.5 + 5 * smoothstep(S2, S3, f)), S2 - 3, S3 + 3)
+    key_every_frame(cam, "location", 0, lambda f: 0.25 - 0.5 * smoothstep(S2, S3, f), S2 - 3, S3 + 3)
+    key_every_frame(cam, "rotation_euler", 2, lambda f: math.radians(-1.2 + 2.4 * smoothstep(S2, S3, f)), S2 - 3, S3 + 3)
     key_every_frame(cam, "rotation_euler", 0, lambda f: math.radians(87.0 + 0 * f), S2 - 3, S2 - 2)
     # collapse flare + final whiteout as we stare down the jet
     card(sc, cam, "flare", (0.85, 0.88, 1.0), 0.9,
-         lambda f: 0.0 if f < COLLAPSE else 0.55 * math.exp(-((f - COLLAPSE) / FPS) / 0.35),
+         lambda f: 0.0 if f < COLLAPSE else 0.55 * (1 - smoothstep(COLLAPSE, COLLAPSE + 30, f)),
          f0=COLLAPSE - 3, f1=COLLAPSE + 40)
     card(sc, cam, "white_out", (1.0, 0.98, 1.0), 0.85, lambda f: smoothstep(S3 - 30, S3 - 2, f) ** 1.5,
          f0=S3 - 33, f1=S3 + 3)

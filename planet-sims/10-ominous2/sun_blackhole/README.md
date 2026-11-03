@@ -33,7 +33,7 @@ It renders the scenes, and the same script writes the numpy soundtrack.
 
 - The whole scenario is a hypothetical, and the captions say so ("What if", "imagine", "It never will").
 - The 8 min 20 s wait is compressed into 12 s, with an on-screen timer. A week and a year are compressed into about 10 s.
-- The **space view is not to scale.** A 6 km object seen from 1 AU would be far too small to see, and its real Einstein-ring radius would be under an arcminute. Here the black sphere and its ring are huge and close so they can be seen. The lensing is a point-lens approximation in the world shader: a camera ray at angle θ from the hole is bent by θ_E²/θ. The faint ring glow is an artistic touch.
+- The **space view is not to scale.** A 6 km object seen from 1 AU would be far too small to see, and its real Einstein-ring radius would be under an arcminute. Here the black sphere and its ring are huge and close so they can be seen. The lensing is a point-lens approximation in the world shader: a camera ray at angle θ from the hole is bent by θ_E²/θ. The black shadow (radius 0.6 θ_E), the thin bright Einstein ring and the faint photon ring are stylised glows. There is honestly no accretion disc, because an isolated black hole has no matter falling in. The ice glows faintly so it reads on a night-side planet.
 - The faint blue light on the dark Earth is a stand-in for starlight, so the planet can be seen at all. Ice spreading from the poles and the city lights dimming are dramatisations of "the oceans would ice over".
 - The Sun's disc is drawn larger than its real 0.5° so it reads on a phone.
 

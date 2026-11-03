@@ -207,7 +207,7 @@ def new_scene(name):
         pass
     sc.cycles.max_bounces = 3
     sc.render.use_motion_blur = True
-    for v in (2.0, 1.0):  # every 3rd frame is rendered: a long shutter bridges the gaps
+    for v in (1.2, 1.0):  # every 3rd frame is rendered: a long-ish shutter softens the gaps
         try:
             sc.render.motion_blur_shutter = v
             break
@@ -428,7 +428,7 @@ def build_world():
     nt.links.new(tc.outputs["Generated"], sep.inputs[0])
     # stars
     acc = None
-    for scale, radius, gain in ((150, 0.13, 90.0),):
+    for scale, radius, gain in ((110, 0.16, 60.0),):
         vor = N(nt, "ShaderNodeTexVoronoi", Scale=scale)
         nt.links.new(tc.outputs["Generated"], vor.inputs["Vector"])
         core = N(nt, "ShaderNodeMapRange", **{"From Min": 0.0, "From Max": radius, "To Min": 1.0, "To Max": 0.0})
@@ -762,9 +762,9 @@ def fling(loose, trunks):
         key_prop(ob, "rotation_euler", [(1, rot0), (t0, rot0), (END, Vector(rot0) + spin * dur)])
     # a constant stream of debris blown in from the sea and the town upwind (west)
     m = mat_pr("stream_m", (0.4, 0.33, 0.25))
-    for i in range(260):
-        s = rng.uniform(0.12, 1.2)
-        y = rng.uniform(3, 90)
+    for i in range(320):
+        s = rng.uniform(0.15, 1.3)
+        y = rng.uniform(3, 30) if i % 2 else rng.uniform(3, 90)
         z = rng.uniform(0.3, 18)
         ob = box(f"stream{i}", (s * rng.uniform(0.6, 2), s, s * rng.uniform(0.2, 1)), (-300, y, z), m)
         v = rng.uniform(22, 50) / FPS

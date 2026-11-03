@@ -438,7 +438,7 @@ def build_world(sc):
     nt.links.new(D2, dust.inputs["Vector"])
     dcore = node(nt, "ShaderNodeMapRange", **{"From Min": 0.0, "From Max": 0.22, "To Min": 1.0, "To Max": 0.0})
     nt.links.new(dust.outputs["Distance"], dcore.inputs["Value"])
-    acc = math_op(nt, "ADD", acc, math_op(nt, "MULTIPLY", dcore.outputs["Result"], 6.0))
+    acc = math_op(nt, "ADD", acc, math_op(nt, "MULTIPLY", dcore.outputs["Result"], 0.25))
     sep2 = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(D2, sep2.inputs[0])
     band = math_op(nt, "EXPONENT", math_op(nt, "MULTIPLY", math_op(nt, "POWER",
@@ -447,7 +447,7 @@ def build_world(sc):
     nt.links.new(D2, neb.inputs["Vector"])
     nebm = node(nt, "ShaderNodeMapRange", **{"From Min": 0.42, "From Max": 0.75})
     nt.links.new(neb.outputs["Fac"], nebm.inputs["Value"])
-    nebv = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", band, nebm.outputs["Result"]), 0.05)
+    nebv = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", band, nebm.outputs["Result"]), 0.012)
     # rings (theta ~ sqrt(p2)): a thin bright Einstein ring with a soft halo, and a faint photon ring
     th = math_op(nt, "SQRT", p2)
 
@@ -456,8 +456,8 @@ def build_world(sc):
         g = math_op(nt, "EXPONENT", math_op(nt, "MULTIPLY", math_op(nt, "POWER", g, 2.0), -1.0))
         return math_op(nt, "MULTIPLY", g, gain)
 
-    ring = math_op(nt, "ADD", gauss(THETA_E, THETA_E * 0.035, 1.6), gauss(THETA_E, THETA_E * 0.22, 0.10))
-    ring = math_op(nt, "ADD", ring, gauss(SHADOW * 1.04, THETA_E * 0.025, 0.7))
+    ring = math_op(nt, "ADD", gauss(THETA_E, THETA_E * 0.022, 1.3), gauss(THETA_E, THETA_E * 0.2, 0.04))
+    ring = math_op(nt, "ADD", ring, gauss(SHADOW * 1.03, THETA_E * 0.015, 0.25))
     ringv = nt.nodes.new("ShaderNodeValue")
     ring = math_op(nt, "MULTIPLY", math_op(nt, "MULTIPLY", ring, front), ringv.outputs[0])
     stars = mix_rgb(nt, "MULTIPLY", acc, (0.86, 0.92, 1.0))
@@ -621,7 +621,7 @@ def build_space(sc):
     glowi = math_op(nt, "ADD", math_op(nt, "MULTIPLY", icef, 0.10), math_op(nt, "MULTIPLY", edge, 0.9))
     b.inputs["Emission Color"].default_value = (1.0, 0.6, 0.26, 1)
     ecol = mix_rgb(nt, "MIX", (1.0, 0.6, 0.26), (0.7, 0.85, 1.0))
-    nt.links.new(icef, ecol.node.inputs["Fac"])
+    nt.links.new(math_op(nt, "MINIMUM", math_op(nt, "MULTIPLY", icef, 4.0), 1.0), ecol.node.inputs["Fac"])
     nt.links.new(ecol, b.inputs["Emission Color"])
     nt.links.new(math_op(nt, "ADD", lights, glowi), b.inputs["Emission Strength"])
     earth.data.materials.append(m)

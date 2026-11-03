@@ -28,3 +28,25 @@ Camera descends through Jupiter's cloud decks: bright ammonia-ice cloud tops, th
 
 ## 6. ONE HOUR
 A small craft hovering near a black hole: black disc with a glowing lensed accretion ring (procedural), stars distorted around it. Two clocks on screen: HERE and HOME. HERE ticks normally; HOME spins faster and faster as the ship descends, ending at "1 hour = 7 years". Final: the ship's light turns away. Real-ish: time dilation factor 61,000 (1 h ≈ 7 yr) requires a hover extremely close to a rapidly spinning black hole's horizon (Interstellar's Miller scenario) — say "near a spinning black hole".
+
+---
+# Wave 2 (45–55 s each)
+
+| # | Title | Hook | Accent |
+|---|-------|------|--------|
+| 8 | THE STAR THAT HIT US | "In 2004, a dead star 50,000 light-years away hit Earth." | magnetar magenta |
+| 9 | ONE LIGHT-DAY | "Voyager 1 is now one light-day away. And it's going quiet." | pale blue |
+| 10 | THE SKY THAT'S COMING | "Andromeda is already falling toward us." | violet-white |
+| 11 | 1859 | "The sky caught fire. The telegraph wires sparked." | aurora crimson |
+
+## 8. THE STAR THAT HIT US
+Magnetar SGR 1806-20 giant flare, 27 Dec 2004: in ~0.2 s released more energy than the Sun in ~100,000+ years (cite source carefully); measurably disturbed Earth's ionosphere from ~50,000 ly (distance estimates vary ~30–50k ly; say "tens of thousands"). Visuals: deep-space flight to a tiny spinning neutron star wrapped in twisted magnetic field lines; field lines snap; a flash travels across the galaxy; cut to night Earth, a silent flicker in the upper atmosphere. Text: real facts; final "It was 20 km wide." (neutron star ~20 km diameter).
+
+## 9. ONE LIGHT-DAY
+Voyager 1, launched 1977, the farthest human-made object; around late 2026 it reaches about one light-day from Earth (verify date). Its radio signal takes ~a day; transmitter ~22–23 W; instruments being switched off to save dwindling plutonium power; expected to fall silent sometime in the 2030s. Visuals: the small probe with its dish drifting in black, the Sun just a bright star behind it; a faint radio pulse travels away toward a pale blue dot; the "Pale Blue Dot" image idea (1990) recreated generically: a sunbeam streak with a tiny dot. Ending: the instrument light goes out; "It will keep going. Silently. For billions of years." (Voyager reaching ~1.6 ly near Gliese 445 in ~40,000 yr — optional fact.)
+
+## 10. THE SKY THAT'S COMING
+Andromeda (~2.5 million ly) approaching at ~110 km/s; simulations predict a merger in ~4–5 billion years, though Gaia/Hubble 2025 work gives only ~50% chance within 10 billion years — say "may" honestly. Visuals: the same night landscape (silhouette ridge + lone tree) as time advances: Andromeda grows from a faint smudge to filling the sky, two galaxies tearing, starburst skies, then a glowing elliptical blob. Year counter. Text: "Stars almost never collide. The space between them is too vast." End: "Someone will be watching. It won't be us."
+
+## 11. 1859
+The Carrington Event, 1–2 Sept 1859: Richard Carrington sketched a white-light solar flare; ~17.6 h later the CME hit Earth; auroras seen near the tropics (Caribbean/Hawaii reports); telegraph lines sparked, some operators shocked, some lines worked with batteries disconnected. Visuals: Victorian telegraph office at night (silhouettes, brass key, wires), sky outside turns blood-red/green, sparks arc from the key; cut to the Sun erupting; then modern Earth from orbit with grid lights. Text: "If it happened today…" — honest framing: 2012 a comparable CME missed Earth by ~9 days (July 2012 event). Final: "It's not if. It's when." (keep it honest — frequency estimates vary.)

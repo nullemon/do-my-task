@@ -13,6 +13,10 @@ blender -b -P water_pour_planets.py -- --preview           # small fast bake + C
    options: --out DIR   --planets Moon,Sun   --no-bake
 ```
 
+Heads-up: with `BAKE_ON_RUN = True`, Run Script in the UI bakes all planets at `RESOLUTION` and Blender stays busy for
+hours (see the time budget below). For a quick look, set `RESOLUTION = 48` or `BAKE_ON_RUN = False` and bake one scene from
+*Physics > Fluid > Bake All*.
+
 Output: `//renders/water_pour/<NN_Planet>/frame_####.png` (next to the .blend, or the script folder when unsaved),
 fluid caches in `//cache_water_pour/<NN_Planet>_r<res>/`, metrics in `renders/water_pour/metrics*.json`.
 
@@ -78,9 +82,11 @@ whole glass empties into the bowl as one sheet within about 0.1 s.
 
 Baking scales roughly with res³ × sub-steps. Measured preview bakes, scaled up:
 
-- `RESOLUTION = 128` on a 4-core CPU: Moon/Pluto/Mars about 0.5–1 h each, Earth/Jupiter 1.5–2 h, **Sun 5–7 h** (up to 250
-  sub-steps per frame), so **about 12–15 h total**. A 12–16-core desktop takes roughly a third of that. Use res 96 for a quick pass
-  (about 2.5× faster).
+- Measured here: the Sun at res 80 took 1364 s for 1.5 s of clip, about 50 s per simulated frame with 30–100 sub-steps. It stayed
+  stable: the splash topped out at 0.29 m, just below the 0.30 m lip.
+- `RESOLUTION = 128` on a 4-core CPU: Moon/Pluto/Mars about 0.5–1 h each, Earth/Jupiter 1.5–2 h, **Sun 10–13 h** (5–6 min per
+  frame, up to 250 sub-steps), so **about 16–20 h total**. A 12–16-core desktop takes roughly a third of that. Tip: bake the Sun
+  separately at a lower `RESOLUTION` (`--planets Sun`), or use res 96 everywhere for a quick pass (about 2.5× faster).
 - 160–192: 2–3.5× longer again. Caches are about 1–3 GB per planet at 128 (OpenVDB + mesh).
 - Render: Eevee 1080×1920 takes 2–6 s/frame on a decent GPU, so about 30–90 min for all 900 frames. Cycles 256 samples
   (best-looking water) takes 20–60 s/frame on GPU, so 5–15 h. On CPU expect 3–5× longer.
@@ -88,5 +94,7 @@ Baking scales roughly with res³ × sub-steps. Measured preview bakes, scaled up
 
 ## Preview
 
-`preview/` holds stills at the same moment (t = 1.9 s) for each planet, plus `01_Moon_impact` and `05_Sun_impact`
-(two frames after the first water lands). They are low-res, 24-sample Cycles renders.
+`preview/` holds stills at the same moment (t = 1.9 s) for each planet from the res-48 preview bake, plus
+`01_Moon_impact.jpg` (two frames after the water first lands) and `05_Sun_res80_splash.jpg`: a res-80 bake of the Sun 0.1 s
+after impact, where the whole glass hits the bowl as one sheet and sprays out. That's the look to expect at final resolution.
+They are low-res, 24-sample Cycles renders.

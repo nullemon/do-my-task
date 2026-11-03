@@ -55,7 +55,7 @@ CONFIG = dict(
     VOLUME_DENSITY=26.0,         # optical density of the molten bulk (higher = more solid surface)
     EMISSION=1.0,                # overall glow strength of the bulk
     EMISSION_FLOOR=0.45,
-    EMISSION_HOT=0.8,            # extra glow of the hottest material (too high -> clipped white)         # glow of the coolest material (molten bodies self-luminous)
+    EMISSION_HOT=0.5,            # extra glow of the hottest material (too high -> clipped white)         # glow of the coolest material (molten bodies self-luminous)
     ALBEDO=(0.55, 0.22, 0.07),    # scattering colour (lit by the sun lamp -> day/night shading)
     HAZE=True, HAZE_TEMP=0.55, HAZE_RADIUS=3.2, HAZE_DENSITY=0.10, HAZE_EMISSION=5.0,
     SPARKLE=True,                # tiny emissive points for every particle (grain + debris)
@@ -63,7 +63,7 @@ CONFIG = dict(
     SPARKLE_MAX_RADIUS=0.012,    # Earth radii
     SPARKLE_EMISSION=3.0,
     DEBRIS_H=2.2,                # particles with h > this * bulk h are sparse debris: drawn as glowing dots, not volume
-    DEBRIS_RADIUS=0.30,          # debris dot radius (* bulk h)
+    DEBRIS_RADIUS=0.16,          # debris dot radius (* bulk h)
     SUN_STRENGTH=3.0, SUN_DIR=(-0.55, 0.35, 0.45),
     COMPOSITOR_CPU=False,        # force CPU compositing (always on in background mode)
     GLARE=True, BLOOM_SIZE=0.6, FOG_GLOW_MIX=0.35, GLARE_THRESHOLD=0.8,
@@ -77,8 +77,8 @@ CONFIG = dict(
     CAM_AZIMUTH=-80.0,           # degrees, start
     CAM_ORBIT=18.0,              # degrees of slow orbit over the whole video
     CAM_ROLL=0.0,                # 90 puts the orbital plane vertical in the 9:16 frame
-    CAM_FIT_PERCENTILE=99.5,     # fraction of particles kept in frame
-    CAM_MARGIN=1.25,
+    CAM_FIT_PERCENTILE=96.0,     # fraction of particles kept in frame
+    CAM_MARGIN=1.0, 
     CAM_MIN_EXTENT=1.6,          # Earth radii (half height of the view at least)
     CAM_SMOOTH_S=1.5,            # gaussian smoothing of auto-framing (seconds)
     CAM_PUSH=0.10,               # slow push-in over the video (fraction of distance)
@@ -127,11 +127,11 @@ PRESETS = {
 }
 
 # colour ramp used for the bands: temperature (0..1) -> emission colour (blackbody-like)
-RAMP = [(0.00, (0.70, 0.130, 0.020)),
-        (0.25, (1.00, 0.260, 0.040)),
-        (0.45, (1.00, 0.380, 0.070)),
-        (0.62, (1.00, 0.490, 0.110)),
-        (0.78, (1.00, 0.620, 0.220)),
+RAMP = [(0.00, (0.92, 0.300, 0.045)),
+        (0.25, (1.00, 0.360, 0.060)),
+        (0.45, (1.00, 0.430, 0.080)),
+        (0.62, (1.00, 0.520, 0.120)),
+        (0.78, (1.00, 0.630, 0.220)),
         (0.92, (1.00, 0.760, 0.420)),
         (1.00, (1.00, 0.860, 0.620))]
 
@@ -838,6 +838,7 @@ def build(preview=False):
         set_mod_input(mod, vg, "TMin", float(c["HAZE_TEMP"])); set_mod_input(mod, vg, "TMax", 2.0)
         set_mod_input(mod, vg, "RadiusFactor", float(c["HAZE_RADIUS"]))
         set_mod_input(mod, vg, "MaxRadius", float(hb * c["MAX_RADIUS_H"] * 2.5))
+        set_mod_input(mod, vg, "MaxH", float(hb * c["DEBRIS_H"]))
         set_mod_input(mod, vg, "VoxelSize", float(np.clip(vox * 3, 0.02, 0.15)))
         set_mod_input(mod, vg, "Density", 1.0)
         set_mod_input(mod, vg, "Material", m)

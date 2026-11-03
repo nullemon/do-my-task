@@ -79,15 +79,15 @@ JELLY = dict(
     shear=0.3,
     bending=2.0,             # high bending keeps the skin smooth (no crumpling)
     internal=0.003,           # weak internal springs give the shell a "body" (0.01 = rubber-hard)
-    damping=0.0,              # spring damping (low = wobbly)
-    air_damping=0.05,
+    damping=0.1,              # spring damping (low = wobbly)
+    air_damping=0.1,
     pressure_factor=400.0,      # kPa, pulls volume back to the rest volume (near-incompressible)
     shell_fraction=0.3,       # share of the jelly mass carried by the cloth skin vertices...
     fluid_density=True,       # ...the rest is "fluid" weight via cloth hydrostatic pressure gradient
 )
 BASE_QUALITY = 15             # cloth substeps per frame at Earth gravity
 PLATE_FRICTION = 60.0       # plate grip (cloth collision friction)
-MAX_QUALITY = 80
+MAX_QUALITY = 50           # Sun: 50 substeps/frame (tested stable; 80 = same result, 2x slower)
 SELF_COLLISION = True       # stops the top punching through the bottom under Sun gravity
 
 TAG = "jelly_planets"         # custom property put on everything we create

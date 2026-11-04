@@ -108,3 +108,6 @@ Rebuild: `/home/user/bpyenv/bin/python -c "import sys; p='blender/animals.py'; s
   instead of `slow`, and the 4K files use `-preset veryfast`. The quality targets (CRF 18 / CRF 20 / bitrate caps)
   are unchanged.
 - Audio: −14.0 LUFS integrated, −1.4 dBTP true peak (ebur128 on the final hq file).
+- `-4k-share.mp4`: the 13.5 Mb/s ABR encode came out at 543 MB, over the 480 MB cap, because the film is 316 s
+  long. The CRF 20 4K encode is only 360 MB, so the share file is a stream copy (remux, faststart) of
+  `megalodon-to-scale-4k.mp4`. Both are lanczos upscales of the 1080p render.

@@ -21,3 +21,9 @@ Each video: **16:9 1920×1080, 24 fps, 4:00–5:00 long (target 4:30 = 270 s)**,
 - Launch long renders/encodes detached (`setsid nohup … &`) with resume/skip-existing. NEVER `pkill -f` broad patterns — kill only your own PIDs.
 - Don't touch other videos' folders. Don't git commit.
 - Report: final file paths + sizes + durations, render time, voice/audio notes, fact sources, honest limitations.
+
+## Wave 2 ("Earth's Extremes") overrides
+- Length **4:00–6:00** (target ~5:00 = 300 s), narration ~600–750 words.
+- **Disk is tight (≈9 GB free shared by 3 videos):** keep your scratch ≤ 2.5 GB. Delete intermediate frames once a shot is encoded to a lossless/near-lossless segment (x264 crf 14). Check `df -h /` before big steps.
+- **Memory:** avoid running more than 2 heavy processes yourself at once (an earlier agent was OOM-killed).
+- Folders: `docs-series/05-mariana-trench/`, `06-lituya-bay/`, `07-megalodon-to-scale/`.

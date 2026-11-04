@@ -8,10 +8,12 @@ Sunlight fading to black is the visual spine; bioluminescence is the beauty; the
 Script, locked timings and shot list: [`SCRIPT.md`](SCRIPT.md).
 
 ## Deliverables (`out/`, gitignored)
-- `mariana-trench-1080p.mp4` — master: x264 CRF 18 (slow, tune film), AAC 256 kb/s, +faststart, soft English subtitle track.
-- `mariana-trench-1080p-hq.mp4` — same picture, CRF 18 capped at 10 Mb/s (for chat delivery, ≤ 380 MB).
-- `mariana-trench-4k.mp4` — **3840×2160 lanczos UPSCALE of the 1080p render** (not native 4K detail), CRF 20.
-- `mariana-trench-4k-share.mp4` — the same upscale, capped at 13 Mb/s (≤ 480 MB).
+- `mariana-trench-1080p.mp4` — master: x264 CRF 18 (preset medium, tune film), AAC 256 kb/s, +faststart, soft English subtitle track. **424 MB**, 352.0 s.
+- `mariana-trench-1080p-hq.mp4` — same picture, CRF 18 capped at 8 Mb/s (for chat delivery). **361 MB**.
+- `mariana-trench-4k.mp4` — **3840×2160 lanczos UPSCALE of the 1080p render** (not native 4K detail), CRF 20, preset ultrafast (the shared CPU was at load ≈ 30; hence the large file). **2.36 GB**.
+- `mariana-trench-4k-share.mp4` — the same upscale, capped at 10 Mb/s. **453 MB**.
+
+Audio: −14.1 LUFS integrated, LRA 3.1 LU, true peak −1.8 dBTP (measured with ebur128 on the final AAC).
 - `mariana-trench.srt` — subtitles generated from the real placed narration timings.
 
 ## Pipeline
@@ -23,7 +25,7 @@ Script, locked timings and shot list: [`SCRIPT.md`](SCRIPT.md).
 | Blender assets | `deep3d.py`, `render_plates.sh` | bpy 5.1.2, Cycles CPU. Floor plates: a 1M-vertex numpy heightfield (fbm relief, burrow mounds with pits, dimpled trails, small debris), ooze material with fine bump, lit only by two spot lamps (our "lander"), 2880×1620, 24 spp. Vessel sprites: stylised low-detail models of Trieste, Deepsea Challenger and Limiting Factor (proportions only), orthographic ¾ view, rim + own lamps, transparent RGBA, 16 spp + OIDN. |
 | compositor | `common.py`, `creatures.py`, `descent.py`, `run_queue.sh` | python3 + numpy + PIL, linear light, piped straight into x264 per 24 s segment (crf 14). |
 | audio | `audio/mix.py` | voice chain (70 Hz HPF, EQ, 3:1 comp, small room), surface wash, splash + bubbles, depth-driven underwater rumble (gets lower/heavier with depth), sparse hadal groans, sperm-whale clicks, glassy chimes on bioluminescence, floor thump, lamp click; numpy pad bed that descends from airy D to low drones and is progressively low-passed with depth; 8 dB sidechain ducking; 2-pass loudnorm → −14 LUFS, limiter. |
-| final | `assemble.sh` | concat segments (stream copy) → vignette + fine temporal grain → mux audio + mov_text subtitles → 1080p / hq / 4K / 4K-share. |
+| final | `assemble.sh` (+ `assemble4k.sh`, the 4K half, run in parallel) | concat segments (stream copy) → vignette + fine temporal grain → mux audio + mov_text subtitles → 1080p / hq / 4K / 4K-share. |
 
 ### How the picture works
 - **Water colour** = surface colour × per-channel exponential attenuation (red 6 m, green 95 m, blue 175 m e-folding —

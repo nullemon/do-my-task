@@ -17,12 +17,16 @@ enc() { local out=$1 needmb=$2; shift 2; [[ -s $out ]] && { log "skip $out"; ret
   (( free > needmb + 300 )) || { log "NOT ENOUGH DISK for $out (free ${free} MB, need ~${needmb})"; return; }
   nice -n 5 ffmpeg -v error -y -i "$V" -i "$A" -i "$S" "${COMMON[@]}" "$@" "$out.part.mp4" && mv -f "$out.part.mp4" "$out"
   log "done $out $(du -h "$out" | cut -f1) $(ffprobe -v error -show_entries format=duration -of csv=p=0 "$out")s"; }
-enc $O/$N-1080p.mp4 500 -vf "$VIG,noise=c0s=3:c0f=t+u,format=yuv420p" -c:v libx264 -preset medium -crf 18 -maxrate 14000k -bufsize 28000k -tune film \
+# 1080p master capped at 10 Mb/s so it also fits the chat budget; the -hq file is then a stream-copy of it
+# (identical pictures, re-muxed). Same idea for the 4K pair (capped at 13 Mb/s < 480 MB).
+enc $O/$N-1080p.mp4 400 -vf "$VIG,noise=c0s=3:c0f=t+u,format=yuv420p" -c:v libx264 -preset faster -crf 18 -maxrate 10000k -bufsize 20000k -tune film \
   -metadata title="What They See of Us"
-enc $O/$N-1080p-hq.mp4 370 -vf "$VIG,noise=c0s=3:c0f=t+u,format=yuv420p" -c:v libx264 -preset medium -crf 19 -maxrate 9500k -bufsize 19000k -tune film \
-  -metadata title="What They See of Us"
-enc $O/$N-4k-share.mp4 470 -vf "$VIG,scale=3840:2160:flags=lanczos,noise=c0s=3:c0f=t+u,format=yuv420p" -c:v libx264 -preset faster -crf 22 -maxrate 12500k -bufsize 25000k -tune film \
-  -metadata title="What They See of Us (4K lanczos upscale, share size)"
-enc $O/$N-4k.mp4 600 -vf "$VIG,scale=3840:2160:flags=lanczos,noise=c0s=3:c0f=t+u,format=yuv420p" -c:v libx264 -preset faster -crf 20 -maxrate 16000k -bufsize 32000k -tune film \
+remux() { local src=$1 out=$2 cap=$3; [[ -s $out ]] && return
+  local sz=$(stat -c %s $src); if (( sz < cap*1000000 )); then
+    ffmpeg -v error -y -i $src -map 0 -c copy -movflags +faststart $out.part.mp4 && mv -f $out.part.mp4 $out
+    log "done $out (stream copy of $(basename $src)) $(du -h $out | cut -f1)"; else log "$src over ${cap} MB, needs a capped re-encode"; fi; }
+remux $O/$N-1080p.mp4 $O/$N-1080p-hq.mp4 380
+enc $O/$N-4k.mp4 480 -vf "$VIG,scale=3840:2160:flags=lanczos,noise=c0s=3:c0f=t+u,format=yuv420p" -c:v libx264 -preset veryfast -crf 20 -maxrate 13000k -bufsize 26000k -tune film \
   -metadata title="What They See of Us (4K lanczos upscale of the 1080p render)"
+remux $O/$N-4k.mp4 $O/$N-4k-share.mp4 480
 touch $W/ASSEMBLY_DONE; log "assembly complete"

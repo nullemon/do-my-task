@@ -19,7 +19,8 @@ the sky with the photosphere. It ends on the orbit itself: a fall that keeps mis
 | `audio/narration.py`, `audio/gen_voice.py` | narration text, Kokoro TTS (am_michael, speed 0.94) |
 | `audio/mix.py`, `audio/placement.json` | voice chain, numpy music bed (C minor; ticks on every day change; heartbeat + riser + roar into impact; hard cut to silence at impact), ducking, two-pass loudnorm |
 | `65-days.srt` | subtitles from the real placed voice timings (also muxed as a soft track) |
-| `assemble.sh` | concat + grain/vignette + mux → the four deliverables in `out/` |
+| `assemble.sh` | concat segments → joined silent master, then grain/vignette + mux → the four deliverables in `out/` (sequential) |
+| `encode_one.sh` | encode one deliverable (`1080p`/`hq`/`4k`/`share`) from the joined master; resume-safe, used to run them in parallel |
 
 Rebuild: `python3 physics/fall.py` → `python3 gen_textures.py` → Blender stills/dive (see `blender/shots.py` header)
 → `/home/user/ttsenv/bin/python audio/gen_voice.py && /home/user/ttsenv/bin/python audio/mix.py`

@@ -7,10 +7,13 @@ home; each real star we pass is labelled with its distance and the year on Earth
 
 ## Deliverables (`out/`, gitignored)
 See the bottom of this file for sizes/durations of the final encodes.
-- `what-they-see-of-us-1080p.mp4` — master: x264 CRF 18, AAC 256 kb/s, +faststart, soft English subtitle track.
-- `what-they-see-of-us-1080p-hq.mp4` — chat-delivery size (CRF 19 capped at 9.5 Mb/s, ≤ 380 MB).
-- `what-they-see-of-us-4k.mp4` — **3840×2160 lanczos UPSCALE of the 1080p render** (not native 4K detail), CRF 20.
-- `what-they-see-of-us-4k-share.mp4` — the same upscale, capped at 12.5 Mb/s (≤ 480 MB).
+- `what-they-see-of-us-1080p.mp4` — master: x264 CRF 18 (preset faster, capped at 10 Mb/s), vignette + fine
+  temporal grain, AAC 256 kb/s, +faststart, soft English subtitle track (off by default).
+- `what-they-see-of-us-1080p-hq.mp4` — chat delivery (≤ 380 MB). Because the master already fits the budget, this
+  is a stream-copy remux of it (identical picture and sound) rather than a second, lossier encode.
+- `what-they-see-of-us-4k.mp4` — **3840×2160 lanczos UPSCALE of the 1080p render** (not native 4K detail),
+  CRF 20 capped at 13 Mb/s.
+- `what-they-see-of-us-4k-share.mp4` — ≤ 480 MB; likewise a stream-copy remux of the 4K file.
 - `what-they-see-of-us.srt` — subtitles from the real narration timings (also muxed, off by default).
 
 ## Pipeline (rebuild)
@@ -106,4 +109,17 @@ within a few light-years.
 - "The first printing presses" refers to Gutenberg's press (c. 1450); woodblock and movable-type printing in East
   Asia are older.
 - 4K files are lanczos upscales of the 1080p render.
-- Shared CPU (4 cores, 4 videos): compositing ran at ~2–3.5 s/frame under heavy load.
+- Shared CPU (4 cores, 4 videos, load average ~28): Blender loop 192 frames ≈ 20 min wall (≈ 5–8 s/frame at
+  2 threads), Earth + Moon stills ≈ 1 min, compositing 6,753 frames ≈ 70 min wall with 3 workers (≈ 2.5 s/frame
+  each under load, ≈ 0.6 s unloaded). A first compositing pass (≈ 50 min) was discarded after a memory-cgroup OOM
+  kill; the final pass renders resumable 240-frame chunks. A container restart killed the first final encode, which
+  was simply re-run from the intact silent master.
+
+## Final files (verified)
+| file | size | duration | notes |
+|---|---|---|---|
+| out/what-they-see-of-us-1080p.mp4 | 92.0 MB | 281.375 s | 1920×1080 h264 24 fps (~2.3 Mb/s), AAC 256k, mov_text subs |
+| out/what-they-see-of-us-1080p-hq.mp4 | 92.0 MB | 281.375 s | stream copy of the master (fits ≤ 380 MB) |
+
+Audio measured on the final 1080p file: **−14.1 LUFS integrated, −1.0 dBTP true peak** (AAC encode; the WAV
+master is −14.0 LUFS / −1.5 dBTP).

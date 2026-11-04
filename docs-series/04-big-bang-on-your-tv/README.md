@@ -20,8 +20,8 @@ See the report table at the bottom (sizes / durations filled after the final enc
 | narration text + pronunciation | `audio/narration.py` | 29 lines, 499 words. Dates spelled for TTS ("nineteen sixty-four"…), "Dicke" → "Dicky", COBE → "Koh-bee", WMAP → "W-map". |
 | voice | `audio/gen_voice.py` | Kokoro-82M v1.0 (kokoro-onnx, offline), voice **am_michael**, speed 0.94 (series voice). Clips trimmed of silence. |
 | timeline lock | `audio/timeline.py` → `audio/placement.json` | Line start = previous end + scripted pause × 1.31, so speech ends at 263.0 s; shot boundaries derived from it. Nothing is time-stretched. |
-| room plates | `room.py`, `render_plates.sh` | Blender 5.1.2 (bpy module), Cycles CPU. Two cameras × three *linear* passes saved as float16 .npy at 2880×1620: moonlight only, TV-light only (screen invisible to camera), screen UV. |
-| horn antenna | `gen_sky.py`, `horn.py`, `render_horn.sh` | Stylised horn-reflector (tapered square horn + reflector hood with a side aperture, elevation wheel, cab, rail track) at blue hour; three 4K stills (16 spp) for 2D moves + a 41-key 3D orbit (1280×720, 4 spp, cross-blended in-betweens, upscaled). |
+| room plates | `room.py`, `render_plates.sh`, `render_plates_dn.sh` | Blender 5.1.2 (bpy module), Cycles CPU. Two cameras × three *linear* passes saved as float16 .npy at 2880×1620: moonlight only, TV-light only (screen invisible to camera), screen UV. Light passes: 16 spp + OpenImageDenoise (albedo/normal guided); the UV/mask pass is never denoised. |
+| horn antenna | `gen_sky.py`, `horn.py`, `render_horn.sh` | Stylised horn-reflector: long square pyramidal horn with a flared profile and 12 stiffening frames, reflector hood with the side aperture, elevation wheel, receiver cab, turntable pad + circular rail. Weathered-aluminium shader (metallic, noise-varied roughness, grime streaks, panel seams), painted-steel structure; night lighting with a low moon behind-left giving a cold rim, faint warm horizon, cab lamp. Three 4K stills (12 spp + OIDN) for 2D moves + a 41-key 3D orbit (1280×720, 6 spp + OIDN, cross-blended in-betweens, upscaled). |
 | compositor | `common.py`, `tv.py`, `cosmos.py`, `shots.py`, `run_queue.sh` | python3 + numpy + PIL; every frame is composited in numpy and piped straight into x264 per shot (no PNG sequences on disk). |
 | audio | `audio/mix.py` | voice chain (70 Hz HPF, EQ, 3:1 comp, short room), analog hiss + crackle, very quiet 15.734 kHz line whine, power-off click/thump/zap, numpy pad bed, 8 dB sidechain ducking, 2-pass loudnorm → −14 LUFS, limiter. |
 | final | `assemble.sh` | concat segments (stream copy) → vignette + fine temporal grain → mux audio + mov_text subtitles → 1080p / hq / 4K / 4K-share. |
@@ -72,7 +72,7 @@ See the report table at the bottom (sizes / durations filled after the final enc
 - The sky map is procedural and labelled as an impression; the "galaxies condensing" moment is an illustration of the idea that
   denser regions grew into structure, not a simulation.
 - On-screen wavelength stretching is compressed (∝ stretch^0.33); the HUD gives the real factor.
-- The 3D orbit is 41 rendered key frames cross-blended over 10 s (the move is slow, so blending is subtle) and upscaled from 1280×720.
+- The 3D orbit is 41 rendered (denoised) key frames cross-blended over 10 s (the move is slow, so blending is subtle) and upscaled from 1280×720.
 - "Someone turns the TV off" is conveyed by sound (switch click) and the CRT collapse; no hand is shown.
 - 4K files are lanczos upscales of the 1080p render.
 - Narration is 499 words (slightly under the 550–650 guideline) with generous pauses; the film is exactly 270 s.

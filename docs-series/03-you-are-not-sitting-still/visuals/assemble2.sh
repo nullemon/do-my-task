@@ -9,7 +9,7 @@ S=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scrat
 D=/home/user/do-my-task/docs-series/03-you-are-not-sitting-still; OUT=$D/out; N=you-are-not-sitting-still
 M=$OUT/$N-1080p.mp4
 log() { echo "[$(date '+%F %T')] $*"; }
-while pgrep -f "out/$N-1080p.mp4.part.mp4" > /dev/null; do sleep 20; done
+# (master is produced by final.sh)
 [[ -s $M ]] || mv -f "$M.part.mp4" "$M"
 log "master $(du -h "$M" | cut -f1)"
 MAP=(-map 0:v:0 -map 0:a:0 -map 0:s:0 -c:a copy -c:s copy -movflags +faststart)

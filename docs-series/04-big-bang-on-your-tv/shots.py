@@ -38,7 +38,9 @@ CAPS = [
 def overlay_captions(disp, t):
     for a, b, m, s in CAPS:
         if a - 0.1 <= t <= b + 0.1:
-            caption(disp, t, a, b, m, s)
+            # over the close TV shot the bright screen sits behind the lower third: put those captions up top
+            y = H * 0.10 if 14.05 <= t < SH["push"] else None
+            caption(disp, t, a, b, m, s, y=y)
 
 
 # ------------------------------------------------------------------------------ room shots

@@ -24,7 +24,12 @@ sc = bpy.context.scene
 sc.render.engine = "CYCLES"
 sc.cycles.device = "CPU"
 sc.cycles.samples = SPP
-sc.cycles.use_denoising = False
+# OpenImageDenoise (albedo+normal guided) on the light passes; never on the UV/mask pass
+sc.cycles.use_denoising = PASS != "uv"
+if PASS != "uv":
+    sc.cycles.denoiser = "OPENIMAGEDENOISE"
+    sc.cycles.denoising_input_passes = "RGB_ALBEDO_NORMAL"
+    sc.cycles.denoising_prefilter = "ACCURATE"
 sc.cycles.max_bounces = 2 if PASS != "uv" else 0
 sc.cycles.diffuse_bounces = 1 if PASS != "uv" else 0
 sc.cycles.glossy_bounces = 1 if PASS != "uv" else 0

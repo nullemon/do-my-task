@@ -9,3 +9,6 @@ andromeda-doc/4k-halves/
 docs-series/*/out/
 docs-series/**/__pycache__/
 docs-series/**/*.wav
+*.mp4
+*.mp3
+*.part[0-9]*

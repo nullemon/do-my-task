@@ -1,0 +1,331 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "dur": 336.0,
+ "pause_factor": 0.8923007246376813,
+ "shots": {
+  "open": 0.0,
+  "map": 16.487,
+  "night": 44.991,
+  "quake": 69.833,
+  "slide": 78.304,
+  "surge": 94.733,
+  "scale": 118.749,
+  "runup": 137.818,
+  "ocean": 160.113,
+  "bay": 182.926,
+  "boats": 195.344,
+  "miller": 231.968,
+  "science": 256.142,
+  "risk": 275.633,
+  "end": 312.707
+ },
+ "lines": [
+  {
+   "i": 0,
+   "shot": "open",
+   "pause": 1.0,
+   "dur": 7.821,
+   "text": "On a summer night in 1958, the water in this bay climbed five hundred and twenty-four metres up a mountainside.",
+   "start": 0.8,
+   "end": 8.621
+  },
+  {
+   "i": 1,
+   "shot": "open",
+   "pause": 1.4,
+   "dur": 5.118,
+   "text": "Higher than the Empire State Building. The highest wave run-up ever recorded.",
+   "start": 9.87,
+   "end": 14.988
+  },
+  {
+   "i": 2,
+   "shot": "map",
+   "pause": 4.2,
+   "dur": 10.274,
+   "text": "Lituya Bay is a narrow fjord on the remote coast of southeast Alaska, carved by glaciers. A long gravel spit almost closes its mouth.",
+   "start": 18.736,
+   "end": 29.01
+  },
+  {
+   "i": 3,
+   "shot": "map",
+   "pause": 1.2,
+   "dur": 10.372,
+   "text": "At its head, the bay forms a T. The crossbar is a trench along the Fairweather Fault, where the Pacific and North American plates grind past each other.",
+   "start": 30.081,
+   "end": 40.453
+  },
+  {
+   "i": 4,
+   "shot": "map",
+   "pause": 1.0,
+   "dur": 2.932,
+   "text": "Glaciers flow down into both arms of the T.",
+   "start": 41.345,
+   "end": 44.277
+  },
+  {
+   "i": 5,
+   "shot": "night",
+   "pause": 2.0,
+   "dur": 12.582,
+   "text": "On the ninth of July, three fishing boats lay at anchor near the entrance. It was after ten at night, but this far north in midsummer, the sun had only just set. The sky stayed pale.",
+   "start": 46.062,
+   "end": 58.644
+  },
+  {
+   "i": 6,
+   "shot": "night",
+   "pause": 1.4,
+   "dur": 9.084,
+   "text": "On the Edrie, Howard Ulrich and his young son, Sonny. On the Badger, Bill and Vivian Swanson. On the Sunmore, Orville and Mickey Wagner.",
+   "start": 59.893,
+   "end": 68.977
+  },
+  {
+   "i": 7,
+   "shot": "quake",
+   "pause": 2.4,
+   "dur": 6.686,
+   "text": "At about a quarter past ten, the Fairweather Fault ruptured. A magnitude seven point eight earthquake.",
+   "start": 71.118,
+   "end": 77.804
+  },
+  {
+   "i": 8,
+   "shot": "slide",
+   "pause": 1.4,
+   "dur": 6.601,
+   "text": "At the head of the bay, in an arm called Gilbert Inlet, the shaking broke loose part of a mountain wall.",
+   "start": 79.054,
+   "end": 85.655
+  },
+  {
+   "i": 9,
+   "shot": "slide",
+   "pause": 1.0,
+   "dur": 7.401,
+   "text": "About thirty million cubic metres of rock fell, from as high as nine hundred metres, straight into the water.",
+   "start": 86.547,
+   "end": 93.948
+  },
+  {
+   "i": 10,
+   "shot": "surge",
+   "pause": 2.2,
+   "dur": 5.066,
+   "text": "The impact drove the water of the inlet across to the opposite shore. And up.",
+   "start": 95.911,
+   "end": 100.977
+  },
+  {
+   "i": 11,
+   "shot": "surge",
+   "pause": 1.0,
+   "dur": 6.871,
+   "text": "It tore up the facing slope, through old spruce forest, to a height of five hundred and twenty-four metres.",
+   "start": 101.869,
+   "end": 108.74
+  },
+  {
+   "i": 12,
+   "shot": "surge",
+   "pause": 1.2,
+   "dur": 8.082,
+   "text": "Trees were snapped off or ripped out by the roots. In places, the soil itself was scoured away, down to bare rock.",
+   "start": 109.811,
+   "end": 117.893
+  },
+  {
+   "i": 13,
+   "shot": "scale",
+   "pause": 2.4,
+   "dur": 11.112,
+   "text": "To picture that height: the Eiffel Tower stands three hundred and thirty metres tall. The Empire State Building, to the tip of its antenna, four hundred and forty-three.",
+   "start": 120.034,
+   "end": 131.146
+  },
+  {
+   "i": 14,
+   "shot": "scale",
+   "pause": 1.2,
+   "dur": 4.744,
+   "text": "The water went higher than both. Around eighty metres higher than the antenna.",
+   "start": 132.217,
+   "end": 136.961
+  },
+  {
+   "i": 15,
+   "shot": "runup",
+   "pause": 2.4,
+   "dur": 8.69,
+   "text": "It's worth being precise. Five hundred and twenty-four metres is the run-up: how high the water reached on land, above sea level.",
+   "start": 139.103,
+   "end": 147.793
+  },
+  {
+   "i": 16,
+   "shot": "runup",
+   "pause": 1.0,
+   "dur": 10.786,
+   "text": "The wave itself was lower. Laboratory models suggest roughly a hundred and fifty metres where it struck the slope. Its momentum carried it the rest of the way.",
+   "start": 148.685,
+   "end": 159.471
+  },
+  {
+   "i": 17,
+   "shot": "ocean",
+   "pause": 1.8,
+   "dur": 9.049,
+   "text": "And it was not a classic tsunami. Those are usually born when an earthquake heaves the sea floor, and they can cross entire oceans.",
+   "start": 161.077,
+   "end": 170.126
+  },
+  {
+   "i": 18,
+   "shot": "ocean",
+   "pause": 1.0,
+   "dur": 11.122,
+   "text": "This was a giant splash. A landslide, slamming into a narrow, enclosed bay. Catastrophic inside it. Outside, it spread out and quickly lost its power.",
+   "start": 171.018,
+   "end": 182.14
+  },
+  {
+   "i": 19,
+   "shot": "bay",
+   "pause": 2.2,
+   "dur": 10.669,
+   "text": "From the head of the bay, the wave raced toward the entrance. Still tens of metres high. By some estimates, faster than a hundred and fifty kilometres an hour.",
+   "start": 184.104,
+   "end": 194.773
+  },
+  {
+   "i": 20,
+   "shot": "boats",
+   "pause": 1.6,
+   "dur": 5.447,
+   "text": "Howard Ulrich saw it coming. He let out his anchor chain and turned the Edrie to face it.",
+   "start": 196.2,
+   "end": 201.647
+  },
+  {
+   "i": 21,
+   "shot": "boats",
+   "pause": 1.0,
+   "dur": 8.725,
+   "text": "The wave lifted the boat, snapped the chain, and threw it toward the shore, then swept it back into the bay. Father and son survived.",
+   "start": 202.54,
+   "end": 211.265
+  },
+  {
+   "i": 22,
+   "shot": "boats",
+   "pause": 1.4,
+   "dur": 9.761,
+   "text": "The Badger was carried right over the spit, out to sea. It sank. The Swansons escaped in a small skiff and were picked up by another fishing boat.",
+   "start": 212.514,
+   "end": 222.275
+  },
+  {
+   "i": 23,
+   "shot": "boats",
+   "pause": 1.4,
+   "dur": 7.373,
+   "text": "The Sunmore had tried to run for the open ocean. It was never seen again. Orville and Mickey Wagner were lost.",
+   "start": 223.524,
+   "end": 230.897
+  },
+  {
+   "i": 24,
+   "shot": "miller",
+   "pause": 3.0,
+   "dur": 13.26,
+   "text": "Soon after, the geologist Don Miller of the U.S. Geological Survey photographed the bay. Its shores were ringed by a sharp line: forest above, raw ground below. A trimline.",
+   "start": 233.574,
+   "end": 246.834
+  },
+  {
+   "i": 25,
+   "shot": "miller",
+   "pause": 1.2,
+   "dur": 7.595,
+   "text": "He found older trimlines too. Giant waves had swept the bay at least four times in a little more than a century.",
+   "start": 247.905,
+   "end": 255.5
+  },
+  {
+   "i": 26,
+   "shot": "science",
+   "pause": 1.8,
+   "dur": 12.551,
+   "text": "Decades later, scientists rebuilt Gilbert Inlet as a laboratory model, at one six-hundred-and-seventy-fifth scale. Its model wave ran up to the height of the real trimline.",
+   "start": 257.106,
+   "end": 269.657
+  },
+  {
+   "i": 27,
+   "shot": "science",
+   "pause": 1.0,
+   "dur": 4.227,
+   "text": "Computer simulations since then have reproduced the run-up too.",
+   "start": 270.549,
+   "end": 274.776
+  },
+  {
+   "i": 28,
+   "shot": "risk",
+   "pause": 2.4,
+   "dur": 8.184,
+   "text": "And the danger is not only in the past. As glaciers thin and retreat, they can leave steep valley walls without support.",
+   "start": 276.918,
+   "end": 285.102
+  },
+  {
+   "i": 29,
+   "shot": "risk",
+   "pause": 1.2,
+   "dur": 7.988,
+   "text": "In 2015, in Taan Fiord, Alaska, a landslide sent water a hundred and ninety-three metres up a slope.",
+   "start": 286.172,
+   "end": 294.16
+  },
+  {
+   "i": 30,
+   "shot": "risk",
+   "pause": 1.2,
+   "dur": 16.476,
+   "text": "In Barry Arm, in Prince William Sound, a slowly creeping slope of hundreds of millions of cubic metres hangs above a fjord. A worst-case model suggests run-up of more than five hundred metres. Scientists are watching it closely.",
+   "start": 295.231,
+   "end": 311.707
+  },
+  {
+   "i": 31,
+   "shot": "end",
+   "pause": 2.8,
+   "dur": 6.062,
+   "text": "In Lituya Bay, the forest has grown back. But the line is still there, if you know where to look.",
+   "start": 314.206,
+   "end": 320.268
+  },
+  {
+   "i": 32,
+   "shot": "end",
+   "pause": 1.6,
+   "dur": 3.923,
+   "text": "A mark on the mountain, five hundred and twenty-four metres up.",
+   "start": 321.695,
+   "end": 325.618
+  },
+  {
+   "i": 33,
+   "shot": "end",
+   "pause": 1.2,
+   "dur": 1.811,
+   "text": "The height of one night's water.",
+   "start": 326.689,
+   "end": 328.5
+  }
+ ]
+}

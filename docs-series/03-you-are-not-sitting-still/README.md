@@ -72,8 +72,24 @@ Big intermediates live in `/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2
   a layer at each pull-back and lifts to D major on "You've never been still"; sidechain duck 8 dB;
   two-pass loudnorm → −14.0 LUFS integrated, −1.5 dBTP. The ducking envelope uses an O(N) moving sum
   (the original np.convolve version took > 10 min).
-- Final: `visuals/assemble.sh` (concat + vignette + temporal grain → 1080p master, crf 18 preset slow),
-  then `visuals/assemble2.sh` derives the hq / 4K files from that graded master.
+- Final (after a container restart killed the first encode): `visuals/final.sh` makes the graded 1080p master
+  from the joined parts (vignette + temporal luma grain, x264 crf 18 preset medium, AAC 256k, soft English
+  mov_text subtitles, +faststart), then `visuals/assemble2.sh` derives the rest from that master:
+  - `-1080p-hq.mp4` is a **hard link to the master**: at crf 18 it is already 290 MB (< 380 MB), so
+    re-encoding could only lose quality.
+  - `-4k-share.mp4` is a lanczos upscale at 12 Mb/s (413 MB).
+  - `-4k.mp4` is a lanczos upscale at crf 21, capped at 22 Mb/s because disk on the shared box was down
+    to about 1.4 GB (441 MB). Both 4K files are **upscaled** and have no native 4K detail.
+- Verified: all four files are 270.000 s with 6,480 frames, video + AAC + subtitle streams; −14.0 LUFS
+  integrated, −1.2 dBTP after AAC.
+
+## Deliverables (`out/`)
+| File | Size | Notes |
+|---|---|---|
+| `you-are-not-sitting-still-1080p.mp4` | 290 MB | master, 1920×1080 |
+| `you-are-not-sitting-still-1080p-hq.mp4` | 290 MB | hard link to the master (≤ 380 MB) |
+| `you-are-not-sitting-still-4k.mp4` | 441 MB | 3840×2160 lanczos upscale |
+| `you-are-not-sitting-still-4k-share.mp4` | 413 MB | 3840×2160 upscale, ≤ 480 MB |
 
 Rebuild:
 ```
@@ -82,5 +98,6 @@ Rebuild:
 /usr/bin/python3 -I visuals/gen_assets.py
 /home/user/bpyenv/bin/python visuals/earth_blender.py -- --render --skip-existing
 bash visuals/render_parts.sh "$(seq -s ' ' 0 26)"
-bash visuals/assemble.sh   # (stop after the 1080p master) ; bash visuals/assemble2.sh
+# concat the parts into joined.mp4 (first half of visuals/assemble.sh), then:
+bash visuals/final.sh      # 1080p master + assemble2.sh (hq / 4K)
 ```

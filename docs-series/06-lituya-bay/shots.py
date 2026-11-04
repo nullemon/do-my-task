@@ -75,7 +75,7 @@ def label(disp, vec, x, y, txt, sub=None, op=1.0, side="r", size=22, lead=60, co
 @shot("O1", 0.0, T_TITLE)
 def o1(t):
     P = plate("wide", strip=False)
-    z, cx, cy = move(P, t, 0, T_TITLE, 1.0, 1.16, (0.5, 0.5), (0.47, 0.47))
+    z, cx, cy = move(P, t, 0, T_TITLE, 1.25, 1.5, (0.5, 0.52), (0.48, 0.5))
     img = crop3(P.forest, z, cx, cy)
     d = finish(img)
     caption(d, t, 2.2, 8.4, "LITUYA BAY  ·  ALASKA", "SUMMER 1958", size=28)
@@ -91,17 +91,20 @@ def o1(t):
 
 # =================================================================== M1  map (top-down plate)
 WORLD_LBL = {
-    "gulf": (-300, -2200), "spit": (-450, 0), "cen": (450, 4800), "gil": (-2300, 11320), "cri": (2300, 11050),
-    "lgl": (-4700, 13600), "cgl": (4600, 13500), "slide": (-1650, 11900), "spur": (-1500, 9850),
+    "gulf": (-2600, -2600), "spit": (-450, 0), "cen": (450, 4800), "gil": (-2300, 11320), "cri": (2300, 11050),
+    "lgl": (-4700, 13600), "cgl": (4800, 13600), "slide": (-1650, 11900), "spur": (-1500, 9850),
     "edrie": (780, 1600), "badger": (-620, 1050), "sunmore": (-430, 1320),
 }
 
 
-def map_base(t, t0, t1, z0=1.0, z1=1.08, c0=(0.5, 0.5), c1=(0.52, 0.48), tint=1.0):
+def map_base(t, t0, t1, z0=1.0, z1=1.08, c0=(0.5, 0.5), c1=(0.52, 0.48), tint=1.0, wc=None):
     P = plate("top", strip=True)
+    if wc is not None:
+        u, v, _ = P.cam.project([[wc[0], wc[1], 0.0]])
+        c0 = c1 = (float(u[0]) / P.wp, float(v[0]) / P.hp)
     z, cx, cy = move(P, t, t0, t1, z0, z1, c0, c1)
     img = crop3(P.forest, z, cx, cy)
-    d = finish(img * tint, exposure=2.6)
+    d = finish(img * tint, exposure=1.7)
     return P, d, z, cx, cy
 
 
@@ -119,7 +122,7 @@ def north_arrow(vec, d, x, y, op):
     draw_text(d, "N", x, y - L - 24, 18, op)
 
 
-def scale_bar(P, vec, d, z, op, x=150, y=H - 150, km=2):
+def scale_bar(P, vec, d, z, op, x=W - 330, y=H - 110, km=2):
     s = W / (P.wp / z) * P.wp / P.cam.oscale       # screen px per metre
     L = km * 1000 * s
     vec.line([(x, y), (x + L, y)], width=1.4, alpha=op)
@@ -140,33 +143,38 @@ def m1(t):
     # Fairweather Fault along the crossbar
     of = o(l3 + 3.0)
     if of > 0:
-        xs = np.linspace(-9000, 9000, 40); ys = 10900 + (xs + 0) * 0.17 + 120 * np.sin(xs / 3000)
+        kx = np.array([-6.0, -4.5, -3.15, -1.5, 0.55, 1.9, 3.4, 5.2]) * 1000
+        ky = np.array([12.8, 12.2, 11.65, 10.95, 10.45, 10.8, 11.25, 11.9]) * 1000
+        tt_ = np.linspace(0, 1, 60); kk = np.linspace(0, 1, len(kx))
+        xs = np.interp(tt_, kk, kx); ys = np.interp(tt_, kk, ky)
         sx, sy, _ = screen_pt(P, np.stack([xs, ys, np.zeros_like(xs)], -1), z, cx, cy)
         n = int(len(xs) * ss(l3 + 3.0, l3 + 6.0, t)) + 1
         vec.dashed(list(zip(sx[:n], sy[:n])), col=(240, 160, 110), width=1.6, alpha=of, dash=14, gap=9)
-        ex, ey = float(sx[-8]), float(sy[-8])
-        draw_text(d, "FAIRWEATHER FAULT", ex + 10, ey + 30, 18, of, col=srgb((0.95, 0.7, 0.55)), anchor="c")
-        draw_text(d, "PACIFIC PLATE  ·  NORTH AMERICAN PLATE", ex + 10, ey + 54, 13, of * 0.8, anchor="c")
+        ex, ey = float(sx[14]), float(sy[14])
+        draw_text(d, "FAIRWEATHER FAULT", ex - 40, ey + 10, 18, of, col=srgb((0.95, 0.7, 0.55)), anchor="r")
+        draw_text(d, "plate boundary  ·  Pacific / North American", ex - 40, ey + 34, 13, of * 0.8, anchor="r")
     label(d, vec, *wpt(P, "gil", z, cx, cy), "GILBERT INLET", op=o(l3 + 1.0), side="l", size=20)
     label(d, vec, *wpt(P, "cri", z, cx, cy), "CRILLON INLET", op=o(l3 + 1.6), side="r", size=20)
     label(d, vec, *wpt(P, "lgl", z, cx, cy), "LITUYA GLACIER", op=o(l4), side="l", size=18)
-    label(d, vec, *wpt(P, "cgl", z, cx, cy), "NORTH CRILLON GLACIER", op=o(l4 + 0.6), side="r", size=18)
-    north_arrow(vec, d, W - 130, 130, o(t0 + 1.0))
+    label(d, vec, *wpt(P, "cgl", z, cx, cy), "NORTH CRILLON GLACIER", op=o(l4 + 0.6), side="l", size=18)
+    north_arrow(vec, d, 120, 140, o(t0 + 1.0))
     scale_bar(P, vec, d, z, o(t0 + 1.0))
     vec.comp(d)
-    draw_text(d, "STYLISED TERRAIN  ·  NOT TO SURVEY", W - 210, H - 60, 13, o(t0 + 1.0) * 0.6)
+    draw_text(d, "STYLISED TERRAIN  ·  NOT TO SURVEY", W - 230, H - 60, 13, o(t0 + 1.0) * 0.6)
     fade_edges(d, t, t0, t1, fin=0.8, fout=0.5)
     return to_frame(d)
 
 
 # =================================================================== N1  night: boats at anchor near the entrance
-BOATS = {"edrie": (780, 1600, 13.0, 0.0), "badger": (-620, 1050, 14.0, 0.6), "sunmore": (-430, 1320, 13.0, 1.7)}
+BOATS = {"edrie": (720, 1650, 13.0, 0.0), "badger": (-480, 1450, 14.0, 0.6), "sunmore": (-280, 1700, 13.0, 1.7)}
 
 
-def draw_boats(P, d, t, z, cx, cy, lift=None, alpha=1.0, names=None, name_op=0.0):
+def draw_boats(P, d, t, z, cx, cy, lift=None, alpha=1.0, names=None, name_op=0.0, only=None):
     """True-scale boat silhouettes on the water (dark, faint rim from the sky glow) + reflection."""
     vec = Vec()
     for k, (bx, by, bl, ph) in BOATS.items():
+        if only and k not in only:
+            continue
         dz = 0.35 * math.sin(t * 1.1 + ph)
         roll = 0.03 * math.sin(t * 0.8 + ph * 2)
         if lift is not None:
@@ -192,8 +200,8 @@ def draw_boats(P, d, t, z, cx, cy, lift=None, alpha=1.0, names=None, name_op=0.0
 @shot("N1", SH["night"], SH["quake"])
 def n1(t):
     t0, t1 = SH["night"], SH["quake"]
-    P = plate("entrance", strip=False)
-    z, cx, cy = move(P, t, t0, t1, 1.05, 1.18, (0.5, 0.55), (0.47, 0.55))
+    P = plate("night", strip=False)
+    z, cx, cy = move(P, t, t0, t1, 1.0, 1.12, (0.5, 0.52), (0.5, 0.55))
     img = crop3(P.forest, z, cx, cy)
     d = finish(img)
     names = {"edrie": ("EDRIE", "Howard Ulrich & son"), "badger": ("BADGER", "Bill & Vivian Swanson"),
@@ -234,16 +242,16 @@ def tau_of(t):
 
 
 class Splash:
-    def __init__(self, n=5000):
+    def __init__(self, n=9000):
         r = np.random.default_rng(11)
         ang = r.uniform(-np.pi, np.pi, n)
         # thrown mostly away from the slide (towards -y, the spur) and upward
         bias = np.array([0.0, -1.0])
-        sp = r.uniform(15, 75, n) * (0.6 + 0.4 * r.random(n))
+        sp = r.uniform(20, 90, n) * (0.6 + 0.4 * r.random(n))
         dirx = np.cos(ang) * 0.6 + bias[0]; diry = np.sin(ang) * 0.6 + bias[1] * 0.7
         nn = np.hypot(dirx, diry) + 1e-6
         self.vx = sp * dirx / nn * 0.9; self.vy = sp * diry / nn * 0.9
-        self.vz = r.uniform(25, 85, n) * r.random(n) ** 0.4
+        self.vz = r.uniform(40, 140, n) * r.random(n) ** 0.35
         self.p0 = np.array([Wd.IMPACT[0] * 1000, Wd.IMPACT[1] * 1000 + 180, 0.0])
         self.p0x = self.p0[0] + r.normal(0, 220, n); self.p0y = self.p0[1] + r.normal(0, 120, n)
         self.w = r.uniform(0.3, 1.0, n)
@@ -262,7 +270,7 @@ class Splash:
         fade = np.exp(-tt / 16.0) * self.w * alive
         acc.add(sx, sy, fade, np.array([1.0, 1.0, 1.0]))
         im = acc.image()[..., 0]
-        im = blur(im, 3.0) * 0.7 + blur(im, 10.0) * 2.2
+        im = blur(im, 2.0) * 1.2 + blur(im, 9.0) * 3.0
         return np.clip(im, 0, 6)
 
 
@@ -289,9 +297,11 @@ def gilbert_frame(t, t0, t1, zoom):
         # rolling dust at the front of the falling mass and a cloud that lingers above
         band = sm * np.exp(-((Z - zf) / 70.0) ** 2) * (k > 0) * (k < 1.02)
         cloud = sm * sst(zf - 30, zf + 200, Z) * k
-        dust = down4(np.ascontiguousarray((band * 1.4 + cloud * 0.35).astype(np.float32)))
-        dust = blur(dust, 5)
-        img += up4(dust)[..., None] * np.array([0.30, 0.31, 0.33], np.float32)
+        C2, _ = P.crop([P.X, P.Y], z, cx, cy)
+        tex = np.clip(0.55 + 0.6 * Wd.noise(C2[0] / 1000.0, C2[1] / 1000.0 + 0.00002 * (t - T_SLIDE0) * 1000, 0.03, 95), 0, 1.5)
+        dust = down4(np.ascontiguousarray(((band * 1.2 + cloud * 0.3) * tex).astype(np.float32)))
+        dust = blur(dust, 3)
+        img = img * (1 - 0.5 * np.clip(up4(dust), 0, 1))[..., None] + up4(dust)[..., None] * np.array([0.20, 0.19, 0.18], np.float32)
         return img, (z, cx, cy), P
     img, info = surge_layer(P, tau, z, cx, cy)
     cx, cy = info["cx"], info["cy"]
@@ -373,9 +383,9 @@ def sc1(t):
     t0, t1 = SH["scale"], SH["runup"]
     P = plate("spur")
     z, cx, cy = move(P, t, t0, t1, 1.08, 1.0, (0.5, 0.47), (0.5, 0.5))
-    img, info = surge_layer(P, 400.0, z, cx, cy)
+    cxx, cyy = clamp_center((P.hp, P.wp), z, cx, cy)
+    img = crop3(P.after(), z, cxx, cyy)
     d = finish(img)
-    cxx, cyy = info["cx"], info["cy"]
     # reference point: the run-up maximum on the slope; silhouettes stand at sea level at the same distance
     pk = np.array([[-1534.0, 9719.0, 524.0]])
     u, v, dep = P.cam.project(pk)
@@ -569,7 +579,7 @@ def b1(t):
     P = plate("entrance", strip=False)
     z, cx, cy = move(P, t, t0, t1, 1.05, 1.14, (0.5, 0.55), (0.5, 0.5))
     tau = B1_TAU0 + (t - t0) * B1_RATE
-    img, info = surge_layer(P, tau, z, cx, cy, foam_gain=1.2)
+    img, info = surge_layer(P, tau, z, cx, cy, foam_gain=1.2, band_gain=0.2)
     Y, wat = info["Y"], info["wat"]
     cxx, cyy = info["cx"], info["cy"]
     yf = front_y_km(tau) * 1000.0
@@ -587,33 +597,41 @@ def b1(t):
     s = px_per_m(P, dist, z)
     hpx = Hw * s
     top = rf - hpx
-    xx = np.arange(W)
-    wob = 0.18 * hpx * np.sin(xx / 37.0 + tau * 0.9) * np.sin(xx / 13.0 + tau * 1.7)
+    xx = np.arange(W, dtype=np.float32)
+    def ridge1d(seed, n=7, base=900.0, drift=0.0):
+        r = np.random.default_rng(seed); out = np.zeros(W, np.float32)
+        for k in range(n):
+            wl = base / (1.7 ** k); out += r.uniform(0.5, 1.0) / (1.4 ** k) * np.sin(2 * np.pi * xx / wl + r.uniform(0, 6.3) + drift * (k + 1))
+        return out / 2.2
+    wob = 0.10 * hpx * ridge1d(1, drift=0.08 * tau)
     top = top + wob
     face = (rows >= top[None, :]) & (rows < rf[None, :]) & has[None, :] & (dist < 9000)
-    fy = np.clip((rows - top[None, :]) / np.maximum(hpx[None, :] if np.ndim(hpx) else hpx, 1), 0, 1)
-    nz = Wd.noise(xx[None, :] / 40.0 + 0 * rows, rows / 9.0 + tau * 3.0, 0.4, 90)
-    facecol = np.array([0.025, 0.04, 0.055], np.float32)[None, None] * (0.8 + 0.4 * nz[..., None])
-    crest = np.exp(-(fy / 0.22) ** 2)[..., None] * np.array([0.45, 0.5, 0.58], np.float32) * (0.6 + 0.5 * nz[..., None])
+    fy = np.clip((rows - top[None, :]) / max(float(hpx), 1.0), 0, 1)
+    cn = np.clip(0.75 + 0.35 * ridge1d(2, drift=0.15 * tau), 0.2, 1.2)[None, :]
+    facecol = np.array([0.016, 0.024, 0.032], np.float32)[None, None] * (0.6 + 0.8 * fy[..., None])
+    crest = (np.exp(-(fy / 0.16) ** 2) * cn)[..., None] * np.array([0.36, 0.41, 0.48], np.float32)
+    streak = (0.5 + 0.5 * np.sin(rows / 3.0 + xx[None, :] * 0.0 + tau * 2.0)) * 0.0
     col = facecol + crest
     img = np.where(face[..., None], col, img)
     # spray above the crest
     sp = np.zeros((H, W), np.float32)
-    band = (rows >= top[None, :] - hpx * 0.6) & (rows < top[None, :] + 2) & has[None, :] & (dist < 9000)
+    band = (rows >= top[None, :] - hpx * 0.45) & (rows < top[None, :] + 0.1 * hpx) & has[None, :] & (dist < 9000)
     sp[band] = 1.0
-    sp = up4(blur(down4(sp), 4)) * (0.6 + 0.4 * Wd.noise(xx[None, :] / 25.0 + 0 * rows, rows / 25.0 - tau, 0.5, 91))
-    img += sp[..., None] * np.array([0.25, 0.28, 0.33], np.float32)
+    sp = up4(blur(down4(sp), 5)) * cn
+    img += sp[..., None] * np.array([0.22, 0.25, 0.30], np.float32)
     # whiteout when the wave reaches the camera
     wo = sst(cam[1] + 150, cam[1] - 40, yf)
     d = finish(img)
     # boats: lifted as the front passes
     lift = {}
-    for k, (bx_, by_, bl, ph) in BOATS.items():
-        dd = (by_ - yf)
-        lift[k] = Hw * 0.85 * math.exp(-(dd / 120.0) ** 2) if dd < 300 else 0.0
-        if dd < -300: lift[k] = 3.0
-    draw_boats(P, d, t, z, cxx, cyy, lift=lift, alpha=1.0 - 0.7 * min(1, max(0, -(BOATS["edrie"][1] - yf) / 600)))
-    d = d * (1 - wo) + np.array([0.55, 0.6, 0.66], np.float32) * wo
+    gone = 0.0
+    bx_, by_, bl, ph = BOATS["edrie"]
+    ahead = yf - by_                       # metres the front still has to travel to reach the Edrie
+    lift["edrie"] = Hw * 0.9 * float(np.clip(1 - ahead / 160.0, 0, 1)) if ahead < 160 else 0.0
+    gone = float(np.clip(-ahead / 25.0, 0, 1))      # once the crest has passed, the boat is hidden behind the wave
+    if gone < 1:
+        draw_boats(P, d, t, z, cxx, cyy, lift=lift, alpha=1.0 - gone, only=("edrie",))
+    d = d * (1 - wo) + np.array([0.10, 0.12, 0.14], np.float32) * wo
     caption(d, t, t0 + 0.6, LS(21) - 0.5, "THE EDRIE", "Howard Ulrich and his son, near the south shore", size=24)
     fade_edges(d, t, t0, t1, fin=0.4, fout=0.5)
     return to_frame(d)
@@ -623,19 +641,19 @@ def b1(t):
 @shot("B2", B1_T1, SH["miller"])
 def b2(t):
     t0, t1 = B1_T1, SH["miller"]
-    P, d, z, cx, cy = map_base(t, t0, t1, 2.3, 2.45, (0.17, 0.5), (0.18, 0.5), tint=0.8)
+    P, d, z, cx, cy = map_base(t, t0, t1, 3.2, 3.4, tint=0.8, wc=(0, 500))
     vec = Vec()
     o = lambda a, b=0.8: ss(a, a + b, t)
     pt = lambda xy: tuple(float(v[0]) for v in screen_pt(P, [[xy[0], xy[1], 0]], z, cx, cy)[:2])
     WC = WATER_C
     # Edrie: thrown toward the shore, swept back (survived)
-    e0 = pt((780, 1600)); e1 = pt((1150, 1750)); e2 = pt((650, 1500))
+    e0 = pt((720, 1650)); e1 = pt((1100, 1800)); e2 = pt((620, 1550))
     oe = o(t0 + 0.2)
     vec.circle(*e0, 5, fill=LINE_C, outline=None, alpha=oe)
     vec.line([e0, e1], col=WC, width=1.5, alpha=oe); vec.line([e1, e2], col=WC, width=1.5, alpha=oe)
     # Badger: over the spit, out to sea, sank (crew escaped in a skiff)
     ob = o(LS(22) + 0.3)
-    b0 = pt((-620, 1050)); b1_ = pt((-700, 200)); b2_ = pt((-760, -900))
+    b0 = pt((-480, 1450)); b1_ = pt((-700, 200)); b2_ = pt((-760, -900))
     vec.circle(*b0, 5, fill=LINE_C, outline=None, alpha=ob)
     k = ss(LS(22) + 0.3, LS(22) + 3.0, t)
     pts = [b0, b1_, b2_]
@@ -645,7 +663,7 @@ def b2(t):
         vec.line([b1_, (b1_[0] + (b2_[0] - b1_[0]) * kk, b1_[1] + (b2_[1] - b1_[1]) * kk)], col=WC, width=1.5, alpha=ob)
     # Sunmore: lost near the entrance
     os_ = o(LS(23) + 0.2)
-    s0 = pt((-430, 1320)); s1 = pt((-80, 150))
+    s0 = pt((-280, 1700)); s1 = pt((-80, 150))
     vec.circle(*s0, 5, fill=LINE_C, outline=None, alpha=os_)
     vec.dashed([s0, s1], col=(200, 200, 205), width=1.2, alpha=os_ * 0.8)
     vec.comp(d)
@@ -660,17 +678,25 @@ def b2(t):
     return to_frame(d)
 
 
+_MI_LV = None
+
+
 # =================================================================== MI  Miller's trimline (after plate, archival-photo look)
 @shot("MI", SH["miller"], SH["science"])
 def mi(t):
     t0, t1 = SH["miller"], SH["science"]
     P = plate("after")
     z, cx, cy = move(P, t, t0, t1, 1.0, 1.15, (0.5, 0.5), (0.47, 0.52))
-    img, info = surge_layer(P, 1000.0, z, cx, cy)
+    cxx, cyy = clamp_center((P.hp, P.wp), z, cx, cy)
+    img = crop3(P.after(churn=0.0), z, cxx, cyy)
+    info = dict(cx=cxx, cy=cyy)
     # daylight-ish B&W print look: lift, desaturate, warm paper, soft vignette, grain
     lum = (img * np.array([0.3, 0.55, 0.15], np.float32)).sum(-1)
-    dd = tonemap(lum, 4.2)
-    dd = np.clip((dd - 0.05) * 1.25, 0, 1) ** 0.9
+    global _MI_LV
+    if _MI_LV is None:
+        _MI_LV = (float(np.percentile(lum, 3)), float(np.percentile(lum, 99.7)))
+    lo, hi = _MI_LV
+    dd = np.clip((lum - lo) / (hi - lo), 0, 1) ** 0.5
     paper = np.array([0.93, 0.88, 0.78], np.float32)
     rng = np.random.default_rng(int(t * 24))
     gr = rng.normal(0, 0.025, (H // 2, W // 2)).astype(np.float32).repeat(2, 0).repeat(2, 1)
@@ -828,7 +854,7 @@ def e1(t):
     C, (cxx, cyy) = P.crop([P.forest[..., 0], P.forest[..., 1], P.forest[..., 2], P.wet, P.X, P.Y], z, cx, cy)
     fo = np.stack(C[:3], -1); wet = C[3]
     # regrown (younger, lighter, more uniform) forest below the old trimline
-    young = fo * np.array([1.25, 1.45, 1.15], np.float32)
+    young = fo * np.array([1.45, 1.85, 1.30], np.float32)
     img = fo * (1 - wet[..., None]) + young * wet[..., None]
     d = finish(img)
     vec = Vec()
@@ -874,7 +900,8 @@ if __name__ == "__main__":
     if a and a[0] == "still":
         nm = a[1]; render(nm, [float(x) for x in a[2:]])
     else:
-        for nm in a:
-            if os.path.exists(os.path.join(SEG, nm + ".mp4")):
+        force = "--force" in a
+        for nm in [x for x in a if x != "--force"]:
+            if not force and os.path.exists(os.path.join(SEG, nm + ".mp4")):
                 print("skip", nm); continue
             render(nm)

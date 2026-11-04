@@ -29,6 +29,7 @@ CAMS = {
     "gilbert": ((1500, 7000, 820), (-2100, 11050, 260), 28),
     "spur":    ((-1650, 11350, 640), (-1500, 9980, 230), 26),
     "entrance": ((900, 1250, 16), (-250, 9800, 330), 30),
+    "night":   ((100, 0, 12), (0, 9800, 260), 35),
     "after":   ((-200, 7600, 1150), (-1700, 10150, 180), 30),
 }
 
@@ -111,7 +112,7 @@ build_grid("patch", "patch", os.path.join(TER, "patch_h.npy"), tex)
 build_grid("far", "far", os.path.join(TER, "far_h.npy"), "forest", hole=(-9.95, 9.95, -3.95, 15.95))
 
 # ------------------------------------------------------------------ water
-bpy.ops.mesh.primitive_plane_add(size=400000, location=(0, 0, 0))
+bpy.ops.mesh.primitive_plane_add(size=4000000, location=(0, 0, 0))
 wat = bpy.context.active_object; wat.name = "water"
 wm = bpy.data.materials.new("water"); wm.use_nodes = True
 nt = wm.node_tree; nt.nodes.clear()
@@ -197,7 +198,7 @@ nt.links.new(bg.outputs[0], wo.inputs["Surface"])
 loc, tgt, lens = CAMS[CAM]
 cd = bpy.data.cameras.new("cam"); cam = bpy.data.objects.new("cam", cd); sc.collection.objects.link(cam)
 sc.camera = cam
-cd.clip_start = 5.0; cd.clip_end = 300000.0; cd.sensor_fit = "HORIZONTAL"; cd.sensor_width = 36.0
+cd.clip_start = 5.0; cd.clip_end = 3000000.0; cd.sensor_fit = "HORIZONTAL"; cd.sensor_width = 36.0
 cam.location = Vector(loc)
 if CAM == "top":
     cd.type = "ORTHO"; cd.ortho_scale = 17500.0

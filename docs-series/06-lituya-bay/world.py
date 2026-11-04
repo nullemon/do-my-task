@@ -183,8 +183,8 @@ def arrival(x, y, h):
     t_h = d_im / 55.0
     # down-bay travel: along y towards the entrance at ~45 m/s once out of the head
     down = np.maximum(10.3 - y, 0) * 1000.0 / 45.0
-    t = np.where(y < 10.3, 1000 * np.hypot(IMPACT[0] - np.clip(x, -0.6, 0.6) * 0, 0) / 55.0 + 24 + down, t_h)
-    t = np.where(y < 10.3, np.maximum(t, t_h), t)
+    inbay = (y < 10.3 + 0.1 * noise(x, y, 0.2, 44)) & (x > -0.95 + 0.15 * noise(x, y, 0.2, 45))                 # main bay (down-bay travel); the spur keeps the direct path
+    t = np.where(inbay, np.maximum(53.5 + down, t_h), t_h)
     climb = np.maximum(h, 0) / 22.0
     return (t + climb).astype(np.float32)
 

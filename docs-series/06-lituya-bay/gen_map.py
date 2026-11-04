@@ -9,8 +9,8 @@ from world import sst
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/06-lituya-bay"
 PL = os.path.join(SCR, "plates"); os.makedirs(PL, exist_ok=True)
 RW, RH = 2880, 1620
-OSCALE = 21500.0                      # metres across the plate
-C = np.array([-700.0, 6300.0])        # map centre (m)
+OSCALE = 30000.0                      # metres across the plate
+C = np.array([-1300.0, 6600.0])        # map centre (m)
 # map +y points to real azimuth ~45 deg -> real north on screen-up is map direction (-0.707, 0.707)
 XC = np.array([math.sqrt(0.5), math.sqrt(0.5), 0.0])     # screen right = real east
 YC = np.array([-math.sqrt(0.5), math.sqrt(0.5), 0.0])    # screen up = real north

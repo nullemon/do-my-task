@@ -148,7 +148,7 @@ def sfx():
     # distant crack for the snapped chain
     n = int(0.5 * SR); t = np.arange(n) / SR
     k = noise_bp(n, 900, 6000, 160) * np.exp(-t / 0.03) * 0.3
-    add(out, L[21]["start"] + 1.4, np.stack([k, k * 0.8], 1).astype(np.float32))
+    add(out, L[21]["start"] + 4.4, np.stack([k, k * 0.8], 1).astype(np.float32))
     return out
 
 

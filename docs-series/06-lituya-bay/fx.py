@@ -42,11 +42,28 @@ class Plate:
         ta[idx] = Wd.arrival(xk[idx], yk[idx], zz)
         iw = np.where(self.water)
         ta[iw] = Wd.arrival(xk[iw], yk[iw], np.zeros(len(iw[0]), np.float32))
+        xs_, ys_ = self.X / 1000.0, self.Y / 1000.0
+        ta += (2.2 * Wd.noise(xs_, ys_, 0.025, 85) + 1.2 * Wd.noise(xs_, ys_, 0.008, 86)) * (~self.sky)
         self.Ta = ta
+        self._after = None
         sm = np.zeros_like(wet); sm[idx] = Wd.slide_mask(xk[idx], yk[idx], zz); self.sm = sm
         # distance from camera (m) for depth tests
         c = self.cam.M[:3, 3]
         self.depth = np.where(self.sky, 1e9, np.sqrt((self.X - c[0]) ** 2 + (self.Y - c[1]) ** 2 + (self.Z - c[2]) ** 2)).astype(np.float32)
+
+    def after(self, churn=0.6):
+        """Static 'long after the wave' composite at plate resolution (trimline revealed, churned water)."""
+        if self._after is None:
+            w = self.wet[..., None]
+            img = self.forest * (1 - w) + self.strip * w
+            wat = self.water.astype(np.float32)[..., None] * churn
+            xk = self.X / 1000.0; yk = self.Y / 1000.0
+            stw = Wd.noise(xk * 3.0, yk * 0.8, 0.05, 83)
+            fw = np.clip(1 - np.abs(stw + 0.5 * Wd.noise(xk, yk, 0.006, 84)) * 1.6, 0, 1) ** 2.5
+            deep = np.array([0.008, 0.012, 0.017], np.float32)
+            img = img * (1 - 0.8 * wat) + deep * 0.8 * wat + np.array([0.08, 0.09, 0.105], np.float32) * (wat * fw[..., None])
+            self._after = img.astype(np.float32)
+        return self._after
 
     def crop(self, arrs, z, cx, cy):
         cx, cy = clamp_center((self.hp, self.wp), z, cx, cy)
@@ -62,7 +79,7 @@ def anim_noise(x, y, t, scale, seed, flow=(0.0, 0.0)):
     return Wd.noise(x + flow[0] * t, y + flow[1] * t, scale, seed)
 
 
-def surge_layer(P, tau, z, cx, cy, foam_gain=1.0, cover_dur=9.0, drain=6.0, extra=None):
+def surge_layer(P, tau, z, cx, cy, foam_gain=1.0, cover_dur=9.0, drain=6.0, extra=None, band_gain=1.0):
     """Composite the before/after plates with the moving water for event time tau (s after impact).
     Returns linear RGB (H,W,3) plus helper maps."""
     chans = [P.forest[..., 0], P.forest[..., 1], P.forest[..., 2], P.strip[..., 0], P.strip[..., 1], P.strip[..., 2],
@@ -81,24 +98,25 @@ def surge_layer(P, tau, z, cx, cy, foam_gain=1.0, cover_dur=9.0, drain=6.0, extr
     img *= (1 - 0.35 * soak)[..., None]
     # moving whitewater on the land: dark turbulent water with flow-aligned foam streaks, bright at the front
     ang = np.arctan2(yk - Wd.IMPACT[1], xk - Wd.IMPACT[0]); rad = np.hypot(xk - Wd.IMPACT[0], yk - Wd.IMPACT[1])
-    stk = Wd.noise(ang * 55.0, rad * 3.0 - 0.012 * tau, 0.06, 81)
+    stk = 0.6 * Wd.noise(ang * 14.0, rad * 6.0 - 0.012 * tau, 0.05, 81) + 0.6 * Wd.noise(xk, yk - 0.002 * tau, 0.02, 87)
     n2 = Wd.noise(xk - 0.002 * tau, yk + 0.005 * tau, 0.012, 82)
     foam = np.clip(sst(0.1, 1.2, stk + 0.5 * n2), 0, 1)
     cover = wet * sst(-0.3, 0.4, f) * (1 - sst(cover_dur, cover_dur + drain, f))
     front = wet * np.exp(-((f - 0.4) / 0.9) ** 2)
     foam_col = np.array([0.36, 0.41, 0.48], np.float32)
-    dark_w = np.array([0.045, 0.058, 0.072], np.float32)
-    fm = np.clip(foam * 0.55 + front * (0.6 + 0.4 * foam), 0, 1) * foam_gain
+    dark_w = np.array([0.022, 0.030, 0.040], np.float32)
+    deep_w = np.array([0.008, 0.012, 0.017], np.float32)
+    fm = np.clip(foam * 0.35 + front * (0.55 + 0.45 * foam), 0, 1) * foam_gain
     wcol = dark_w[None, None] * (1 - fm[..., None]) + foam_col[None, None] * fm[..., None]
     img = img * (1 - cover[..., None]) + wcol * cover[..., None]
     # water body: wave front band + churned water behind it
     fw = (tau - Ta) * wat
-    band = wat * np.exp(-((fw - 0.8) / 2.5) ** 2)
+    band = wat * np.exp(-((fw - 0.8) / 2.5) ** 2) * band_gain
     churn_w = wat * sst(0, 2.0, fw) * (0.45 + 0.55 * np.exp(-np.maximum(fw, 0) / 120.0))
     stw = Wd.noise(xk * 3.0 + 0.004 * tau, yk * 0.8 - 0.004 * tau, 0.05, 83)
-    foam_w = np.clip(sst(0.2, 1.3, stw + 0.6 * Wd.noise(xk, yk + 0.004 * tau, 0.01, 84)), 0, 1)
-    img = img * (1 - 0.75 * churn_w[..., None]) + dark_w[None, None] * (0.75 * churn_w)[..., None]
-    img += (foam_col * 0.45)[None, None] * (churn_w * foam_w)[..., None] * foam_gain
+    foam_w = np.clip(1 - np.abs(stw + 0.5 * Wd.noise(xk, yk + 0.004 * tau, 0.006, 84)) * 1.6, 0, 1) ** 2.5
+    img = img * (1 - 0.8 * churn_w[..., None]) + deep_w[None, None] * (0.8 * churn_w)[..., None]
+    img += (foam_col * 0.22)[None, None] * (churn_w * foam_w)[..., None] * foam_gain
     img += (foam_col * 0.8)[None, None] * (band * (0.4 + 0.6 * foam_w))[..., None] * foam_gain
     # spray / mist above the climbing front (screen-space glow, offset upward)
     mist = down4(np.ascontiguousarray((front * (0.5 + 0.5 * foam) + band * 0.5).astype(np.float32)))
@@ -113,6 +131,7 @@ def finish(lin, exposure=EXPO, lift=0.0, sat=1.0, tint=(1, 1, 1)):
     if sat != 1.0:
         l = lin.mean(-1, keepdims=True); lin = l + (lin - l) * sat
     d = tonemap(lin, exposure)
+    d = 0.6 * d + 0.4 * d * d * (3 - 2 * d)          # gentle S-curve for contrast
     if lift:
         d = d * (1 - lift) + lift
     return d

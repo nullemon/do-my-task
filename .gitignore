@@ -7,3 +7,5 @@ andromeda-doc/andromeda-1080p-hq.mp4
 andromeda-doc/4k-play/
 andromeda-doc/4k-halves/
 docs-series/*/out/
+docs-series/**/__pycache__/
+docs-series/**/*.wav

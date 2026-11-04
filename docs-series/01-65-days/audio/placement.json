@@ -1,0 +1,258 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 4.336791666666667,
+   "text": "If the Earth suddenly stopped moving around the Sun, we would fall into it.",
+   "start": 1.5,
+   "end": 5.837,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 2.1958333333333333,
+   "text": "It would take about sixty-five days.",
+   "start": 6.6,
+   "end": 8.796,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "setup1",
+   "dur": 9.789166666666667,
+   "text": "Right now, Earth is racing along its orbit at thirty kilometres every second. That sideways speed is the only thing that keeps us from falling in.",
+   "start": 15.0,
+   "end": 24.789,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "setup2",
+   "dur": 7.953083333333334,
+   "text": "Nothing could actually stop a planet. This is a thought experiment. But suppose that tonight, somehow, it simply stopped.",
+   "start": 26.0,
+   "end": 33.953,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "day1",
+   "dur": 3.8605833333333335,
+   "text": "Day one. The Sun rises, exactly as it always has.",
+   "start": 37.5,
+   "end": 41.361,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "day1b",
+   "dur": 6.85825,
+   "text": "We are already falling. By tonight we're moving at half a kilometre per second, and no one can feel a thing.",
+   "start": 42.4,
+   "end": 49.258,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "day10",
+   "dur": 6.921958333333333,
+   "text": "Day ten. We've fallen two million kilometres. The Sun is two percent wider. Nobody could tell.",
+   "start": 51.0,
+   "end": 57.922,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "seasons",
+   "dur": 4.676541666666667,
+   "text": "Without an orbit, the seasons freeze. Wherever it was summer, it stays summer.",
+   "start": 59.2,
+   "end": 63.877,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "day30",
+   "dur": 5.6494583333333335,
+   "text": "Day thirty. A whole month has gone by, and we've covered only one seventh of the way.",
+   "start": 66.0,
+   "end": 71.649,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "day30b",
+   "dur": 8.778875,
+   "text": "But sunlight is already a third stronger. On a rough estimate, the world is heading toward an average of nearly forty degrees Celsius.",
+   "start": 72.6,
+   "end": 81.379,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "accel1",
+   "dur": 6.207916666666667,
+   "text": "Here's the cruel part. Gravity grows stronger the closer you get, so the fall keeps speeding up.",
+   "start": 84.0,
+   "end": 90.208,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "accel2",
+   "dur": 5.734416666666666,
+   "text": "The first half of the distance takes fifty-three days. The second half takes less than twelve.",
+   "start": 91.2,
+   "end": 96.934,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "venus",
+   "dur": 6.566291666666666,
+   "text": "Day forty-two. We cross the orbit of Venus. Sunlight is twice as strong as when we started.",
+   "start": 100.0,
+   "end": 106.566,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "venusb",
+   "dur": 4.651875,
+   "text": "Across most of the planet, simply being outdoors would now be deadly.",
+   "start": 107.6,
+   "end": 112.252,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "mercury",
+   "dur": 7.59075,
+   "text": "Day fifty-seven. Mercury's orbit. It took fifty-seven days to get here. From here to the Sun: one more week.",
+   "start": 115.0,
+   "end": 122.591,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "moon",
+   "dur": 9.157083333333333,
+   "text": "The Moon is still with us. In these last days, the Sun's pull begins to tear it away from Earth. But it can't escape. It's falling too.",
+   "start": 125.0,
+   "end": 134.157,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "flips",
+   "dur": 8.925041666666667,
+   "text": "By the end of day sixty, sunlight is twelve times stronger. Day sixty-two: twenty-five times. Day sixty-three: nearly fifty.",
+   "start": 137.5,
+   "end": 146.425,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "hours13",
+   "dur": 7.92175,
+   "text": "Sixty-four days have passed. Thirteen hours remain. We're moving at a hundred and fifty kilometres every second.",
+   "start": 151.0,
+   "end": 158.922,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "hours8",
+   "dur": 5.125708333333334,
+   "text": "Eight hours left. The Sun is nearly twenty times wider than it used to be.",
+   "start": 161.0,
+   "end": 166.126,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "oceans",
+   "dur": 11.439375,
+   "text": "Even now, the oceans haven't boiled away. They're too deep. All the sunlight Earth absorbs on the entire fall could boil off only the top fifteen metres or so.",
+   "start": 168.0,
+   "end": 179.439,
+   "tempo": 1.0
+  },
+  {
+   "i": 20,
+   "key": "hour1",
+   "dur": 4.671125,
+   "text": "One hour left. The Sun is seventy times wider than it used to be.",
+   "start": 182.0,
+   "end": 186.671,
+   "tempo": 1.0
+  },
+  {
+   "i": 21,
+   "key": "granules",
+   "dur": 8.061208333333333,
+   "text": "If anyone could still look, they'd see its surface churning: cells of glowing plasma, each about the size of a country.",
+   "start": 188.0,
+   "end": 196.061,
+   "tempo": 1.0
+  },
+  {
+   "i": 22,
+   "key": "tides",
+   "dur": 4.815166666666666,
+   "text": "In the final minutes, the Sun's tides would begin to stretch the planet itself.",
+   "start": 199.0,
+   "end": 203.815,
+   "tempo": 1.0
+  },
+  {
+   "i": 23,
+   "key": "impact",
+   "dur": 12.451083333333333,
+   "text": "We arrive at more than six hundred kilometres per second, almost exactly the speed you'd need to escape the Sun. At that speed, Earth crosses its own width in twenty seconds.",
+   "start": 205.5,
+   "end": 217.951,
+   "tempo": 1.0
+  },
+  {
+   "i": 24,
+   "key": "after",
+   "dur": 5.703375,
+   "text": "And the Sun would barely notice. Earth is less than a three-hundred-thousandth of its mass.",
+   "start": 223.0,
+   "end": 228.703,
+   "tempo": 1.0
+  },
+  {
+   "i": 25,
+   "key": "end1",
+   "dur": 6.068416666666667,
+   "text": "None of this will happen. But here is the strange part: we are falling toward the Sun right now.",
+   "start": 231.0,
+   "end": 237.068,
+   "tempo": 1.0
+  },
+  {
+   "i": 26,
+   "key": "end2",
+   "dur": 5.717208333333334,
+   "text": "We always have been. An orbit is just a fall, with enough sideways speed to keep missing.",
+   "start": 238.3,
+   "end": 244.017,
+   "tempo": 1.0
+  },
+  {
+   "i": 27,
+   "key": "end3",
+   "dur": 5.44975,
+   "text": "For four and a half billion years, Earth has been falling around the Sun, and missing.",
+   "start": 246.5,
+   "end": 251.95,
+   "tempo": 1.0
+  }
+ ]
+}

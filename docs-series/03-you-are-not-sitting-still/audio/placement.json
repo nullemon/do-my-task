@@ -1,0 +1,214 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "id": "l00",
+   "start": 0.6,
+   "end": 2.07,
+   "dur": 1.47,
+   "text": "You think you're sitting still.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l01",
+   "start": 3.497,
+   "end": 5.203,
+   "dur": 1.706,
+   "text": "You're not. Not even close.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l02",
+   "start": 6.916,
+   "end": 12.571,
+   "dur": 5.656,
+   "text": "Right now, without feeling a thing, you're moving at well over a million kilometres an hour.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l03",
+   "start": 14.284,
+   "end": 21.212,
+   "dur": 6.928,
+   "text": "Let's add it up. One level at a time. And let's keep a running count of how far you travel while you watch.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l04",
+   "start": 26.212,
+   "end": 36.93,
+   "dur": 10.718,
+   "text": "First, the ground beneath you. Earth turns once a day, and you turn with it, sweeping around a circle that, at the equator, is forty thousand kilometres long.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l05",
+   "start": 38.357,
+   "end": 44.015,
+   "dur": 5.658,
+   "text": "At the equator, that's about one thousand, six hundred and seventy kilometres an hour.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l06",
+   "start": 45.727,
+   "end": 55.332,
+   "dur": 9.605,
+   "text": "Away from the equator, your circle is smaller, so you move more slowly. In London, about one thousand and forty. At the poles, almost nothing.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l07",
+   "start": 60.332,
+   "end": 67.431,
+   "dur": 7.099,
+   "text": "But Earth itself is moving. It circles the Sun once a year, at nearly thirty kilometres every second.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l08",
+   "start": 68.858,
+   "end": 75.356,
+   "dur": 6.498,
+   "text": "That's about a hundred and seven thousand kilometres an hour. London to New York in about three minutes.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l09",
+   "start": 80.356,
+   "end": 89.835,
+   "dur": 9.479,
+   "text": "And the Sun is not standing still either. It carries every planet with it, so our real path is not a circle. It's a long, slanted spiral.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l10",
+   "start": 91.262,
+   "end": 110.38,
+   "dur": 19.118,
+   "text": "The planets' orbits are tilted about sixty degrees to the Sun's path. Not the swirling vortex you may have seen online. The real spiral is far gentler. Each year, the Sun moves about fifty times farther than the width of Earth's orbit, so our path is stretched out, almost straight.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l11",
+   "start": 115.38,
+   "end": 119.66,
+   "dur": 4.279,
+   "text": "Because the Sun is orbiting too, around the centre of the Milky Way.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l12",
+   "start": 121.087,
+   "end": 127.691,
+   "dur": 6.604,
+   "text": "At roughly two hundred and thirty kilometres a second. Over eight hundred thousand kilometres an hour.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l13",
+   "start": 129.404,
+   "end": 140.766,
+   "dur": 11.362,
+   "text": "Even so, one lap takes around two hundred and thirty million years. The last time the Sun was at this point in its orbit, the first dinosaurs were only just appearing.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l14",
+   "start": 142.478,
+   "end": 150.536,
+   "dur": 8.058,
+   "text": "And as it circles, it drifts gently up and down through the galaxy's disk, crossing it every thirty million years or so.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l15",
+   "start": 155.536,
+   "end": 160.379,
+   "dur": 4.843,
+   "text": "Then the Milky Way itself is moving, and so is every galaxy around it.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l16",
+   "start": 161.806,
+   "end": 174.918,
+   "dur": 13.112,
+   "text": "All of space is filled with a faint afterglow of the Big Bang: the cosmic microwave background. Measured against it, the Sun is moving at about three hundred and seventy kilometres a second.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l17",
+   "start": 176.345,
+   "end": 185.998,
+   "dur": 9.653,
+   "text": "These speeds don't simply add up. They point in different directions. But the total is still more than one point three million kilometres an hour.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l18",
+   "start": 187.711,
+   "end": 202.922,
+   "dur": 15.211,
+   "text": "And our whole Local Group of galaxies, Andromeda included, is moving at about six hundred kilometres a second, drawn toward vast gatherings of galaxies: the Great Attractor, and beyond it, the Shapley Supercluster.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l19",
+   "start": 207.922,
+   "end": 209.697,
+   "dur": 1.775,
+   "text": "So why don't you feel any of it?",
+   "tempo": 1.0
+  },
+  {
+   "id": "l20",
+   "start": 211.124,
+   "end": 217.89,
+   "dur": 6.766,
+   "text": "Because you don't feel speed. You feel changes in speed. Speeding up. Slowing down. Turning sharply.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l21",
+   "start": 219.317,
+   "end": 230.937,
+   "dur": 11.62,
+   "text": "Almost all of this motion is smooth and steady. Galileo noticed it below deck on a ship gliding over calm water: nothing tells you you're moving. Newton made it a law.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l22",
+   "start": 232.364,
+   "end": 241.457,
+   "dur": 9.093,
+   "text": "And everything around you is moving with you. The chair. The air. The window. The whole planet. Nothing rushes past, so nothing gives it away.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l23",
+   "start": 246.457,
+   "end": 253.565,
+   "dur": 7.108,
+   "text": "Since this video began, you've travelled nearly a hundred thousand kilometres. A quarter of the way to the Moon.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l24",
+   "start": 255.848,
+   "end": 257.203,
+   "dur": 1.355,
+   "text": "You've never been still.",
+   "tempo": 1.0
+  },
+  {
+   "id": "l25",
+   "start": 258.63,
+   "end": 260.0,
+   "dur": 1.37,
+   "text": "Not for one second.",
+   "tempo": 1.0
+  }
+ ]
+}

@@ -1,0 +1,256 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "key": "hook",
+   "start": 0.7,
+   "end": 4.556,
+   "dur": 3.856,
+   "text": "Somewhere out there, right now, it is still nineteen ninety.",
+   "sub": "Somewhere out there, right now, it is still 1990.",
+   "i": "hook",
+   "tempo": 1.0
+  },
+  {
+   "key": "light",
+   "start": 6.456,
+   "end": 17.809,
+   "dur": 11.353,
+   "text": "Light doesn't arrive all at once. It travels. And every moment that has ever happened on Earth is still travelling outward, at three hundred thousand kilometres a second.",
+   "sub": "Light doesn't arrive all at once. It travels. And every moment that has ever happened on Earth is still travelling outward, at three hundred thousand kilometres a second.",
+   "i": "light",
+   "tempo": 1.0
+  },
+  {
+   "key": "chase",
+   "start": 19.008,
+   "end": 25.664,
+   "dur": 6.656,
+   "text": "So let's chase it. And at every star we pass, we'll ask one question: what do they see of us, right now?",
+   "sub": "So let's chase it. And at every star we pass, we'll ask one question: what do they see of us, right now?",
+   "i": "chase",
+   "tempo": 1.0
+  },
+  {
+   "key": "moon",
+   "start": 27.364,
+   "end": 31.095,
+   "dur": 3.731,
+   "text": "The Moon sees Earth as it was one point three seconds ago.",
+   "sub": "The Moon sees Earth as it was 1.3 seconds ago.",
+   "i": "moon",
+   "tempo": 1.0
+  },
+  {
+   "key": "sun",
+   "start": 32.395,
+   "end": 35.239,
+   "dur": 2.844,
+   "text": "The Sun, eight minutes and twenty seconds ago.",
+   "sub": "The Sun, 8 minutes and 20 seconds ago.",
+   "i": "sun",
+   "tempo": 1.0
+  },
+  {
+   "key": "dot",
+   "start": 36.739,
+   "end": 43.41,
+   "dur": 6.671,
+   "text": "Six billion kilometres out, Earth is a pale blue dot. Then it's lost in the glare of the Sun.",
+   "sub": "Six billion kilometres out, Earth is a pale blue dot. Then it's lost in the glare of the Sun.",
+   "i": "dot",
+   "tempo": 1.0
+  },
+  {
+   "key": "proxima",
+   "start": 45.61,
+   "end": 57.297,
+   "dur": 11.687,
+   "text": "Proxima Centauri, our nearest star, four point two light-years away, sees the summer of twenty twenty-two. The James Webb telescope has just opened its eyes.",
+   "sub": "Proxima Centauri, our nearest star, 4.2 light-years away, sees the summer of 2022. The James Webb telescope has just opened its eyes.",
+   "i": "proxima",
+   "tempo": 1.0
+  },
+  {
+   "key": "sirius",
+   "start": 58.897,
+   "end": 63.28,
+   "dur": 4.383,
+   "text": "Sirius, the brightest star in our night sky: early twenty eighteen.",
+   "sub": "Sirius, the brightest star in our night sky: early 2018.",
+   "i": "sirius",
+   "tempo": 1.0
+  },
+  {
+   "key": "vega",
+   "start": 64.78,
+   "end": 72.871,
+   "dur": 8.091,
+   "text": "Vega, twenty-five light-years: late two thousand and one. The space station has had people aboard for about a year.",
+   "sub": "Vega, 25 light-years: late 2001. The space station has had people aboard for about a year.",
+   "i": "vega",
+   "tempo": 1.0
+  },
+  {
+   "key": "arct",
+   "start": 74.571,
+   "end": 88.193,
+   "dur": 13.622,
+   "text": "Arcturus, thirty-seven light-years. And here is something strange. Arcturus is seeing Earth from early nineteen ninety, around the very month Voyager turned back and photographed that pale blue dot.",
+   "sub": "Arcturus, 37 light-years. And here is something strange. Arcturus is seeing Earth from early 1990, around the very month Voyager turned back and photographed that pale blue dot.",
+   "i": "arct",
+   "tempo": 1.0
+  },
+  {
+   "key": "caph",
+   "start": 90.593,
+   "end": 98.315,
+   "dur": 7.722,
+   "text": "Caph, in Cassiopeia, fifty-five light-years: nineteen seventy-two. The last year anyone walked on the Moon.",
+   "sub": "Caph, in Cassiopeia, 55 light-years: 1972. The last year anyone walked on the Moon.",
+   "i": "caph",
+   "tempo": 1.0
+  },
+  {
+   "key": "radio",
+   "start": 100.315,
+   "end": 115.998,
+   "dur": 15.683,
+   "text": "Around a hundred light-years, we cross the edge of something: our first radio broadcasts, from the nineteen twenties. Beyond this line, no one could have heard us. And even inside it, our signals are almost certainly far too faint to pick out.",
+   "sub": "Around 100 light-years, we cross the edge of something: our first radio broadcasts, from the 1920s. Beyond this line, no one could have heard us. And even inside it, our signals are almost certainly far too faint to pick out.",
+   "i": "radio",
+   "tempo": 1.0
+  },
+  {
+   "key": "dubhe",
+   "start": 117.998,
+   "end": 128.647,
+   "dur": 10.649,
+   "text": "Dubhe, in the Big Dipper, a hundred and twenty-three light-years. Give or take a couple of years, the first aeroplane is lifting off a beach in North Carolina.",
+   "sub": "Dubhe, in the Big Dipper, 123 light-years. Give or take a couple of years, the first aeroplane is lifting off a beach in North Carolina.",
+   "i": "dubhe",
+   "tempo": 1.0
+  },
+  {
+   "key": "polaris",
+   "start": 130.447,
+   "end": 144.141,
+   "dur": 13.694,
+   "text": "Polaris, the North Star, about four hundred and forty-six light-years: around fifteen eighty. Ships are crossing oceans, steering by this very star. No one has ever looked through a telescope.",
+   "sub": "Polaris, the North Star, about 446 light-years: around 1580. Ships are crossing oceans, steering by this very star. No one has ever looked through a telescope.",
+   "i": "polaris",
+   "tempo": 1.0
+  },
+  {
+   "key": "betel",
+   "start": 145.941,
+   "end": 160.483,
+   "dur": 14.543,
+   "text": "Betelgeuse, roughly five hundred and fifty light-years, though that distance is uncertain by a hundred or so. It sees the fourteen hundreds, or the fifteen hundreds. Cathedrals, and the first printing presses.",
+   "sub": "Betelgeuse, roughly 550 light-years, though that distance is uncertain by a hundred or so. It sees the 1400s, or the 1500s. Cathedrals, and the first printing presses.",
+   "i": "betel",
+   "tempo": 1.0
+  },
+  {
+   "key": "orion",
+   "start": 162.283,
+   "end": 170.069,
+   "dur": 7.785,
+   "text": "The Orion Nebula, about thirteen hundred light-years: around the year seven hundred. Maya cities are at their height.",
+   "sub": "The Orion Nebula, about 1,300 light-years: around the year 700. Maya cities are at their height.",
+   "i": "orion",
+   "tempo": 1.0
+  },
+  {
+   "key": "deneb",
+   "start": 171.669,
+   "end": 183.251,
+   "dur": 11.582,
+   "text": "Deneb is a mystery. It might be fourteen hundred light-years away, or twenty-six hundred. Either way, it sees the classical world. Rome rising, or Rome falling.",
+   "sub": "Deneb is a mystery. It might be 1,400 light-years away, or 2,600. Either way, it sees the classical world. Rome rising, or Rome falling.",
+   "i": "deneb",
+   "tempo": 1.0
+  },
+  {
+   "key": "vycma",
+   "start": 185.051,
+   "end": 198.22,
+   "dur": 13.169,
+   "text": "V Y Canis Majoris, about thirty-nine hundred light-years. The Great Pyramid is already centuries old. And on an island in the Arctic, the last woolly mammoths are still alive.",
+   "sub": "VY Canis Majoris, about 3,900 light-years. The Great Pyramid is already centuries old. And on an island in the Arctic, the last woolly mammoths are still alive.",
+   "i": "vycma",
+   "tempo": 1.0
+  },
+  {
+   "key": "twist",
+   "start": 200.62,
+   "end": 218.789,
+   "dur": 18.169,
+   "text": "Of course, no one out there could really watch any of this. To make out details just a couple of kilometres across from Proxima Centauri, you would need a telescope as wide as the Earth. From farther away, wider still. The light is there. Seeing it is another matter.",
+   "sub": "Of course, no one out there could really watch any of this. To make out details just a couple of kilometres across from Proxima Centauri, you would need a telescope as wide as the Earth. From farther away, wider still. The light is there. Seeing it is another matter.",
+   "i": "twist",
+   "tempo": 1.0
+  },
+  {
+   "key": "gc",
+   "start": 220.989,
+   "end": 232.846,
+   "dur": 11.857,
+   "text": "Twenty-seven thousand light-years: the heart of our galaxy. Earth is in an ice age. Glaciers bury much of the northern continents, and mammoths roam the plains below them.",
+   "sub": "27,000 light-years: the heart of our galaxy. Earth is in an ice age. Glaciers bury much of the northern continents, and mammoths roam the plains below them.",
+   "i": "gc",
+   "tempo": 1.0
+  },
+  {
+   "key": "lmc",
+   "start": 234.746,
+   "end": 244.534,
+   "dur": 9.788,
+   "text": "The Large Magellanic Cloud, a hundred and sixty thousand light-years. Our species is young, and lives almost entirely in Africa.",
+   "sub": "The Large Magellanic Cloud, 160,000 light-years. Our species is young, and lives almost entirely in Africa.",
+   "i": "lmc",
+   "tempo": 1.0
+  },
+  {
+   "key": "m31",
+   "start": 246.234,
+   "end": 257.395,
+   "dur": 11.161,
+   "text": "And Andromeda, two and a half million light-years away, sees an Earth with no humans at all. Only our distant ancestors, shaping some of the first stone tools.",
+   "sub": "And Andromeda, 2.5 million light-years away, sees an Earth with no humans at all. Only our distant ancestors, shaping some of the first stone tools.",
+   "i": "m31",
+   "tempo": 1.0
+  },
+  {
+   "key": "dino",
+   "start": 259.795,
+   "end": 263.991,
+   "dur": 4.196,
+   "text": "Sixty-six million light-years out, the asteroid is still falling.",
+   "sub": "66 million light-years out, the asteroid is still falling.",
+   "i": "dino",
+   "tempo": 1.0
+  },
+  {
+   "key": "end1",
+   "start": 266.991,
+   "end": 270.284,
+   "dur": 3.293,
+   "text": "Everything we've ever done is still travelling outward.",
+   "sub": "Everything we've ever done is still travelling outward.",
+   "i": "end1",
+   "tempo": 1.0
+  },
+  {
+   "key": "end2",
+   "start": 271.684,
+   "end": 273.346,
+   "dur": 1.662,
+   "text": "Somewhere, it's still happening.",
+   "sub": "Somewhere, it's still happening.",
+   "i": "end2",
+   "tempo": 1.0
+  }
+ ]
+}

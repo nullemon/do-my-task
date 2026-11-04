@@ -1,0 +1,279 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "dur": 270.0,
+ "pause_factor": 1.3098734177215192,
+ "shots": {
+  "room": 0.0,
+  "push": 34.506,
+  "fog": 39.799,
+  "stretch": 78.349,
+  "horn": 125.662,
+  "map": 192.208,
+  "return": 228.693,
+  "end": 253.146
+ },
+ "lines": [
+  {
+   "i": 0,
+   "shot": "room",
+   "pause": 1.0,
+   "dur": 3.119,
+   "text": "Some of this static is left over from the Big Bang.",
+   "start": 0.8,
+   "end": 3.919
+  },
+  {
+   "i": 1,
+   "shot": "room",
+   "pause": 2.2,
+   "dur": 6.201,
+   "text": "If you grew up with an old television, you've seen it. Between the channels: a hissing, crawling snow.",
+   "start": 6.801,
+   "end": 13.002
+  },
+  {
+   "i": 2,
+   "shot": "room",
+   "pause": 1.6,
+   "dur": 7.807,
+   "text": "Most of it was made right here on Earth. Warm electronics inside the set. Distant transmitters. Even the Sun.",
+   "start": 15.098,
+   "end": 22.905
+  },
+  {
+   "i": 3,
+   "shot": "room",
+   "pause": 1.4,
+   "dur": 8.93,
+   "text": "But a tiny part of it, often quoted as about one percent, though it was never precisely measured, came from much, much farther away.",
+   "start": 24.738,
+   "end": 33.668
+  },
+  {
+   "i": 4,
+   "shot": "push",
+   "pause": 1.6,
+   "dur": 2.358,
+   "text": "It is the oldest light in the universe.",
+   "start": 35.764,
+   "end": 38.122
+  },
+  {
+   "i": 5,
+   "shot": "fog",
+   "pause": 3.2,
+   "dur": 10.441,
+   "text": "Go back nearly fourteen billion years. The young universe is a hot, dense fog of charged particles. Light can't travel far before it's scattered.",
+   "start": 42.314,
+   "end": 52.755
+  },
+  {
+   "i": 6,
+   "shot": "fog",
+   "pause": 1.4,
+   "dur": 7.729,
+   "text": "Then, about three hundred and eighty thousand years after the Big Bang, the fog cools to around three thousand degrees.",
+   "start": 54.589,
+   "end": 62.318
+  },
+  {
+   "i": 7,
+   "shot": "fog",
+   "pause": 1.2,
+   "dur": 4.755,
+   "text": "Electrons settle onto atoms. And for the first time, light breaks free.",
+   "start": 63.889,
+   "end": 68.644
+  },
+  {
+   "i": 8,
+   "shot": "fog",
+   "pause": 1.2,
+   "dur": 6.875,
+   "text": "The whole universe glows like the surface of a cool star: a dull orange light, everywhere at once.",
+   "start": 70.216,
+   "end": 77.091
+  },
+  {
+   "i": 9,
+   "shot": "stretch",
+   "pause": 2.4,
+   "dur": 6.458,
+   "text": "That light has been travelling ever since. And as space expanded, it stretched the light along with it.",
+   "start": 80.235,
+   "end": 86.693
+  },
+  {
+   "i": 10,
+   "shot": "stretch",
+   "pause": 1.2,
+   "dur": 10.038,
+   "text": "Orange became red. Red became infrared. The waves grew about a thousand times longer, until the glow was invisible: microwaves.",
+   "start": 88.265,
+   "end": 98.303
+  },
+  {
+   "i": 11,
+   "shot": "stretch",
+   "pause": 1.4,
+   "dur": 7.73,
+   "text": "Today it is just two point seven degrees above absolute zero. And it reaches us from every direction in the sky.",
+   "start": 100.137,
+   "end": 107.867
+  },
+  {
+   "i": 12,
+   "shot": "stretch",
+   "pause": 1.4,
+   "dur": 8.07,
+   "text": "Roughly four hundred of these ancient photons fill every cubic centimetre of space. Including the room you're sitting in.",
+   "start": 109.7,
+   "end": 117.77
+  },
+  {
+   "i": 13,
+   "shot": "stretch",
+   "pause": 1.6,
+   "dur": 4.538,
+   "text": "An old TV antenna, tuned to nothing, catches a faint whisper of it.",
+   "start": 119.866,
+   "end": 124.404
+  },
+  {
+   "i": 14,
+   "shot": "horn",
+   "pause": 2.4,
+   "dur": 9.526,
+   "text": "In 1964, at Bell Labs in New Jersey, Arno Penzias and Robert Wilson were testing a giant horn-shaped antenna.",
+   "start": 127.548,
+   "end": 137.074
+  },
+  {
+   "i": 15,
+   "shot": "horn",
+   "pause": 1.0,
+   "dur": 8.425,
+   "text": "It had been built to catch faint signals from the first communication satellites. It was one of the quietest radio receivers on Earth.",
+   "start": 138.384,
+   "end": 146.809
+  },
+  {
+   "i": 16,
+   "shot": "horn",
+   "pause": 1.2,
+   "dur": 5.596,
+   "text": "They found a faint hiss they couldn't get rid of. Day or night. Whichever way they pointed it.",
+   "start": 148.381,
+   "end": 153.977
+  },
+  {
+   "i": 17,
+   "shot": "horn",
+   "pause": 1.2,
+   "dur": 8.309,
+   "text": "They even evicted a pair of nesting pigeons, and cleaned out what Penzias politely called \"white dielectric material\".",
+   "start": 155.549,
+   "end": 163.858
+  },
+  {
+   "i": 18,
+   "shot": "horn",
+   "pause": 1.4,
+   "dur": 8.986,
+   "text": "The hiss remained. Nearby, at Princeton, physicists had been preparing to search for exactly this: the afterglow of a hot beginning.",
+   "start": 165.691,
+   "end": 174.677
+  },
+  {
+   "i": 19,
+   "shot": "horn",
+   "pause": 1.2,
+   "dur": 7.736,
+   "text": "When their leader, Robert Dicke, heard about the Bell Labs hiss, he reportedly told his team: \"Boys, we've been scooped.\"",
+   "start": 176.249,
+   "end": 183.985
+  },
+  {
+   "i": 20,
+   "shot": "horn",
+   "pause": 1.2,
+   "dur": 5.393,
+   "text": "In 1978, Penzias and Wilson shared the Nobel Prize in Physics.",
+   "start": 185.557,
+   "end": 190.95
+  },
+  {
+   "i": 21,
+   "shot": "map",
+   "pause": 2.4,
+   "dur": 6.535,
+   "text": "Since then, the COBE, WMAP and Planck spacecraft have mapped this glow across the whole sky.",
+   "start": 194.094,
+   "end": 200.629
+  },
+  {
+   "i": 22,
+   "shot": "map",
+   "pause": 1.2,
+   "dur": 8.936,
+   "text": "It is almost perfectly smooth. Its tiny ripples, about one part in a hundred thousand, are the seeds of everything that came later.",
+   "start": 202.201,
+   "end": 211.137
+  },
+  {
+   "i": 23,
+   "shot": "map",
+   "pause": 1.2,
+   "dur": 11.145,
+   "text": "The warmer and cooler spots trace places that were very slightly denser or thinner than average. Over billions of years, gravity pulled the denser places together.",
+   "start": 212.708,
+   "end": 223.853
+  },
+  {
+   "i": 24,
+   "shot": "map",
+   "pause": 1.0,
+   "dur": 2.168,
+   "text": "Galaxies. Stars. Planets. Us.",
+   "start": 225.163,
+   "end": 227.331
+  },
+  {
+   "i": 25,
+   "shot": "return",
+   "pause": 2.6,
+   "dur": 12.688,
+   "text": "Today, analog television is gone from most of the world. The United States switched off full-power analog broadcasts in 2009. The UK finished in 2012.",
+   "start": 230.737,
+   "end": 243.425
+  },
+  {
+   "i": 26,
+   "shot": "return",
+   "pause": 1.2,
+   "dur": 5.529,
+   "text": "And with it, this little window to the beginning of time quietly disappeared from our homes.",
+   "start": 244.997,
+   "end": 250.526
+  },
+  {
+   "i": 27,
+   "shot": "end",
+   "pause": 5.0,
+   "dur": 2.01,
+   "text": "The oldest light in the universe.",
+   "start": 257.075,
+   "end": 259.085
+  },
+  {
+   "i": 28,
+   "shot": "end",
+   "pause": 1.4,
+   "dur": 2.081,
+   "text": "And we used to just change the channel.",
+   "start": 260.919,
+   "end": 263.0
+  }
+ ]
+}

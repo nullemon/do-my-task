@@ -120,6 +120,11 @@ within a few light-years.
 |---|---|---|---|
 | out/what-they-see-of-us-1080p.mp4 | 92.0 MB | 281.375 s | 1920×1080 h264 24 fps (~2.3 Mb/s), AAC 256k, mov_text subs |
 | out/what-they-see-of-us-1080p-hq.mp4 | 92.0 MB | 281.375 s | stream copy of the master (fits ≤ 380 MB) |
+| out/what-they-see-of-us-4k.mp4 | 124.4 MB | 281.375 s | 3840×2160 lanczos upscale, CRF 20 (veryfast), ~3.5 Mb/s |
+| out/what-they-see-of-us-4k-share.mp4 | 124.4 MB | 281.375 s | stream copy of the 4K file (fits ≤ 480 MB) |
+
+All four: 6,753 video frames, h264 + AAC 256k + soft English mov_text subtitle track. Frames checked at 2.5, 12,
+29, 50, 77, 112, 166, 190, 226, 250, 262 and 278 s, plus a 4K crop at 226 s.
 
 Audio measured on the final 1080p file: **−14.1 LUFS integrated, −1.0 dBTP true peak** (AAC encode; the WAV
 master is −14.0 LUFS / −1.5 dBTP).

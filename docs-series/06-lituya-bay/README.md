@@ -59,3 +59,19 @@ WebFetch was not reachable from this session (only web search), so facts were cr
 - The "Miller photograph" is a reconstruction of the stylised terrain graded as a B&W print, labelled "RECONSTRUCTION".
 - The speed figure is hedged; the ~150 m wave height is a laboratory-model estimate; Barry Arm is a modelled worst case (hatched bar), not an event.
 - 4K files are lanczos upscales of the 1080p render.
+- The B1 wall is a cheap displaced mesh (no overturning fluid); its last ~1.5 s are covered by a dark "engulfed" fade as the wave reaches the camera. Spray/foam use procedural noise and show some sampling grain at 6 spp.
+- Close terrain still shows some top-down texture stretching on the steepest faces.
+
+## Results (final encode 4 Nov 2026)
+| file | duration | size |
+|---|---|---|
+| `out/lituya-bay-1080p.mp4` | 336.0 s (5:36), 8,064 frames | 608 MB |
+| `out/lituya-bay-1080p-hq.mp4` | 336.0 s | 345 MB (≤ 380 MB) |
+| `out/lituya-bay-4k.mp4` (upscaled) | 336.0 s | 776 MB |
+| `out/lituya-bay-4k-share.mp4` (upscaled) | 336.0 s | 319 MB (≤ 480 MB) |
+
+Audio: −14.1 LUFS integrated, LRA 3.2 LU, true peak −1.1 dBTP (measured with ffmpeg ebur128 on the master). 61 subtitle cues.
+Render time (wall clock, on a CPU shared with three other videos, load average 9–30 on 4 cores): terrain bakes ~6 min each,
+Blender plates ~1 min per pass (7 cameras × 2–3 passes), Blender wave layer ~355 frames at 8 s–2 min per frame (the last
+~40 frames of B1 are covered by the "engulfed" fade and were not needed), numpy compositing ~1 h 45 min across two/three
+workers, final encodes ~70 min.

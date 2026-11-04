@@ -75,4 +75,24 @@ See the report table at the bottom (sizes / durations filled after the final enc
 - The 3D orbit is 41 rendered (denoised) key frames cross-blended over 10 s (the move is slow, so blending is subtle) and upscaled from 1280×720.
 - "Someone turns the TV off" is conveyed by sound (switch click) and the CRT collapse; no hand is shown.
 - 4K files are lanczos upscales of the 1080p render.
+- Some lower-third captions sit over bright frames (the plasma fog, the CMB map) and are lower-contrast there than over dark shots; they are softened by a dark gradient band but not boxed.
+- The subtitle track is flagged with the container default disposition by ffmpeg's mov_text muxer despite `-disposition 0`; players may show it unless switched off.
 - Narration is 499 words (slightly under the 550–650 guideline) with generous pauses; the film is exactly 270 s.
+
+## Final files (verified)
+| file | size | duration / frames | picture |
+|---|---|---|---|
+| `out/bigbang-tv-1080p.mp4` | 515 MB | 270.0 s / 6480 | 1920×1080, x264 CRF 18 |
+| `out/bigbang-tv-1080p-hq.mp4` | 337 MB | 270.0 s / 6480 | 1920×1080, CRF 18 capped 10 Mb/s |
+| `out/bigbang-tv-4k.mp4` | 677 MB | 270.0 s / 6480 | 3840×2160 lanczos **upscale**, CRF 20 |
+| `out/bigbang-tv-4k-share.mp4` | 361 MB | 270.0 s / 6480 | 3840×2160 upscale, capped 13 Mb/s |
+
+All carry AAC 256 kb/s stereo and an English mov_text subtitle track. Audio: −14.1 LUFS integrated, true peak −1.2 dBTP (ebur128 on the master).
+
+## Rebuild
+```
+/home/user/ttsenv/bin/python audio/gen_voice.py && python3 audio/timeline.py && /home/user/ttsenv/bin/python audio/mix.py
+python3 gen_sky.py; ./render_plates.sh (uv passes) ; ./render_plates_dn.sh wide ; ./render_plates_dn.sh medium ; ./render_horn.sh
+./run_queue.sh R1 R2 S1 S2 S3 S4 H3 H5 M G ; ./pf_chunks.sh        # numpy compositor -> seg/*.mp4
+bash assemble.sh
+```

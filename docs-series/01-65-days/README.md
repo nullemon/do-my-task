@@ -81,6 +81,8 @@ eye could not look); in the final hours the disc is shown "filtered" (orange, li
 - "Sunlight ×N" is the inverse-square factor relative to 1 AU (ignores the Sun's angular size for the last minutes).
 - "Sun ≈ 70× wider" at T − 1 h is 67.9× (rounded in the narration, "≈70" on screen).
 - The landscape is fictional and stylised (silhouettes); late-stage sky colours, haze and steam are artistic.
+- Known sync nit: the story clock keeps running under some captions, e.g. "CROSSING THE ORBIT OF VENUS · DAY 42" stays up
+  while the HUD has already reached day ~47 (fast-forward between narration beats).
 - 4K files are **lanczos upscales** of the 1080p render, not native 4K.
 
 ## Render / CPU notes (4 shared cores, load ~20–30 during this job)

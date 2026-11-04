@@ -83,6 +83,21 @@ def shot_PF(fi):
     return _PF.frame(fi)
 
 
+_PF_LAST = None
+
+
+def shot_PFc(fi):
+    """PF rendered in independent chunks: on the first frame of a chunk the particle simulation is
+    fast-forwarded (no drawing) through every earlier plasma frame, so the result matches one long render."""
+    global _PF, _PF_LAST
+    if _PF is None:
+        _PF = cosmos.PushFog(SH["push"], SH["stretch"])
+        for k in range(F(SH["push"]), fi):
+            if k / FPS >= 37.2:
+                _PF.plasma(k, k / FPS, draw=False)
+    return _PF.frame(fi)
+
+
 def shot_S1(fi):
     return cosmos.stretch_frame(fi)
 
@@ -322,6 +337,9 @@ SHOTS = [
     ("R1", 0.0, 14.05, shot_R1),
     ("R2", 14.05, SH["push"], shot_R2),
     ("PF", SH["push"], SH["stretch"], shot_PF),
+    ("PFa", SH["push"], 49.0, shot_PFc),
+    ("PFb", 49.0, 63.5, shot_PFc),
+    ("PFc", 63.5, SH["stretch"], shot_PFc),
     ("S1", SH["stretch"], 100.0, shot_S1),
     ("S2", 100.0, 109.0, shot_S2),
     ("S3", 109.0, 119.0, shot_S3),

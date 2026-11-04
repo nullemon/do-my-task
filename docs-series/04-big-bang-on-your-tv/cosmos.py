@@ -39,6 +39,11 @@ def fog_field(t, scale=1.0, drift=(0.0, 0.0)):
     return box1(box1(f, 1, 0), 1, 1)
 
 
+class _NullAcc:
+    def add(self, *a, **k):
+        pass
+
+
 # ============================================================== PUSH + FOG (34.5 -> 78.35)
 class PushFog:
     def __init__(self, t0, t1):
@@ -97,19 +102,21 @@ class PushFog:
             disp = lerp(disp, stretch_frame(fi), ss(76.6, 78.35, t))
         return disp
 
-    def plasma(self, fi, t):
+    def plasma(self, fi, t, draw=True):
+        """draw=False only advances the particle simulation (same RNG use) - for resuming in chunks."""
         r = self.r
         rec = ss(LS(7) - 0.2, LS(7) + 3.4, t)           # recombination progress (fog clears)
         late = ss(LS(8) - 0.5, LS(8) + 6.0, t)           # 'glows everywhere' pull-back
         # ---- background fog: very bright & opaque before, translucent amber glow after
         scale = 1.0 + 0.6 * late
-        f = fog_field(t, scale)
-        bright = lerp(0.36, 0.13, rec)
-        col = lerp(bb_color(3700), ORANGE, ss(LS(6), LS(6) + 6, t))
-        col = col / col.max()
-        lin = (f * bright)[..., None] * col
+        if draw:
+            f = fog_field(t, scale)
+            bright = lerp(0.36, 0.13, rec)
+            col = lerp(bb_color(3700), ORANGE, ss(LS(6), LS(6) + 6, t))
+            col = col / col.max()
+            lin = (f * bright)[..., None] * col
         # ---- particles
-        acc = Acc()
+        acc = Acc() if draw else _NullAcc()
         dt = 1.0
         # protons: slow jitter
         self.px += r.normal(0, 0.6, self.NP); self.py += r.normal(0, 0.6, self.NP)
@@ -149,6 +156,8 @@ class PushFog:
         sx, sy = segments(self.gx - (self.gx - x0) * trail, self.gy - (self.gy - y0) * trail, self.gx, self.gy, NS)
         gw = depth_vis(self.gz)[:, None] * np.linspace(0.15, 1.0, NS)[None, :] * (14 / NS) ** 0.8 * lerp(1.6, 0.75, rec)
         acc.add(sx, sy, gw, np.array([1.0, 0.93, 0.78], np.float32))
+        if not draw:
+            return None
         im = acc.image()
         im = blur(im, 1.4, 2) * 2.2
         lin = lin * (1 - 0.0 * im) + im

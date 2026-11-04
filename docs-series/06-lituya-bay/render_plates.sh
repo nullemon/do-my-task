@@ -2,7 +2,7 @@
 # Render every camera plate (forest / strip / data) at 2880x1620. Skips existing .npy. Usage: render_plates.sh [CAM...]
 cd /home/user/do-my-task/docs-series/06-lituya-bay
 PL=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/06-lituya-bay/plates
-CAMS=${@:-"wide wide2 top gilbert spur entrance after"}
+CAMS=${@:-"wide wide2 gilbert spur entrance after"}
 for C in $CAMS; do for P in data forest strip; do
   [[ $P == strip && ( $C == wide || $C == entrance ) ]] && continue
   [[ -s $PL/${C}_${P}.npy ]] && continue

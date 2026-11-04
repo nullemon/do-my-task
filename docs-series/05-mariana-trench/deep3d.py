@@ -86,20 +86,30 @@ def fbm(x, y, seed, octaves=5, base=0.08):
 
 
 def build_floor():
-    n = 420
-    xs = np.linspace(-30, 30, n); ys = np.linspace(-6, 54, n)
+    nx, ny = 900, 1100
+    xs = np.linspace(-11, 11, nx); ys = np.linspace(-3, 30, ny)
     X, Y = np.meshgrid(xs, ys)
-    Z = 0.32 * fbm(X, Y, 3, 4, 0.025) + 0.06 * fbm(X, Y, 7, 4, 0.35) + 0.018 * fbm(X, Y, 9, 2, 1.6)
-    # soft hummocks and a few burrow pits / mounds (generic ooze features)
+    Z = 0.30 * fbm(X, Y, 3, 4, 0.03) + 0.05 * fbm(X, Y, 7, 4, 0.4) + 0.012 * fbm(X, Y, 9, 3, 2.5)
     r = np.random.default_rng(11)
-    for _ in range(70):
-        cx, cy = r.uniform(-14, 14), r.uniform(0, 30); s = r.uniform(0.15, 0.7)
-        h = r.choice([-1, 1]) * r.uniform(0.02, 0.09)
-        Z += h * np.exp(-((X - cx) ** 2 + (Y - cy) ** 2) / (2 * s * s))
+    # burrow mounds with a central pit (generic animal traces in soft ooze), and shallow depressions
+    for _ in range(140):
+        cx, cy = r.uniform(-9, 9), r.uniform(-1, 24); s0 = r.uniform(0.08, 0.35)
+        rr2 = (X - cx) ** 2 + (Y - cy) ** 2
+        if r.random() < 0.55:
+            Z += 0.35 * s0 * np.exp(-rr2 / (2 * s0 * s0)) - 0.25 * s0 * np.exp(-rr2 / (2 * (s0 * 0.22) ** 2))
+        else:
+            Z -= 0.15 * s0 * np.exp(-rr2 / (2 * s0 * s0))
+    # a few meandering trails (rows of small dimples)
+    for k in range(5):
+        x0, y0 = r.uniform(-6, 6), r.uniform(0, 12); th = r.uniform(0, 6.28)
+        for j in range(120):
+            th += r.normal(0, 0.12); x0 += math.cos(th) * 0.07; y0 += math.sin(th) * 0.07
+            if j % 2 == 0:
+                Z -= 0.012 * np.exp(-((X - x0) ** 2 + (Y - y0) ** 2) / (2 * 0.025 ** 2))
+    n = None
     me = bpy.data.meshes.new("floor")
     verts = np.stack([X.ravel(), Y.ravel(), Z.ravel()], 1)
-    faces = []
-    idx = np.arange(n * n).reshape(n, n)
+    idx = np.arange(nx * ny).reshape(ny, nx)
     a = idx[:-1, :-1].ravel(); b = idx[:-1, 1:].ravel(); c = idx[1:, 1:].ravel(); d = idx[1:, :-1].ravel()
     faces = np.stack([a, b, c, d], 1)
     me.from_pydata(verts.tolist(), [], faces.tolist())
@@ -109,28 +119,28 @@ def build_floor():
     t = m.node_tree; bsdf = t.nodes["Principled BSDF"]
     bsdf.inputs["Roughness"].default_value = 0.95
     tc = t.nodes.new("ShaderNodeTexCoord")
-    nz = t.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 0.6; nz.inputs["Detail"].default_value = 8
+    nz = t.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = 0.9; nz.inputs["Detail"].default_value = 8
     t.links.new(tc.outputs["Object"], nz.inputs["Vector"])
     ramp = t.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].color = (0.30, 0.29, 0.26, 1)
+    ramp.color_ramp.elements[0].color = (0.22, 0.21, 0.19, 1)
     ramp.color_ramp.elements[1].color = (0.55, 0.53, 0.47, 1)
     t.links.new(nz.outputs["Fac"], ramp.inputs[0]); t.links.new(ramp.outputs[0], bsdf.inputs["Base Color"])
     # fine grain bump (flocculent ooze)
-    nz2 = t.nodes.new("ShaderNodeTexNoise"); nz2.inputs["Scale"].default_value = 22; nz2.inputs["Detail"].default_value = 9; nz2.inputs["Roughness"].default_value = 0.62
+    nz2 = t.nodes.new("ShaderNodeTexNoise"); nz2.inputs["Scale"].default_value = 9; nz2.inputs["Detail"].default_value = 10; nz2.inputs["Roughness"].default_value = 0.65
     t.links.new(tc.outputs["Object"], nz2.inputs["Vector"])
-    bump = t.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.8
+    bump = t.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.5; bump.inputs["Distance"].default_value = 0.02
     t.links.new(nz2.outputs["Fac"], bump.inputs["Height"]); t.links.new(bump.outputs[0], bsdf.inputs["Normal"])
     ob.data.materials.append(m)
     # scattered tiny lumps (fallen organic debris / aggregates)
     rr = np.random.default_rng(5)
     dm = mat("debris", (0.36, 0.34, 0.3), 0.9)
     for i in range(90):
-        x, y = rr.uniform(-9, 9), rr.uniform(1.5, 22)
+        x, y = rr.uniform(-8, 8), rr.uniform(0.5, 20)
         s = rr.uniform(0.012, 0.05)
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=s, location=(x, y, 0))
         o = bpy.context.active_object
         o.scale = (1, rr.uniform(0.6, 1.6), rr.uniform(0.25, 0.45))
-        zi = np.interp(y, ys, np.arange(n)); xi = np.interp(x, xs, np.arange(n))
+        zi = np.interp(y, ys, np.arange(ny)); xi = np.interp(x, xs, np.arange(nx))
         o.location.z = Z[int(zi), int(xi)] + s * 0.2
         o.data.materials.append(dm)
 
@@ -139,12 +149,14 @@ def floor(view, spp, scale):
     build_floor()
     if view == "A":      # oblique, looking ahead across the floor
         cam((0, -2.0, 2.3), (math.radians(58), 0, 0), lens=28)
-        spot("lamp", (1.6, -2.4, 3.6), (math.radians(42), math.radians(14), 0), 260, 62, 0.85)
-        spot("lamp2", (-1.4, -2.0, 2.9), (math.radians(52), math.radians(-12), 0), 90, 55, 0.9, col=(0.8, 0.88, 1.0))
+        spot("lamp", (-2.6, -1.6, 2.2), (math.radians(62), 0, math.radians(-38)), 320, 64, 0.85)
+        spot("lamp2", (1.8, -2.2, 3.4), (math.radians(40), math.radians(10), 0), 50, 55, 0.9, col=(0.8, 0.88, 1.0))
     else:                # closer, steeper (amphipod scene)
         cam((0, 0.0, 1.35), (math.radians(38), 0, 0), lens=30)
-        spot("lamp", (1.2, -0.6, 2.4), (math.radians(26), math.radians(18), 0), 140, 70, 0.85)
+        spot("lamp", (-2.0, -0.2, 1.5), (math.radians(55), 0, math.radians(-55)), 170, 70, 0.85)
+        spot("lamp2", (0.8, -0.6, 2.4), (math.radians(26), math.radians(12), 0), 25, 70, 0.9)
     sc.cycles.samples = spp
+    sc.cycles.use_denoising = False
     sc.render.resolution_x, sc.render.resolution_y = 1920, 1080
     sc.render.resolution_percentage = scale
     sc.render.filepath = os.path.join(OUT, f"floor_{view}.png")

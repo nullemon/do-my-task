@@ -65,27 +65,27 @@ def xpath(keys, t):
 
 # actors: sprite, drawn length (m), lane y (m), nose-x keys, alpha keys, facing (-1 = swims to -x), style, haze
 ACTORS = [
-    dict(id="tease", sprite="mega", L=16.4, y=7.6, x=[(0, 11.6), (16, -26.8)], a=[(0, 1), (15, 1), (16.5, 0)], face=-1, style="solid", haze=0.62, blur=3),
-    dict(id="diver", sprite="diver", L=2.45, y=0.0, x=[(0, -0.0), (DUR, 0.0)], a=[(0, 1), (DUR, 1)], face=1, style="solid", haze=0.12),
-    dict(id="bull", sprite="bull", L=3.3, y=1.75, x=[(24, 7.9), (46, -11.9)], a=[(24, 1), (44, 1), (46, 0)], face=-1, style="solid", haze=0.16),
-    dict(id="gw", sprite="gw", L=6.0, y=-2.5, x=[(30, 12.0), (58, -16.0)], a=[(30, 1), (56, 1), (58, 0)], face=-1, style="solid", haze=0.18),
-    dict(id="ws", sprite="whaleshark", L=12.0, y=5.4, x=[(52, 21.5), (66, -3.5), (90, -30.0)], a=[(52, 1), (88, 1), (90, 0)], face=-1, style="solid", haze=0.26),
-    dict(id="orca", sprite="orca", L=8.0, y=-3.3, x=[(62, 24.2), (92, -23.8)], a=[(62, 1), (90, 1), (92, 0)], face=-1, style="solid", haze=0.2),
-    dict(id="hump", sprite="humpback", L=15.0, y=8.6, x=[(71, 27.3), (110, -23.4)], a=[(71, 1), (100, 1), (106, 0)], face=-1, style="solid", haze=0.32),
+    dict(id="tease", sprite="mega", L=16.4, y=7.6, x=[(0, 11.6), (16, -26.8)], a=[(0, 1), (15, 1), (16.5, 0)], face=-1, style="solid", haze=0.12, blur=3),
+    dict(id="diver", sprite="diver", L=2.45, y=0.0, x=[(0, -0.0), (DUR, 0.0)], a=[(0, 1), (DUR, 1)], face=1, style="solid", haze=0.18),
+    dict(id="bull", sprite="bull", L=3.3, y=1.75, x=[(24, 7.9), (46, -11.9)], a=[(24, 1), (44, 1), (46, 0)], face=-1, style="solid", haze=0.26),
+    dict(id="gw", sprite="gw", L=6.0, y=-2.5, x=[(30, 12.0), (58, -16.0)], a=[(30, 1), (56, 1), (58, 0)], face=-1, style="solid", haze=0.28),
+    dict(id="ws", sprite="whaleshark", L=12.0, y=5.4, x=[(52, 21.5), (66, -3.5), (90, -30.0)], a=[(52, 1), (88, 1), (90, 0)], face=-1, style="solid", haze=0.36),
+    dict(id="orca", sprite="orca", L=8.0, y=-3.3, x=[(62, 24.2), (92, -23.8)], a=[(62, 1), (90, 1), (92, 0)], face=-1, style="solid", haze=0.3),
+    dict(id="hump", sprite="humpback", L=15.0, y=8.6, x=[(71, 27.3), (110, -23.4)], a=[(71, 1), (100, 1), (106, 0)], face=-1, style="solid", haze=0.42),
     # megalodon, 'classic' great-white-shaped (the old picture): arrives, holds, morphs (est3) into the slender form
     dict(id="megc", sprite="gw", L=16.0, y=2.6, x=[(84, 27.0), (88, 18.0), (92, 9.5), (96, 3.5), (100, -0.8), (104, -1.8), (218, -2.6)],
-         a=[(84, 1), (146.5, 1), (152.5, 0)], face=-1, style="solid", haze=0.2),
+         a=[(84, 1), (146.5, 1), (152.5, 0)], face=-1, style="solid", haze=0.3),
     dict(id="megs", sprite="mega", L=16.4, y=2.6, x=[(100, -0.8), (104, -1.8), (218, -2.6), (222, -4.5), (226, -8.5), (232, -15.5), (240, -25.5)],
-         a=[(146.5, 0), (152.5, 1), (238, 1), (240, 0)], face=-1, style="solid", haze=0.2),
+         a=[(146.5, 0), (152.5, 1), (238, 1), (240, 0)], face=-1, style="solid", haze=0.3),
     # great white returning as the competitor
-    dict(id="gw2", sprite="gw", L=6.0, y=-1.2, x=[(229, 26.5), (252, -8.0), (262, -30.0)], a=[(229, 1), (256, 1), (260, 0)], face=-1, style="solid", haze=0.2),
+    dict(id="gw2", sprite="gw", L=6.0, y=-2.8, x=[(229, 26.5), (252, -8.0), (262, -30.0)], a=[(229, 1), (256, 1), (260, 0)], face=-1, style="solid", haze=0.3),
     # twist: extinct giants as ghosts, the living blue whale solid
     dict(id="megghost", sprite="mega", L=16.4, y=3.0, x=[(256, -3.0), (290, -5.0)], a=[(258, 0), (262, 1), (287, 1), (290, 0)], face=-1, style="ghost", haze=0.0),
     dict(id="blue", sprite="blue", L=29.9, y=-10.0, x=[(258, 66.0), (266, 30.0), (272, 4.0), (277, -6.0), (286, -9.0), (292, -32.0), (296, -62.0)],
-         a=[(258, 1), (293, 1), (296, 0)], face=-1, style="solid", haze=0.3),
+         a=[(258, 1), (293, 1), (296, 0)], face=-1, style="solid", haze=0.42),
     dict(id="peru", sprite="perucetus", L=17.0, y=12.5, x=[(272, 2.0), (290, 0.0)], a=[(274.5, 0), (277.5, 1), (287, 1), (290, 0)], face=-1, style="ghost", haze=0.0, static=True),
     # the ending pass: megalodon over the diver, into the dark
-    dict(id="megend", sprite="mega", L=16.4, y=4.2, x=[(288.5, 21.0), (316, -34.0)], a=[(288.5, 1), (DUR, 1)], face=-1, style="solid", haze=0.22),
+    dict(id="megend", sprite="mega", L=16.4, y=4.2, x=[(288.5, 21.0), (316, -34.0)], a=[(288.5, 1), (DUR, 1)], face=-1, style="solid", haze=0.3),
 ]
 
 

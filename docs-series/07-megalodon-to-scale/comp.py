@@ -126,6 +126,7 @@ YY = (np.arange(H_PX, dtype=np.float32) / H_PX)[:, None]
 TOP = np.array([0.075, 0.30, 0.40], np.float32)        # linear-ish display colours (0..1)
 MID = np.array([0.020, 0.115, 0.180], np.float32)
 BOT = np.array([0.004, 0.022, 0.045], np.float32)
+SPR_GAIN = 0.62                                         # sprites are rendered bright; the sea takes light away
 RAYC = np.array([0.55, 0.85, 0.92], np.float32)
 
 
@@ -231,7 +232,7 @@ def composite(dst, src, x0, y0, opacity=1.0, haze=0.0, light=1.0, tint=None, blu
     if blur:
         s = fblur(s, blur)
     a = s[..., 3:4] * opacity
-    rgb = s[..., :3] * opacity * light
+    rgb = s[..., :3] * opacity * light * SPR_GAIN
     if tint is not None:
         rgb = rgb * (1 - tint[1]) + tint[0][None, None, :] * a * tint[1] * light
     if haze > 0:
@@ -283,6 +284,11 @@ def label(d, anchor_xy, text1, text2, alpha, side=1, dy=-70, dx=40, size=24):
     d.line([(x, y), (x2, y2)], fill=TXT + (a,), width=1)
     d.line([(x2, y2), (x2 + 26 * side, y2)], fill=TXT + (a,), width=1)
     tx = x2 + 34 * side
+    wmax = max(text_w(text1, size, size * 0.18), text_w(text2 or "", int(size * 0.62), size * 0.14))
+    if side > 0 and tx + wmax > W_PX - 40:          # keep labels on screen: flip to the other side
+        return label(d, anchor_xy, text1, text2, alpha, side=-1, dy=dy, dx=dx, size=size)
+    if side < 0 and tx - wmax < 40:
+        return label(d, anchor_xy, text1, text2, alpha, side=1, dy=dy, dx=dx, size=size)
     anch = "l" if side > 0 else "r"
     draw_text(d, (tx, y2 - size * 0.72), text1, size, alpha, anchor=anch)
     if text2:
@@ -311,18 +317,27 @@ def bus_outline(d, x_left, y_bottom, Wm, cx, cy, alpha):
     d.line([P(0.0, 1.25), P(12.0, 1.25)], fill=(255, 214, 120, int(a * 0.5)), width=1)
 
 
-def vertebral_column(d, x_start, x_end, y, Wm, cx, cy, alpha, n=141):
+def vertebral_column(ov, x_start, x_end, y, Wm, cx, cy, alpha, n=141):
+    """141 centra at true scale (column 11.1 m; centrum diameter up to ~15.5 cm), drawn 4x supersampled so the
+    segmentation survives at small sizes."""
     if alpha <= 0: return
-    k = W_PX / Wm
+    k = W_PX / Wm; SS = 4
+    X0, Y0 = to_px(x_start, y, Wm, cx, cy); X1, _ = to_px(x_end, y, Wm, cx, cy)
+    hmax = 0.2 * k
+    bx0, by0 = int(X0) - 4, int(Y0 - hmax) - 4
+    bw, bh = int(X1 - X0) + 9, int(2 * hmax) + 9
+    im = Image.new("RGBA", (bw * SS, bh * SS), (0, 0, 0, 0)); dd = ImageDraw.Draw(im)
     step = (x_end - x_start) / n
-    a = int(235 * alpha)
+    a = int(240 * alpha)
     for i in range(n):
         u = i / (n - 1)
-        hgt = (0.155 * (0.9 + 0.25 * math.sin(math.pi * min(1, u * 1.3))) * (1 - 0.45 * u))   # centrum diameter ~15.5 cm max
-        x = x_start + (i + 0.5) * step
-        X, Y = to_px(x, y, Wm, cx, cy)
-        hw = max(0.6, step * k * 0.36); hh = max(1.5, hgt * k * 1.0)
-        d.rectangle([X - hw, Y - hh, X + hw, Y + hh], fill=(236, 230, 214, a))
+        hgt = 0.155 * (0.86 + 0.14 * math.sin(math.pi * min(1, u * 1.6))) * (1 - 0.5 * u ** 1.5)
+        xc = (X0 + (x_start + (i + 0.5) * step - x_start) * k - bx0) * SS
+        yc = (Y0 - by0) * SS
+        hw = step * k * 0.34 * SS; hh = hgt * k * 0.5 * SS
+        dd.rounded_rectangle([xc - hw, yc - hh, xc + hw, yc + hh], radius=max(0, int(min(hw, hh) * 0.4)), fill=(236, 228, 210, a))
+    im = im.resize((bw, bh), Image.LANCZOS)
+    ov.alpha_composite(im, (max(0, bx0), max(0, by0)), (max(0, -bx0), max(0, -by0)))
 
 
 def vertebra_inset(d, t, alpha, cxy=(1560, 330), r=150):
@@ -333,13 +348,13 @@ def vertebra_inset(d, t, alpha, cxy=(1560, 330), r=150):
     nshow = int(np.clip((t - S["age"] - 0.8) / 4.5, 0, 1) * 46)
     for i in range(46):
         rr = r * (0.10 + 0.9 * (1 - (1 - (i + 1) / 46) ** 1.25))
-        col = (236, 226, 204, a if i < nshow else int(a * 0.15))
+        col = (236, 226, 204, (a if i % 2 == 0 else int(a * 0.55)) if i < nshow else int(a * 0.12))
         d.ellipse([X - rr, Y - rr, X + rr, Y + rr], outline=col, width=1)
     draw_text(d, (X, Y + r + 22), f"{max(nshow, 0):d} GROWTH BANDS", 20, alpha, anchor="c")
     draw_text(d, (X, Y + r + 52), "≈ 46 YEARS OLD · SHIMADA ET AL. 2021", 14, alpha * 0.75, col=ACC, anchor="c", track=3)
 
 
-def tooth_inset(d, t, alpha, cxy=(1500, 300), s_px=1.6):
+def tooth_inset(d, t, alpha, cxy=(1690, 215), s_px=1.3):
     """18 cm tooth vs an adult hand (~19 cm), both at the same (inset) scale: s_px pixels per mm"""
     if alpha <= 0: return
     a = int(235 * alpha)
@@ -369,7 +384,7 @@ def tooth_inset(d, t, alpha, cxy=(1500, 300), s_px=1.6):
 def fossil_timeline(d, t, alpha, mode="range"):
     if alpha <= 0: return
     a = int(220 * alpha)
-    x0, x1, y = 260, 1660, 960       # 25 Ma -> today
+    x0, x1, y = 260, 1660, 900       # 25 Ma -> today
     def X(ma): return x0 + (25 - ma) / 25 * (x1 - x0)
     d.line([(x0, y), (x1, y)], fill=TXT + (int(a * 0.6),), width=1)
     for ma in (25, 20, 15, 10, 5, 0):
@@ -380,7 +395,7 @@ def fossil_timeline(d, t, alpha, mode="range"):
         xe = X(23) + (X(3.6) - X(23)) * u
         d.rectangle([X(23), y - 4, xe, y + 4], fill=WARM + (a,))
         draw_text(d, (X(23), y - 42), "≈ 23 MILLION YEARS AGO", 16, alpha * ss(S["time"], S["time"] + 1, t), anchor="c", track=3.5)
-        draw_text(d, (X(3.6), y - 42), "≈ 3.6", 16, alpha * ss(S["time"] + 3.5, S["time"] + 4.5, t), anchor="c", track=3.5)
+        draw_text(d, (X(3.6), y - 42), "≈ 3.6 MA", 16, alpha * ss(S["time"] + 3.5, S["time"] + 4.5, t), anchor="c", track=3.5)
     else:
         rng = np.random.default_rng(5)
         mas = np.concatenate([rng.uniform(3.6, 23, 220), rng.uniform(3.6, 6, 30)])
@@ -438,17 +453,17 @@ def render_frame(fi):
     occ = np.clip(occ * 0.75, 0, 0.85)
     img = background(t, Wm, cx, cy, occ)
     img *= (1 - 0.35 * occ)[..., None]
-    img += snow(t, Wm, cx, cy)[..., None] * np.array([0.30, 0.42, 0.46], np.float32)[None, None, :] * 0.35
+    img += snow(t, Wm, cx, cy)[..., None] * np.array([0.30, 0.42, 0.46], np.float32)[None, None, :] * 0.6
     img *= lt
     # ---- actors
     for a, al, (src, x0, y0) in placed:
         if a["style"] == "ghost":
             ghost(img, src, x0, y0, al * lt ** 0.5 * 0.85)
             continue
-        tint = None
+        tint = (np.array([0.003, 0.012, 0.022], np.float32), 0.93) if a["id"] == "tease" else None
         if a["id"] in ("megs", "megc"):
             wv = win(t, S["warm"] + 0.5, S["ext"] - 0.5, 1.5, 2.0)
-            if wv > 0: tint = (np.array([0.55, 0.20, 0.06], np.float32), 0.22 * wv)
+            if wv > 0: tint = (np.array([0.55, 0.20, 0.06], np.float32), 0.11 * wv)
             xr = win(t, S["est2"] + 0.2, S["est3"] + 2.0, 1.0, 2.0)
             al = al * (1 - 0.62 * xr)
         composite(img, src, x0, y0, opacity=al, haze=a["haze"], light=lt, tint=tint, blur=a.get("blur", 0))
@@ -462,7 +477,7 @@ def render_frame(fi):
             if r: ghost(img, r[0], r[1], r[2], al * 0.8, col=(1.0, 0.86, 0.62), fill=0.03)
     # ceil: slender ghosts at 20 and 24.3 m
     for Lg, ts in ((20.0, S["ceil"] + 2.0), (24.3, S["ceil"] + 3.6)):
-        al = ss(ts, ts + 1.0, t) * (1 - ss(S["bite"] - 1.0, S["bite"] + 1.0, t))
+        al = ss(ts, ts + 1.0, t) * (1 - ss(S["time"] - 1.5, S["time"] + 0.5, t))
         if al > 0:
             xn = TL.actor_x(ACT["megs"], t)
             r = place_sprite("mega", int(t * FPS) % meta("mega")["frames"], Lg, xn, ACT["megs"]["y"], -1, Wm, cx, cy)
@@ -470,19 +485,44 @@ def render_frame(fi):
     # ---- to 8-bit, then PIL overlay layer
     out = np.clip(img, 0, 1) ** (1 / 2.2)
     base = Image.fromarray((out * 255 + np.random.default_rng(fi).uniform(0, 1, (H_PX, W_PX, 1))).clip(0, 255).astype(np.uint8), "RGB").convert("RGBA")
-    ov = Image.new("RGBA", (W_PX, H_PX), (0, 0, 0, 0)); d = ImageDraw.Draw(ov)
+    ov = Image.new("RGBA", (W_PX, H_PX), (0, 0, 0, 0)); d = ImageDraw.Draw(ov); d.ov = ov
     overlays(d, t, Wm, cx, cy, lt)
     base.alpha_composite(ov)
     return np.asarray(base.convert("RGB"))
 
 
+def bubbles(d, t, Wm, cx, cy, lt):
+    """diver's exhaled bubbles: a burst every ~4.5 s from the regulator, rising ~0.8 m/s with wobble (world metres)"""
+    rng = np.random.default_rng(11)
+    k = W_PX / Wm
+    period = 4.5
+    for burst in range(int(t / period) - 6, int(t / period) + 1):
+        if burst < 0: continue
+        t0 = burst * period + 0.7
+        r2 = np.random.default_rng(1000 + burst)
+        for j in range(14):
+            tb = t0 + j * 0.06 + r2.uniform(0, 0.15)
+            age = t - tb
+            if age < 0 or age > 24: continue
+            v = r2.uniform(0.55, 1.0); rad = r2.uniform(0.006, 0.022) * (1 + age * 0.03)
+            x = 0.05 + r2.uniform(-0.05, 0.05) + 0.06 * math.sin(age * r2.uniform(3, 6) + j) + 0.02 * age
+            y = 0.2 + v * age
+            X, Y = to_px(x, y, Wm, cx, cy)
+            if Y < -10: continue
+            rp = max(0.8, rad * k)
+            a = int(150 * lt * min(1, age * 4) * (1 - min(1, age / 24)))
+            if rp < 1.6: d.point((X, Y), fill=(200, 235, 245, a))
+            else: d.ellipse([X - rp, Y - rp, X + rp, Y + rp], outline=(200, 235, 245, a), width=1)
+
+
 def overlays(d, t, Wm, cx, cy, lt):
+    bubbles(d, t, Wm, cx, cy, lt)
     # title
     ta = win(t, 11.6, 15.6, 1.2, 1.3)
     draw_text(d, (W_PX / 2, 486), "MEGALODON TO SCALE", 64, ta, anchor="c", track=24, light=False)
     draw_text(d, (W_PX / 2, 584), "EVERY ANIMAL DRAWN AT TRUE RELATIVE SIZE", 17, ta * 0.8, col=ACC, anchor="c", track=7)
     # scale bar (whenever there is a scene to measure)
-    scale_bar(d, t, Wm, win(t, 15.8, 309.0, 1.0, 1.5) * (1 - 0.7 * win(t, S["time"] - 0.5, S["bite"] - 0.5, 1, 1)))
+    scale_bar(d, t, Wm, win(t, 15.8, 309.0, 1.0, 1.5) * (1 - 0.75 * max(win(t, S["time"] - 0.5, S["bite"] - 0.5, 1, 1), win(t, S["myth"] + 0.5, S["twist"] - 0.4, 1, 1))))
     # species labels
     def L(aid, a0, a1, t1, t2, frac=0.35, up=1.0, side=1, dy=-70, dx=40, size=24):
         al = win(t, a0, a1, 0.9, 1.2)
@@ -522,7 +562,7 @@ def overlays(d, t, Wm, cx, cy, lt):
     va = win(t, S["est2"] + 1.5, S["est3"] + 3.0, 1.5, 2.0)
     if va > 0:
         a = ACT["megc"]; xn = TL.actor_x(a, t)
-        vertebral_column(d, xn + 2.1, xn + 2.1 + 11.1, a["y"] + 0.15, Wm, cx, cy, va * lt)
+        vertebral_column(d.ov, xn + 2.1, xn + 2.1 + 11.1, a["y"] + 0.15, Wm, cx, cy, va * lt)
         X0, Y0 = to_px(xn + 2.1, a["y"] - 1.6, Wm, cx, cy); X1, _ = to_px(xn + 13.2, a["y"], Wm, cx, cy)
         d.line([(X0, Y0), (X1, Y0)], fill=TXT + (int(160 * va),), width=1)
         for xx in (X0, X1): d.line([(xx, Y0 - 6), (xx, Y0 + 6)], fill=TXT + (int(160 * va),), width=1)
@@ -538,16 +578,16 @@ def overlays(d, t, Wm, cx, cy, lt):
         for xx in (X0, X1): d.line([(xx, Y0 - 8), (xx, Y0 + 8)], fill=WARM + (int(200 * ba),), width=2)
         draw_text(d, ((X0 + X1) / 2, Y0 + 14), "≈ 16 M · BEST-GROUNDED REAL INDIVIDUAL", 20, ba, anchor="c", col=WARM)
         draw_text(d, ((X0 + X1) / 2, Y0 + 44), "BELGIAN SPECIMEN, SLENDER RECONSTRUCTION · SHIMADA ET AL. 2025", 13, ba * 0.8, anchor="c", col=ACC, track=3.2)
-    ca = win(t, S["ceil"] + 2.0, S["bite"] - 0.5, 1.2, 1.2)
+    ca = win(t, S["ceil"] + 2.0, S["time"] + 0.3, 1.2, 1.2)
     if ca > 0:
         a = ACT["megs"]; xn = TL.actor_x(a, t)
         for Lg, ts, txt in ((20.0, S["ceil"] + 2.0, "20 M"), (24.3, S["ceil"] + 3.6, "24.3 M · UPPER LIMIT")):
             q = ss(ts, ts + 1.0, t) * ca
-            X, Y = to_px(xn + Lg, a["y"] + 1.0, Wm, cx, cy)
-            draw_text(d, (X + 12, Y - 10 - (12 if Lg > 21 else 0)), txt, 17, q, col=(200, 230, 245))
+            X, Y = to_px(xn + Lg, a["y"] + (5.2 if Lg > 21 else 4.0), Wm, cx, cy)
+            draw_text(d, (X, Y), txt, 17, q, col=(200, 230, 245), anchor="r")
         caption(d, [("MOST WERE SMALLER · ≈ 24 M IS THE LARGEST SIZE THE EVIDENCE CAN SUPPORT", 18, None),
                     ("FROM A 23 CM VERTEBRA, DENMARK · BODY SHAPE AND FINS REMAIN UNKNOWN", 13, ACC)],
-                win(t, S["ceil"] + 7.0, S["bite"] - 0.5, 1.0, 1.0), y=905)
+                win(t, S["ceil"] + 7.0, S["time"] - 0.2, 1.0, 1.0), y=905)
     # time span
     fossil_timeline(d, t, win(t, S["time"] - 0.3, S["bite"] - 0.4, 1.0, 1.0), "range")
     caption(d, [("COMPUTER MODEL · BITE FORCE ≈ 108,000 – 182,000 N", 20, None),
@@ -577,7 +617,7 @@ def overlays(d, t, Wm, cx, cy, lt):
     # twist: blue whale + perucetus
     L("blue", S["blue"] + 2.5, S["end1"] - 1.0, "BLUE WHALE", "UP TO ≈ 30 M · WELL OVER 100 TONNES · ALIVE TODAY", frac=0.42, up=1.6, dy=-60, size=26)
     xa = win(t, S["twist"] + 4.0, S["end1"] - 1.0, 1.2, 1.2)
-    if xa > 0: label(d, actor_screen_anchor("megghost", t, Wm, cx, cy, 0.3, 1.6), "MEGALODON", "≈ 16 M (UP TO ≈ 24?) · EXTINCT", xa, dy=-40, size=20)
+    if xa > 0: label(d, actor_screen_anchor("megghost", t, Wm, cx, cy, 0.3, 1.6), "MEGALODON", "≈ 16 M · UP TO ≈ 24 M · EXTINCT", xa, dy=-40, size=20)
     pa = win(t, S["peru"] + 3.0, S["end1"] - 1.0, 1.2, 1.2)
     if pa > 0:
         label(d, actor_screen_anchor("peru", t, Wm, cx, cy, 0.3, 1.0), "PERUCETUS COLOSSUS · ≈ 39 MA", "≈ 17 M · PARTIAL SKELETON ONLY · SHAPE CONJECTURAL", pa, dy=-40, size=20)

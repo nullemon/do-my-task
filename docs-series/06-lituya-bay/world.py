@@ -73,7 +73,7 @@ CRILLON_GL = [(3.6, 11.3, 0.55), (4.5, 12.9, 0.7), (5.0, 15.0, 0.85), (5.4, 18.0
 CENOTAPH = (0.45, 4.8, 0.62)
 IMPACT = (-1.62, 11.12)          # where the slide hits the water (north half of Gilbert Inlet)
 SLIDE_C = (-1.65, 11.85)          # centre of the slide scar on the +y wall
-SPUR = (-1.45, 9.96)             # run-up maximum (524 m) on the spur opposite
+SPUR = (-1.5, 9.72)             # run-up maximum (524 m) on the spur opposite
 RUNUP_MAX = 524.0
 
 
@@ -131,12 +131,12 @@ def fields(x, y):
     A = amplitude(y) + 650 * np.exp(-((x + 2.0) ** 2 + (y - 9.1) ** 2) / 0.9)
     L = 0.85 + 0.5 * (1 - sst(0.5, 6.5, y)) - 0.25 * sst(6.5, 9.5, y) + 0.25 * sst(9.5, 10.8, y)
     big = fbm(x, y, 3.0, 3, 1)
-    ridg = fbm(x, y, 1.6, 4, 2, gain=0.42, ridged=True)
+    ridg = fbm(x, y, 2.0, 3, 2, gain=0.30, ridged=True)
     ramp_w = 1 - np.exp(-rr / L)
     ramp_g = 1 - np.exp(-rg / (L * 1.2))
     ramp = np.minimum(ramp_w, ramp_g)
-    mount = A * ramp ** 0.95 * (0.78 + 0.22 * big + 0.42 * (ridg - 0.55))
-    mount += 10 * fbm(x, y, 0.12, 3, 7) * ramp + 6 * noise(x, y, 0.05, 8)
+    mount = A * ramp ** 0.95 * (0.82 + 0.22 * big + 0.26 * (ridg - 0.55))
+    mount += 7 * fbm(x, y, 0.15, 3, 7) * ramp + 2.5 * noise(x, y, 0.06, 8)
     # glacier valley floors lift surrounding land
     near_g = np.exp(-rg / 1.0)
     base = zg * near_g

@@ -45,7 +45,7 @@ DEPTH = pchip([k[0] for k in KEYS], [k[1] for k in KEYS])
 TT = np.arange(0, DUR + 1, 1 / (FPS * 4))
 DD = DEPTH(TT)
 VV = np.gradient(DD, TT)
-VIS = 0.22 + 0.9 * np.maximum(VV, 0) ** 0.35
+VIS = 0.18 + 0.62 * np.maximum(VV, 0) ** 0.35
 VIS = np.where(TT > LS(34) + 2.0, 0.08 + 0.14 * np.exp(-(TT - LS(34) - 2.0) / 2.0), VIS)
 CAMY = np.concatenate([[0], np.cumsum(VIS[1:] * np.diff(TT))])
 
@@ -84,7 +84,7 @@ def pressure_bar(d):
 
 TPROF = np.array([(0, 29.0), (50, 28.6), (100, 26.5), (150, 22.5), (200, 17.5), (300, 11.0), (500, 7.4), (800, 5.0),
                   (1000, 4.3), (1500, 2.9), (2000, 2.2), (3000, 1.65), (4000, 1.5), (5000, 1.6), (6000, 1.75),
-                  (8000, 2.0), (10000, 2.3), (10935, 2.45)])
+                  (8000, 2.0), (10000, 2.3), (10935, 2.4)])
 
 
 def temp_c(d):
@@ -103,6 +103,7 @@ def fmt_light(d):
         return "NONE"
     if p >= 10: return f"{p:.0f} %"
     if p >= 1: return f"{p:.1f} %"
+    if p >= 0.01: return f"{p:.2f} %"
     ex = int(math.floor(math.log10(p)))
     return f"{p / 10 ** ex:.0f} × 10^{ex} %".replace("^-", "⁻").replace("⁻1", "⁻¹").replace("⁻2", "⁻²").replace("⁻3", "⁻³") \
         .replace("⁻4", "⁻⁴").replace("⁻5", "⁻⁵").replace("⁻6", "⁻⁶").replace("⁻7", "⁻⁷").replace("⁻8", "⁻⁸").replace("⁻9", "⁻⁹")
@@ -121,26 +122,26 @@ RADIAL = np.exp(-(((XX - W / 2) / (W * 0.42)) ** 2 + ((YY - H * 0.52) / (H * 0.5
 
 
 def water_bg(d, t):
-    c0 = np.array([0.020, 0.20, 0.34], np.float32)
+    c0 = np.array([0.012, 0.13, 0.27], np.float32)
     att = np.exp(-max(d, 0) / np.array([6.0, 95.0, 175.0], np.float32))
     base = c0 * att
     gs = 1.0 - 0.75 * ss(300, 1100, d)
     grad = (1 - gs) + gs * (0.45 + 1.25 * (1 - YN) ** 1.4)
     img = base[None, None, :] * grad[..., None]
     deep = ss(500, 1300, d)
-    img += np.array([0.0005, 0.0009, 0.0020], np.float32) * deep
+    img += np.array([0.00001, 0.00004, 0.00012], np.float32) * deep
     # our own lamp scattering in the water (it comes on as the daylight fails)
     lam = lamp_level(d)
     if lam > 0:
-        img += (RADIAL[..., None] * np.array([0.0035, 0.0048, 0.0065], np.float32) * lam)
+        img += (RADIAL[..., None] * np.array([0.0001, 0.00028, 0.0007], np.float32) * lam)
     if d < 320:
         k = math.exp(-d / 55.0) * (1 - ss(150, 320, d))
         u = RAY_ANG * 9.0
         r = (0.5 + 0.5 * np.sin(u * 3.1 + t * 0.35 + 1.3 * np.sin(u * 0.7 - t * 0.2))) * \
             (0.5 + 0.5 * np.sin(u * 5.3 - t * 0.27 + 2.0 * np.sin(u * 1.3 + t * 0.11)))
-        r = r ** 3 * (1 - y4 / h4) ** 1.2
+        r = r ** 4 * (1 - y4 / h4) ** 1.2
         rays = up4(r.astype(np.float32))
-        img += rays[..., None] * (np.array([0.10, 0.30, 0.38], np.float32) * k)[None, None, :]
+        img += rays[..., None] * (np.array([0.08, 0.30, 0.40], np.float32) * k)[None, None, :]
     return img
 
 
@@ -210,10 +211,10 @@ def particles(img, t, d, dt=1 / FPS, gain=1.0, floor_mode=0.0):
     sx = sx + sway / PZ
     if floor_mode > 0:     # at the bottom: gentle lateral drift (a weak current)
         sx = (sx + floor_mode * (t * 9.0) / PZ * 3) % (W + 200) - 100
-    amb = 0.55 * math.exp(-max(d, 0) / 140.0)
+    amb = 0.22 * math.exp(-max(d, 0) / 140.0)
     lam = lamp_level(d)
     r2 = ((sx - W / 2) / (W * 0.55)) ** 2 + ((sy - H * 0.5) / (H * 0.7)) ** 2
-    lit = amb * (0.4 + 0.6 * np.exp(-PZ / 8)) + lam * 0.11 / (0.35 + PZ ** 1.4) * np.exp(-r2)
+    lit = amb * (0.4 + 0.6 * np.exp(-PZ / 8)) + lam * 0.07 / (0.6 + PZ ** 1.4) * np.exp(-r2)
     wgt = lit * PB * gain
     col_amb = np.array([0.55, 0.85, 1.0], np.float32) if d < 400 else np.array([0.85, 0.9, 1.0], np.float32)
     near = PZ < 1.6
@@ -236,7 +237,7 @@ def particles(img, t, d, dt=1 / FPS, gain=1.0, floor_mode=0.0):
         n = 10
         k = np.arange(n, dtype=np.float32) / (n - 1)
         xs = np.repeat(sx[near] / 4, n); ys = ((sy[near][:, None] + dy_streak[near][:, None] * k[None, :]) / 4).ravel()
-        a4.add(xs, ys, np.repeat(wgt[near] * 3.0 / n, n), col_amb)
+        a4.add(xs, ys, np.repeat(wgt[near] * 1.1 / n, n), col_amb)
         out += up4(blur(a4.image(), 2.2, 2))
     # bioluminescent sparks (only in the dark), fewer in the abyss and hadal zone
     bio_k = ss(250, 700, d) * (1 - 0.65 * ss(3500, 6500, d)) * gain
@@ -300,9 +301,9 @@ def draw_markers(disp, t):
             continue
         y = marker_y(tm, t)
         op = 1 - ss(0.30, 0.52, abs(y - H / 2) / H)
-        hline(disp, y, op)
-        draw_text(disp, a, 110, y - 26, 30, op, anchor="l", font=FONT_EXL, tracking=0.18)
-        draw_text(disp, b, 112, y + 24, 16, op * 0.85, anchor="l", tracking=0.28)
+        hline(disp, y, op, x0=420)
+        draw_text(disp, a, W / 2, y - 30, 30, op, font=FONT_EXL, tracking=0.18)
+        draw_text(disp, b, W / 2, y + 24, 16, op * 0.85, tracking=0.28)
 
 
 def burj(disp, t):
@@ -325,9 +326,9 @@ def burj(disp, t):
     pts = L + [(cx, base - 828 * s)] + R[::-1]
     polyline(disp, pts, op, width=1.2)
     polyline(disp, [(cx - 220, base), (cx + 220, base)], op * 0.8, width=1.0)
-    draw_text(disp, "828 M", cx + 120, base + 30, 30, op / 0.75, anchor="l", font=FONT_EXL, tracking=0.18)
-    draw_text(disp, "BURJ KHALIFA, THE TALLEST BUILDING ON EARTH", cx + 122, base + 70, 16, op / 0.75 * 0.85, anchor="l")
-    draw_text(disp, "STANDING HERE, ITS TIP WOULD JUST REACH THE SURFACE", cx + 122, base + 96, 14, op / 0.75 * 0.7, anchor="l")
+    draw_text(disp, "828 M", cx - 130, base + 34, 30, op / 0.75, anchor="r", font=FONT_EXL, tracking=0.18)
+    draw_text(disp, "BURJ KHALIFA, THE TALLEST BUILDING ON EARTH", cx - 130, base + 72, 16, op / 0.75 * 0.85, anchor="r")
+    draw_text(disp, "STANDING HERE, ITS TIP WOULD JUST REACH THE SURFACE", cx - 130, base + 98, 14, op / 0.75 * 0.7, anchor="r")
 
 
 EV_PROF = None
@@ -369,9 +370,8 @@ def titanic(disp, t):
     hull = np.array([(-120, 0), (60, 0), (100, -6), (118, -22), (126, -40), (128, -52), (-120, -46)]) * s
     deck = np.array([(-120, -46), (-40, -47), (40, -49), (128, -52)]) * s
     house = np.array([(-110, -46), (-110, -62), (-30, -62), (-30, -55), (10, -55), (10, -47)]) * s
-    funnel = np.array([(-80, -62), (-84, -90), (-66, -90), (-62, -62)]) * s
-    mast = np.array([(70, -50), (66, -120)]) * s
-    for p in (hull, deck, house, funnel, mast):
+    mast = np.array([(70, -51), (-20, -66)]) * s       # the foremast lies collapsed across the deck
+    for p in (hull, deck, house, mast):
         polyline(disp, np.asarray(p) + (cx, base), op, width=1.2)
     xs = np.linspace(cx - 520, cx + 440, 60)
     polyline(disp, np.stack([xs, base + 3 + 4 * np.sin(xs / 50)], 1), op * 0.7, width=1.0)
@@ -409,7 +409,7 @@ def hud(disp, t, d, op):
         disp[yy:yy + 1, gx - ln:gx] = disp[yy:yy + 1, gx - ln:gx] * (1 - a) + 0.8 * a
         if km % 2 == 0:
             draw_text(disp, f"{km}" if km else "0", gx + 18, yy, 12, op * 0.55, anchor="l", tracking=0.1)
-    draw_text(disp, "KM", gx + 18, g1 + 22, 11, op * 0.45, anchor="l")
+    draw_text(disp, "KM", gx + 18, g0 - 26, 11, op * 0.45, anchor="l")
     for zd in (200, 1000, 4000, 6000):
         yy = int(gy(zd))
         disp[yy:yy + 1, gx - 3:gx + 6] = disp[yy:yy + 1, gx - 3:gx + 6] * (1 - a) + 0.9 * a
@@ -512,7 +512,7 @@ def creatures(img, t, d):
         for i, (ux, uy, z) in enumerate(LF):
             x = W * 0.5 + ux * 700 + (t - tc) * 38 * (1 + 0.2 * uy) / z * 4
             y = H * 0.48 + uy * 260 + scroll(t, tc, z, 0.35)
-            Lpx = 1100 / z
+            Lpx = 650 / z
             C.lanternfish(img, t + i * 0.37, x, y, Lpx, facing=1, ang=0.05 * uy, body_col=tuple(bgc * 0.15),
                           rim=tuple(bgc * 0.5), glow=fade(t, t0, t1, 1.5) * 0.25, seed=i)
     # giant squid: a huge, dim silhouette crossing slowly (fins first)
@@ -522,7 +522,7 @@ def creatures(img, t, d):
         x = W * 0.72 - (t - tc) * 55
         y = H * 0.56 + scroll(t, tc, 18, 0.25)
         bgc = np.array([0.020, 0.20, 0.34]) * np.exp(-d / np.array([6.0, 95.0, 175.0]))
-        C.giant_squid(img, t, x, y, 640, body_col=tuple(bgc * 0.18), rim=tuple(bgc * 0.6), op=fade(t, t0, t1, 2.0))
+        C.giant_squid(img, t, x, y, 640, body_col=tuple(bgc * 0.12), rim=tuple(bgc * 1.4), op=fade(t, t0, t1, 2.0))
     # Atolla
     t0, t1 = LS(17) - 0.8, LE(17) + 1.5
     if t0 < t < t1:
@@ -606,7 +606,7 @@ def vessels(img, t):
             tc = (t0 + t1) / 2
             op = fade(t, t0, t1, 1.6) * 0.9
             y = H * 0.46 + (t - tc) * -12
-            put_sprite(img, name, x + (t - tc) * 4, y, wpx, op, 0.12)
+            put_sprite(img, name, x + (t - tc) * 4, y, wpx, op * 0.8, 0.05)
 
 
 # ------------------------------------------------------------------------------------------ the floor
@@ -621,6 +621,7 @@ def plate(v):
     return _PLATE[v]
 
 
+FLOOR_TINT = np.array([0.20, 0.195, 0.175], np.float32)
 T_FLOOR0 = LS(34) - 3.5          # floor starts to appear in our light
 T_ARRIVE = LS(34) + 1.0
 T_B = LS(38) - 1.4                # cut to the close view (amphipods)
@@ -651,11 +652,11 @@ def floor_frame(t):
         if shift > 0:
             im = np.concatenate([np.zeros((shift, W, 3), np.float32), im[:H - shift]], 0)
             im *= np.clip((YY - shift) / 260.0, 0, 1)[..., None]
-        return im * expo * 0.85, k
+        return im * expo * 0.85 * FLOOR_TINT, k
     pB = plate("B")
     z = 1.0 + 0.05 * ss(T_B, T_LAMPOFF, t)
     cx, cy = clamp_center(pB[0].shape, z, pB[0].shape[1] / 2, pB[0].shape[0] / 2 + 40)
-    im = zoom_crop_ch(pB, z, cx, cy)
+    im = zoom_crop_ch(pB, z, cx, cy) * 0.55
     if t < T_B + 1.4:     # cross-dissolve from A
         pA = plate("A")
         ia = zoom_crop_ch(pA, 1.06, *clamp_center(pA[0].shape, 1.06, pA[0].shape[1] / 2, pA[0].shape[0] / 2))
@@ -663,7 +664,7 @@ def floor_frame(t):
         im = ia * 0.85 * (1 - u) + im * 0.9 * u
     else:
         im = im * 0.9
-    return im, 1.0
+    return im * FLOOR_TINT, 1.0
 
 
 def silt(img, t):
@@ -690,7 +691,7 @@ def food_and_amphipods(img, t):
     a = cv.alpha()
     yy, xx = np.mgrid[cv.y0:cv.y0 + cv.h, cv.x0:cv.x0 + cv.w].astype(np.float32)
     sh = np.clip(1.2 - (yy - (fy - 34)) / 70.0, 0.3, 1.2)
-    C.comp(img, cv, a, np.stack([0.20 * sh, 0.18 * sh, 0.15 * sh], -1))
+    C.comp(img, cv, a, np.stack([0.08 * sh, 0.072 * sh, 0.06 * sh], -1))
     arrive = ss(T_B, LS(38) + 6, t)
     for i, p in enumerate(AMPH):
         r = p["r0"] * (1 - 0.82 * arrive * min(1.0, p["sp"])) + 30
@@ -698,7 +699,7 @@ def food_and_amphipods(img, t):
         x = fx + math.cos(th) * r * 1.4 + math.sin(t * 3 + i) * 4
         y = fy + math.sin(th) * r * 0.42 - (i % 4 == 0) * (80 + 40 * math.sin(t * 0.8 + i))
         op = ss(T_B + 0.3 + (i % 5) * 0.6, T_B + 1.5 + (i % 5) * 0.6, t)
-        C.amphipod(img, t * p["sp"], x, y, p["L"], ang=th + math.pi / 2 + 0.6 * math.sin(t + i), light=1.0, op=op, seed=i)
+        C.amphipod(img, t * p["sp"], x, y, p["L"], ang=th + math.pi / 2 + 0.6 * math.sin(t + i), light=0.42, op=op, seed=i)
 
 
 def compare_overlay(disp, t):
@@ -737,12 +738,12 @@ def frame(fi):
     fl, fk = floor_frame(t)
     if fl is not None:
         lin = lin * (1 - fk) + fl * fk + lin * fk * 0.0
-        lin = lin + (RADIAL[..., None] * np.array([0.002, 0.0028, 0.0036], np.float32))
+        lin = lin + (RADIAL[..., None] * np.array([0.0004, 0.0007, 0.0011], np.float32))
         silt(lin, t)
         food_and_amphipods(lin, t)
     lamp_gain = 1.0
     if t > T_DIM:
-        lamp_gain = 1 - 0.62 * ss(T_DIM, T_DIM + 1.5, t)
+        lamp_gain = 1 - 0.78 * ss(T_DIM, T_DIM + 1.5, t)
         lamp_gain *= (1 - ss(T_LAMPOFF, T_LAMPOFF + 2.2, t))
         lin = lin * lamp_gain
     creatures(lin, t, d)
@@ -751,7 +752,7 @@ def frame(fi):
     lin = particles(lin, t, d, gain=pg * (lamp_gain if t > T_DIM else 1.0), floor_mode=1.0 if t > T_ARRIVE else 0.0)
     lin = bloom(lin, 0.35, 16)
     # exposure: the deep scenes are pushed a little so that faint things read on a screen
-    expo = 1.0 + 1.6 * ss(300, 1400, d)
+    expo = 1.0 + 1.0 * ss(300, 1400, d)
     disp = tonemap(lin, 1.7 * expo)
     # final lone spark in the dark, then the title
     if t > T_LAMPOFF + 1.0:

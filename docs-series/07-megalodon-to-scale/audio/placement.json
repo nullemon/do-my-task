@@ -1,0 +1,276 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 4.142,
+   "text": "Megalodon. The largest predatory shark that has ever lived.",
+   "start": 1.25,
+   "end": 5.392,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 5.023458333333333,
+   "text": "But how big was it, really? Let's find out, with everything drawn to true scale.",
+   "start": 6.5,
+   "end": 11.523,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "diver",
+   "dur": 9.232708333333333,
+   "text": "First, a ruler. A diver: about one point eight metres tall. Every animal you'll see is drawn to the same scale as this person.",
+   "start": 15.5,
+   "end": 24.733,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "bull",
+   "dur": 4.6146666666666665,
+   "text": "A bull shark. The largest females reach around three and a half metres.",
+   "start": 27.0,
+   "end": 31.615,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "gw1",
+   "dur": 7.03275,
+   "text": "A great white. Most adults are four to five metres long. The biggest reliably measured, about six.",
+   "start": 33.75,
+   "end": 40.783,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "gw2",
+   "dur": 6.50875,
+   "text": "For a long time, this was the shape scientists imagined for megalodon: a great white, scaled up.",
+   "start": 41.75,
+   "end": 48.259,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "bus",
+   "dur": 1.9449166666666666,
+   "text": "A school bus. Twelve metres.",
+   "start": 50.25,
+   "end": 52.195,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "ws",
+   "dur": 11.70975,
+   "text": "A whale shark, the largest fish alive today. Big adults reach about twelve metres. The largest reliable record is close to nineteen. It feeds on plankton.",
+   "start": 53.75,
+   "end": 65.46,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "orca",
+   "dur": 6.3785,
+   "text": "An orca. Large males reach about eight metres. Today, it is the ocean's top predator.",
+   "start": 67.75,
+   "end": 74.129,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "hump",
+   "dur": 5.428625,
+   "text": "A humpback whale. Around fifteen metres, with flippers a third as long as its body.",
+   "start": 76.25,
+   "end": 81.679,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "megA",
+   "dur": 1.613375,
+   "text": "And now... megalodon.",
+   "start": 84.25,
+   "end": 85.863,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "megB",
+   "dur": 14.634291666666666,
+   "text": "Here is the honest part. No complete skeleton has ever been found. A shark's skeleton is cartilage, and cartilage rarely fossilises. What survives are teeth, and a few rare columns of vertebrae.",
+   "start": 90.75,
+   "end": 105.384,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "teeth",
+   "dur": 7.339083333333333,
+   "text": "The teeth are enormous. The largest are around eighteen centimetres long, about the length of a human hand.",
+   "start": 106.5,
+   "end": 113.839,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "est1",
+   "dur": 7.571041666666667,
+   "text": "For decades, size estimates scaled a great white up from those teeth: fifteen metres, eighteen, perhaps twenty.",
+   "start": 115.25,
+   "end": 122.821,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "est2",
+   "dur": 9.996083333333333,
+   "text": "Then came a column of a hundred and forty-one vertebrae from Belgium, all from one animal. Eleven metres of backbone, without its head or tail.",
+   "start": 124.25,
+   "end": 134.246,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "age",
+   "dur": 8.013541666666667,
+   "text": "Growth rings in those vertebrae, like the rings of a tree, say this shark was about forty-six years old when it died.",
+   "start": 135.5,
+   "end": 143.514,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "est3",
+   "dur": 12.787541666666666,
+   "text": "Studies in twenty twenty-four and twenty twenty-five argued that megalodon was not a giant great white at all. It was probably longer and slimmer, closer in shape to a lemon shark.",
+   "start": 145.0,
+   "end": 157.788,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "best",
+   "dur": 8.454041666666667,
+   "text": "On that reading, the Belgian shark was about sixteen metres long. That is our best-grounded figure for a real individual.",
+   "start": 159.25,
+   "end": 167.704,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "ceil",
+   "dur": 14.15375,
+   "text": "Larger ones certainly existed. A single huge vertebra from Denmark suggests some may have reached twenty-four metres. The researchers call that the upper limit the evidence can support. Most were smaller.",
+   "start": 169.0,
+   "end": 183.154,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "time",
+   "dur": 8.495875,
+   "text": "Megalodon lived from about twenty-three million to three point six million years ago, in warm seas across much of the world.",
+   "start": 185.75,
+   "end": 194.246,
+   "tempo": 1.0
+  },
+  {
+   "i": 20,
+   "key": "bite",
+   "dur": 8.15125,
+   "text": "Computer models suggest a bite of more than ten tonnes of force. But those are models, built by scaling up a great white.",
+   "start": 195.75,
+   "end": 203.901,
+   "tempo": 1.0
+  },
+  {
+   "i": 21,
+   "key": "warm",
+   "dur": 12.470083333333333,
+   "text": "Chemistry locked in its teeth suggests it was partly warm-blooded, about seven degrees warmer than the water around it. A powerful engine, that needed enormous amounts of food.",
+   "start": 205.5,
+   "end": 217.97,
+   "tempo": 1.0
+  },
+  {
+   "i": 22,
+   "key": "ext",
+   "dur": 15.734916666666667,
+   "text": "Then, it vanished. The likely causes: a cooling climate and falling seas that shrank the shallow nurseries where its young were born; changes in the whales it hunted; and a newcomer competing for the same prey. The great white.",
+   "start": 220.5,
+   "end": 236.235,
+   "tempo": 1.0
+  },
+  {
+   "i": 23,
+   "key": "myth",
+   "dur": 17.143375,
+   "text": "And it is gone. It is not hiding in the deep. Its pups grew up in shallow coastal water, and its teeth fill the fossil record, until about three and a half million years ago. Then, nothing. The television specials that said otherwise were fiction.",
+   "start": 238.25,
+   "end": 255.393,
+   "tempo": 1.0
+  },
+  {
+   "i": 24,
+   "key": "twist",
+   "dur": 4.00175,
+   "text": "But megalodon was not the largest animal of all time.",
+   "start": 258.5,
+   "end": 262.502,
+   "tempo": 1.0
+  },
+  {
+   "i": 25,
+   "key": "blue",
+   "dur": 7.609333333333334,
+   "text": "That animal is alive today. The blue whale. Up to about thirty metres long, and well over a hundred tonnes.",
+   "start": 264.0,
+   "end": 271.609,
+   "tempo": 1.0
+  },
+  {
+   "i": 26,
+   "key": "peru",
+   "dur": 13.202541666666667,
+   "text": "In twenty twenty-three, a fossil whale from Peru, Perucetus, was proposed as possibly even heavier. Later work challenged that estimate. For now, the blue whale still holds the record.",
+   "start": 274.0,
+   "end": 287.203,
+   "tempo": 1.0
+  },
+  {
+   "i": 27,
+   "key": "end1",
+   "dur": 3.06925,
+   "text": "The largest predator the sea has ever known is gone.",
+   "start": 291.25,
+   "end": 294.319,
+   "tempo": 1.0
+  },
+  {
+   "i": 28,
+   "key": "end2",
+   "dur": 4.564416666666666,
+   "text": "For almost twenty million years, it passed over everything in the ocean.",
+   "start": 295.75,
+   "end": 300.314,
+   "tempo": 1.0
+  },
+  {
+   "i": 29,
+   "key": "end3",
+   "dur": 1.5295,
+   "text": "Then, one day, it didn't.",
+   "start": 301.75,
+   "end": 303.279,
+   "tempo": 1.0
+  }
+ ]
+}

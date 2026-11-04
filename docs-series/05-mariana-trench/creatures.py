@@ -119,21 +119,21 @@ def lanternfish(frame, t, cx, cy, L, facing=1, ang=0.0, body_col=(0.003, 0.006, 
     gv = Canvas(x0, y0, x1, y1)
     eye = rot([[spine[3, 0], spine[3, 1] - wid[3] * 0.15]], ang)[0] + (cx, cy)
     gl = []
-    for k in range(4, 21, 2):
+    for k in range(4, 21, 3):
         p = spine[k] + (0, wid[k] * 0.72)
         gl.append(p)
-    for k in range(7, 19, 3):
-        gl.append(spine[k] + (0, wid[k] * 0.25))
+    for k in range(8, 19, 5):
+        gl.append(spine[k] + (0, wid[k] * 0.3))
     gl.append(spine[2] + (0, wid[2] * 0.55))
     gl = rot(gl, ang) + (cx, cy)
-    r = max(0.9, L * 0.018)
+    r = max(0.8, L * 0.013)
     for (x, y) in gl:
         gv.ellipse(x, y, r, r)
     ga = gv.alpha()
     comp(frame, gv, ga, (0.25, 0.55, 1.6), op=glow, add=True, halo=0.9, halo_r=max(3, L * 0.04))
-    ev = Canvas(eye[0] - 6, eye[1] - 6, eye[0] + 6, eye[1] + 6)
+    ev = Canvas(eye[0] - L * 0.06 - 2, eye[1] - L * 0.06 - 2, eye[0] + L * 0.06 + 2, eye[1] + L * 0.06 + 2)
     ev.ellipse(eye[0], eye[1], L * 0.045, L * 0.045)
-    comp(frame, ev, ev.alpha(), (0.02, 0.03, 0.05), op=0.8, add=True)
+    comp(frame, ev, ev.alpha(), (0.006, 0.010, 0.018), op=0.8, add=True)
 
 
 # ------------------------------------------------------------------------------------------ giant squid
@@ -179,7 +179,7 @@ def giant_squid(frame, t, cx, cy, L, body_col=(0.006, 0.003, 0.004), rim=(0.004,
     top = np.clip(a - np.roll(a, 3, axis=0), 0, 1)
     comp(frame, cv, top, rim, op=op, add=True)
     # the eye: the largest of any animal, catches the faint light
-    ev = Canvas(head[0] - 30, head[1] - 30, head[0] + 30, head[1] + 30)
+    ev = Canvas(head[0] - 0.04 * L, head[1] - 0.04 * L, head[0] + 0.04 * L, head[1] + 0.04 * L)
     ev.ellipse(head[0] - 0.005 * L, head[1] - 0.01 * L, 0.022 * L, 0.022 * L)
     comp(frame, ev, ev.alpha(), (0.010, 0.016, 0.03), op=op, add=True)
 
@@ -279,15 +279,23 @@ def gulper(frame, t, cx, cy, L, op=1.0, body_col=(0.010, 0.011, 0.014)):
     wid = L * (0.022 * np.exp(-((s - 0.04) / 0.06) ** 2) + 0.010 * (1 - s) ** 1.5) + 0.5
     poly, _ = outline(spine, wid)
     open_ = 0.6 + 0.4 * math.sin(t * 0.6) ** 2
-    jaw_len = 0.20 * L
-    hx, hy = cx - 0.18 * L, cy
-    top = np.array([[hx + 0.02 * L, hy - 0.01 * L], [hx - jaw_len, hy - 0.05 * L * open_ - 0.01 * L],
-                    [hx - jaw_len * 0.95, hy - 0.035 * L * open_]])
-    bot = np.array([[hx + 0.02 * L, hy + 0.01 * L], [hx - jaw_len * 0.98, hy + 0.09 * L * open_],
-                    [hx - jaw_len * 0.9, hy + 0.075 * L * open_]])
-    pouch = np.array([[hx - jaw_len * 0.9, hy + 0.075 * L * open_], [hx - jaw_len * 0.55, hy + 0.11 * L * open_],
-                      [hx - 0.02 * L, hy + 0.05 * L], [hx + 0.02 * L, hy + 0.01 * L]])
+    jaw_len = 0.17 * L
+    hx, hy = spine[0]
+    u = np.linspace(0, 1, 16)
+    # upper jaw: thin sliver reaching forward; lower jaw: longer sliver hanging down-forward; membrane between
+    ux = hx - u * jaw_len; uy = hy - np.sin(u * 1.4) * 0.03 * L * open_
+    lx = hx - u * jaw_len * 1.02; ly = hy + u * 0.10 * L * open_ + np.sin(u * 3.0) * 0.01 * L
+    top, _ = outline(np.stack([ux, uy], 1), L * 0.004 * (1.4 - u) + 0.6)
+    bot, _ = outline(np.stack([lx, ly], 1), L * 0.004 * (1.4 - u) + 0.6)
+    sag = np.sin(np.pi * u) * 0.035 * L * open_
+    pouch = np.concatenate([np.stack([ux, uy], 1)[::-1] * 0 + np.stack([lx, ly + sag * 0], 1)[::-1],
+                            np.stack([hx + 0.03 * L - u * 0.03 * L, hy + 0.012 * L + u * 0.0], 1)[:1],
+                            ], 0)
+    pouch = np.concatenate([np.stack([lx, ly], 1), np.stack([lx[::-1] * 0.5 + hx * 0.5, (ly[::-1] + sag[::-1] * 1.6) * 0.6 + hy * 0.4 + 0.03 * L], 1)], 0)
+    mouth_in = np.concatenate([np.stack([ux, uy], 1), np.stack([lx[::-1], ly[::-1]], 1)], 0)
     x0, y0, x1, y1 = bbox(np.concatenate([poly, top, bot, pouch]), 10)
+    mv = Canvas(x0, y0, x1, y1); mv.poly(mouth_in)
+    comp(frame, mv, mv.alpha(), (0.0, 0.0, 0.0), op=op * 0.3)
     cv = Canvas(x0, y0, x1, y1)
     cv.poly(poly); cv.poly(top); cv.poly(bot)
     a = cv.alpha()

@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image, ImageDraw
 from common import *          # noqa
 import world as Wd
+from world import sst
 
 EXPO = 2.3
 
@@ -78,29 +79,32 @@ def surge_layer(P, tau, z, cx, cy, foam_gain=1.0, cover_dur=9.0, drain=6.0, extr
     # soaked ground right after the water drains: darker, then slowly back
     soak = passed * sst(cover_dur, cover_dur + drain, f) * (1 - sst(cover_dur + drain, cover_dur + drain + 40, f))
     img *= (1 - 0.35 * soak)[..., None]
-    # moving whitewater on the land
-    n1 = Wd.noise(xk * 1.0 + 0.004 * tau, yk - 0.003 * tau, 0.02, 81)
-    n2 = Wd.noise(xk - 0.002 * tau, yk + 0.005 * tau, 0.006, 82)
-    churn = np.clip(0.55 + 0.35 * n1 + 0.25 * n2, 0, 1.3)
+    # moving whitewater on the land: dark turbulent water with flow-aligned foam streaks, bright at the front
+    ang = np.arctan2(yk - Wd.IMPACT[1], xk - Wd.IMPACT[0]); rad = np.hypot(xk - Wd.IMPACT[0], yk - Wd.IMPACT[1])
+    stk = Wd.noise(ang * 55.0, rad * 3.0 - 0.012 * tau, 0.06, 81)
+    n2 = Wd.noise(xk - 0.002 * tau, yk + 0.005 * tau, 0.012, 82)
+    foam = np.clip(sst(0.1, 1.2, stk + 0.5 * n2), 0, 1)
     cover = wet * sst(-0.3, 0.4, f) * (1 - sst(cover_dur, cover_dur + drain, f))
-    front = wet * np.exp(-((f - 0.25) / 0.7) ** 2)
-    foam_col = np.array([0.42, 0.48, 0.56], np.float32)
-    dark_w = np.array([0.03, 0.045, 0.06], np.float32)
-    wcol = dark_w[None, None] * (1 - churn[..., None]) + foam_col[None, None] * churn[..., None] * foam_gain
+    front = wet * np.exp(-((f - 0.4) / 0.9) ** 2)
+    foam_col = np.array([0.36, 0.41, 0.48], np.float32)
+    dark_w = np.array([0.045, 0.058, 0.072], np.float32)
+    fm = np.clip(foam * 0.55 + front * (0.6 + 0.4 * foam), 0, 1) * foam_gain
+    wcol = dark_w[None, None] * (1 - fm[..., None]) + foam_col[None, None] * fm[..., None]
     img = img * (1 - cover[..., None]) + wcol * cover[..., None]
     # water body: wave front band + churned water behind it
     fw = (tau - Ta) * wat
-    band = wat * np.exp(-((fw - 0.5) / 2.2) ** 2)
-    churn_w = wat * sst(0, 2.0, fw) * (0.35 + 0.65 * np.exp(-np.maximum(fw, 0) / 90.0))
-    foam_w = np.clip(0.5 + 0.5 * Wd.noise(xk + 0.003 * tau, yk - 0.006 * tau, 0.03, 83) +
-                     0.3 * Wd.noise(xk, yk + 0.004 * tau, 0.008, 84), 0, 1.4)
-    img = img * (1 - 0.7 * churn_w[..., None]) + (foam_col * 0.55)[None, None] * (churn_w * foam_w)[..., None] * foam_gain
-    img += (foam_col * 0.9)[None, None] * (band * foam_w)[..., None] * foam_gain
+    band = wat * np.exp(-((fw - 0.8) / 2.5) ** 2)
+    churn_w = wat * sst(0, 2.0, fw) * (0.45 + 0.55 * np.exp(-np.maximum(fw, 0) / 120.0))
+    stw = Wd.noise(xk * 3.0 + 0.004 * tau, yk * 0.8 - 0.004 * tau, 0.05, 83)
+    foam_w = np.clip(sst(0.2, 1.3, stw + 0.6 * Wd.noise(xk, yk + 0.004 * tau, 0.01, 84)), 0, 1)
+    img = img * (1 - 0.75 * churn_w[..., None]) + dark_w[None, None] * (0.75 * churn_w)[..., None]
+    img += (foam_col * 0.45)[None, None] * (churn_w * foam_w)[..., None] * foam_gain
+    img += (foam_col * 0.8)[None, None] * (band * (0.4 + 0.6 * foam_w))[..., None] * foam_gain
     # spray / mist above the climbing front (screen-space glow, offset upward)
-    mist = down4(np.ascontiguousarray((front * churn + band * 0.6).astype(np.float32)))
+    mist = down4(np.ascontiguousarray((front * (0.5 + 0.5 * foam) + band * 0.5).astype(np.float32)))
     mist = blur(mist, 6)
     mist = np.roll(mist, -3, axis=0)
-    img += up4(mist)[..., None] * np.array([0.34, 0.38, 0.44], np.float32) * 0.9 * foam_gain
+    img += up4(mist)[..., None] * np.array([0.30, 0.34, 0.40], np.float32) * 0.6 * foam_gain
     return img, dict(X=X, Y=Y, Z=Z, wat=wat, lnd=lnd, f=f, wet=wet, extra=C[13:], cx=cx, cy=cy)
 
 
@@ -181,7 +185,7 @@ class Vec:
 def eiffel(h=330.0):
     """Side silhouette of the Eiffel Tower: (outer polygon, arch polygon) in metres, x centred, y up."""
     ys = np.linspace(0, 300, 60)
-    half = 62.0 * np.exp(-ys / 78.0) + 2.2
+    half = 62.0 * np.exp(-ys / 100.0) + 2.0
     right = list(zip(half, ys)); left = list(zip(-half[::-1], ys[::-1]))
     outer = right + [(1.6, 300), (0.6, 330), (-0.6, 330), (-1.6, 300)] + left
     # platforms

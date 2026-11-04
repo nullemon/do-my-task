@@ -20,7 +20,7 @@ REG = {"main": (-10.0, 10.0, -4.0, 16.0, 1536, 4096),
 # In map frame (+y = azimuth 45 deg) that is ~274 deg from +y, i.e. towards -x.
 _az = np.radians(319 - 45)
 GLOW = np.array([np.sin(_az), np.cos(_az), 0.0]); GLOW[2] = 0.16; GLOW /= np.linalg.norm(GLOW)
-AMB = np.array([0.30, 0.40, 0.66])        # blue sky dome
+AMB = np.array([0.36, 0.46, 0.74])        # blue sky dome
 WARM = np.array([0.95, 0.62, 0.48])       # afterglow
 
 
@@ -98,8 +98,8 @@ def bake(reg):
     edge = sst(0.0, 18.0, R - h) * sst(0.0, 0.03, wetlim - dw)                    # soft lower edge of trimline
     ang = np.arctan2(Y - Wd.IMPACT[1], X - Wd.IMPACT[0]); rad = np.hypot(X - Wd.IMPACT[0], Y - Wd.IMPACT[1])
     streak = noise(ang * 30.0, rad * 0.8, 0.05, 70)                               # scour streaks radial from impact
-    soil_c = np.array([0.105, 0.090, 0.074]) * (0.8 + 0.25 * streak[..., None]) * (0.85 + 0.3 * fbm(X, Y, 0.05, 3, 71)[..., None])
-    bare = np.array([0.12, 0.115, 0.11]) * (0.8 + 0.3 * streak[..., None])
+    soil_c = np.array([0.105, 0.090, 0.074]) * (0.9 + 0.08 * streak[..., None]) * (0.85 + 0.3 * fbm(X, Y, 0.05, 3, 71)[..., None])
+    bare = np.array([0.12, 0.115, 0.11]) * (0.9 + 0.1 * streak[..., None])
     scour = sst(120, 300, R - h + 40 * noise(X, Y, 0.1, 72))[..., None]          # deeper in the zone: bare rock
     strip_c = soil_c * (1 - scour) + bare * scour
     # fallen-log debris near the trimline (lighter speckle)
@@ -119,7 +119,7 @@ def bake(reg):
         sh = np.roll(h, k * step, axis=1)  # samples towards -x
         sh[:, :k * step] = h[:, :1]
         rise = (sh - h) / (k * step * px)
-        shadow = np.minimum(shadow, np.clip(1 - (rise - 0.16) * 4.0, 0.15, 1))
+        shadow = np.minimum(shadow, np.clip(1 - (rise - 0.16) * 3.0, 0.45, 1))
     light = (AMB[None, None, :] * (ao * (0.55 + 0.45 * nrm[..., 2]))[..., None] +
              WARM[None, None, :] * (0.85 * ndg * shadow)[..., None])
     # water texels are not seen (water plane covers them), keep them dark

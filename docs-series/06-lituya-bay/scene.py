@@ -27,7 +27,7 @@ CAMS = {
     "wide2":   ((-1900, -4200, 820), (-600, 9200, 300), 34),
     "top":     ((-300, 6200, 30000), None, 0),                 # orthographic map
     "gilbert": ((1500, 7000, 820), (-2100, 11050, 260), 28),
-    "spur":    ((-1950, 11050, 230), (-1480, 9900, 300), 22),
+    "spur":    ((-1650, 11350, 640), (-1500, 9980, 230), 26),
     "entrance": ((900, 1250, 16), (-250, 9800, 330), 30),
     "after":   ((-200, 7600, 1150), (-1700, 10150, 180), 30),
 }
@@ -81,7 +81,7 @@ def build_grid(name, reg, hpath, tex, hole=None):
     me.polygons.foreach_set("loop_total", np.full(nf, 4, np.int32))
     uv = me.uv_layers.new(name="UVMap")
     vi = quads.ravel()
-    u = (vi % n) / (n - 1); v = (vi // n) / (n - 1)
+    u = (vi % n) / (n - 1); v = 1.0 - (vi // n) / (n - 1)     # PNG row 0 = south edge = top of the image
     uv.data.foreach_set("uv", np.stack([u, v], -1).astype(np.float32).ravel())
     me.update(calc_edges=True); me.validate(verbose=False)
     me.polygons.foreach_set("use_smooth", np.ones(nf, bool))

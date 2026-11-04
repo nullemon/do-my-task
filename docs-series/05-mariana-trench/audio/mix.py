@@ -143,7 +143,7 @@ def sfx():
     tc = t0
     while tc < t1:
         n = int(0.02 * SR); t = np.arange(n) / SR
-        k = bp(rng.standard_normal(n), 2000, 12000) * np.exp(-t / 0.0015) * 0.45
+        k = bp(rng.standard_normal(n), 1500, 7000) * np.exp(-t / 0.002) * 0.22
         k += bp(rng.standard_normal(n), 400, 2000) * np.exp(-t / 0.003) * 0.2
         pan = 0.5 + 0.3 * np.sin(tc)
         g = np.sin(np.pi * (tc - t0) / (t1 - t0))
@@ -292,11 +292,11 @@ def main():
     pre = os.path.join(SCR, "mix_pre.wav")
     sf.write(pre, mix.astype(np.float32), SR, subtype="FLOAT")
     r = subprocess.run(["ffmpeg", "-hide_banner", "-i", pre, "-af",
-                        "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json", "-f", "null", "-"], capture_output=True, text=True)
+                        "loudnorm=I=-14:TP=-2.0:LRA=11:print_format=json", "-f", "null", "-"], capture_output=True, text=True)
     js = json.loads(re.search(r"\{[^{}]*\"input_i\"[^{}]*\}", r.stderr, re.S).group(0))
-    af = (f"loudnorm=I=-14:TP=-1.5:LRA=11:measured_I={js['input_i']}:measured_TP={js['input_tp']}:"
+    af = (f"loudnorm=I=-14:TP=-2.0:LRA=11:measured_I={js['input_i']}:measured_TP={js['input_tp']}:"
           f"measured_LRA={js['input_lra']}:measured_thresh={js['input_thresh']}:offset={js['target_offset']}:"
-          f"linear=true:print_format=summary,aresample=48000,alimiter=limit=0.84:attack=5:release=80:level=false")
+          f"linear=true:print_format=summary,aresample=48000,alimiter=limit=0.79:attack=5:release=80:level=false")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", pre, "-af", af, "-t", str(DUR), "-ar", "48000",
                     "-c:a", "pcm_s24le", os.path.join(SCR, "mix.wav")], check=True)
     os.remove(pre)

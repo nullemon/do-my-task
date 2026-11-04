@@ -13,7 +13,7 @@ from world import sst, noise, fbm
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/06-lituya-bay"
 OUT = os.path.join(SCR, "terrain"); os.makedirs(OUT, exist_ok=True)
 REG = {"main": (-10.0, 10.0, -4.0, 16.0, 1536, 4096),
-       "patch": (-4.4, 0.6, 8.4, 13.4, 1024, 4096),
+       "patch": (-4.4, 0.6, 8.4, 13.4, 1536, 4096),
        "far": (-40.0, 40.0, -6.0, 56.0, 1024, 4096)}
 
 # twilight light: sun ~1 deg below the horizon at azimuth ~319 deg (computed for 06:15 UTC 10 Jul 1958 at 58.65N).
@@ -46,12 +46,40 @@ def gblur(a, r):
     return a
 
 
+def crown_field(X, Y, px, n=1024, seed=7):
+    """Shaded conifer crowns: random crown centres convolved with a cone kernel (periodic tile, sampled by world xy).
+    Returns ~[-1, 1]: lit crown tops (towards the twilight glow, -x) positive, gaps between crowns negative."""
+    r = np.random.default_rng(seed)
+    tile_m = n * px
+    cnt = int(tile_m * tile_m / 26.0)
+    imp = np.zeros((n, n), np.float32)
+    ix = r.integers(0, n, cnt); iy = r.integers(0, n, cnt)
+    np.add.at(imp, (iy, ix), r.uniform(0.6, 1.0, cnt).astype(np.float32))
+    rad = 2.6 / px                                     # crown radius ~2.6 m
+    k = np.fft.fftfreq(n)
+    KX, KY = np.meshgrid(k, k)
+    # cone-ish kernel via gaussian sum in Fourier space
+    ker = np.exp(-(KX ** 2 + KY ** 2) * (np.pi * rad) ** 2) + 0.5 * np.exp(-(KX ** 2 + KY ** 2) * (np.pi * rad * 0.5) ** 2)
+    C = np.real(np.fft.ifft2(np.fft.fft2(imp) * ker)).astype(np.float32)
+    C = np.minimum(C / (np.percentile(C, 97) + 1e-6), 1.2)
+    gy_, gx_ = np.gradient(C)
+    shade = np.clip(0.5 - 3.0 * gx_ * 1.0 + 1.2 * gy_ * 0.3, 0, 1)    # lit from -x (the glow)
+    T = (C * 0.9 + (shade - 0.5) * 1.4) - 0.5
+    ui = (np.floor(X * 1000.0 / px) % n).astype(np.int64); vi = (np.floor(Y * 1000.0 / px) % n).astype(np.int64)
+    return (T[vi, ui] * 1.6).astype(np.float32)
+
+
 def bake(reg):
     x0, x1, y0, y1, nm, nt = REG[reg]
     # ---------------- mesh heights
     X, Y = grid(reg, nm)
     F = Wd.fields(X, Y)
-    np.save(os.path.join(OUT, f"{reg}_h.npy"), F["h"])
+    hm = F["h"]
+    if reg in ("main", "patch"):
+        # light smoothing of the mesh (removes heightmap spikes; texture shading keeps the fine detail)
+        r = 2 if reg == "patch" else 1
+        hm = np.where(F["dw"] < 0, hm, gblur(hm, r * 2))
+    np.save(os.path.join(OUT, f"{reg}_h.npy"), hm.astype(np.float32))
     del X, Y, F
     # ---------------- texture-resolution fields
     X, Y = grid(reg, nt)
@@ -71,8 +99,10 @@ def bake(reg):
     rng_n = fbm(X, Y, 0.35, 4, 60)
     treeline = 700 + 150 * noise(X, Y, 1.0, 61)
     snowline = 1350 + 250 * noise(X, Y, 1.4, 62) + 700 * slope ** 2
-    crowns = noise(X, Y, 0.006, 63, beta=1.2) if px < 3 else noise(X, Y, 0.02, 63, beta=1.6)
-    forest_c = np.array([0.020, 0.036, 0.024]) * (0.75 + 0.35 * crowns[..., None]) * (0.85 + 0.25 * rng_n[..., None])
+    crowns = noise(X, Y, 0.02, 63, beta=1.6)
+    if px < 3:
+        crowns = crown_field(X, Y, px)
+    forest_c = np.array([0.020, 0.036, 0.024]) * np.clip(0.75 + 0.45 * crowns[..., None], 0.25, 1.8) * (0.85 + 0.25 * rng_n[..., None])
     meadow_c = np.array([0.055, 0.060, 0.040]) * (0.8 + 0.3 * rng_n[..., None])
     rock_c = np.array([0.085, 0.080, 0.076]) * (0.75 + 0.35 * fbm(X, Y, 0.08, 4, 64)[..., None])
     snow_c = np.array([0.80, 0.83, 0.88])
@@ -85,6 +115,9 @@ def bake(reg):
     rz = np.clip(sst(0.55, 0.75, slope) + sst(treeline, treeline + 500, alt) * 0.45, 0, 1)                                                  # cliffs -> rock
     alb = meadow_c * (1 - fz[..., None]) + forest_c * fz[..., None]
     alb = alb * (1 - rz[..., None]) + rock_c * rz[..., None]
+    scree = sst(0.40, 0.50, slope) * (1 - sst(0.62, 0.72, slope)) * sst(0.0, 0.8, fbm(X, Y, 0.06, 3, 75)) * sst(treeline - 250, treeline, alt)
+    scree_c = np.array([0.115, 0.112, 0.108]) * (0.7 + 0.5 * noise(X, Y, 0.004, 76, beta=1.0)[..., None])
+    alb = alb * (1 - scree[..., None]) + scree_c * scree[..., None]
     sz = sst(snowline - 80, snowline + 160, alt) * sst(0.85, 0.65, slope)
     alb = alb * (1 - sz[..., None]) + snow_c * sz[..., None]
     shore = sst(0.035, 0.0, dw) * (dw >= 0)
@@ -99,8 +132,8 @@ def bake(reg):
     ang = np.arctan2(Y - Wd.IMPACT[1], X - Wd.IMPACT[0]); rad = np.hypot(X - Wd.IMPACT[0], Y - Wd.IMPACT[1])
     streak = noise(ang * 30.0, rad * 0.8, 0.05, 70)                               # scour streaks radial from impact
     soil_c = np.array([0.105, 0.090, 0.074]) * (0.9 + 0.08 * streak[..., None]) * (0.85 + 0.3 * fbm(X, Y, 0.05, 3, 71)[..., None])
-    bare = np.array([0.12, 0.115, 0.11]) * (0.9 + 0.1 * streak[..., None])
-    scour = sst(120, 300, R - h + 40 * noise(X, Y, 0.1, 72))[..., None]          # deeper in the zone: bare rock
+    bare = np.array([0.15, 0.145, 0.14]) * (0.85 + 0.1 * streak[..., None]) * (0.8 + 0.35 * noise(X, Y, 0.004, 77, beta=1.0)[..., None])
+    scour = sst(30, 140, R - h + 40 * noise(X, Y, 0.1, 72))[..., None]          # deeper in the zone: bare rock
     strip_c = soil_c * (1 - scour) + bare * scour
     # fallen-log debris near the trimline (lighter speckle)
     logs = (sst(0.4, 1.4, noise(X, Y, 0.012, 73, beta=1.0)) * sst(60, 0, np.abs(R - h - 25)))[..., None]

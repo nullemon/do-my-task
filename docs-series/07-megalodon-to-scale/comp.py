@@ -542,7 +542,7 @@ def overlays(d, t, Wm, cx, cy, lt):
     L("orca", S["orca"] - 0.2, S["hump"] + 1.5, "ORCA", "LARGE MALES ≈ 8 M", frac=0.35, up=-1.5, dy=80)
     L("hump", S["hump"] - 0.2, S["megA"] + 0.5, "HUMPBACK WHALE", "≈ 15 M · FLIPPERS ≈ ⅓ BODY LENGTH", frac=0.35, up=2.0, dy=-50)
     # megalodon
-    ma = win(t, S["megA"] + 1.0, S["megB"] + 6.0, 1.5, 1.5)
+    ma = win(t, S["megA"] + 7.0, S["megB"] + 8.0, 1.5, 1.5)
     if ma > 0:
         label(d, actor_screen_anchor("megc", t, Wm, cx, cy, 0.3, 3.2), "MEGALODON", "OTODUS MEGALODON · AS IT IS OFTEN PICTURED", ma, dy=-60, size=28)
     # skeleton note

@@ -35,8 +35,8 @@ if [[ ! -s $OUT/$NAME-1080p.mp4 ]]; then
 log "1080p master + hq"
 nice -n 5 ffmpeg -v error -y "${IN[@]}" -i "$MIX" -i "$SRT" \
   -filter_complex "[0:v]fps=24,${VIG},${GRAIN},format=yuv420p,split=2[a][b]" \
-  -map "[a]" -map 1:a -map 2:s -c:v libx264 -preset slow -crf 18 -profile:v high -tune film "${META[@]}" -t 352 "$OUT/$NAME-1080p.part.mp4" \
-  -map "[b]" -map 1:a -map 2:s -c:v libx264 -preset slow -crf 18 -maxrate 8M -bufsize 16M -profile:v high -tune film "${META[@]}" -t 352 "$OUT/$NAME-1080p-hq.part.mp4"
+  -map "[a]" -map 1:a -map 2:s -c:v libx264 -preset medium -crf 18 -profile:v high -tune film "${META[@]}" -t 352 "$OUT/$NAME-1080p.part.mp4" \
+  -map "[b]" -map 1:a -map 2:s -c:v libx264 -preset medium -crf 18 -maxrate 8M -bufsize 16M -profile:v high -tune film "${META[@]}" -t 352 "$OUT/$NAME-1080p-hq.part.mp4"
 mv -f "$OUT/$NAME-1080p.part.mp4" "$OUT/$NAME-1080p.mp4"; mv -f "$OUT/$NAME-1080p-hq.part.mp4" "$OUT/$NAME-1080p-hq.mp4"
 fi
 log "1080p done"
@@ -45,8 +45,8 @@ if [[ ! -s $OUT/$NAME-4k.mp4 ]]; then
 log "4K (lanczos UPSCALE of the 1080p render) + 4K-share"
 nice -n 5 ffmpeg -v error -y "${IN[@]}" -i "$MIX" -i "$SRT" \
   -filter_complex "[0:v]fps=24,${VIG},scale=3840:2160:flags=lanczos,noise=c0s=6:c0f=t+u,format=yuv420p,split=2[a][b]" \
-  -map "[a]" -map 1:a -map 2:s -c:v libx264 -preset fast -crf 20 -profile:v high "${META[@]}" -metadata comment="4K lanczos upscale of a 1080p render" -t 352 "$OUT/$NAME-4k.part.mp4" \
-  -map "[b]" -map 1:a -map 2:s -c:v libx264 -preset fast -crf 20 -maxrate 10M -bufsize 20M -profile:v high "${META[@]}" -metadata comment="4K lanczos upscale of a 1080p render" -t 352 "$OUT/$NAME-4k-share.part.mp4"
+  -map "[a]" -map 1:a -map 2:s -c:v libx264 -preset ultrafast -crf 20 -profile:v high "${META[@]}" -metadata comment="4K lanczos upscale of a 1080p render" -t 352 "$OUT/$NAME-4k.part.mp4" \
+  -map "[b]" -map 1:a -map 2:s -c:v libx264 -preset ultrafast -crf 20 -maxrate 10M -bufsize 20M -profile:v high "${META[@]}" -metadata comment="4K lanczos upscale of a 1080p render" -t 352 "$OUT/$NAME-4k-share.part.mp4"
 mv -f "$OUT/$NAME-4k.part.mp4" "$OUT/$NAME-4k.mp4"; mv -f "$OUT/$NAME-4k-share.part.mp4" "$OUT/$NAME-4k-share.mp4"
 fi
 ls -la "$OUT"

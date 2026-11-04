@@ -169,7 +169,7 @@ def m1(t):
 BOATS = {"edrie": (720, 1650, 13.0, 0.0), "badger": (-480, 1450, 14.0, 0.6), "sunmore": (-280, 1700, 13.0, 1.7)}
 
 
-def draw_boats(P, d, t, z, cx, cy, lift=None, alpha=1.0, names=None, name_op=0.0, only=None):
+def draw_boats(P, d, t, z, cx, cy, lift=None, alpha=1.0, names=None, name_op=0.0, only=None, pitch=None):
     """True-scale boat silhouettes on the water (dark, faint rim from the sky glow) + reflection."""
     vec = Vec()
     for k, (bx, by, bl, ph) in BOATS.items():
@@ -177,6 +177,8 @@ def draw_boats(P, d, t, z, cx, cy, lift=None, alpha=1.0, names=None, name_op=0.0
             continue
         dz = 0.35 * math.sin(t * 1.1 + ph)
         roll = 0.03 * math.sin(t * 0.8 + ph * 2)
+        if pitch is not None:
+            roll += pitch.get(k, 0.0)
         if lift is not None:
             dz += lift.get(k, 0.0)
         sx, sy, dd = screen_pt(P, [[bx, by, 0.0]], z, cx, cy)
@@ -387,7 +389,7 @@ def sc1(t):
     img = crop3(P.after(), z, cxx, cyy)
     d = finish(img)
     # reference point: the run-up maximum on the slope; silhouettes stand at sea level at the same distance
-    pk = np.array([[-1534.0, 9719.0, 524.0]])
+    pk = np.array([[-1514.0, 9660.0, 524.0]])
     u, v, dep = P.cam.project(pk)
     D = float(dep[0])
     s = px_per_m(P, D, z)
@@ -567,6 +569,8 @@ def by(t):
 # =================================================================== B1  the wave reaches the Edrie (entrance plate)
 B1_T1 = LS(22) - 0.6
 B1_TAU0, B1_RATE = 215.0, 2.6
+WAVE_XC, WAVE_CURVE = 250.0, 1.2e-4
+WAVE_PROF = np.array([(-25, 0.0), (-6, 0.0), (0, 0.04), (6, 0.18), (12, 0.42), (17, 0.70), (20, 0.88), (20.5, 0.98)])
 
 
 def front_y_km(tau):
@@ -580,58 +584,38 @@ def b1(t):
     z, cx, cy = move(P, t, t0, t1, 1.05, 1.14, (0.5, 0.55), (0.5, 0.5))
     tau = B1_TAU0 + (t - t0) * B1_RATE
     img, info = surge_layer(P, tau, z, cx, cy, foam_gain=1.2, band_gain=0.2)
-    Y, wat = info["Y"], info["wat"]
+    Y, wat, lnd, X = info["Y"], info["wat"], info["lnd"], info["X"]
     cxx, cyy = info["cx"], info["cy"]
     yf = front_y_km(tau) * 1000.0
-    # the wave face: for every column, the screen row where the water reaches the front, extruded upward by Hw
-    Hw = 32.0
-    rows = np.arange(H)[:, None]
-    behind = (wat > 0.5) & (Y > yf)
-    infront = (wat > 0.5) & (Y <= yf)
-    # first water row in front of the front (closest to the horizon)
-    has = infront.any(0)
-    rf = np.where(has, np.argmax(infront, 0), H)
-    # distance at the front row -> pixel height of the wall
     cam = P.cam.M[:3, 3]
-    dist = np.maximum(yf - cam[1], 30.0)
-    s = px_per_m(P, dist, z)
-    hpx = Hw * s
-    top = rf - hpx
-    xx = np.arange(W, dtype=np.float32)
-    def ridge1d(seed, n=7, base=900.0, drift=0.0):
-        r = np.random.default_rng(seed); out = np.zeros(W, np.float32)
-        for k in range(n):
-            wl = base / (1.7 ** k); out += r.uniform(0.5, 1.0) / (1.4 ** k) * np.sin(2 * np.pi * xx / wl + r.uniform(0, 6.3) + drift * (k + 1))
-        return out / 2.2
-    wob = 0.10 * hpx * ridge1d(1, drift=0.08 * tau)
-    top = top + wob
-    face = (rows >= top[None, :]) & (rows < rf[None, :]) & has[None, :] & (dist < 9000)
-    fy = np.clip((rows - top[None, :]) / max(float(hpx), 1.0), 0, 1)
-    cn = np.clip(0.75 + 0.35 * ridge1d(2, drift=0.15 * tau), 0.2, 1.2)[None, :]
-    facecol = np.array([0.016, 0.024, 0.032], np.float32)[None, None] * (0.6 + 0.8 * fy[..., None])
-    crest = (np.exp(-(fy / 0.16) ** 2) * cn)[..., None] * np.array([0.36, 0.41, 0.48], np.float32)
-    streak = (0.5 + 0.5 * np.sin(rows / 3.0 + xx[None, :] * 0.0 + tau * 2.0)) * 0.0
-    col = facecol + crest
-    img = np.where(face[..., None], col, img)
-    # spray above the crest
-    sp = np.zeros((H, W), np.float32)
-    band = (rows >= top[None, :] - hpx * 0.45) & (rows < top[None, :] + 0.1 * hpx) & has[None, :] & (dist < 9000)
-    sp[band] = 1.0
-    sp = up4(blur(down4(sp), 5)) * cn
-    img += sp[..., None] * np.array([0.22, 0.25, 0.30], np.float32)
+    f = int(round(t * FPS - 0.5))
+    wpth = os.path.join(SCR, "wave", f"w_{f:05d}.png")
+    if os.path.exists(wpth):
+        wv = np.asarray(Image.open(wpth).convert("RGBA").resize((W, H), Image.BILINEAR), np.float32) / 255.0
+        wa = wv[..., 3]
+        # land nearer to the camera than the wave front hides the wave
+        yfr = yf + WAVE_CURVE * (X - WAVE_XC) ** 2
+        occl = (lnd > 0.5) & (Y < yfr - 40.0)
+        wa = wa * (~occl)
+        img = img * (1 - wa[..., None]) + (wv[..., :3] ** 2.2) * wa[..., None]
     # whiteout when the wave reaches the camera
-    wo = sst(cam[1] + 150, cam[1] - 40, yf)
+    wo = float(sst(cam[1] + 300, cam[1] + 50, yf))     # engulfed: the wave reaches the camera
     d = finish(img)
     # boats: lifted as the front passes
-    lift = {}
-    gone = 0.0
+    lift = {}; pitch = {}
     bx_, by_, bl, ph = BOATS["edrie"]
-    ahead = yf - by_                       # metres the front still has to travel to reach the Edrie
-    lift["edrie"] = Hw * 0.9 * float(np.clip(1 - ahead / 160.0, 0, 1)) if ahead < 160 else 0.0
-    gone = float(np.clip(-ahead / 25.0, 0, 1))      # once the crest has passed, the boat is hidden behind the wave
+    sb = by_ - (yf + WAVE_CURVE * (bx_ - WAVE_XC) ** 2)       # metres behind the toe (negative: not reached yet)
+    zb = float(np.interp(sb, WAVE_PROF[:, 0], WAVE_PROF[:, 1])) * 32.0
+    lift["edrie"] = zb
+    pitch["edrie"] = float(np.clip(np.interp(sb, [-6, 0, 10, 19], [0, 0.06, 0.22, 0.35]), 0, 0.35))
+    gone = float(np.clip((sb - 17.0) / 3.0, 0, 1))           # past the lip: lost from view behind the crest
     if gone < 1:
-        draw_boats(P, d, t, z, cxx, cyy, lift=lift, alpha=1.0 - gone, only=("edrie",))
-    d = d * (1 - wo) + np.array([0.10, 0.12, 0.14], np.float32) * wo
+        draw_boats(P, d, t, z, cxx, cyy, lift=lift, alpha=1.0 - gone, only=("edrie",), pitch=pitch)
+    if wo > 0:
+        gx_ = np.arange(W, dtype=np.float32)[None, :] / 1000.0; gy_ = np.arange(H, dtype=np.float32)[:, None] / 1000.0
+        g = np.linspace(1.0, 0.6, H, dtype=np.float32)[:, None, None]
+        dark = np.array([0.075, 0.088, 0.105], np.float32) * g
+        d = d * (1 - wo) + dark * wo
     caption(d, t, t0 + 0.6, LS(21) - 0.5, "THE EDRIE", "Howard Ulrich and his son, near the south shore", size=24)
     fade_edges(d, t, t0, t1, fin=0.4, fout=0.5)
     return to_frame(d)
@@ -710,7 +694,7 @@ def mi(t):
     d = np.where(inside[..., None], ph * vig[..., None], np.array([0.012, 0.012, 0.012], np.float32))
     vec = Vec()
     ol = ss(LS(24) + 7.0, LS(24) + 8.2, t)
-    pk = screen_pt(P, [[-1534, 9719, 524]], z, info["cx"], info["cy"])
+    pk = screen_pt(P, [[-1514, 9660, 524]], z, info["cx"], info["cy"])
     label(d, vec, float(pk[0][0]), float(pk[1][0]), "TRIMLINE", "forest above · bare ground below", op=ol, side="l",
           size=20, col=(250, 245, 235))
     vec.comp(d)
@@ -854,12 +838,12 @@ def e1(t):
     C, (cxx, cyy) = P.crop([P.forest[..., 0], P.forest[..., 1], P.forest[..., 2], P.wet, P.X, P.Y], z, cx, cy)
     fo = np.stack(C[:3], -1); wet = C[3]
     # regrown (younger, lighter, more uniform) forest below the old trimline
-    young = fo * np.array([1.45, 1.85, 1.30], np.float32)
+    young = fo * np.array([1.12, 1.32, 1.08], np.float32)
     img = fo * (1 - wet[..., None]) + young * wet[..., None]
     d = finish(img)
     vec = Vec()
     ol = ss(LS(31) + 3.0, LS(31) + 4.5, t) * (1 - ss(LS(33) + 2.5, LS(33) + 3.5, t))
-    pk = screen_pt(P, [[-1534, 9719, 524]], z, cxx, cyy)
+    pk = screen_pt(P, [[-1514, 9660, 524]], z, cxx, cyy)
     label(d, vec, float(pk[0][0]), float(pk[1][0]), "524 m", None, op=ol, side="r", size=22)
     vec.comp(d)
     op = ss(LS(33) + 3.0, LS(33) + 4.2, t)

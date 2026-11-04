@@ -98,3 +98,13 @@ Rebuild: `/home/user/bpyenv/bin/python -c "import sys; p='blender/animals.py'; s
   sizes are foreshortened by ≈2 %. Background rays and snow are screen-space effects. The vertical-light model
   is stylised.
 - **4K files** are lanczos upscales of the 1080p render.
+
+## Render / encode notes
+- Sprites: 9 loops, 497 frames, ≈12 min CPU (Cycles 6 spp, 2 threads, ≈0.5–1 s/frame).
+- Compositor: 7,584 frames (316.0 s) in 16 segments × 2 workers, ≈1.0–1.5 s/frame, ≈80 min wall clock on the
+  shared 4-core box, plus one 20 s segment re-rendered after a label fix. Silent segments are x264 CRF 14 and the
+  joined master is in scratch.
+- Final encodes: the shared CPU was heavily loaded (load ≈28), so the 1080p master uses `-preset medium` (CRF 18)
+  instead of `slow`, and the 4K files use `-preset veryfast`. The quality targets (CRF 18 / CRF 20 / bitrate caps)
+  are unchanged.
+- Audio: −14.0 LUFS integrated, −1.4 dBTP true peak (ebur128 on the final hq file).

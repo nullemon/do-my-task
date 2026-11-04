@@ -106,6 +106,21 @@ def water_sdf(x, y):
     return d.astype(np.float32)
 
 
+def shore_along(x, y):
+    """Distance (km) along the nearest shore-defining centreline (a coordinate that runs parallel to the shore)."""
+    best = np.full(np.shape(x), 1e9, np.float32); al = np.zeros(np.shape(x), np.float32)
+    for k, pts in enumerate((BAY, GILBERT, CRILLON)):
+        d, t = _polyline_sdf(x, y, pts)
+        # opposite banks get different coordinates so their gullies do not mirror each other
+        side = np.sign((x - pts[0][0]) * 0.0 + 1.0)
+        t = t + 37.0 * k
+        m = d < best; best = np.where(m, d, best); al = np.where(m, t, al)
+    coast = (y + 0.35) + 0.0
+    m = coast < best
+    al = np.where(m, x + 80.0, al)
+    return al.astype(np.float32)
+
+
 def glacier_sdf(x, y):
     a, ta = _polyline_sdf(x, y, LITUYA_GL)
     b, tb = _polyline_sdf(x, y, CRILLON_GL)
@@ -131,12 +146,23 @@ def fields(x, y):
     A = amplitude(y) + 650 * np.exp(-((x + 2.0) ** 2 + (y - 9.1) ** 2) / 0.9)
     L = 0.85 + 0.5 * (1 - sst(0.5, 6.5, y)) - 0.25 * sst(6.5, 9.5, y) + 0.25 * sst(9.5, 10.8, y)
     big = fbm(x, y, 3.0, 3, 1)
-    ridg = fbm(x, y, 2.0, 3, 2, gain=0.30, ridged=True)
+    ridg = fbm(x, y, 2.0, 2, 2, gain=0.30, ridged=True)
     ramp_w = 1 - np.exp(-rr / L)
     ramp_g = 1 - np.exp(-rg / (L * 1.2))
     ramp = np.minimum(ramp_w, ramp_g)
     mount = A * ramp ** 0.95 * (0.82 + 0.22 * big + 0.26 * (ridg - 0.55))
-    mount += 7 * fbm(x, y, 0.15, 3, 7) * ramp + 2.5 * noise(x, y, 0.06, 8)
+    mount += 4 * fbm(x, y, 0.15, 2, 7) * ramp + 1.5 * noise(x, y, 0.06, 8)
+    # erosion-like spurs and gullies running straight downslope: smooth ridged noise in (along-shore, distance-from-
+    # shore) coordinates of each shore centreline, soft-blended between centrelines so there are no seams
+    gs = 0.0; ws = 0.0
+    for k, pts in enumerate((BAY, GILBERT, CRILLON)):
+        dk, tk = _polyline_sdf(x, y, pts)
+        wk = np.exp(-np.maximum(dk, 0) / 0.25) + 1e-6
+        gk = 1 - np.abs(noise(tk + 37.0 * k, rr * 0.18, 0.30, 31, beta=3.6))
+        gs = gs + wk * gk; ws = ws + wk
+    g1 = gs / ws
+    slope_band = ramp * (1 - ramp) * 4                            # strongest mid-slope, fades at shore and crest
+    mount += A * 0.06 * slope_band * (g1 - 0.6)
     # glacier valley floors lift surrounding land
     near_g = np.exp(-rg / 1.0)
     base = zg * near_g

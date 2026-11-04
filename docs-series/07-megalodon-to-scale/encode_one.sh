@@ -12,10 +12,10 @@ IN=(-i "$J" -i "$MIX" -i "$SRT" -map 0:v:0 -map 1:a:0 -map 2:s:0)
 A=(-c:a aac -b:a 256k -ar 48000)
 UP=(-metadata comment="3840x2160 lanczos upscale of a 1920x1080 render")
 case $1 in
- 1080p) F=megalodon-to-scale-1080p.mp4; V=(-vf "${VIG},noise=c0s=5:c0f=t+u,format=yuv420p" -c:v libx264 -preset slow -crf 18 -tune film -profile:v high -pix_fmt yuv420p); X=();;
+ 1080p) F=megalodon-to-scale-1080p.mp4; V=(-vf "${VIG},noise=c0s=5:c0f=t+u,format=yuv420p" -c:v libx264 -preset medium -crf 18 -tune film -profile:v high -pix_fmt yuv420p); X=();;
  hq)    F=megalodon-to-scale-1080p-hq.mp4; V=(-vf "${VIG},noise=c0s=5:c0f=t+u,format=yuv420p" -c:v libx264 -preset medium -crf 18 -maxrate 10M -bufsize 20M -tune film -profile:v high -pix_fmt yuv420p); X=();;
- 4k)    F=megalodon-to-scale-4k.mp4; V=(-vf "${VIG},scale=3840:2160:flags=lanczos,noise=c0s=6:c0f=t+u,format=yuv420p" -c:v libx264 -preset faster -crf 20 -tune film -profile:v high -pix_fmt yuv420p); X=("${UP[@]}");;
- share) F=megalodon-to-scale-4k-share.mp4; V=(-vf "${VIG},scale=3840:2160:flags=lanczos,noise=c0s=6:c0f=t+u,format=yuv420p" -c:v libx264 -preset faster -b:v 13.5M -maxrate 16M -bufsize 32M -tune film -pix_fmt yuv420p); X=("${UP[@]}");;
+ 4k)    F=megalodon-to-scale-4k.mp4; V=(-vf "${VIG},scale=3840:2160:flags=lanczos,noise=c0s=6:c0f=t+u,format=yuv420p" -c:v libx264 -preset veryfast -crf 20 -tune film -profile:v high -pix_fmt yuv420p); X=("${UP[@]}");;
+ share) F=megalodon-to-scale-4k-share.mp4; V=(-vf "${VIG},scale=3840:2160:flags=lanczos,noise=c0s=6:c0f=t+u,format=yuv420p" -c:v libx264 -preset veryfast -b:v 13.5M -maxrate 16M -bufsize 32M -tune film -pix_fmt yuv420p); X=("${UP[@]}");;
 esac
 [[ -s $OUT/$F ]] && { echo "exists $F"; exit 0; }
 echo "[$(date '+%T')] start $F"

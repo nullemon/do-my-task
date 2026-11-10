@@ -87,7 +87,7 @@ COUNTERS = [
      "THE TRIP TAKES 8 MIN 19 S", SUNY),
 ]
 FEAT_END = {c[0]: (COUNTERS[i + 1][1] if i + 1 < len(COUNTERS) else T_END) for i, c in enumerate(COUNTERS)}
-FLY = 0.55
+FLY = 0.35
 MAXROWS = 5
 ROWLAB = dict(orbit="EARTH'S ORBIT", sun="SUN: H FUSED", dust="SPACE DUST", gal="AROUND GALAXY", cmb="THROUGH COSMOS",
               stars="STARS BORN", sn="SUPERNOVAE", light="SUNLIGHT SENT")
@@ -667,22 +667,24 @@ class Scene:
             vtxt = val(t)
             if t < te:                                                 # featured card
                 age = t - ta
-                a = min(1.0, max(0.0, (age + 0.02) / 0.10)) * vis_all
-                pop = 1 + 0.22 * math.exp(-max(age, 0) / 0.08)
+                d0 = 0.16 if ta > 0.6 else -0.02                       # let the outgoing value clear the spot first
+                a = min(1.0, max(0.0, (age - d0) / 0.10)) * vis_all
+                pop = 1 + 0.22 * math.exp(-max(age - d0, 0) / 0.08)
                 crisp_put(out, lab, ly["fx"], ly["fly"], ly["fls"], WHITE, a, wt="Black")
                 w = text_img(vtxt, int(ly["fvs"]), "Black")[1]
                 vs = ly["fvs"] * min(1.0, ly["fmaxw"] / max(w, 1))
                 crisp_put(out, vtxt, ly["fx"], ly["fvy"], int(vs * pop), col, a)
                 crisp_put(out, sub, ly["fx"], ly["fsy"], ly["fss"], tuple(c * 0.55 + 0.45 for c in col), a * ramp(age, 0.25, 0.5), wt="Bold")
             else:                                                       # flying into / sitting in the stack
-                u = ease((t - te) / FLY)
+                x = min(max((t - te) / FLY, 0.0), 1.0)
+                u = ease(x); up = 1 - (1 - x) ** 3                         # fast ease-out: leaves the featured spot quickly
                 if ra <= 0.003: continue
-                if u < 1:
+                if x < 1:
                     w = text_img(vtxt, int(ly["vs"]), "Black")[1]
                     rx = ly["x1"] - w / 2
                     fvs = ly["fvs"] * min(1.0, ly["fmaxw"] / max(text_img(vtxt, int(ly["fvs"]), "Black")[1], 1))
-                    size = int(fvs + (ly["vs"] - fvs) * u)
-                    crisp_put(out, vtxt, ly["fx"] + (rx - ly["fx"]) * u, ly["fvy"] + (ry - ly["fvy"]) * u, size, col, ra)
+                    size = int(fvs + (ly["vs"] - fvs) * up)
+                    crisp_put(out, vtxt, ly["fx"] + (rx - ly["fx"]) * up, ly["fvy"] + (ry - ly["fvy"]) * up, size, col, ra)
                     crisp_put(out, ROWLAB[key], ly["x0"], ry, ly["ls"], WHITE, u * ra, anchor="l", wt="Black")
                 else:
                     hl = 0.0
@@ -691,7 +693,7 @@ class Scene:
                     crisp_put(out, vtxt, ly["x1"], ry, int(ly["vs"] * (1 + 0.35 * hl)), col, ra, anchor="r")
         # finale: "right here" -> how far you went, big
         if t >= T_END:
-            age = t - T_END; a = min(1.0, age / 0.15) * vis_all
+            age = t - T_END; a = min(1.0, max(0.0, (age - 0.16) / 0.10)) * vis_all
             crisp_put(out, "WHILE YOU WATCHED, YOU TRAVELLED", ly["fx"], ly["fly"], ly["fls"], WHITE, a, wt="Black")
             vt = f"{fmt_int(V_ORBIT * t)} KM"
             crisp_put(out, vt, ly["fx"], ly["fvy"], int(ly["fvs"] * (1 + 0.2 * math.exp(-age / 0.08))), CYAN, a)
@@ -718,7 +720,28 @@ def run(vertical, stills=None):
     enc.close(); print("done", time.time() - t0, "DUR", DUR)
 
 
+def patch(vertical, ranges):
+    """re-render only frames inside `ranges` [(t0, t1)], copying the others from the existing render (from other-suns)"""
+    import subprocess
+    sc = Scene(vertical); tag = "vert" if vertical else "wide"
+    W, H = sc.L.W, sc.L.H; src = os.path.join(SCR, f"video_{tag}.mp4"); old = src.replace(".mp4", "_prev.mp4")
+    os.replace(src, old)
+    dec = subprocess.Popen(["nice", "-n", "10", "ffmpeg", "-v", "error", "-i", old, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    enc = Encoder(src, W, H, FPS, crf=17); k = 0
+    for i in range(NFR):
+        buf = dec.stdout.read(W * H * 3); t = i / FPS
+        if any(a <= t <= b for a, b in ranges) or len(buf) < W * H * 3: enc.write(sc.frame(t)); k += 1
+        else: enc.p.stdin.write(buf)
+    enc.close(); dec.wait(); os.remove(old); print("patched", k, "frames")
+
+
+TRANSITIONS = ",".join(f"{te - 0.05:.2f}:{te + FLY + 0.05:.2f}" for te in sorted(set(FEAT_END.values())))
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "patch":
+        rng = sys.argv[3] if len(sys.argv) > 3 else TRANSITIONS
+        patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in rng.split(",")]); sys.exit()
     if sys.argv[1] == "info":
         print("DUR", DUR, "frames", NFR)
         for l in PL: print(f"{l['key']:6s} {l['start']:6.2f} {l['end']:6.2f}")

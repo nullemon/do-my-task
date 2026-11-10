@@ -121,7 +121,7 @@ def rock_material():
 def setup(res):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene; sc.render.engine = "CYCLES"; c = sc.cycles
-    c.device = "CPU"; c.samples = 14; c.use_adaptive_sampling = False; c.use_denoising = False
+    c.device = "CPU"; c.samples = 10; c.use_adaptive_sampling = False; c.use_denoising = False
     c.max_bounces = 1; c.diffuse_bounces = 1; c.glossy_bounces = 0; c.transmission_bounces = 0; c.caustics_reflective = False; c.caustics_refractive = False
     c.pixel_filter_type = "BLACKMAN_HARRIS"; c.filter_width = 1.5
     sc.render.threads_mode = "FIXED"; sc.render.threads = int(os.environ.get("THREADS", "2"))
@@ -149,8 +149,8 @@ def setup(res):
 
 def orient(ob, f):
     """slow tumble: 0.30 deg/frame about a tilted axis plus a slow wobble (non-principal-axis look)"""
-    a = math.radians(0.30 * f)
-    q1 = Matrix.Rotation(a, 4, Vector((0.25, 0.42, 0.87)).normalized())
+    a = math.radians(0.24 * f)
+    q1 = Matrix.Rotation(a, 4, Vector((0.30, -0.88, 0.37)).normalized())
     q2 = Matrix.Rotation(math.radians(14) * math.sin(a * 0.6 + 0.4), 4, "X")
     q0 = Matrix.Rotation(math.radians(-18), 4, "Y") @ Matrix.Rotation(math.radians(25), 4, "X")
     ob.matrix_world = q1 @ q2 @ q0

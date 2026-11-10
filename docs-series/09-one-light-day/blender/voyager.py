@@ -100,7 +100,7 @@ M_GOLDFOIL = mat("goldfoil", (1.0, 0.62, 0.22), rough=0.24, metal=1.0, bump=0.7,
 M_GOLD = mat("gold", (1.0, 0.72, 0.30), rough=0.2, metal=1.0)
 M_ALU = mat("alu", (0.78, 0.79, 0.80), rough=0.33, metal=1.0)
 M_ALUD = mat("aludark", (0.30, 0.31, 0.33), rough=0.42, metal=1.0)
-M_TRUSS = mat("truss", (0.55, 0.56, 0.58), rough=0.38, metal=1.0)
+M_TRUSS = mat("truss", (0.42, 0.43, 0.46), rough=0.34, metal=1.0)
 M_RTG = mat("rtg", (0.065, 0.065, 0.07), rough=0.48, metal=0.7)
 M_RTGEND = mat("rtgend", (0.5, 0.5, 0.52), rough=0.4, metal=1.0)
 M_LENS = mat("lens", (0.01, 0.012, 0.03), rough=0.05, coat=1.0)
@@ -495,9 +495,9 @@ def sst(a, b, x):
 SUN_DIR = Vector((0.30, -0.52, 0.80)).normalized()     # direction TO the sun (theatrical: ~37 deg off boresight)
 
 root = build_voyager()
-sun(SUN_DIR, 5.5)
-area(Vector((-9, -12, -5)), (0, 0, 0), 2500, 9, (0.55, 0.7, 1.0))       # cool fill from below/behind
-area(Vector((10, 6, -8)), (0, 0, 0), 1200, 8, (1.0, 0.75, 0.5))         # faint warm kicker
+sun(SUN_DIR, 6.5)
+area(Vector((-9, -12, -5)), (0, 0, 0), 1100, 9, (0.5, 0.68, 1.0))       # cool fill from below/behind
+area(Vector((10, 8, -6)), (0, 0, 0), 1500, 6, (1.0, 0.72, 0.45))         # faint warm kicker
 cam = make_cam()
 
 

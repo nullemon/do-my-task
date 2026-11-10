@@ -214,7 +214,7 @@ class Scene:
         V = (0.53 * W, 0.20 * H) if vertical else (0.56 * W, 0.10 * H)
         self.aur = Aurora(W, H, self.hz, self.f, V)
         self.caps = Captions(self.L, WORDS, emphasis={"1859", "SUN", "STORM", "TODAY", "FLARE", "17.6", "EARTH", "ERUPTED",
-                                                       "CARIBBEAN", "SPARKED", "TRANSFORMERS", "DARK", "MONTHS", "GPS", "PHONES",
+                                                       "CARIBBEAN", "SPARKED", "DARK", "MONTHS", "GPS", "PHONES",
                                                        "TRILLIONS", "2012", "NINE", "WHEN"})
         yy, xx = np.mgrid[0:H, 0:W].astype(f32)
         self.xx, self.yy = xx, yy
@@ -256,7 +256,7 @@ class Scene:
         fade = 1 - ramp(t, T_FADE0, T_FADE1)
         lvl *= fade; prog = prog * (0.55 + 0.45 * fade)
         pulse = 1 + 0.22 * noise1(t, 3, 1.7, 3) + 0.08 * noise1(t, 4, 8.0, 1)
-        pulse += sum(0.9 * math.exp(-((t - ts) / 0.18) ** 2) * (1 if t > ts else 1.0) for ts in SURGES)
+        pulse += sum((0.45 if ts == SURGES[0] else 0.9) * math.exp(-((t - ts) / 0.18) ** 2) for ts in SURGES)
         return night, lvl * pulse, prog
 
     def beam_layer(self, t, k):
@@ -302,7 +302,7 @@ class Scene:
         aur, mean = self.aur.render(t, lvl, prog, storm=1.0, crown=1.0)
         img = img + aur
         if T_ERUPT - 0.05 < t < T_ERUPT + 1.0:                              # eruption flash
-            img = img + 1.0 * math.exp(-(t - T_ERUPT + 0.05) / 0.16) * np.array([0.6, 1.0, 0.8], f32)
+            img = img + 0.35 * math.exp(-(t - T_ERUPT + 0.05) / 0.12) * np.array([0.55, 1.0, 0.75], f32) * self.el[..., None]
         return img, mean
 
     def flash(self, t):
@@ -466,7 +466,24 @@ def run(vertical, stills=None):
     enc.close(); print("done", time.time() - t0, "DUR", DUR)
 
 
+def patch(vertical, ranges):
+    """re-render only frames inside `ranges` [(t0, t1)], copying the others from the existing render (as in S1)"""
+    import subprocess
+    sc = Scene(vertical); tag = "vert" if vertical else "wide"
+    W, H = sc.L.W, sc.L.H; src = os.path.join(SCR, f"video_{tag}.mp4"); old = src.replace(".mp4", "_prev.mp4")
+    os.replace(src, old)
+    dec = subprocess.Popen(["ffmpeg", "-v", "error", "-i", old, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    enc = Encoder(src, W, H, FPS, crf=17)
+    for i in range(int(round(DUR * FPS))):
+        buf = dec.stdout.read(W * H * 3); t = i / FPS
+        if any(a <= t <= b for a, b in ranges) or len(buf) < W * H * 3: enc.write(sc.frame(t))
+        else: enc.p.stdin.write(buf)
+    enc.close(); dec.wait(); os.remove(old); print("patched")
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "patch":
+        patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"
     st = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else None
     run(vert, st)

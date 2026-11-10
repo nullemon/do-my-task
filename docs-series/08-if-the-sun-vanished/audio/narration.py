@@ -1,6 +1,6 @@
 # Narration for "IF THE SUN VANISHED RIGHT NOW". (key, subtitle text). Timing is locked after TTS (timeline.py).
 LINES = [
- ("hook1", "The Sun has just vanished. And you have no idea."),
+ ("hook1", "The Sun has just vanished. And for eight minutes and twenty seconds, you will not notice a thing."),
  ("hook2", "Not exploded. Not burned out. Simply gone. This is what happens next, minute by minute."),
  ("still", "For now, nothing changes. The Sun is still up there in the sky, shining. You are looking at light that had already left it, and that light takes eight minutes and twenty seconds to cross the gap."),
  ("grav", "Stranger still, the Earth keeps circling a star that is no longer there. Gravity is not instant. Changes in it travel at the speed of light, too. So for eight minutes, our planet orbits an empty point in space."),

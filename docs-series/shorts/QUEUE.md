@@ -14,7 +14,7 @@ STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Sh
 | S5 | Every star is a date (light-departure year on real stars; myth-bust: almost none are dead) | A_park, night | delivered |
 | S6 | If the 1859 solar storm hit today (auroras overhead, then city lights fail) | C_city | delivered |
 | S7 | What if Earth had rings? | B_valley | delivered |
-| S8 | When you see the Sun touch the horizon, it's already gone (refraction) | B_valley | in progress |
+| S8 | When you see the Sun touch the horizon, it's already gone (refraction) | B_valley | delivered |
 | S9 | What if Betelgeuse exploded tonight? | A2_park | delivered |
 | S10 | Your sky in 1 million years (real proper motions, HYG catalogue) | B_valley, night | in progress (A2_park) |
 | S11 | Planets at the Moon's distance | B_valley | delivered |
@@ -25,5 +25,5 @@ NOTE: user loved S4 'Other Stars' format (locked shot, sky swaps huge real-size 
 
 USER: at the very end, deliver ZIP(s) of all thumbnails (every docs-series/*/out and shorts/*/out thumb*.jpg). Keep all thumbnails until then.
 | S14 | What if other moons replaced our Moon? (swap format) | A2_park | in progress |
-| S15 | What if other planets orbited where Earth is (their skies) | ? | idea |
+| S15 | What if other planets orbited where Earth is (their skies) | ? | skipped (overlaps doc 13) |
 | S16 | Famous nebulas if they were in our sky | ? | in progress (C_city) |

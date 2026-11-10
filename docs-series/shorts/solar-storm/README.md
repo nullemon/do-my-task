@@ -71,5 +71,5 @@ turning into laser spokes. It is then remapped to the screen. Overlapping folds 
 
 Scratch: `.../scratchpad/series/S6-solar-storm/`. Outputs: `out/` (git-ignored).
 
-Pipeline: `audio/gen_voice.py` → `audio/mix.py` → `short.py vert` → `encode.sh vert` → `short.py wide` →
+Pipeline: `audio/gen_voice.py` → `audio/mix.py` → `short.py vert` (`short.py patch vert t0:t1,…` re-renders ranges) → `encode.sh vert` → `short.py wide` →
 `encode.sh wide` → `thumbnail.py vert` / `thumbnail.py wide`.

@@ -32,8 +32,8 @@ LAWN_SRC = 1324          # far edge of the lawn (source row)
 VAN_SRC = 1300           # vanishing line of the lawn plane (source row), slightly above the far edge
 F_SRC = 1000.0           # plate focal length (source px), camera height 1.3 m
 CAM_H = 1.3
-SH_EL = 22.0            # light elevation used for the tree shadows (deg, stylised low: long shadows)
-LAMP_EL = 9.0           # ... and for the lamp-post shadows
+SH_EL = 19.0            # light elevation used for the shadows (deg, stylised low: long shadows)
+LAMP_EL = 7.0           # the far lamp posts get an even lower one so their thin shadows reach across the lawn
 FPS = 30
 LEAD, TAIL = 0.25, 1.30
 LST0 = 5.55              # local sidereal time (h): Orion just east of the meridian, upright, due south
@@ -280,7 +280,7 @@ class Scene:
         f = fg.flat; yl = lum(f)[..., None]
         self.fg_night = ((f * 0.40 + yl * 0.60) * np.array([0.22, 0.22, 0.52], f32) * 1.25).astype(f32)
         self.fg_day = (fg.rgb * np.array([0.98, 1.0, 1.04], f32)).astype(f32)
-        self.lit_alb = np.clip(f * 0.55 + yl * 0.45, 0, 1).astype(f32)
+        self.lit_alb = np.clip(f * 0.40 + yl * 0.60, 0, 1).astype(f32)
         self.shadow, self.lawn, self.fill = self._shadows()
         a2 = fg.a; sh = np.zeros_like(a2); sh[8:] = a2[:-8]
         self.rim = (cv2.GaussianBlur(np.clip(a2 - sh, 0, 1), (0, 0), 3.0) * a2).astype(f32)
@@ -302,65 +302,51 @@ class Scene:
         return out
 
     def _shadows(self):
-        """shadows of the trees, hedge and house (ray-marched) and of the lamp posts (analytic) on the lawn, cast by the
-        supernova point. 2.5-D: lawn plane Z = f h / (y - y_v); every occluder pixel gets the depth of its ground contact;
-        rays from every lawn pixel are marched towards the light and tested against the plate in screen space. Done in SOURCE
-        px (cached), then warped like the plate. Light azimuth from the star's screen x; elevation kept low (stylised:
-        SH_EL for the trees, LAMP_EL for the lamp posts) so the shadows run long towards the camera."""
+        """clean ground-plane shadows cast by the supernova point: the conifer (a serrated spear), the three lamp posts
+        (thin strips ending in the lamp head) and the big tree's trunk. Lawn plane Z = f h / (y - y_v); each object is a
+        vertical profile (height, half-width) standing at its ground contact; every point at height z lands on the lawn
+        z * cot(el) further from the light (towards the camera), then is projected back into the plate. Light azimuth from
+        the star's screen x; elevation SH_EL (stylised low, so the shadows run long). Crisp at the base, softening further
+        out. Built in SOURCE px at 4x, then warped like the plate."""
         im = np.asarray(Image.open(FG_PATH).convert("RGBA"), f32) / 255.0
         a = im[..., 3]; sh_, sw_ = a.shape
         cxs = sw_ / 2
         xs = self.C[0] / self.fg.s
         az = math.atan((xs - cxs) / F_SRC)
-        cache = os.path.join(SCR, f"shadow_{int(round(xs))}_{SH_EL:.1f}_{LAMP_EL:.1f}.npz")
         yy, xx = np.mgrid[0:sh_, 0:sw_].astype(f32)
         lawn = (a > 0.5) & (yy > LAWN_SRC) & ~((xx < 52) & (yy < 1392))
         occ = (a > 0.5) & ~lawn
-        if os.path.exists(cache):
-            S = np.load(cache)["S"]
-        else:
-            lampm = np.zeros(a.shape, bool)
-            for lx, ly, by in LAMPS_SRC: lampm |= (np.abs(xx - lx) < 9) & (yy > ly - 16) & (yy < by + 2)
-            occ_t = occ & ~lampm
-            base = np.full(a.shape, LAWN_SRC - 2, f32)
-            base[(xx < 425) & (yy < 1392)] = 1384                                   # big tree: trunk base
-            base[(xx > 355) & (xx < 595) & (yy > 925) & (yy < LAWN_SRC)] = 1318     # conifer
-            zocc = F_SRC * CAM_H / np.maximum(base - VAN_SRC, 1.0)
-            el = math.radians(SH_EL)
-            Ld = np.array([math.sin(az) * math.cos(el), math.sin(el), math.cos(az) * math.cos(el)])
-            # supersampled lawn (2x2 per source px)
-            ly_, lx_ = np.nonzero(lawn)
-            S2 = np.zeros((sh_ * 2, sw_ * 2), f32)
-            for oy, ox in ((0.25, 0.25), (0.25, 0.75), (0.75, 0.25), (0.75, 0.75)):
-                py = ly_ + oy - 0.5; px = lx_ + ox - 0.5
-                Z = F_SRC * CAM_H / (py - VAN_SRC); X = (px - cxs) * Z / F_SRC
-                shadow = np.zeros(len(py), bool)
-                for sstep in np.geomspace(0.10, 300, 700):
-                    Xq = X + sstep * Ld[0]; Yq = sstep * Ld[1]; Zq = Z + sstep * Ld[2]
-                    xq = np.round(cxs + F_SRC * Xq / Zq).astype(np.int32); yq = np.round(VAN_SRC + F_SRC * (CAM_H - Yq) / Zq).astype(np.int32)
-                    ok = (xq >= 0) & (xq < sw_) & (yq >= 0) & (yq < sh_) & ~shadow
-                    xi, yi = xq[ok], yq[ok]
-                    hit = occ_t[yi, xi] & (np.abs(Zq[ok] - zocc[yi, xi]) < (2.0 + 0.10 * zocc[yi, xi]))
-                    shadow[np.where(ok)[0][hit]] = True
-                S2[(ly_ * 2 + int(oy * 2)), (lx_ * 2 + int(ox * 2))] = shadow
-            S = cv2.resize(S2, (sw_, sh_), interpolation=cv2.INTER_AREA)
-            # lamp posts: thin dark strips on the ground running away from the light, with the lamp head at the end
-            Lp = np.zeros((sh_ * 4, sw_ * 4), np.uint8)
-            kk = 1 / math.tan(math.radians(LAMP_EL))
-            for lx, ly, by in LAMPS_SRC:
-                Zb = F_SRC * CAM_H / (by - VAN_SRC); Xb = (lx - cxs) * Zb / F_SRC; Hh = (by - ly) * Zb / F_SRC
-                for u in np.linspace(0, 1, 400):
-                    hgt = Hh * u
-                    X = Xb - hgt * kk * math.sin(az); Z = Zb - hgt * kk * math.cos(az)
-                    if Z < 0.6: break
-                    x = cxs + F_SRC * X / Z; y = VAN_SRC + F_SRC * CAM_H / Z
-                    w = (0.45 if u < 0.95 else 0.9) * F_SRC / Z * 0.5
-                    cv2.ellipse(Lp, (int(x * 4), int(y * 4)), (max(1, int(w * 4)), max(1, int(w * 4 * CAM_H / max(Z, 1) * 0.6 + 2))), 0, 0, 360, 255, -1)
-            Lp = cv2.resize(Lp.astype(f32) / 255, (sw_, sh_), interpolation=cv2.INTER_AREA) * lawn
-            S = np.maximum(S, Lp)
-            S = cv2.GaussianBlur(S.astype(f32), (0, 0), 0.6)
-            np.savez(cache, S=S.astype(f32))
-        S = smooth(0.30, 0.70, cv2.GaussianBlur(S, (0, 0), 2.6)).astype(f32)          # round off the marching steps
+        kk = 1 / math.tan(math.radians(SH_EL)); sa, ca = math.sin(az), math.cos(az)
+        Q = 4; P = np.zeros((sh_ * Q, sw_ * Q), np.uint8)
+        def scr(X, Z): return cxs + F_SRC * X / Z, VAN_SRC + F_SRC * CAM_H / Z
+        def cast(xb, yb, ztop_px, prof, n=300, kk=kk):
+            """object standing at source (xb, yb); its top at source row ztop_px; prof(u) -> half-width [m] at height u"""
+            Zb = F_SRC * CAM_H / (yb - VAN_SRC); Xb = (xb - cxs) * Zb / F_SRC; Hh = (yb - ztop_px) * Zb / F_SRC
+            L, R = [], []
+            for u in np.linspace(0, 1, n):
+                X = Xb - Hh * u * kk * sa; Z = Zb - Hh * u * kk * ca
+                if Z < 0.4: break
+                w = prof(u)
+                xl, yl = scr(X - w * ca, Z + w * sa); xr, yr = scr(X + w * ca, Z - w * sa)
+                L.append((xl * Q, yl * Q)); R.append((xr * Q, yr * Q))
+            if len(L) > 1:
+                poly = np.array(L + R[::-1], np.float64)
+                poly = np.clip(poly, -1e5, 1e5).astype(np.int32)
+                cv2.fillPoly(P, [poly], 255, cv2.LINE_AA)
+        # conifer: tiered, serrated cone (source: base x 470, y 1318; top y 950)
+        rng = np.random.default_rng(4); jit = rng.uniform(0.85, 1.15, 64)
+        def conifer(u):
+            if u < 0.06: return 0.35                                                   # trunk
+            v = (u - 0.06) / 0.94; tier = (v * 9) % 1.0
+            return 4.2 * (1 - v) ** 1.1 * (0.72 + 0.28 * tier) * jit[int(v * 63)] + 0.05
+        cast(470, 1318, 950, conifer, 500)
+        for lx, ly, by in LAMPS_SRC:                                                   # lamp posts + heads
+            cast(lx, by, ly, lambda u: 0.80 if u > 0.94 else 0.42, 600, 1 / math.tan(math.radians(LAMP_EL)))
+        cast(22, 1384, 1050, lambda u: 0.55, 200)                                     # big tree trunk
+        Ms = cv2.resize(P.astype(f32) / 255, (sw_, sh_), interpolation=cv2.INTER_AREA)
+        Mb = cv2.GaussianBlur(Ms, (0, 0), 3.0)
+        w = 0.7 * np.clip((yy - LAWN_SRC) / 300.0, 0, 1) ** 0.8                            # soften away from the bases
+        S = (Ms * (1 - w) + Mb * w) * lawn
         Lm = cv2.GaussianBlur(lawn.astype(f32), (0, 0), 0.7)
         fill = occ.astype(f32)                                                  # foliage / house / hedges: backlit
         fg = self.fg; M = np.array([[fg.s, 0, 0], [0, fg.s, fg.oy]], np.float64)
@@ -512,7 +498,7 @@ class Scene:
         if I > 0:
             c = vivid(bbcolor(T), 1.3); c = c / max(c.max(), 1e-4)
             Lk = min(I, 1.4) * 2.2
-            lit = self.lit_alb * c * Lk * (1 - self.shadow)[..., None] * self.lawn[..., None]
+            lit = self.lit_alb * c * Lk * (1 - 0.78 * self.shadow)[..., None] * self.lawn[..., None]
             back = self.lit_alb * c * Lk * 0.10 * self.fill[..., None]                       # backlit foliage: faint fill
             rim = self.rim[..., None] * c * Lk * 0.40
             base = base + lit + back + rim

@@ -193,7 +193,7 @@ class Scene:
         # dust motes (blast)
         dr = np.random.default_rng(14); n = 500
         self.mote = dict(x=dr.uniform(0, W, n), y=dr.uniform(0.0, 1.0, n) * H, sp=dr.uniform(500, 1600, n), sz=dr.uniform(0.3, 1, n))
-        emph = {"DINOSAUR-KILLER", "1,000 KM", "10 KM", "20 KM/S", "FLASH", "SUN", "FIREBALL", "SPACE", "HEAVES", "TEN", "RED-HOT",
+        emph = {"1,000 KM", "10 KM", "20 KM/S", "FLASH", "SUN", "FIREBALL", "SPACE", "HEAVES", "TEN", "RED-HOT",
                 "IGNITE", "BLAST", "YEARS", "VANISH", "HERE", "MOLTEN", "STAR"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         L.cap_y = 1010 if vertical else 590
@@ -241,17 +241,17 @@ class Scene:
             n = sample(self.N1, sp * Ln * 0.35 - t * 6, pp * 0.6) * 0.5 + sample(self.N2, sp * Ln * 0.9, pp * 1.5 + t * 3) * 0.3
             tex = np.clip(1 + 0.55 * n, 0.2, 2.0)
             core = np.exp(-(pp / (w * 0.45)) ** 2) * np.exp(-age / 0.5) * 6.0
-            glow = np.exp(-(pp / (w * 1.4)) ** 2) * (np.exp(-age / 1.0) * 2.6 + np.exp(-age / 3.5) * 0.6) * tex
-            halo = np.exp(-np.abs(pp) / (w * 3.5)) * np.exp(-age / 1.8) * 0.25
+            glow = np.exp(-(pp / (w * 1.9)) ** 2) * (np.exp(-age / 1.0) * 2.6 + np.exp(-age / 3.5) * 0.6) * tex
+            halo = np.exp(-np.abs(pp) / (w * 4.5)) * np.exp(-age / 1.8) * 0.45
             fade_in = np.clip((sp - s_e) * 25, 0, 1)
             m = (valid * fade_in * ent * (1 - ramp(t, T_IMP + 1.0, T_IMP + 3.4))).astype(f32)
             cool = np.clip(age / 1.2, 0, 1)[..., None]
-            ccore = np.array([1.0, 0.95, 0.85], f32) * (1 - cool) + np.array([1.0, 0.55, 0.18], f32) * cool
+            ccore = np.array([1.0, 0.78, 0.40], f32) * (1 - cool) + np.array([1.0, 0.40, 0.08], f32) * cool
             # chromatic train: red outer, blue-violet inner sheath
             ion = np.stack([np.exp(-(pp / (w * 1.25)) ** 2), np.exp(-(pp / (w * 0.9)) ** 2) * 0.55, np.exp(-(pp / (w * 0.75)) ** 2) * 1.15], -1)
             ion = np.stack([np.exp(-(pp / (w * 2.6)) ** 2), np.exp(-(pp / (w * 2.2)) ** 2) * 0.6, np.exp(-(pp / (w * 1.9)) ** 2) * 1.2], -1) - ion * 0.6
-            ionc = np.maximum(ion, 0) * (np.exp(-age / 2.5) * 0.9 * tex)[..., None] * np.array([0.40, 0.45, 1.0], f32)
-            lay += (core[..., None] * ccore + glow[..., None] * np.array([1.0, 0.45, 0.12], f32) + ionc + halo[..., None] * np.array([1.0, 0.5, 0.25], f32)) * m[..., None]
+            ionc = np.maximum(ion, 0) * (np.exp(-age / 2.5) * 0.35 * tex)[..., None] * np.array([0.15, 0.45, 1.0], f32)
+            lay += (core[..., None] * ccore + glow[..., None] * np.array([1.6, 0.42, 0.05], f32) + ionc + halo[..., None] * np.array([1.0, 0.5, 0.25], f32)) * m[..., None]
         # ---- head
         if t <= T_IMP + 0.02:
             hx, hy = float(head[0]), float(head[1])
@@ -267,7 +267,7 @@ class Scene:
                 comet = np.exp(-perp / (rc * 0.9 + 1.5)) * np.exp(-np.maximum(along, 0) / (rc * 6 + 2)) * (along > -rc) * ent * 1.4
                 bow = np.exp(-((d - rc * 1.4) / (rc * 0.5 + 0.8)) ** 2) * (along < 0) * ent * 0.8
                 v = np.exp(-(d / rc) ** 2) * 1.0 + np.exp(-d / (rc * 2.5 + 2)) * 0.12 + np.exp(-d / (rc * 10 + 8)) * 0.010
-                return (v * Ih)[..., None] * np.array([1.0, 0.92, 0.82], f32) + (comet * Ih * 0.12)[..., None] * np.array([1.0, 0.6, 0.25], f32) \
+                return (v * Ih)[..., None] * (np.array([1.0, 0.92, 0.82], f32) * (1 - ent) + np.array([1.0, 0.70, 0.35], f32) * ent) + (comet * Ih * 0.12)[..., None] * np.array([1.0, 0.6, 0.25], f32) \
                     + (bow * Ih * 0.10)[..., None] * np.array([0.6, 0.7, 1.0], f32)
             splat(lay, hx, hy, min(420, rc * 60 + 40), fn)
             # 4-point twinkling spikes while it is still a star
@@ -478,7 +478,9 @@ class Scene:
         sI = (P["sunI"] * 40 + winter * 5)
         splat(img, self.SUN[0], self.SUN[1], 60, lambda d, dx, dy: (smooth(9.5, 8.0, d) * sI + np.exp(-d / 14) * sI * 0.06)[..., None] * suncol)
         ast, alight = self.asteroid(t)
-        if ast is not None: img += self.up(ast)
+        if ast is not None:
+            al_ = np.clip(lum(ast) * 0.9, 0, 0.9)                                    # the plasma partly hides the sky behind it
+            img = img * (1 - self.up(al_)[..., None]) + self.up(ast)
         pl = self.plume(t, sky_amb, flash)
         if pl is not None:
             (x0, y0, x1, y1), col, al = pl

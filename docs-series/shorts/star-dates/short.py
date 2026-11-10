@@ -397,6 +397,7 @@ class Scene:
             x, y, ok = self.label_state(lb, t, lst)
             if not ok: continue
             a = ramp(t, tn - 0.05, tn + 0.12) * (1 - ramp(t, te, te + 0.45))
+            a *= float(np.clip(min(x + 20, W + 20 - x) / 140.0, 0, 1))                 # fade as the star leaves the frame
             if a <= 0.003: continue
             rr = (gal[2] * 0.42 if (key == "m31" and gal) else 26 * sc)
             pulse = 1 + 0.15 * math.sin(t * 6.0)
@@ -574,7 +575,24 @@ def run(vertical, stills=None):
     enc.close(); print("done", time.time() - t0, "DUR", DUR)
 
 
+def patch(vertical, ranges):
+    """re-render only frames inside `ranges` [(t0, t1)], copying the others from the existing render"""
+    import subprocess
+    sc = Scene(vertical); tag = "vert" if vertical else "wide"
+    W, H = sc.L.W, sc.L.H; src = os.path.join(SCR, f"video_{tag}.mp4"); old = src.replace(".mp4", "_prev.mp4")
+    os.replace(src, old)
+    dec = subprocess.Popen(["nice", "-n", "10", "ffmpeg", "-v", "error", "-i", old, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    enc = Encoder(src, W, H, FPS, crf=17)
+    for i in range(int(round(DUR * FPS))):
+        buf = dec.stdout.read(W * H * 3); t = i / FPS
+        if any(a <= t <= b for a, b in ranges) or len(buf) < W * H * 3: enc.write(sc.frame(t))
+        else: enc.p.stdin.write(buf)
+    enc.close(); dec.wait(); os.remove(old); print("patched")
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "patch":
+        patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     if sys.argv[1] == "info":
         print("DUR", DUR); [print(l["key"], l["start"], l["end"]) for l in PL]; sys.exit()
     vert = sys.argv[1] != "wide"

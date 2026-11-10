@@ -50,7 +50,7 @@ for k in range(260):
     o = bpy.data.objects.new("r", bm_[k % 6]); sc.collection.objects.link(o); o.location = (p[0], p[1], zat(*p) + 0.2 * r); o.scale = (r, r * rng.uniform(0.7, 1.2), r * rng.uniform(0.5, 0.9)); o.rotation_euler = tuple(rng.uniform(0, 6.28, 3))
 
 # ------------------------------------------------------------------ materials
-WHITE = simple("white", (0.80, 0.81, 0.82), rough=0.38, noise_bump=(3.0, 0.05))
+WHITE = simple("white", (0.86, 0.87, 0.88), rough=0.62, noise_bump=(3.0, 0.05))
 WHITE2 = simple("white2", (0.62, 0.63, 0.65), rough=0.45)
 GREY = simple("grey", (0.22, 0.23, 0.25), rough=0.5, metal=0.6)
 DARK = simple("dark", (0.03, 0.03, 0.035), rough=0.6)
@@ -61,7 +61,7 @@ REDL = simple("redl", (0, 0, 0), emit=(1.0, 0.08, 0.03), estr=30.0)
 MIRR = simple("mirr", (0.9, 0.9, 0.95), rough=0.05, metal=1.0)
 
 
-def dome(radius, base_h, slit_az, slit_half=math.radians(10), nseg=96, nring=40, at=(0, 0), z0=0.0, tel=True):
+def dome(radius, base_h, slit_az, slit_half=math.radians(13), nseg=96, nring=40, at=(0, 0), z0=0.0, tel=True):
     parts = []
     cx, cy = at
     # base drum: stacked rings with shadow gaps + vertical pilasters
@@ -163,11 +163,11 @@ def dome(radius, base_h, slit_az, slit_half=math.radians(10), nseg=96, nring=40,
         for sgn in (-1, 1):                                               # fork arms + pier
             strut(piv + lat * sgn * tube_r * 1.25 - up * 2.6, piv + lat * sgn * tube_r * 1.25 + up * 0.1, 0.32, WHITE)
         prim("cyl", WHITE2, loc=(cx, cy, zt - 1.6), scale=(tube_r * 1.6, tube_r * 1.6, 1.2), seg=32, smooth=True)
-        point(tuple(piv - fwd * 1.5 - up * 1.0), 60, (1.0, 0.12, 0.05), 0.4)            # dim red work light inside
+        point(tuple(piv - fwd * 1.8 - up * 0.3), 220, (1.0, 0.16, 0.06), 0.5)            # dim red work light inside
         exit_pt = piv + axis * tl * 1.0
     return exit_pt
 
-AZ = math.radians(-28)
+AZ = math.radians(-84)
 exit_pt = dome(5.2, 6.0, AZ, at=(0, 0), z0=zat(0, 0) - 0.2)
 # door + stair + lit window on the drum, facing the camera side
 z0 = zat(0, 0) - 0.2
@@ -193,8 +193,8 @@ prim("cyl", STEEL, loc=(mx_, my_, mz + 5), scale=(0.05, 0.05, 10), seg=10); prim
 prim("box", STEEL, loc=(mx_, my_, mz + 9.2), scale=(1.4, 0.04, 0.04)); point((mx_, my_, mz + 10.3), 25, (1.0, 0.1, 0.05), 0.1)
 
 # ------------------------------------------------------------------ light + camera
-sun((0.78, 0.10, 0.62), 1.5, (0.62, 0.74, 1.0), angle=1.0)            # moonlight from the upper right, toward the camera side
-cam = camera((-7.0, -23.0, z0 - 0.6), (2.2, 0.0, z0 + 9.5), lens=24, shift=(0.0, 0.0))
+sun((0.50, -0.62, 0.60), 3.0, (0.62, 0.74, 1.0), angle=1.0)            # moonlight from the upper right, toward the camera side
+print("cam ground", zat(-7.0, -23.0), "z0", z0); cam = camera((-7.0, -23.0, zat(-7.0, -23.0) + 1.3), (2.2, 0.0, z0 + 9.5), lens=24, shift=(0.0, 0.0))
 bpy.context.view_layer.update()
 far = exit_pt + (np.array([math.cos(AZ), math.sin(AZ), 0]) * math.cos(math.radians(52)) + np.array([0, 0, 1.0]) * math.sin(math.radians(52))) * 60
 json.dump(dict(exit=project(tuple(exit_pt)), far=project(tuple(far))), open(SCR + "/plates/observatory.json", "w"))

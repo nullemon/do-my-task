@@ -4,7 +4,7 @@ LINES = [
  ("hook2", "Billions of tonnes. More than every human being on Earth, combined. So what would it do, if you brought it home?"),
  ("hook3", "The honest answer is stranger than the question."),
  ("form1", "It begins with a giant star, at least eight times the mass of our Sun. For millions of years it shines. Then its core fills with iron, and iron gives no energy back."),
- ("form2", "The fire goes out. In less than a second, a core thousands of kilometres wide falls in on itself, to a ball about twenty kilometres across. The rest of the star is blown into space. A supernova."),
+ ("form2", "The fire goes out. In less than a second, a core thousands of kilometres wide falls in on itself, to a ball roughly twenty-five kilometres across. The rest of the star is blown into space. A supernova."),
  ("size1", "What is left behind is a neutron star. Here is one, to scale, above New York. About twenty-five kilometres across. A little longer than Manhattan."),
  ("size2", "And packed inside that sphere is more mass than the entire Sun."),
  ("dens1", "Ordinary atoms are almost entirely empty space. Here, that space has been crushed out. Electrons and protons are forced together into neutrons, packed about as tightly as the inside of an atomic nucleus."),

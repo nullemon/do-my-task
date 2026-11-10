@@ -214,20 +214,20 @@ def shot_giant(t, lt):
 
 
 def shot_sn(t, lt):
-    zo = ss(45.5, 51.0, t)
+    zo = ss(46.3, 51.8, t)
     R0 = hv(380, 400) * (1 + 0.010 * 13.4) * lerp(1.0, 0.42, zo); cx, cy = hv((W * 0.60, 520), (W / 2, 780))
     cx = lerp(cx, W / 2, zo); cy = lerp(cy, hv(520, 800), zo)
-    tb = 50.2                                              # shock breaks out of the star
+    tb = 51.0                                              # shock breaks out of the star
     tau = t - tb
     dim = 1 - 0.45 * ss(40.4, 43.5, t)
     star_a = 1 - ss(0.0, 1.6, tau)
     img = rsg_base(t, cx, cy, R0, gain=dim * star_a + 0.001) if star_a > 0.004 else rsg_sky().copy()
     # the collapsing core, seen as a glow shrinking to a point inside the star
-    c = ss(42.3, 47.6, t)
+    c = ss(42.3, 48.4, t)
     if t < tb + 1.5:
         g = (0.25 + 1.6 * c) * ss(41.5, 43.0, t) * (1 - ss(0.2, 1.5, tau))
         add_glint(img, cx, cy, g, (1.0, 0.86, 0.62), sig=lerp(R0 * 0.34, 5.0, c ** 0.7))
-        if c >= 1: glare(img, cx, cy, 0.5 * ss(47.6, 48.4, t) * (1 - ss(0.0, 1.2, tau)), s=1.4, col=(0.8, 0.9, 1.0))
+        if c >= 1: glare(img, cx, cy, 0.5 * ss(48.4, 49.2, t) * (1 - ss(0.0, 1.2, tau)), s=1.4, col=(0.8, 0.9, 1.0))
     if tau > -1.4:                                         # light of the shock climbing through the envelope, then the flash
         pre = ss(-1.4, 0.0, tau) * (1 - ss(0.0, 2.2, tau))
         add_glint(img, cx, cy, 2.4 * pre, (1.0, 0.93, 0.82), sig=R0 * lerp(0.35, 0.9, ss(-1.4, 0, tau)))
@@ -241,9 +241,9 @@ def shot_sn(t, lt):
     img = bloom(img, 0.7, 0.8)
     if tau > 0: img += np.array([1.0, 0.97, 0.92], F32) * 0.9 * math.exp(-tau / 0.45)
     T = Text()
-    cap(T, t, 42.0, 49.6, hv(["CORE COLLAPSE", "LESS THAN ONE SECOND"], ["CORE COLLAPSE", "LESS THAN ONE SECOND"]), hv(880, 1300))
-    cap(T, t, 45.4, 49.6, ["THOUSANDS OF KM  →  ≈ 20 KM"], hv(980, 1436), size=hv(24, 30), col=COOL)
-    T.put(hv((120, 900), (W / 2, 1330)), "SUPERNOVA", hv(60, 68), win(t, 52.6, 57.4, 0.8, 0.6), anchor=hv("l", "c"), wt="XL", track=hv(14, 10))
+    cap(T, t, 42.0, 50.4, hv(["CORE COLLAPSE", "LESS THAN ONE SECOND"], ["CORE COLLAPSE", "LESS THAN ONE SECOND"]), hv(880, 1300))
+    cap(T, t, 46.0, 50.4, ["THOUSANDS OF KM  →  ≈ 25 KM"], hv(980, 1436), size=hv(24, 30), col=COOL)
+    T.put(hv((120, 900), (W / 2, 1330)), "SUPERNOVA", hv(60, 68), win(t, 53.4, 57.4, 0.8, 0.6), anchor=hv("l", "c"), wt="XL", track=hv(14, 10))
     note(T, t, 42.0, 57.4, "ILLUSTRATION · TIME COMPRESSED")
     return T.add_to(img)
 

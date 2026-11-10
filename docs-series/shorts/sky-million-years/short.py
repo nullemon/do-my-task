@@ -63,12 +63,12 @@ E_KEYS_A = [(0.0, 0.0), (T_FF0, 0.0), (wt("ff", "BARNARD'S"), 3500.0), (wt("ff",
             (LN["ff"]["end"] + 0.1, 24000.0), (wt("dip", "TOGETHER"), 38000.0), (wt("dip", "DUBHE"), 58000.0),
             (wt("dip", "100,000"), 100000.0), (T_BROKEN, 150000.0), (T_SW2, 180000.0), (T_SW2 + SWEEP, 255000.0),
             (T_APART, 480000.0), (T_SW3 + 0.05, 1000000.0)]
-D_KEYS = [(T_SW3 + 0.05, T_PERI - 1000000.0), (wt("gj", "MILLION"), 60000.0), (wt("gj", "GLIESE 710"), 11000.0),
-          (wt("gj", "SKIMS"), 4200.0), (wt("gj", "SUN"), 2200.0), (wt("gj", "BRIGHTER"), 1200.0), (LN["gj"]["end"], 800.0),
-          (T_RW0, 700.0)]
+D_KEYS = [(T_SW3 + 0.05, T_PERI - 1000000.0), (wt("gj", "MILLION"), 40000.0), (wt("gj", "GLIESE 710"), 4000.0),
+          (wt("gj", "SKIMS"), 2400.0), (wt("gj", "SUN"), 1800.0), (wt("gj", "BRIGHTER"), 1350.0), (LN["gj"]["end"], 1150.0),
+          (T_RW0, 1100.0)]
 _ea = PchipInterpolator([k[0] for k in E_KEYS_A], [math.log10(k[1] + 300.0) for k in E_KEYS_A])
 _ed = PchipInterpolator([k[0] for k in D_KEYS], [math.log10(k[1]) for k in D_KEYS])
-E_RW_END = T_PERI - 700.0
+E_RW_END = T_PERI - 1100.0
 
 
 def E_of(t):
@@ -183,11 +183,11 @@ class Scene:
         if vertical:
             L.cap_y = 1330
             self.counter_xy = (W / 2, 315)
-            V = [(660, 1150, 12.3 * 15, 56.0, 6.0), (720, 830, 5.6 * 15, 0.0, 0.0), (560, 1120, 221.0, -1.1, -50.0)]
+            V = [(660, 1150, 12.3 * 15, 56.0, 6.0), (720, 830, 5.6 * 15, 0.0, 0.0), (720, 960, 221.0, -1.1, -72.0)]
         else:
             L.cap_y = 880; L.cap_size = 100
             self.counter_xy = (520, 175)
-            V = [(1330, 690, 12.3 * 15, 56.0, 38.0), (1400, 450, 5.6 * 15, 0.0, 0.0), (1200, 720, 221.0, -1.1, -62.0)]
+            V = [(1330, 690, 12.3 * 15, 56.0, 38.0), (1400, 450, 5.6 * 15, 0.0, 0.0), (1250, 680, 221.0, -1.1, -80.0)]
         self.views = [view_R(self.lens, *v) for v in V]
         self.mx = int(0.07 * W)
         self.caps = Captions(L, WORDS, emphasis={"FIXED", "BIG", "DIPPER", "MOVING", "BARNARD'S", "FASTEST", "FAMILY", "DUBHE",
@@ -701,7 +701,25 @@ def run(vertical, stills=None):
     enc.close(); print("done", time.time() - t0, "DUR", DUR)
 
 
+def patch(vertical, t_from):
+    """re-render frames with t >= t_from, copying the earlier ones from the existing render"""
+    import subprocess
+    sc = Scene(vertical); tag = "vert" if vertical else "wide"
+    W, H = sc.L.W, sc.L.H; src = os.path.join(SCR, f"video_{tag}.mp4"); old = src.replace(".mp4", "_prev.mp4")
+    os.replace(src, old)
+    dec = subprocess.Popen(["nice", "-n", "10", "ffmpeg", "-v", "error", "-i", old, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    enc = Encoder(src, W, H, FPS, crf=17)
+    for i in range(int(round(DUR * FPS))):
+        buf = dec.stdout.read(W * H * 3); t = i / FPS
+        if t >= t_from or len(buf) < W * H * 3: enc.write(sc.frame(t))
+        else: enc.p.stdin.write(buf)
+        if i % 60 == 0: print("patch", i, flush=True)
+    enc.close(); dec.wait(); os.remove(old); print("patched")
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "patch":
+        patch(sys.argv[2] != "wide", float(sys.argv[3])); sys.exit()
     if sys.argv[1] == "info":
         print("DUR", DUR); [print(l["key"], l["start"], l["end"]) for l in PL]
         for tt in np.arange(0, DUR, 0.5): print(f"{tt:5.2f}  E={E_of(tt):12.0f}  sh={shutter(tt):.3f}")

@@ -2,7 +2,7 @@
 
 The vertical cut is 1080×1920 at 30 fps and 36.47 s long. There is also a 16:9 recomposition at 1920×1080. It uses one
 **locked** tripod shot of the user's `A2_park.png` (big tree, conifer, house, street lamps) at night, with the lamps on.
-Everything happens in the sky. The real HYG sky fast-forwards from **YEAR 2026** to **YEAR 1,291,326** under a big
+Everything happens in the sky. The real HYG sky fast-forwards from **YEAR 2026** to **YEAR 1,290,926** under a big
 glowing counter that also reads out "N YEARS PER SECOND". Stars leave motion trails. Glowing stick figures stretch like
 rubber bands and snap. At the end a rainbow rewind sends everything back to 2026, and the last frame matches the first,
 so the Short loops. Captions are one big orange word at a time. There are no disclaimer captions (user rule).
@@ -21,7 +21,7 @@ so the Short loops. Captions are one big orange word at a time. There are no dis
 | 4.6–10 | → 26,000 | The counter starts with a riser and a hit, and every star streaks. **Barnard's Star** shoots across the top of the frame as a red comet, with the readout FASTEST STAR · 10.4″/YR. Its real track runs from Ophiuchus, past the celestial pole (~15,000 yr), to Auriga. |
 | 10–19.4 | → 160,000 | Velocity arrows show 60,000 years of motion: 5 cyan arrows point the same way (URSA MAJOR MOVING GROUP · 5 STARS · SAME MOTION), and the arrows for DUBHE and ALKAID point elsewhere. Faint path trails grow. The lines heat up, vibrate, and snap on "broken" with recoil, sparks and bursts. |
 | 19.2–23.7 | → 1,000,000 | The sky sweeps to **Orion**. BETELGEUSE and BELLATRIX drift apart (7.5° → 17.4° in 1 Myr), and two lines snap. The vivid Milky Way crosses the frame. |
-| 23.7–31.9 | → 1,291,300 | The sky sweeps to **Gliese 710**. It brightens from mag ~6 to −3.1 and streaks ~60° across the sky as it passes the Sun. The readout shows the live MAG and distance in au, ending at ~10,700 AU. A huge glare with spikes and a rainbow halo. The park gets only a faint silver tint (lead's note). |
+| 23.7–31.9 | → 1,290,900 | The sky sweeps to **Gliese 710**. It rises over the conifer, brightens from mag ~6 to −3.0 and streaks ~30° across the sky as it swings past the Sun. The readout shows the live MAG and distance in au, ending at ~11,000 AU, 1,100 years before closest approach. A huge glare with spikes and a rainbow halo. The park gets only a faint silver tint (lead's note). |
 | 31.7–34.6 | held | The sky sweeps back to the Dipper's place. The 2026 Dipper appears as a dashed ghost, and the 7 stars' million-year paths fan out across the sky ("temporary"). |
 | 34.6–35.7 | → 2026 | A rainbow vortex REWIND (log-speed). Everything races back, then the Dipper re-links with a white flash. |
 | 35.7–36.47 | 2026 | The opening frame again (loop). |

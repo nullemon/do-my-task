@@ -36,6 +36,7 @@ def sky_half(pl, skyfn):
     return up(skyfn(pl.ELh, pl.AZh))
 
 # ------------------------------------------------------------------------------------------------ HUD
+# last field: basis of each reconstruction (kept for the README; no longer drawn on screen, by the series rule against disclaimer captions)
 INFO = dict(
     earth=("EARTH", "1.00", "8.3 LIGHT-MINUTES", "ONE DAY  24 H", "COMPUTER-GENERATED LIKE THE OTHERS, FOR A FAIR COMPARISON"),
     mars=("MARS", "0.66", "12.7 LIGHT-MINUTES", "ONE DAY  24 H 40 MIN", "ARTIST'S RECONSTRUCTION BASED ON ROVER SUNSET IMAGES (SPIRIT, CURIOSITY, PERSEVERANCE)"),
@@ -69,20 +70,14 @@ def hud(ov, w, a, speed="TIME-LAPSE", extra=None):
         ov.text(x, y + 100, "SUN'S APPARENT SIZE", size=17, a=0.8 * a, track=0.26); ov.text(x + 330, y + 96, size + " x", size=23, wt="Regular", col=(255, 214, 120), a=a, track=0.1); ov.text(x + 330 + 16 * len(size) + 44, y + 100, "EARTH'S", size=17, a=0.8 * a, track=0.26)
         ov.text(x, y + 134, "DISTANCE FROM EARTH" if w == "kepler" else "DISTANCE FROM THE SUN", size=17, a=0.8 * a, track=0.26); ov.text(x + 330, y + 134, dist, size=17, wt="Regular", a=a, track=0.2)
         ov.text(x, y + 168, day, size=17, a=0.8 * a, track=0.26)
-        ov.text(W - 96, y + 6, "SAME LENS ON EVERY WORLD", size=15, a=0.75 * a, track=0.3, anchor="r"); ov.text(W - 96, y + 32, "24-DEGREE FIELD OF VIEW  .  " + speed, size=15, a=0.75 * a, track=0.3, anchor="r")
-        ov.text(W / 2, H - 58, credit, size=15, wt="Regular", a=0.92 * a, track=0.24, anchor="m")
-        return [(40, 40, 760, 320, 0.30 * a), (W - 600, 50, W - 40, 180, 0.2 * a), (W / 2 - 9.5 * len(credit) - 30, H - 76, W / 2 + 9.5 * len(credit) + 30, H - 30, 0.5 * a)]
+        return [(40, 40, 760, 320, 0.30 * a)]
     x, y = 70, int(H * 0.125)
     ov.text(x, y, name, size=76, wt="ExtraLight", a=a, track=0.3, display=True)
     ov.line([(x, y + 108), (W - 70, y + 108)], a=0.5 * a, width=1.2)
     ov.text(x, y + 128, "SUN'S APPARENT SIZE", size=24, a=0.85 * a, track=0.22); ov.text(x + 400, y + 122, size + " x", size=32, wt="Regular", col=(255, 214, 120), a=a, track=0.1); ov.text(x + 400 + 23 * len(size) + 60, y + 128, "EARTH'S", size=24, a=0.85 * a, track=0.22)
     ov.text(x, y + 174, "DISTANCE FROM EARTH" if w == "kepler" else "DISTANCE", size=24, a=0.85 * a, track=0.22); ov.text(x + 400, y + 174, dist.replace("ABOUT ", ""), size=24, wt="Regular", a=a, track=0.16)
     ov.text(x, y + 220, day, size=24, a=0.85 * a, track=0.22)
-    ov.text(x, y + 266, "SAME 24-DEGREE LENS  .  " + speed, size=20, a=0.7 * a, track=0.24)
-    words = credit.split(" "); l1 = []; 
-    while words and len(" ".join(l1 + [words[0]])) < 46: l1.append(words.pop(0))
-    ov.text(W / 2, H * 0.80 - 74, " ".join(l1), size=19, wt="Regular", a=0.92 * a, track=0.2, anchor="m"); ov.text(W / 2, H * 0.80 - 44, " ".join(words), size=19, wt="Regular", a=0.92 * a, track=0.2, anchor="m")
-    return [(0, y - 60, W, y + 330, 0.26 * a), (0, H * 0.80 - 86, W, H * 0.80 - 10, 0.5 * a)]
+    return [(0, y - 60, W, y + 290, 0.26 * a)]
 def caption(ov, txt, a, sub=None, y=None):
     """one fact line, low centre (16:9) or above the credit (9:16)"""
     if a <= 0.004: return []
@@ -363,7 +358,7 @@ CAPS = dict(
     mars=[_c("mars1", 5.5, "mars1", 0.8, "AIR PRESSURE: LESS THAN 1% OF EARTH'S", "BUT FULL OF FINE RUST-COLOURED DUST"),
           _c("mars2", 1.0, "mars2", 0.8, "BUTTERSCOTCH SKY, BLUE SUNSET", "THE DUST SCATTERS BLUE LIGHT FORWARD, AROUND THE SUN")],
     mercury=[_c("merc1", 1.0, "merc1", 0.6, "ALMOST NO AIR.  NO COLOUR.  A BLACK SKY", "THE SUN: UP TO 3.3 TIMES WIDER THAN FROM EARTH"),
-             _c("merc2", 7.0, "merc2", 1.2, "NEAR PERIHELION THE SUN CAN SET TWICE", "SEEN ONLY FROM SOME LONGITUDES.  HEAVILY SPEEDED UP")],
+             _c("merc2", 7.0, "merc2", 1.2, "NEAR PERIHELION THE SUN CAN SET TWICE", "SEEN ONLY FROM SOME LONGITUDES")],
     venus=[_c("venus1", 5.0, "venus1", 0.6, "THE SUN'S DISC IS NEVER SEEN FROM THE SURFACE", "DAYLIGHT IS A DIM ORANGE OVERCAST"),
            _c("venus2", 3.0, "venus2", 1.0, "SUNRISE TO SUNRISE: 117 EARTH DAYS", "VENUS SPINS BACKWARDS.  THE SUN WOULD RISE IN THE WEST")],
     jupiter=[_c("jup", 6.5, "jup", -7.5, "27 TIMES FAINTER THAN ON EARTH", "THE SUN IS ONE FIFTH AS WIDE"),
@@ -371,12 +366,12 @@ CAPS = dict(
     saturn=[_c("sat", 5.0, "sat", 1.6, "THE RINGS, SEEN FROM THE CLOUD TOPS", "WATER ICE, FROM DUST GRAINS TO BOULDERS")],
     uranus=[_c("ura", 4.5, "ura", -8.5, "NEAR A POLE: 42 YEARS OF DAYLIGHT, THEN 42 OF NIGHT", "THE SUN CIRCLES THE SKY ONCE EVERY 17 HOURS"),
             (S_["ura"] + 16.0, E_["ura"] - 6.6, "THE DISC SETS WITHIN DAYS", "THE TWILIGHT CAN LINGER FOR YEARS"),
-            (E_["ura"] - 5.6, E_["ura"] + 1.5, "NEPTUNE: THE SUN IS 1/30 THE WIDTH", "ABOUT FOUR LIGHT-HOURS FROM THE SUN.  NOT SHOWN SEPARATELY")],
+            (E_["ura"] - 5.6, E_["ura"] + 1.5, "NEPTUNE: THE SUN IS 1/30 THE WIDTH", "ABOUT FOUR LIGHT-HOURS FROM THE SUN")],
     titan=[_c("titan1", 7.5, "titan1", 0.8, "DAYLIGHT ABOUT 1,000 TIMES DIMMER THAN ON EARTH", "MEASURED BY THE HUYGENS LANDER IN 2005"),
            _c("titan2", 0.8, "titan2", 0.8, "THE HAZE PASSES RED LIGHT AND BLOCKS BLUE", "THE SUN NEVER SHOWS A CLEAN EDGE")],
     pluto=[_c("pluto1", 4.5, "pluto1", 0.8, "THE SUN IS A POINT OF LIGHT", "YET ABOUT 250 TIMES BRIGHTER THAN OUR FULL MOON"),
            _c("pluto2", 5.5, "pluto2", 1.0, "BLUE HAZE, LAYER UPON LAYER", "SEEN BY NEW HORIZONS IN 2015")],
-    kepler=[_c("kep", 3.5, "kep", 0.8, "TWO SUNS: AN ORANGE DWARF AND A RED DWARF", "KEPLER-16 b IS A GAS GIANT.  THIS MOON IS IMAGINED")],
+    kepler=[_c("kep", 3.5, "kep", 0.8, "TWO SUNS: AN ORANGE DWARF AND A RED DWARF", "KEPLER-16 b ITSELF IS A GAS GIANT, 245 LIGHT-YEARS AWAY")],
 )
 SPEED = dict(jupiter="REAL TIME")
 def world_shot(w, t, shot=None, se=None):
@@ -411,11 +406,11 @@ def sh_mars0(t):
     ov = Overlay(); k = fade(t, 0.25, b - 0.1, 0.5, 0.6)
     if not VERT:
         ov.text(W / 2, 150, "MARS SUNSETS ARE BLUE", size=84, wt="Light", a=k, track=0.2, anchor="m", display=True)
-        ov.text(W / 2, 268, "PHOTOGRAPHED BY NASA'S ROVERS.  THIS VIEW IS A RECONSTRUCTION", size=20, a=0.9 * fade(t, 1.6, b - 0.1, 0.6, 0.6), track=0.3, anchor="m")
+        ov.text(W / 2, 268, "PHOTOGRAPHED BY NASA'S ROVERS", size=20, a=0.9 * fade(t, 1.6, b - 0.1, 0.6, 0.6), track=0.3, anchor="m")
         y = scrim(y, 200, 110, W - 200, 320, 0.25 * k)
     else:
         ov.text(W / 2, H * 0.15, "MARS SUNSETS", size=92, wt="Light", a=k, track=0.14, anchor="m", display=True); ov.text(W / 2, H * 0.15 + 120, "ARE BLUE", size=92, wt="Light", a=k, track=0.14, anchor="m", display=True)
-        k2 = 0.9 * fade(t, 1.6, b - 0.1, 0.6, 0.6); ov.text(W / 2, H * 0.15 + 270, "PHOTOGRAPHED BY NASA'S ROVERS", size=24, a=k2, track=0.24, anchor="m"); ov.text(W / 2, H * 0.15 + 308, "THIS VIEW IS A RECONSTRUCTION", size=24, a=k2, track=0.24, anchor="m")
+        k2 = 0.9 * fade(t, 1.6, b - 0.1, 0.6, 0.6); ov.text(W / 2, H * 0.15 + 270, "PHOTOGRAPHED BY NASA'S ROVERS", size=24, a=k2, track=0.24, anchor="m")
         y = scrim(y, 0, H * 0.12, W, H * 0.15 + 360, 0.25 * k)
     return ov.apply(y)
 def sh_intro(t):
@@ -440,7 +435,7 @@ _grid = {}
 def sh_recap(t):
     a, b = TL.SH["recap"]; u = (t - a) / (b - a)
     if "g" not in _grid:
-        g = np.zeros((H, W, 3), f32); gap = hv(14, 12); mx, my0, my1 = hv(150, 40), hv(120, int(H * 0.14)), hv(150, int(H * 0.24))
+        g = np.zeros((H, W, 3), f32); gap = hv(14, 12); mx, my0, my1 = hv(150, 40), hv(70, int(H * 0.13)), hv(170, int(H * 0.24))
         tw = (W - 2 * mx - 2 * gap) // 3; th = (H - my0 - my1 - 2 * gap) // 3; pos = []
         for i, w in enumerate(GRID):
             st = still(w); sc = max(tw / W, th / H); im = cv2.resize(st, (int(W * sc + 1), int(H * sc + 1)), interpolation=cv2.INTER_AREA)
@@ -455,11 +450,8 @@ def sh_recap(t):
         k = ease((t - a - 0.5 - 0.22 * i) / 0.7); ov.text(x0 + 14, y0 + th - hv(34, 40), INFO[GRID[i]][0], size=hv(16, 19), a=0.95 * k, track=0.3)
     k = fade(t, a + 0.4, b, 0.8, 0.5); k2 = fade(t, S_["end1"] + 3.5, b, 0.8, 0.5)
     if not VERT:
-        ov.text(W / 2, 46, "EVERY VIEW HERE IS A RECONSTRUCTION BUILT FROM MEASUREMENTS", size=22, a=k, track=0.3, anchor="m")
-        ov.text(W / 2, H - 112, "NO HUMAN HAS EVER STOOD UNDER ANY OF THESE SKIES", size=26, a=k2, track=0.3, anchor="m")
-        ov.text(W / 2, H - 66, "FROM THE SURFACE, ROBOTS HAVE PHOTOGRAPHED THE SUNSET ON MARS.  SPACECRAFT HAVE WATCHED IT ON TITAN, SATURN AND PLUTO FROM ABOVE", size=14, a=0.85 * k2, track=0.22, anchor="m")
+        ov.text(W / 2, H - 98, "NO HUMAN HAS EVER STOOD UNDER ANY OF THESE SKIES", size=28, a=k2, track=0.3, anchor="m")
     else:
-        ov.text(W / 2, H * 0.14 - 78, "EVERY VIEW HERE IS A RECONSTRUCTION", size=26, a=k, track=0.22, anchor="m"); ov.text(W / 2, H * 0.14 - 40, "BUILT FROM MEASUREMENTS", size=26, a=k, track=0.22, anchor="m")
         ov.text(W / 2, H * 0.76 + 14, "NO HUMAN HAS EVER STOOD", size=32, a=k2, track=0.22, anchor="m"); ov.text(W / 2, H * 0.76 + 60, "UNDER ANY OF THESE SKIES", size=32, a=k2, track=0.22, anchor="m")
     return ov.apply(zoom(y, 1.0 + 0.02 * u, W / 2, H / 2))
 def sh_earth2(t):

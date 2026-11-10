@@ -12,15 +12,18 @@ and one big orange word at a time at mid-height, synced to the voice. There is a
 > eighteen. In a year, minus seventy-three. And Earth keeps orbiting perfectly. A frozen world, circling a hole you
 > can't even see.
 
-## Beats
-| t (s) | picture |
-|---|---|
-| 0–9.9 | Day: Rayleigh sky, sun with bloom and faint optical ghosts, slow push-in. The clock `T + 0:00 → 8:20` starts at "now". Ticks and a riser build. |
-| 9.9 | "OUT": the Sun and the blue sky vanish together. Sub-bass thump, near-silence, then the starlit scene fades up as the camera adapts. The lamps switch on about 2 s later. |
-| 12–17 | Stars and the Milky Way in the middle of the day, with scintillation that is stronger near the horizon. The daylight shadows are flattened out of the lawn. Cold blue grade. |
-| 17.8–23 | Orbit diagram (not to scale): "same mass · same orbit". Then a reticle on the old Sun's spot: "black hole · ~6 km across · invisible to the eye". |
-| 24–28 | Telescope view grows out of that spot (4′ field, time-lapse): point-lens lensing of the stars behind it, with doubled and brightened stars and a faint galaxy stretched into a ring. Dashed guide at the Einstein radius. Caption: no disk, nothing falls in. |
-| 28–39.6 | Temperature counter (°C, plus day and °F). Frost creeps over the lawn and trees, with glints and an icy shimmer. A low hit lands on the last word. |
+## Versions
+- **B — locked camera (preferred)**: `out/sun-black-hole-short-locked.mp4` (9:16) and `out/sun-black-hole-16x9-locked.mp4`,
+  built by `short_locked.py` with the `mix.py locked` audio. One tripod frame for the whole Short. The Sun swells, flickers,
+  implodes to a point and flashes. Instant night, and stars fade in over ~1 s. The black hole hangs where the Sun was
+  (drawn about 450× larger than real). The real night sky is lensed around it with the exact point-lens map, and as the
+  stars drift past they split into image pairs; on "bending" a bright one lines up into a full Einstein ring. Facts sit
+  in the lower safe band. Then the frost, the countdown and the temperature counter.
+- **A — multi-shot**: `out/sun-black-hole-short.mp4`, built by `short.py`. The park is the anchor, with cut-aways to a
+  solar-telescope Sun (granulation, sunspot map, prominences), the implosion, the dark Earth on its unchanged orbit around
+  the lensing black hole, a telescope inset, and Earth icing over.
+- User rule: no disclaimer captions ("illustration", "enlarged", "time-lapse", "not to scale", "brightened"). Only
+  factual text appears on screen.
 
 ## Science notes and sources
 - **Event horizon.** The Schwarzschild radius is r_s = 2GM☉/c² = 2.95 km (GM☉ = 1.327×10²⁰ m³ s⁻², standard), so the
@@ -50,7 +53,7 @@ and one big orange word at a time at mid-height, synced to the voice. There is a
   over while the deep ocean stays liquid for a very long time. That part is not narrated, to keep the Short under 40 s.
 - **It cannot happen.** The Sun has far too little mass to collapse into a black hole. It will end as a white dwarf.
 
-## Honest liberties
+## Liberties (deliberately not captioned, per the user)
 The sky, stars and Milky Way are procedural, not a real star chart. Time is compressed: the clock, the lamps switching
 on after dark, a year of frost in about 10 s, and the lensing time-lapse. The camera "adapts" to night in about 2 s,
 where real eyes take minutes. The night foreground is a grade of the daylight photo, so faint traces of the daylight

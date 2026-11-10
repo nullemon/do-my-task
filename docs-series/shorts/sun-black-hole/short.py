@@ -358,7 +358,6 @@ class Scene:
             a_bh = fin if sh == "orbit" else ramp(t, t0 + 2.2, t0 + 2.8)
             if sh == "orbit":
                 lab("SAME MASS · SAME ORBIT", W / 2, top, fin, (195, 220, 255), int(fs * 1.15))
-        if sh == "freeze":
         # temperature counter
         show_temp = (t > T_COLD - 0.4) and t < T_CUT_END + 2.6
         if show_temp:

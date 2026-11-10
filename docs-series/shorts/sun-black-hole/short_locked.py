@@ -116,10 +116,7 @@ class Locked(A.Scene):
         def lab(txt, x, y, a, col=(225, 232, 245), size=fs, wt="SemiBold", tr=0.18):
             if a > 0.01: hud_text(out, txt, x, y, size, wt, col, a, tr)
         a = ramp(t, T_SW0 + 0.2, T_SW0 + 0.5) * (1 - ramp(t, T_OUT + 1.0, T_OUT + 1.5))
-        lab("TIME-COMPRESSED ILLUSTRATION", W / 2, top, a, (255, 196, 130))
         a = ramp(t, T_OUT + 2.5, T_OUT + 3.2)
-        lab("BLACK HOLE · SHOWN ~500× ENLARGED", bx, by + self.thE + 44, a * (1 - ramp(t, A.T_CUT_FREEZE, A.T_CUT_FREEZE + 0.4)) + a * 0.6 * ramp(t, A.T_CUT_FREEZE, A.T_CUT_FREEZE + 0.4), (255, 200, 140), int(fs * 0.9))
-        lab("STAR DRIFT: TIME-LAPSE", bx, by + self.thE + 44 + fs * 1.4, a * 0.75, (200, 212, 232), int(fs * 0.75))
         o0, o1 = LN["orbit"]["start"], LN["bh"]["start"]
         lab("SAME MASS · SAME ORBIT", W / 2, low, ramp(t, o0, o0 + 0.3) * (1 - ramp(t, o1 - 0.2, o1 + 0.1)), (195, 220, 255), int(fs * 1.15))
         b0, b1 = LN["bh"]["start"], LN["scope"]["start"]

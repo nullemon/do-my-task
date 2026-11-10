@@ -20,7 +20,6 @@ for w, col, size, y in (("WHAT IF THE SUN", (245, 245, 245), 92, 930), ("BECAME 
                         ("BLACK", ORANGE, 210, 1190), ("HOLE?", ORANGE, 210, 1385)):
     rgba, _ = word_layer(w, size, 1000, fill=col)
     composite(img, rgba, 540, y, 1.0)
-hud_text(img, "ILLUSTRATION · BLACK HOLE ENLARGED", 540, 1490, 26, "SemiBold", (215, 225, 240), 0.9, 0.18)
 os.makedirs(os.path.join(HERE, "out"), exist_ok=True)
 Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(HERE, "out", "thumb-vertical.jpg"), quality=92)
 print("ok")

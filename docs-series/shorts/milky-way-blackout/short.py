@@ -301,10 +301,6 @@ class Scene:
         lab("NEARLY 80% OF NORTH AMERICANS", top + fs * 1.7, a, (255, 190, 110), int(fs * 1.15), "Bold")
         lab("MORE THAN 1/3 OF HUMANITY", top + fs * 3.5, a, (255, 190, 110), int(fs * 1.15), "Bold")
         lab("FALCHI ET AL., SCIENCE ADVANCES (2016)", top + fs * 5.3, a * 0.75, (190, 200, 220), int(fs * 0.72))
-        # honest label on the payoff sky
-        m0 = T_MW0 + 0.8
-        a = ramp(t, m0, m0 + 0.6) * (1 - ramp(t, LN["cloud"]["start"] - 0.1, LN["cloud"]["start"] + 0.3))
-        lab("ILLUSTRATION  ·  STARS NOT TO SCALE", (L.safe_bot - 30) if L.vertical else 1030, a * 0.6, (200, 210, 230), int(fs * 0.70))
         self.caps.draw(out, t)
 
 

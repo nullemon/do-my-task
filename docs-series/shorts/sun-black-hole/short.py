@@ -335,7 +335,6 @@ class Scene:
         if s["marker"] > 0.01:
             cx, cy = self.cam_xy(t, *self.sun)
             hud_text(out, "BLACK HOLE · ~6 KM ACROSS", cx, cy + 62, int(L.hud_size * 0.40), "SemiBold", (255, 200, 140), s["marker"], 0.18)
-            hud_text(out, "invisible to the eye", cx, cy + 62 + L.hud_size * 0.62, int(L.hud_size * 0.36), "Regular", (220, 228, 240), s["marker"] * 0.85, 0.10)
         if s["orbit"] > 0.01:
             cx, cy = self.cam_xy(t, *self.sun)
             hud_text(out, "SAME MASS · SAME ORBIT", cx, cy - (300 * 0.26 + 70), int(L.hud_size * 0.42), "SemiBold", (190, 215, 255), s["orbit"], 0.2)
@@ -344,27 +343,22 @@ class Scene:
             cx, cy, r, a = self._inset_geom
             al = ramp(a, 0.6, 1.0)
             fs = int(L.hud_size * 0.36)
-            hud_text(out, "TELESCOPE VIEW · 3′ FIELD · TIME-LAPSE", cx, cy - r - fs * 1.5, fs, "SemiBold", (230, 236, 245), al, 0.16)
-            hud_text(out, "BLACK HOLE ENLARGED · EINSTEIN RING ≈ 1.4′", cx, cy + r + fs * 0.45, int(fs * 0.95), "SemiBold", (255, 196, 130), al, 0.10)
+            hud_text(out, "TELESCOPE VIEW", cx, cy - r - fs * 1.5, fs, "SemiBold", (230, 236, 245), al, 0.16)
+            hud_text(out, "EINSTEIN RING · REAL SIZE ≈ 1.4′", cx, cy + r + fs * 0.45, int(fs * 0.95), "SemiBold", (255, 196, 130), al, 0.10)
             hud_text(out, "NO DISK: NOTHING IS FALLING IN", cx, cy + r + fs * 1.75, int(fs * 0.85), "SemiBold", (215, 225, 240), al * 0.9, 0.12)
         # shot labels (small, honest)
         sh, t0 = s["shot"], s["t0"]; fs = int(L.hud_size * 0.40); top = L.safe_top + 40 if L.vertical else 70
         def lab(txt, x, y, a, col=(225, 232, 245), size=fs, wt="SemiBold", tr=0.18):
             if a > 0.01: hud_text(out, txt, x, y, size, wt, col, a, tr)
         fin = ramp(t, t0 + 0.1, t0 + 0.4)
-        if sh == "sun": lab("THE SUN · SOLAR-TELESCOPE VIEW", W / 2, top, fin)
         if sh == "collapse":
             lab("WHAT REACHES US AT T + 8:20", W / 2, top, fin)
-            lab("TIME-COMPRESSED ILLUSTRATION", W / 2, top + fs * 1.5, fin * 0.85, (255, 196, 130), int(fs * 0.85))
         if sh in ("orbit", "end") and hasattr(self, "_space_geom"):
             g = self._space_geom; bx, by = g["bh"]
             a_bh = fin if sh == "orbit" else ramp(t, t0 + 2.2, t0 + 2.8)
-            lab("BLACK HOLE (ENLARGED)", bx, by + self.space_layout()["thE"] * 0.9 + 24, a_bh, (255, 200, 140), int(fs * 0.9))
             if sh == "orbit":
                 lab("SAME MASS · SAME ORBIT", W / 2, top, fin, (195, 220, 255), int(fs * 1.15))
-            lab("ILLUSTRATION · NOT TO SCALE · BRIGHTENED", W / 2, (L.safe_bot - 40) if L.vertical else H_ - 40, a_bh * 0.8, (190, 200, 220), int(fs * 0.75))
         if sh == "freeze":
-            lab("EARTH WITH NO SUNLIGHT · BRIGHTENED", W / 2, top, fin, (205, 220, 240), int(fs * 0.9))
         # temperature counter
         show_temp = (t > T_COLD - 0.4) and t < T_CUT_END + 2.6
         if show_temp:

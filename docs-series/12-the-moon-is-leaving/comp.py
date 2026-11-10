@@ -352,7 +352,7 @@ def shot_past(t, lt):
     put(T, "YEARS AGO", a1, (126, 396, 22), (W / 2, 414, 21), col=DIM)
     put(T, f"{days:5.1f}" if k < 1 else "≈ 372", a1, (120, 500, 104), (W / 2, 480, 92), col=YEL, wt="XL", track=3)
     put(T, "DAYS IN A YEAR", a1, (126, 624, 22), (W / 2, 590, 21))
-    hh = int(hrs); mm = int(round((hrs - hh) * 60))
+    hh, mm = divmod(int(round(hrs * 60)), 60)
     put(T, f"{hh} H {mm:02d} MIN", a1, (120, 720, 78), (W / 2, 1470, 60), col=TXT, wt="XL", track=3)
     put(T, "LENGTH OF ONE DAY", a1, (126, 816, 22), (W / 2, 1426, 21), col=DIM)
     put(T, "LATE CRETACEOUS  ·  FROM DAILY GROWTH LAYERS IN A FOSSIL SHELL", win(t, S['past1'] + 9.5, b0, 0.8), (126, 900, 19), (W / 2, 650, 0), col=AMB)

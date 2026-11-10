@@ -25,7 +25,7 @@ V_DRIFT = (-20.0, 7.0)                               # px/s apparent drift of th
 class Locked(A.Scene):
     def __init__(self, vertical=True):
         super().__init__(vertical)
-        self.thE = 78.0 if vertical else 66.0          # Einstein radius drawn in px (real: ~0.2 px -> ~350x enlarged)
+        self.thE = 105.0 if vertical else 85.0          # Einstein radius drawn in px (real: ~0.23 px -> ~450x enlarged)
         self.bh = self.sun
         # bright background stars that drift into near-alignment (frame px offsets of their closest approach, time)
         self.heroes = [(A.wt("bh", "6 KM"), 9.0, 22.0), (A.wt("scope", "BENDING"), 2.0, 30.0), (A.wt("end", "FROZEN"), 14.0, 16.0)]
@@ -57,12 +57,15 @@ class Locked(A.Scene):
         W, H = self.L.W, self.L.H
         dt = t - T_OUT
         sh = (V_DRIFT[0] * dt, V_DRIFT[1] * dt)
-        sky = self.stars.render(self.cam, t, cx=2350, cy=1150, rot=-8, gain=1.0, twinkle=1.0, plate_gain=0.6, shift=sh)
+        sky = self.stars.render(self.cam, t, cx=2020, cy=1180, rot=-8, gain=1.0, twinkle=1.0, plate_gain=0.6, shift=sh)
         bx, by = self.bh
         for (ta, imp, flux) in self.heroes:                      # extra background stars passing behind the hole
             px = bx + V_DRIFT[0] * (t - ta) - imp * 0.33; py = by + V_DRIFT[1] * (t - ta) + imp
             if abs(px - bx) < 700 and abs(py - by) < 700:
                 splat(sky, px, py, 14, lambda d, dx, dy: (np.exp(-d * d / (2 * 1.6 ** 2)) * flux * 0.25)[..., None] * np.array([0.85, 0.92, 1.0], f32))
+        # a faint, distant galaxy almost exactly behind the hole (its own slow drift): lensed into the Einstein ring
+        ox, oy = 5.0 * math.sin(0.21 * t), 4.0 * math.cos(0.17 * t)
+        splat(sky, bx + ox, by + oy, 40, lambda d, dx, dy: (np.exp(-d * d / (2 * 5.0 ** 2)) * 0.05 + np.exp(-d / 9.0) * 0.012)[..., None] * np.array([1.0, 0.88, 0.72], f32))
         return SP.lens_warp(sky, bx, by, self.thE, shadow=0.40)
 
     def frame(self, t):
@@ -109,20 +112,21 @@ class Locked(A.Scene):
     def facts(self, out, t):
         L = self.L; W = L.W; fs = int(L.hud_size * 0.40); bx, by = self.bh
         top = L.safe_top + 40 if L.vertical else 60
+        low = 1235 if L.vertical else 720                   # facts row (clear of the hole, the caption and the counter)
         def lab(txt, x, y, a, col=(225, 232, 245), size=fs, wt="SemiBold", tr=0.18):
             if a > 0.01: hud_text(out, txt, x, y, size, wt, col, a, tr)
         a = ramp(t, T_SW0 + 0.2, T_SW0 + 0.5) * (1 - ramp(t, T_OUT + 1.0, T_OUT + 1.5))
         lab("TIME-COMPRESSED ILLUSTRATION", W / 2, top, a, (255, 196, 130))
         a = ramp(t, T_OUT + 2.5, T_OUT + 3.2)
-        lab("BLACK HOLE · SHOWN ~350× ENLARGED", bx, by + self.thE + 26, a * (1 - ramp(t, A.T_CUT_FREEZE, A.T_CUT_FREEZE + 0.4)) + a * 0.6 * ramp(t, A.T_CUT_FREEZE, A.T_CUT_FREEZE + 0.4), (255, 200, 140), int(fs * 0.9))
-        lab("STAR DRIFT: TIME-LAPSE", bx, by + self.thE + 26 + fs * 1.4, a * 0.75, (200, 212, 232), int(fs * 0.75))
+        lab("BLACK HOLE · SHOWN ~500× ENLARGED", bx, by + self.thE + 44, a * (1 - ramp(t, A.T_CUT_FREEZE, A.T_CUT_FREEZE + 0.4)) + a * 0.6 * ramp(t, A.T_CUT_FREEZE, A.T_CUT_FREEZE + 0.4), (255, 200, 140), int(fs * 0.9))
+        lab("STAR DRIFT: TIME-LAPSE", bx, by + self.thE + 44 + fs * 1.4, a * 0.75, (200, 212, 232), int(fs * 0.75))
         o0, o1 = LN["orbit"]["start"], LN["bh"]["start"]
-        lab("SAME MASS · SAME ORBIT", W / 2, top, ramp(t, o0, o0 + 0.3) * (1 - ramp(t, o1 - 0.2, o1 + 0.1)), (195, 220, 255), int(fs * 1.15))
+        lab("SAME MASS · SAME ORBIT", W / 2, low, ramp(t, o0, o0 + 0.3) * (1 - ramp(t, o1 - 0.2, o1 + 0.1)), (195, 220, 255), int(fs * 1.15))
         b0, b1 = LN["bh"]["start"], LN["scope"]["start"]
-        lab("EVENT HORIZON ≈ 6 KM ACROSS", W / 2, top, ramp(t, b0, b0 + 0.3) * (1 - ramp(t, b1 + 0.6, b1 + 0.9)), (255, 210, 160), int(fs * 1.1))
+        lab("EVENT HORIZON ≈ 6 KM ACROSS", W / 2, low, ramp(t, b0, b0 + 0.3) * (1 - ramp(t, b1 + 0.6, b1 + 0.9)), (255, 210, 160), int(fs * 1.1))
         c0, c1 = b1 + 0.9, LN["cold"]["start"]
-        lab("NO DISK: NOTHING IS FALLING IN", W / 2, top, ramp(t, c0, c0 + 0.3) * (1 - ramp(t, c1 - 0.2, c1 + 0.1)), (215, 225, 240), int(fs * 1.1))
-        lab("EINSTEIN RING · REAL SIZE ≈ 1.4′", W / 2, top + fs * 1.6, ramp(t, c0 - 0.6, c0) * (1 - ramp(t, c1 - 0.2, c1 + 0.1)) * 0.85, (200, 212, 232), int(fs * 0.85))
+        lab("NO DISK: NOTHING IS FALLING IN", W / 2, low, ramp(t, c0, c0 + 0.3) * (1 - ramp(t, c1 - 0.2, c1 + 0.1)), (215, 225, 240), int(fs * 1.1))
+        lab("EINSTEIN RING · REAL SIZE ≈ 1.4′", W / 2, low + fs * 1.7, ramp(t, c0 - 0.6, c0) * (1 - ramp(t, c1 - 0.2, c1 + 0.1)) * 0.85, (200, 212, 232), int(fs * 0.85))
 
 
 def run(vertical, stills=None):

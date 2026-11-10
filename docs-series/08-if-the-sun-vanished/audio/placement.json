@@ -1,0 +1,213 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 5.928041666666667,
+   "text": "The Sun has just vanished. And for eight minutes and twenty seconds, you will not notice a thing.",
+   "start": 0.75,
+   "end": 6.678,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 6.111125,
+   "text": "Not exploded. Not burned out. Simply gone. This is what happens next, minute by minute.",
+   "start": 7.75,
+   "end": 13.861,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "still",
+   "dur": 12.107875,
+   "text": "For now, nothing changes. The Sun is still up there in the sky, shining. You are looking at light that had already left it, and that light takes eight minutes and twenty seconds to cross the gap.",
+   "start": 18.25,
+   "end": 30.358,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "grav",
+   "dur": 14.801583333333333,
+   "text": "Stranger still, the Earth keeps circling a star that is no longer there. Gravity is not instant. Changes in it travel at the speed of light, too. So for eight minutes, our planet orbits an empty point in space.",
+   "start": 32.0,
+   "end": 46.802,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "dark",
+   "dur": 6.986208333333333,
+   "text": "Eight minutes, twenty seconds. The last light arrives. And the whole day side of the Earth goes dark at once.",
+   "start": 49.5,
+   "end": 56.486,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "line",
+   "dur": 11.097041666666666,
+   "text": "At the same moment, the Sun's pull lets go. The Earth stops curving, and leaves in a straight line, at about thirty kilometres every second. The Moon comes with us.",
+   "start": 59.75,
+   "end": 70.847,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "moon",
+   "dur": 6.213708333333333,
+   "text": "But the Moon only ever shone by reflected sunlight. Within about two seconds, it fades out.",
+   "start": 72.75,
+   "end": 78.964,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "plan1",
+   "dur": 8.69975,
+   "text": "The planets shine the same way. But they are far away, and their last reflected light is still travelling towards us. So they linger.",
+   "start": 81.25,
+   "end": 89.95,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "plan2",
+   "dur": 8.480458333333333,
+   "text": "Venus and Mars go out within about half an hour. Jupiter keeps shining for more than an hour. Saturn, for more than two.",
+   "start": 91.25,
+   "end": 99.73,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "stars",
+   "dur": 6.158041666666667,
+   "text": "Then, only the stars are left. They are suns in their own right. And they haven't noticed a thing.",
+   "start": 102.0,
+   "end": 108.158,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "photo",
+   "dur": 17.545666666666666,
+   "text": "On the ground, photosynthesis stops. Every plant on Earth, and the plankton in the sea, has lost its only source of energy. Small plants die within weeks. Large trees, living on stored sugar, might last for years, if they didn't freeze first.",
+   "start": 111.25,
+   "end": 128.796,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "cold1",
+   "dur": 6.463041666666666,
+   "text": "Because the cold comes quickly. With nothing to replace it, the planet's heat leaks away into space.",
+   "start": 130.5,
+   "end": 136.963,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "cold2",
+   "dur": 17.177083333333332,
+   "text": "These are rough estimates. But within about a week, the average surface temperature falls below freezing. The most quoted figure is around minus eighteen degrees Celsius. Within a year, around minus seventy. Colder than a winter at the South Pole.",
+   "start": 138.25,
+   "end": 155.427,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "human",
+   "dur": 8.763708333333334,
+   "text": "A few people might hold out, gathered around heat that never came from the Sun: nuclear reactors, and the warmth of the Earth itself.",
+   "start": 157.25,
+   "end": 166.014,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "ocean",
+   "dur": 12.747208333333333,
+   "text": "The oceans freeze over, from the top down. But ice floats, and it insulates. Beneath that lid, kilometres of water stay liquid. By one estimate, for hundreds of thousands of years.",
+   "start": 168.5,
+   "end": 181.247,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "vents",
+   "dur": 15.775375,
+   "text": "And down there, in the dark, some life would barely notice. Around hydrothermal vents, microbes live on chemical energy rising from inside the planet. Of everything alive on Earth, they have the best chance of carrying on.",
+   "start": 183.0,
+   "end": 198.775,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "air1",
+   "dur": 9.713833333333334,
+   "text": "Above the ice, it keeps getting colder. Eventually, and here the estimates run from decades to far longer, the air itself begins to condense.",
+   "start": 201.5,
+   "end": 211.214,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "air2",
+   "dur": 13.933375,
+   "text": "At normal pressure, oxygen turns liquid at minus one hundred and eighty-three degrees. Nitrogen follows, at minus one hundred and ninety-six. The sky falls as rain. Then, as snow.",
+   "start": 212.5,
+   "end": 226.433,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "floor",
+   "dur": 10.892291666666667,
+   "text": "Millions of years on, the Earth settles near minus two hundred and forty degrees, held just above absolute zero by the slow leak of heat from its own interior.",
+   "start": 228.75,
+   "end": 239.642,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "drift",
+   "dur": 6.173208333333333,
+   "text": "And so the Earth drifts on. A dark, frozen world. One more wanderer among the stars.",
+   "start": 242.75,
+   "end": 248.923,
+   "tempo": 1.0
+  },
+  {
+   "i": 20,
+   "key": "real1",
+   "dur": 8.910833333333333,
+   "text": "None of this is going to happen. A star cannot simply disappear. The laws of physics do not let that much matter and energy vanish.",
+   "start": 253.0,
+   "end": 261.911,
+   "tempo": 1.0
+  },
+  {
+   "i": 21,
+   "key": "real2",
+   "dur": 6.447041666666666,
+   "text": "Our Sun is about halfway through its life, with roughly five billion years of steady light still ahead.",
+   "start": 263.25,
+   "end": 269.697,
+   "tempo": 1.0
+  },
+  {
+   "i": 22,
+   "key": "end",
+   "dur": 7.758958333333333,
+   "text": "So tomorrow morning, when it rises, remember: that light is eight minutes old. And everything alive here depends on it.",
+   "start": 271.75,
+   "end": 279.509,
+   "tempo": 1.0
+  }
+ ]
+}

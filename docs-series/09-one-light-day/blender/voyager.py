@@ -74,38 +74,76 @@ def link(ob):
 
 
 # ------------------------------------------------------------------------------------------- materials
-def mat(name, col, rough=0.5, metal=0.0, bump=0.0, bscale=30.0, coat=0.0, emit=None, es=0.0, bdetail=3.0):
+def mat(name, col, rough=0.5, metal=0.0, bump=0.0, bscale=30.0, coat=0.0, emit=None, es=0.0, bdetail=3.0,
+        crinkle=0.0, cscale=14.0, wear=0.12, bevel=0.004):
+    """Principled material with: roughness/albedo wear variation (noise), optional fine bump, optional crinkled-foil
+    normal (Voronoi distance-to-edge facets + noise warp), and rounded edges via the Cycles Bevel node."""
     m = bpy.data.materials.new(name); m.use_nodes = True
     t = m.node_tree; b = t.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (*col, 1)
-    b.inputs["Roughness"].default_value = rough
+    L = t.links.new
+    tcn = t.nodes.new("ShaderNodeTexCoord")
     b.inputs["Metallic"].default_value = metal
     if coat:
         b.inputs["Coat Weight"].default_value = coat
     if emit:
         b.inputs["Emission Color"].default_value = (*emit, 1); b.inputs["Emission Strength"].default_value = es
+    # wear: large + small noise drives roughness and darkens albedo slightly
+    wn = t.nodes.new("ShaderNodeTexNoise"); wn.inputs["Scale"].default_value = 3.5; wn.inputs["Detail"].default_value = 8.0
+    wn.inputs["Roughness"].default_value = 0.7
+    L(tcn.outputs["Object"], wn.inputs["Vector"])
+    mr = t.nodes.new("ShaderNodeMapRange"); mr.inputs[1].default_value = 0.3; mr.inputs[2].default_value = 0.75
+    mr.inputs[3].default_value = max(0.03, rough - wear); mr.inputs[4].default_value = min(1.0, rough + wear * 1.6)
+    L(wn.outputs["Fac"], mr.inputs[0]); L(mr.outputs[0], b.inputs["Roughness"])
+    mx = t.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"
+    mx.inputs["A"].default_value = (*col, 1); mx.inputs["B"].default_value = (*[c * 0.55 for c in col], 1)
+    mr2 = t.nodes.new("ShaderNodeMapRange"); mr2.inputs[1].default_value = 0.45; mr2.inputs[2].default_value = 0.8
+    L(wn.outputs["Fac"], mr2.inputs[0]); L(mr2.outputs[0], mx.inputs["Factor"]); L(mx.outputs["Result"], b.inputs["Base Color"])
+    normal = None
+    if bevel > 0:
+        bv = t.nodes.new("ShaderNodeBevel"); bv.samples = 2; bv.inputs["Radius"].default_value = bevel
+        normal = bv.outputs["Normal"]
+    if crinkle > 0:
+        nz = t.nodes.new("ShaderNodeTexNoise"); nz.inputs["Scale"].default_value = cscale * 0.5; nz.inputs["Detail"].default_value = 2.0
+        L(tcn.outputs["Object"], nz.inputs["Vector"])
+        mxv = t.nodes.new("ShaderNodeMix"); mxv.data_type = "VECTOR"; mxv.inputs["Factor"].default_value = 0.12
+        L(tcn.outputs["Object"], mxv.inputs["A"]); L(nz.outputs["Color"], mxv.inputs["B"])
+        vo = t.nodes.new("ShaderNodeTexVoronoi"); vo.feature = "DISTANCE_TO_EDGE"; vo.inputs["Scale"].default_value = cscale
+        L(mxv.outputs["Result"], vo.inputs["Vector"])
+        vo2 = t.nodes.new("ShaderNodeTexVoronoi"); vo2.feature = "F1"; vo2.inputs["Scale"].default_value = cscale * 2.7
+        L(mxv.outputs["Result"], vo2.inputs["Vector"])
+        ad = t.nodes.new("ShaderNodeMath"); ad.operation = "ADD"
+        L(vo.outputs["Distance"], ad.inputs[0]); L(vo2.outputs["Distance"], ad.inputs[1])
+        bp = t.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = crinkle; bp.inputs["Distance"].default_value = 0.03
+        L(ad.outputs[0], bp.inputs["Height"])
+        if normal is not None: L(normal, bp.inputs["Normal"])
+        normal = bp.outputs["Normal"]
     if bump > 0:
         n = t.nodes.new("ShaderNodeTexNoise"); n.inputs["Scale"].default_value = bscale
         n.inputs["Detail"].default_value = bdetail; n.inputs["Roughness"].default_value = 0.6
-        tcn = t.nodes.new("ShaderNodeTexCoord"); t.links.new(tcn.outputs["Object"], n.inputs["Vector"])
-        bp = t.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = bump; bp.inputs["Distance"].default_value = 0.02
-        t.links.new(n.outputs["Fac"], bp.inputs["Height"]); t.links.new(bp.outputs["Normal"], b.inputs["Normal"])
+        L(tcn.outputs["Object"], n.inputs["Vector"])
+        bp = t.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = bump; bp.inputs["Distance"].default_value = 0.01
+        L(n.outputs["Fac"], bp.inputs["Height"])
+        if normal is not None: L(normal, bp.inputs["Normal"])
+        normal = bp.outputs["Normal"]
+    if normal is not None:
+        L(normal, b.inputs["Normal"])
     return m
 
 
-M_WHITE = mat("white", (0.80, 0.80, 0.78), rough=0.55, bump=0.04, bscale=6)
-M_WHITEB = mat("whiteback", (0.62, 0.62, 0.60), rough=0.6)
-M_BLACK = mat("blanket", (0.012, 0.012, 0.014), rough=0.32, bump=0.55, bscale=22, coat=0.3)
-M_GOLDFOIL = mat("goldfoil", (1.0, 0.62, 0.22), rough=0.24, metal=1.0, bump=0.7, bscale=26)
-M_GOLD = mat("gold", (1.0, 0.72, 0.30), rough=0.2, metal=1.0)
-M_ALU = mat("alu", (0.78, 0.79, 0.80), rough=0.33, metal=1.0)
-M_ALUD = mat("aludark", (0.30, 0.31, 0.33), rough=0.42, metal=1.0)
-M_TRUSS = mat("truss", (0.42, 0.43, 0.46), rough=0.34, metal=1.0)
-M_RTG = mat("rtg", (0.065, 0.065, 0.07), rough=0.48, metal=0.7)
-M_RTGEND = mat("rtgend", (0.5, 0.5, 0.52), rough=0.4, metal=1.0)
-M_LENS = mat("lens", (0.01, 0.012, 0.03), rough=0.05, coat=1.0)
-M_WHIP = mat("whip", (0.85, 0.70, 0.42), rough=0.3, metal=1.0)
-M_LOUV = mat("louver", (0.85, 0.85, 0.86), rough=0.22, metal=1.0)
+M_WHITE = mat("white", (0.78, 0.78, 0.76), rough=0.55, bump=0.05, bscale=40)
+M_WHITEB = mat("whiteback", (0.60, 0.60, 0.58), rough=0.6, bump=0.05, bscale=40)
+M_BLACK = mat("blanket", (0.016, 0.016, 0.018), rough=0.30, crinkle=0.85, cscale=13, coat=0.25, wear=0.14)
+M_GOLDFOIL = mat("goldfoil", (1.0, 0.60, 0.20), rough=0.22, metal=1.0, crinkle=0.9, cscale=16, wear=0.12)
+M_GOLD = mat("gold", (1.0, 0.72, 0.30), rough=0.2, metal=1.0, wear=0.08)
+M_ALU = mat("alu", (0.78, 0.79, 0.80), rough=0.33, metal=1.0, bump=0.03, bscale=120)
+M_ALUD = mat("aludark", (0.26, 0.27, 0.29), rough=0.42, metal=1.0, bump=0.04, bscale=90)
+M_TRUSS = mat("truss", (0.40, 0.41, 0.44), rough=0.34, metal=1.0, bevel=0.0, wear=0.1)
+M_RTG = mat("rtg", (0.055, 0.055, 0.06), rough=0.46, metal=0.7, bump=0.08, bscale=160, wear=0.18)
+M_RTGEND = mat("rtgend", (0.5, 0.5, 0.52), rough=0.4, metal=1.0, bump=0.04, bscale=120)
+M_LENS = mat("lens", (0.01, 0.012, 0.03), rough=0.05, coat=1.0, wear=0.0, bevel=0.0)
+M_WHIP = mat("whip", (0.85, 0.70, 0.42), rough=0.3, metal=1.0, bevel=0.0)
+M_LOUV = mat("louver", (0.85, 0.85, 0.86), rough=0.22, metal=1.0, bevel=0.002)
+M_CABLE = mat("cable", (0.75, 0.50, 0.20), rough=0.3, metal=1.0, crinkle=0.9, cscale=45, bevel=0.0)
 
 
 # ------------------------------------------------------------------------------------------- mesh helpers
@@ -133,6 +171,16 @@ class MB:
     def sphere(self, m, c, r, seg=16):
         bm = self.get(m)
         bmesh.ops.create_uvsphere(bm, u_segments=seg, v_segments=seg // 2, radius=r, matrix=Matrix.Translation(Vector(c)))
+
+    def cable(self, m, pts, r=0.014, sag=0.03, seed=0, sub=6):
+        rg = np.random.default_rng(seed); pts = [Vector(p) for p in pts]; out = []
+        for a, b in zip(pts, pts[1:]):
+            for i in range(sub):
+                t = i / sub
+                out.append(a.lerp(b, t) + Vector(rg.normal(0, sag * 0.35, 3)) * math.sin(math.pi * t) + Vector((0, 0, -sag)) * math.sin(math.pi * t))
+        out.append(pts[-1])
+        for a, b in zip(out, out[1:]):
+            self.cyl(m, a, b, r, 7); self.sphere(m, b, r * 1.02, 8)
 
     def finish(self, name, smooth_angle=40):
         obs = []
@@ -206,6 +254,23 @@ def build_voyager():
         mb.cyl(M_ALU, (math.cos(ang + math.pi / n) * BUS_R, math.sin(ang + math.pi / n) * BUS_R, -BUS_H / 2),
                (math.cos(ang + math.pi / n) * BUS_R, math.sin(ang + math.pi / n) * BUS_R, BUS_H / 2), 0.018, 8)
     mb.cyl(M_BLACK, (0, 0, -BUS_H / 2 - 0.01), (0, 0, BUS_H / 2 + 0.01), ap * 0.99, 10)
+    rg = np.random.default_rng(5)
+    for k in range(n):                                                          # frame bolts, deck boxes, harness loops
+        ang = 2 * math.pi * k / n + math.radians(18)
+        rot = Matrix.Rotation(ang, 3, "Z"); wface = 2 * BUS_R * math.sin(math.pi / n)
+        for sy in (-0.42, -0.2, 0.0, 0.2, 0.42):
+            for sz in (-0.47, 0.47):
+                pb = rot @ Vector((ap * 1.008, sy * wface, sz * BUS_H))
+                mb.cyl(M_ALU, pb, pb + rot @ Vector((0.012, 0, 0)), 0.007, 6)
+        if rg.random() < 0.7:
+            pb = rot @ Vector((ap * 0.72, rg.uniform(-0.1, 0.1), BUS_H / 2 + 0.05))
+            mb.box(M_GOLDFOIL if rg.random() < 0.5 else M_ALUD, pb, (rg.uniform(0.1, 0.2), rg.uniform(0.12, 0.25), 0.1), rot)
+        mb.cable(M_CABLE if k % 2 else M_BLACK, [rot @ Vector((ap * 0.95, -wface * 0.5, BUS_H / 2 + 0.02)), rot @ Vector((ap * 0.97, 0, BUS_H / 2 + 0.035)),
+                                                 rot @ Vector((ap * 0.95, wface * 0.5, BUS_H / 2 + 0.02))], 0.012, 0.015, 10 + k, sub=4)
+    for ang in (1.0, 1.35):                                                     # star trackers on the top deck
+        pb = Vector((math.cos(ang) * 0.62, math.sin(ang) * 0.62, BUS_H / 2))
+        mb.cyl(M_BLACK, pb, pb + Vector((math.cos(ang) * 0.1, math.sin(ang) * 0.1, 0.34)), 0.06, 14)
+        mb.cyl(M_LENS, pb + Vector((math.cos(ang) * 0.1, math.sin(ang) * 0.1, 0.34)), pb + Vector((math.cos(ang) * 0.101, math.sin(ang) * 0.101, 0.343)), 0.05, 14)
     mb.sphere(M_GOLDFOIL, (0, 0, -0.16), 0.36, 20)                             # propellant tank bulging below
     # thruster clusters
     for ang in (0.6, 2.2, 3.75, 5.3):
@@ -275,13 +340,30 @@ def build_voyager():
             rot = Matrix((d, fdir, d.cross(fdir))).transposed()
             mb.box(M_RTG, (p + q) / 2 + fdir * 0.17, (0.46, 0.13, 0.008), rot)
         mb.cyl(M_RTGEND, p - d * 0.02, p, 0.125, 20); mb.cyl(M_RTGEND, q, q + d * 0.02, 0.125, 20)
+        for j in range(1, 8):                                                   # circumferential ribs between the fins
+            c0 = p + d * (0.5 * j / 8)
+            mb.cyl(M_RTG, c0 - d * 0.004, c0 + d * 0.004, 0.121, 20)
+        for k in range(12):                                                     # end-flange bolts
+            ang = 2 * math.pi * k / 12
+            fdir = (side * math.cos(ang) + d.cross(side).normalized() * math.sin(ang))
+            mb.cyl(M_ALUD, p - d * 0.028 + fdir * 0.108, p - d * 0.018 + fdir * 0.108, 0.008, 6)
+            mb.cyl(M_ALUD, q + d * 0.018 + fdir * 0.108, q + d * 0.028 + fdir * 0.108, 0.008, 6)
+        for k in range(6):                                                      # fin edge stiffeners
+            ang = 2 * math.pi * k / 6
+            fdir = (side * math.cos(ang) + d.cross(side).normalized() * math.sin(ang))
+            mb.cyl(M_RTGEND, p + d * 0.02 + fdir * 0.235, q - d * 0.02 + fdir * 0.235, 0.006, 6)
         mb.cyl(M_ALUD, q + d * 0.02, q + d * 0.06, 0.05, 12)
         p = q + d * 0.06
     mb.cyl(M_RTGEND, p - d * 0.04, p, 0.09, 16, r2=0.03)
+    # cable harnesses along the booms
+    mb.cable(M_CABLE, [a + Vector((0, 0.1, 0.1)), a + d * 0.5 + Vector((0, 0.12, 0.12)), a + d * 1.0 + Vector((0, 0.1, 0.1)), b + Vector((0, 0.06, 0.08)), b + d * 0.12], 0.016, 0.03, 1)
+    mb.cable(M_BLACK, [a + Vector((0, -0.1, 0.12)), a + d * 0.8 + Vector((0, -0.1, 0.1)), b + Vector((0, -0.05, 0.08))], 0.011, 0.04, 2)
     # ---------------- science boom (+X) with instruments and scan platform
     d2 = Vector((1, 0.0, 0.10)).normalized()
     a = Vector((BUS_R * 0.95, 0, 0.0)); b = a + d2 * 2.3
     truss(mb, M_TRUSS, a, b, 0.22, 0.13, up, 7, r=0.012)
+    mb.cable(M_CABLE, [a + Vector((0, 0.09, 0.12)), a + d2 * 0.6 + Vector((0, 0.1, 0.1)), a + d2 * 1.15 + Vector((0, 0.14, 0.1)), a + d2 * 1.8 + Vector((0, 0.06, 0.08)), b + Vector((0.05, 0, -0.1))], 0.015, 0.03, 3)
+    mb.cable(M_BLACK, [a + Vector((0, -0.09, 0.11)), a + d2 * 1.2 + Vector((0, -0.12, 0.08)), a + d2 * 1.6 + Vector((0, -0.2, 0.0))], 0.011, 0.04, 4)
     mid = a + d2 * 1.15
     mb.box(M_BLACK, mid + Vector((0, 0.27, 0.05)), (0.30, 0.24, 0.26))          # cosmic ray system
     mb.cyl(M_ALU, mid + Vector((0, 0.38, 0.12)), mid + Vector((0.0, 0.52, 0.22)), 0.045, 12)
@@ -336,7 +418,8 @@ def build_voyager():
     for i in range(nr):
         for j in range(na):
             faces.append((i * na + j, i * na + (j + 1) % na, (i + 1) * na + (j + 1) % na, (i + 1) * na + j))
-    dish = pydata_obj("dish", verts, faces, M_WHITE)
+    duv = [(0.5 + v[0] / (2 * DISH_R) * 0.98, 0.5 + v[1] / (2 * DISH_R) * 0.98) for v in verts]
+    dish = pydata_obj("dish", verts, faces, dish_material(), uvs=duv)
     sm = dish.modifiers.new("sol", "SOLIDIFY"); sm.thickness = 0.012; sm.offset = -1
     obs.append(dish)
 
@@ -365,6 +448,39 @@ def build_voyager():
     root = bpy.data.objects.new("voyager", None); link(root)
     for o in obs: o.parent = root
     return root
+
+
+def dish_material():
+    """white painted reflector: gore seams, ring seams, fastener dots and faint stains baked with numpy"""
+    path = os.path.join(TEX, "dish.png"); N = 2048
+    if not os.path.exists(path):
+        yy, xx = np.mgrid[0:N, 0:N].astype(np.float32); x = (xx / N - 0.5) / 0.49; y = (yy / N - 0.5) / 0.49
+        r = np.hypot(x, y); th = np.arctan2(y, x)
+        seam = np.zeros((N, N), np.float32)
+        g = np.abs(((th / (2 * math.pi) * 24 + 0.5) % 1.0) - 0.5) * (2 * math.pi / 24) * np.maximum(r, 0.05)
+        seam = np.maximum(seam, np.clip(1 - g / 0.0035, 0, 1))
+        for rr in (0.17, 0.42, 0.61, 0.82, 0.985):
+            seam = np.maximum(seam, np.clip(1 - np.abs(r - rr) / 0.0035, 0, 1))
+        dots = np.clip(1 - np.hypot(((th / (2 * math.pi) * 24 + 0.5) % 1.0 - 0.5) * (2 * math.pi / 24) * r, ((r * 28) % 1.0 - 0.5) / 28) / 0.004, 0, 1)
+        rg = np.random.default_rng(3); f = np.fft.fftfreq(N) * N; kx, ky = np.meshgrid(f, f); k = np.hypot(kx, ky)
+        nz = np.real(np.fft.ifft2(np.fft.fft2(rg.standard_normal((N, N))) * np.where(k < 2, 0, (k + 1e-6) ** -1.5))); nz = (nz - nz.min()) / (nz.max() - nz.min())
+        panel = (np.floor(th / (2 * math.pi) * 24 + 0.5) * 7 + np.searchsorted([0.17, 0.42, 0.61, 0.82], r) * 13) % 5 / 5.0
+        alb = 1.0 - 0.45 * seam - 0.25 * dots - 0.22 * np.clip(nz - 0.45, 0, 1) - 0.05 * panel
+        img = np.stack([alb, np.clip(seam + dots * 0.6, 0, 1), nz, np.ones_like(alb)], -1)
+        im = bpy.data.images.new("dish", N, N, alpha=False); im.pixels.foreach_set(np.ascontiguousarray(img, np.float32).ravel())
+        im.filepath_raw = path; im.file_format = "PNG"; im.save(); bpy.data.images.remove(im)
+    m = bpy.data.materials.new("dish"); m.use_nodes = True
+    t = m.node_tree; b = t.nodes["Principled BSDF"]; L = t.links.new
+    img = t.nodes.new("ShaderNodeTexImage"); img.image = bpy.data.images.load(path); img.image.colorspace_settings.name = "Non-Color"
+    sp = t.nodes.new("ShaderNodeSeparateColor"); L(img.outputs["Color"], sp.inputs[0])
+    mx = t.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"
+    mx.inputs["A"].default_value = (0.06, 0.06, 0.06, 1); mx.inputs["B"].default_value = (0.70, 0.70, 0.68, 1)
+    L(sp.outputs[0], mx.inputs["Factor"]); L(mx.outputs["Result"], b.inputs["Base Color"])
+    mr = t.nodes.new("ShaderNodeMapRange"); mr.inputs[3].default_value = 0.42; mr.inputs[4].default_value = 0.7
+    L(sp.outputs[2], mr.inputs[0]); L(mr.outputs[0], b.inputs["Roughness"])
+    bp = t.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.5; bp.inputs["Distance"].default_value = 0.004; bp.invert = True
+    L(sp.outputs[1], bp.inputs["Height"]); L(bp.outputs["Normal"], b.inputs["Normal"])
+    return m
 
 
 def record_material():
@@ -495,9 +611,9 @@ def sst(a, b, x):
 SUN_DIR = Vector((0.30, -0.52, 0.80)).normalized()     # direction TO the sun (theatrical: ~37 deg off boresight)
 
 root = build_voyager()
-sun(SUN_DIR, 6.5)
-area(Vector((-9, -12, -5)), (0, 0, 0), 1100, 9, (0.5, 0.68, 1.0))       # cool fill from below/behind
-area(Vector((10, 8, -6)), (0, 0, 0), 1500, 6, (1.0, 0.72, 0.45))         # faint warm kicker
+sun(SUN_DIR, 5.0)
+area(Vector((-9, -12, -5)), (0, 0, 0), 520, 9, (0.5, 0.68, 1.0))       # cool fill from below/behind
+area(Vector((10, 8, -6)), (0, 0, 0), 1100, 6, (1.0, 0.72, 0.45))         # faint warm kicker
 cam = make_cam()
 
 
@@ -505,7 +621,7 @@ def cam_state(shot, t):
     """returns (loc, target, lens, roll) for time t (s) within the shot"""
     if shot == "hero":        # 24 s: slow orbit on the sunlit side, from dish front round to the record side
         u = t / 24.0
-        az = math.radians(-128 + 46 * u); el = math.radians(24 - 10 * u); dist = 15.5 - 3.0 * sst(0, 1, u)
+        az = math.radians(-128 + 46 * u); el = math.radians(24 - 10 * u); dist = 12.5 - 2.5 * sst(0, 1, u)
         loc = Vector((math.cos(az) * math.cos(el), math.sin(az) * math.cos(el), math.sin(el))) * dist
         return loc, Vector((-0.4, 0.6, 0.35)), 40, math.radians(-8)
     if shot == "sig":         # 14 s: looking past the dish along the boresight (towards the Sun / Earth)
@@ -523,6 +639,19 @@ def cam_state(shot, t):
         az = math.radians(-100 + 30 * u); el = math.radians(18); dist = 30
         loc = Vector((math.cos(az) * math.cos(el), math.sin(az) * math.cos(el), math.sin(el))) * dist
         return loc, Vector((-0.8, 1.2, 0.2)), 50, 0.0
+    def orb(az, el, dist):
+        az = math.radians(az); el = math.radians(el)
+        return Vector((math.cos(az) * math.cos(el), math.sin(az) * math.cos(el), math.sin(el))) * dist
+    if shot == "plate_heroA":
+        return orb(-122, 22, 11.0), Vector((-0.5, 0.7, 0.35)), 40, math.radians(-8)
+    if shot == "plate_heroB":
+        return orb(-80, 12, 8.6), Vector((-0.1, 0.4, 0.3)), 40, math.radians(-5)
+    if shot == "plate_sig":
+        return orb(193, -31, 11.0), Vector((0.0, 0.0, 1.4)), 30, math.radians(6)
+    if shot == "plate_end":
+        return orb(-60, 48, 10.5), Vector((-0.3, 0.5, 0.3)), 45, math.radians(12)
+    if shot == "plate_fly":
+        return orb(-95, 15, 26), Vector((-0.8, 1.2, 0.2)), 50, 0.0
     if shot == "plate_record":
         return Vector((1.9, -4.6, 0.25)), Vector((0.2, -0.6, 0.25)), 50, math.radians(-4)
     if shot == "plate_cover":
@@ -576,5 +705,7 @@ elif SHOT in ("hero", "sig", "end"):
 elif SHOT == "fly":
     render(SHOT, range(0, 8 * 24, 1), (640, 360), 32, os.path.join(SCR, "fr_fly"))
 elif SHOT.startswith("plate_"):
-    res = (2560, 1440) if SHOT != "plate_cover" else (2880, 1620)
-    render(SHOT, [0], res, 160, os.path.join(SCR, "plates", SHOT))
+    big = SHOT in ("plate_heroA", "plate_heroB", "plate_end", "plate_thumb", "plate_sig")
+    res = (3200, 1800) if big else ((1600, 900) if SHOT == "plate_fly" else (2560, 1440))
+    sc.cycles.adaptive_threshold = 0.012
+    render(SHOT, [0], res, 200 if big else 110, os.path.join(SCR, "plates", SHOT))

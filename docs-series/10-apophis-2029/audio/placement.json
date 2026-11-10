@@ -1,0 +1,249 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 8.047666666666666,
+   "text": "On Friday the thirteenth of April, 2029, a mountain of rock will pass between the Earth and its own satellites.",
+   "start": 1.0,
+   "end": 9.048,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 7.49125,
+   "text": "It will not hit us. We have known that for years. And that is exactly what makes this night unlike any other in history.",
+   "start": 10.0,
+   "end": 17.491,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "disc1",
+   "dur": 9.711541666666667,
+   "text": "The story begins in June 2004, at Kitt Peak in Arizona. Three astronomers catch a faint new asteroid, and then lose it.",
+   "start": 23.0,
+   "end": 32.712,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "disc2",
+   "dur": 5.028458333333333,
+   "text": "That December, it is found again. And the orbit calculations turn alarming.",
+   "start": 33.9,
+   "end": 38.928,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "scare",
+   "dur": 17.431166666666666,
+   "text": "For a few days, the odds of an impact on the thirteenth of April, 2029, climb to two point seven percent. One chance in thirty-seven. It reaches level four on the Torino scale, the highest rating any asteroid has ever been given.",
+   "start": 40.2,
+   "end": 57.631,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "name",
+   "dur": 4.56625,
+   "text": "It is later named Apophis, after the Egyptian serpent of chaos.",
+   "start": 59.0,
+   "end": 63.566,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "relief1",
+   "dur": 15.06375,
+   "text": "But a number like that measures what we don't know. Every new observation narrows the range of possible paths. Within days, older images turn up, and the Earth slips outside that range. 2029 is safe.",
+   "start": 65.2,
+   "end": 80.264,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "relief2",
+   "dur": 11.955666666666668,
+   "text": "Smaller risks lingered for later decades. Then, in March 2021, radar tracked Apophis precisely enough to settle it. No impact, for at least a hundred years.",
+   "start": 81.6,
+   "end": 93.556,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "size1",
+   "dur": 14.436166666666667,
+   "text": "So what is it? A stony asteroid, about three hundred and forty metres across. Radar suggests it is elongated, perhaps two lobes joined together. It tumbles slowly, about once every thirty hours.",
+   "start": 95.6,
+   "end": 110.036,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "size2",
+   "dur": 3.365,
+   "text": "Here it is beside the Eiffel Tower, at the same scale.",
+   "start": 111.4,
+   "end": 114.765,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "scale1",
+   "dur": 13.270708333333333,
+   "text": "Now, the distance. This is the Earth. Out here, about thirty-six thousand kilometres up, is the ring of geostationary satellites, the ones that carry television and weather pictures.",
+   "start": 118.0,
+   "end": 131.271,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "scale2",
+   "dur": 3.2365833333333334,
+   "text": "And far beyond them, ten times farther, the Moon.",
+   "start": 132.8,
+   "end": 136.037,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "pass1",
+   "dur": 13.06075,
+   "text": "Apophis will arrive at about six kilometres per second, and pass roughly thirty-two thousand kilometres above the surface. Inside the satellite ring. About a tenth of the way to the Moon.",
+   "start": 138.0,
+   "end": 151.061,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "rare",
+   "dur": 5.990541666666667,
+   "text": "An asteroid this large is thought to come this close only once in several thousand years.",
+   "start": 152.6,
+   "end": 158.591,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "view1",
+   "dur": 13.24375,
+   "text": "And you will be able to see it. No telescope needed. That evening, across Europe, Africa and western Asia, around two billion people will be able to look up into a clear, dark sky, and find it.",
+   "start": 161.0,
+   "end": 174.244,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "view2",
+   "dur": 11.4425,
+   "text": "A point of light, about as bright as the stars of the Little Dipper, drifting through the constellations. At its fastest, it will cross the width of the full Moon in under a minute.",
+   "start": 175.6,
+   "end": 187.042,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "view3",
+   "dur": 4.685791666666667,
+   "text": "It will not look like a rock. Just a star that refuses to stay still.",
+   "start": 188.4,
+   "end": 193.086,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "grav1",
+   "dur": 13.96725,
+   "text": "For Apophis, the encounter changes everything. Earth's gravity will bend its path, and widen its orbit around the Sun. Its year will stretch from about nine tenths of ours, to nearly one point two.",
+   "start": 195.6,
+   "end": 209.567,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "grav2",
+   "dur": 10.672166666666667,
+   "text": "The pull may also change the way it tumbles, and could even set off small landslides on its surface. Nobody knows for sure. Which is why we are going.",
+   "start": 211.0,
+   "end": 221.672,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "miss1",
+   "dur": 12.581333333333333,
+   "text": "NASA's OSIRIS-APEX, the spacecraft that brought home pieces of asteroid Bennu, is already on its way, due to arrive just after the flyby, if its funding survives.",
+   "start": 223.6,
+   "end": 236.181,
+   "tempo": 1.0
+  },
+  {
+   "i": 20,
+   "key": "miss2",
+   "dur": 15.77325,
+   "text": "Europe's Ramses, approved in late 2025 and now being built, is due to launch in 2028 and arrive two months early, to watch the before, and the after. A Japanese probe is planned to fly past, too.",
+   "start": 237.6,
+   "end": 253.373,
+   "tempo": 1.0
+  },
+  {
+   "i": 21,
+   "key": "hypo1",
+   "dur": 15.129916666666666,
+   "text": "And if it had been on target? To be clear, this will not happen. But a rock this size would strike with the energy of roughly a thousand megatons of TNT: more than twenty times the most powerful bomb ever detonated.",
+   "start": 255.8,
+   "end": 270.93,
+   "tempo": 1.0
+  },
+  {
+   "i": 22,
+   "key": "hypo2",
+   "dur": 4.510291666666666,
+   "text": "Enough to devastate a whole region. Not enough to end civilisation.",
+   "start": 272.2,
+   "end": 276.71,
+   "tempo": 1.0
+  },
+  {
+   "i": 23,
+   "key": "end1",
+   "dur": 10.968916666666667,
+   "text": "Instead, we get something no generation has had before. A large asteroid will pass this close, and we have known for years, almost to the minute, where it will be.",
+   "start": 279.5,
+   "end": 290.469,
+   "tempo": 1.0
+  },
+  {
+   "i": 24,
+   "key": "end2",
+   "dur": 5.51325,
+   "text": "Our ancestors might have seen an omen. A wandering star, on Friday the thirteenth.",
+   "start": 292.0,
+   "end": 297.513,
+   "tempo": 1.0
+  },
+  {
+   "i": 25,
+   "key": "end3",
+   "dur": 3.79175,
+   "text": "We will see a rock, on a path we worked out long in advance.",
+   "start": 298.8,
+   "end": 302.592,
+   "tempo": 1.0
+  },
+  {
+   "i": 26,
+   "key": "end4",
+   "dur": 6.443125,
+   "text": "So, on the thirteenth of April, 2029, if the sky is clear, look up. And watch it miss.",
+   "start": 304.4,
+   "end": 310.843,
+   "tempo": 1.0
+  }
+ ]
+}

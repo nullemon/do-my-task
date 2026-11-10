@@ -1,0 +1,34 @@
+# 08 - IF THE SUN VANISHED RIGHT NOW
+
+YouTube title: **What Happens If the Sun Disappears Right Now?**
+
+Locked script. 287 s (4:47), 24 fps, voice am_michael @ 0.94 (Kokoro). Times are the measured voice placements (`timeline.py`).
+A clock in the top-left corner (`T + hh:mm:ss`, then days, years) runs through the whole film; T = 0 is the frame the Sun disappears (2.35 s).
+
+| time | line | picture |
+|---|---|---|
+|   0.75-  6.68 | The Sun has just vanished. And for eight minutes and twenty seconds, you will not notice a thing. | SUN close-up (granulation, spots, prominences, corona). At 2.35 s it is simply gone: stars. Cross to the EARTH, still fully lit. Big caption `8 MIN 20 SEC` / `THEN EVERYTHING CHANGES`. Clock `T + 00:00:00` starts. |
+|   7.75- 13.86 | Not exploded. Not burned out. Simply gone. This is what happens next, minute by minute. | EARTH, slow drift and rotation, clock running in real time. Title: `IF THE SUN VANISHED` / `RIGHT NOW`. |
+|  18.25- 30.36 | For now, nothing changes. The Sun is still up there in the sky, shining. You are looking at light that had already left it, and that light takes eight minutes and twenty seconds to cross the gap. | LAKE by day (Blender plate, relit): low Sun over the ridge, glitter path on the water, cirrus. Real-time clock. Caption: the sunlight you see left the Sun 8 min 20 s ago. |
+|  32.00- 46.80 | Stranger still, the Earth keeps circling a star that is no longer there. Gravity is not instant. Changes in it travel at the speed of light, too. So for eight minutes, our planet orbits an empty point in space. | DIAGRAM (distances to scale): the edge of the last light sweeping out past Mercury (3 min 13 s) and Venus (6 min 1 s) towards Earth (8 min 20 s). Clock time-lapse. Caption: gravity travels at light speed too. |
+|  49.50- 56.49 | Eight minutes, twenty seconds. The last light arrives. And the whole day side of the Earth goes dark at once. | LAKE, real-time clock 00:08:14 ... 00:08:20 - the Sun, the blue sky and the daylight cut out in one frame; stars appear as the exposure opens up. Then EARTH from space, slow-motion replay of the front crossing the day side. |
+|  59.75- 70.85 | At the same moment, the Sun's pull lets go. The Earth stops curving, and leaves in a straight line, at about thirty kilometres every second. The Moon comes with us. | DIAGRAM, time-lapse in days: each planet leaves along the tangent to its dashed former orbit. `EARTH + MOON  ~30 KM/S  ~107,000 KM/H`. |
+|  72.75- 78.96 | But the Moon only ever shone by reflected sunlight. Within about two seconds, it fades out. | MOON close-up (real map + crater relief), real-time clock; it fades at 00:08:22. |
+|  81.25- 89.95 | The planets shine the same way. But they are far away, and their last reflected light is still travelling towards us. So they linger. | Night LAKE: Venus, Mars, Jupiter, Saturn along the ecliptic over the mountains, reflected in the water. Clock time-lapse. |
+|  91.25- 99.73 | Venus and Mars go out within about half an hour. Jupiter keeps shining for more than an hour. Saturn, for more than two. | Venus and Mars go out over the lake. Cut: JUPITER (goes dark ~T+1 h 25), cut: SATURN with rings (~T+2 h 40). |
+| 102.00-108.16 | Then, only the stars are left. They are suns in their own right. And they haven't noticed a thing. | Night LAKE, slow push in: only stars and the Milky Way, mirrored in the lake. |
+| 111.25-128.80 | On the ground, photosynthesis stops. Every plant on Earth, and the plankton in the sea, has lost its only source of energy. Small plants die within weeks. Large trees, living on stored sugar, might last for years, if they didn't freeze first. | Same LAKE, clock in days: the green of the slopes drains away. Captions: photosynthesis stops; small plants weeks, large trees possibly years. |
+| 130.50-136.96 | Because the cold comes quickly. With nothing to replace it, the planet's heat leaks away into space. | LAKE: mist thickens, frost and snow creep over the rock, first flakes. |
+| 138.25-155.43 | These are rough estimates. But within about a week, the average surface temperature falls below freezing. The most quoted figure is around minus eighteen degrees Celsius. Within a year, around minus seventy. Colder than a winter at the South Pole. | Dark EARTH from space, ice spreading. `~1 WEEK: BELOW 0 C (most quoted ~-18 C)`, `~1 YEAR: ~-70 C`. Labelled rough estimates. |
+| 157.25-166.01 | A few people might hold out, gathered around heat that never came from the Sun: nuclear reactors, and the warmth of the Earth itself. | EARTH: city lights go out, a few remain. |
+| 168.50-181.25 | The oceans freeze over, from the top down. But ice floats, and it insulates. Beneath that lid, kilometres of water stay liquid. By one estimate, for hundreds of thousands of years. | Under the ICE lid (Blender plate, our own lamp, particles drifting). |
+| 183.00-198.78 | And down there, in the dark, some life would barely notice. Around hydrothermal vents, microbes live on chemical energy rising from inside the planet. Of everything alive on Earth, they have the best chance of carrying on. | HYDROTHERMAL VENTS (Blender plate): chimneys, black-smoker plumes, heat shimmer, microbial mats. |
+| 201.50-211.21 | Above the ice, it keeps getting colder. Eventually, and here the estimates run from decades to far longer, the air itself begins to condense. | Frozen LAKE, snow everywhere, mist; flakes begin. |
+| 212.50-226.43 | At normal pressure, oxygen turns liquid at minus one hundred and eighty-three degrees. Nitrogen follows, at minus one hundred and ninety-six. The sky falls as rain. Then, as snow. | Closer on the mountains: heavy fall of condensed air; the haze thins as the atmosphere goes. `OXYGEN -183 C`, `NITROGEN -196 C`. |
+| 228.75-239.64 | Millions of years on, the Earth settles near minus two hundred and forty degrees, held just above absolute zero by the slow leak of heat from its own interior. | Wide frozen LAKE, airless and still, hard stars. `~-240 C`. |
+| 242.75-248.92 | And so the Earth drifts on. A dark, frozen world. One more wanderer among the stars. | Frozen EARTH, cracked ice, receding into the Milky Way. Fade to black. |
+| 253.00-261.91 | None of this is going to happen. A star cannot simply disappear. The laws of physics do not let that much matter and energy vanish. | SUNRISE from orbit: the Sun clears the limb, the atmosphere lights up. |
+| 263.25-269.70 | Our Sun is about halfway through its life, with roughly five billion years of steady light still ahead. | SUN close-up again. `~5 BILLION YEARS OF STEADY LIGHT STILL AHEAD`. |
+| 271.75-279.51 | So tomorrow morning, when it rises, remember: that light is eight minutes old. And everything alive here depends on it. | LAKE by day. `THIS LIGHT IS 8 MIN 20 SEC OLD`. End title. |
+
+Narration: 593 words.

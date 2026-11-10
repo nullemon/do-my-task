@@ -1,10 +1,10 @@
-"""MEGALODON TO SCALE — voice placement (locked timeline), processing, music bed, ducking, loudness, SRT.
+"""IF THE SUN VANISHED RIGHT NOW — voice placement (locked timeline), processing, music bed, ducking, loudness, SRT.
 Adapted from andromeda-doc/audio/mix.py (same voice chain, same synthesis helpers).
 Inputs : $SCR/vo_raw/<key>.wav + meta.json (gen_voice.py), ../timeline.py (START times)
-Outputs: $SCR/audio/{voice_48k,bed_48k,mix_megalodon}.wav, placement.json, ../megalodon-to-scale.srt
+Outputs: $SCR/audio/{voice_48k,bed_48k,mix_sun}.wav, placement.json, ../if-the-sun-vanished.srt
 Run    : /home/user/ttsenv/bin/python mix.py
 """
-import os, sys, json, subprocess, re
+import os, sys, json, subprocess, re, math
 import numpy as np, soundfile as sf
 from scipy.signal import butter, sosfilt, sosfiltfilt, resample_poly, fftconvolve
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -283,52 +283,72 @@ def bubbles(t0, t1, amp, rate=0.7, seed=9):
 
 
 def build_bed():
+    """D minor world. The music is the Sun: warm at the start, cut dead when it vanishes (T = 0), a held breath while the clock ticks,
+    a second drop at 8:20, long cold pads, water rumble under the ice, thin wind over the snow, and D major when the Sun comes back."""
+    S_ = TL.START; TV, TD = 2.35, 53.9
     bed = np.zeros((N, 2))
-    D2 = 38
-    dr = drone(0, DUR - 0.2, 0.12, D2)
+    dr = drone(0, DUR - 0.2, 0.11, 38)
     t = np.arange(len(dr)) / SR
-    e = np.interp(t, [0, 6, 80, 86, 100, 218, 236, 241, 256, 262, 290, 300, 309, 314.5],
-                     [0, 0.8, 0.8, 1.15, 1.0, 1.0, 1.1, 0.75, 0.75, 1.0, 1.0, 1.3, 0.5, 0])
+    e = np.interp(t, [0, 1.0, TV - 0.05, TV + 0.05, 8, 30, 47, TD - 0.1, TD + 0.1, 60, 110, 167, 200, 241, 250, 253, 262, 271, 281, DUR - 0.5],
+                     [0, 0.9, 1.0, 0.0, 0.45, 0.6, 0.75, 0.9, 0.0, 0.75, 0.9, 1.0, 0.85, 1.0, 0.7, 0.3, 0.6, 0.7, 0.5, 0])
     add(bed, 0, dr * e[:, None])
-    add(bed, 0, ocean_noise(0, DUR, 0.05) * np.interp(np.arange(int(DUR * SR)) / SR, [0, 4, 305, 312, DUR], [0, 1, 1, 0.3, 0])[:, None])
-    chords = [  # (t0, t1, notes, amp, brightness) - D minor world, Bb / Gm / A tension at reveals
-        (0.5, 16, [50, 57, 62], 0.026, 0.25),          # Dm open (tease)
-        (13, 30, [46, 53, 62, 65], 0.026, 0.35),       # Bb (title -> diver)
-        (28, 48, [50, 57, 64, 65], 0.024, 0.3),        # Dm add9
-        (46, 66, [43, 50, 58, 62], 0.026, 0.35),       # Gm
-        (63, 85, [46, 53, 60, 65], 0.028, 0.4),        # Bb add9 (orca, humpback)
-        (84, 108, [38, 45, 50, 53, 57], 0.034, 0.3),   # Dm low (MEGALODON)
-        (105, 130, [46, 53, 58, 62], 0.024, 0.3),      # Bb
-        (127, 152, [43, 50, 55, 58, 62], 0.024, 0.35), # Gm
-        (150, 172, [41, 48, 57, 60], 0.026, 0.4),      # F (slender)
-        (169, 190, [45, 52, 57, 61, 64], 0.028, 0.45), # A (ceiling, tension)
-        (187, 220, [50, 57, 62, 65], 0.024, 0.3),      # Dm (time, bite, warm)
-        (218, 240, [46, 53, 58, 61], 0.026, 0.35),     # Bbm-ish (vanished)
-        (238, 258, [50, 57, 60, 65], 0.020, 0.2),      # Dm7 sparse (gone)
-        (257, 278, [46, 53, 60, 62, 65], 0.030, 0.5),  # Bbmaj9 (blue whale: awe)
-        (275, 292, [41, 48, 55, 60, 64], 0.028, 0.45), # Fmaj7
-        (290, 314, [38, 45, 50, 53], 0.034, 0.25),     # Dm low (the pass)
+    # opening: the Sun's own chord (D major, bright), cut at T = 0
+    o = sum(np.pad(pad_note(m, 0, TV + 0.1, 0.05, a=0.6, r=0.05, bright=0.8, seed=j), ((0, 0), (0, 0))) for j, m in enumerate([38, 50, 57, 62, 66, 69]))
+    add(bed, 0, o)
+    add(bed, 0.2, riser(0.2, TV, 0.10, f0=90, f1=300))
+    add(bed, TV, thud(0.55, f=38)); add(bed, TD, thud(0.75, f=34, dec=1.4))
+    add(bed, TD - 5.5, riser(TD - 5.5, TD, 0.16, f0=70, f1=360, seed=6))
+    chords = [  # (t0, t1, notes, amp, brightness)
+        (4.5, 19, [50, 57, 62], 0.022, 0.25),             # Dm open, held breath
+        (17, 33, [46, 53, 62, 65], 0.026, 0.4),            # Bb (the Sun still shining)
+        (31, 49.5, [43, 50, 58, 62], 0.026, 0.35),         # Gm (the front on its way)
+        (47, TD + 0.2, [45, 52, 57, 61, 64], 0.030, 0.5),  # A (tension)
+        (57, 74, [38, 45, 50, 53], 0.030, 0.2),            # Dm low (dark, straight line)
+        (72, 83, [46, 53, 58, 62], 0.022, 0.3),            # Bb (Moon)
+        (81, 103, [43, 50, 55, 58, 62], 0.024, 0.35),      # Gm (planets)
+        (101, 113, [50, 57, 64, 65], 0.024, 0.45),         # Dm add9 (stars)
+        (111, 132, [46, 53, 58, 61], 0.024, 0.25),         # Bbm-ish (photosynthesis stops)
+        (130, 158, [38, 45, 52, 57], 0.028, 0.2),          # D5 bare (cold)
+        (156, 170, [43, 50, 55, 58], 0.022, 0.25),         # Gm (refuges)
+        (168, 185, [41, 48, 53, 57], 0.026, 0.3),          # F (under the ice)
+        (183, 203, [46, 53, 60, 62, 65], 0.028, 0.45),     # Bbmaj9 (vents: life)
+        (201, 229, [38, 45, 50, 53, 57], 0.028, 0.25),     # Dm (air falls)
+        (227, 244, [36, 43, 50, 55], 0.028, 0.2),          # C/G low (floor)
+        (242, 254, [38, 45, 50, 57, 64], 0.030, 0.35),     # Dsus2 (adrift)
+        (252.6, 264, [43, 50, 59, 62, 66], 0.034, 0.6),    # G major (sunrise)
+        (262.5, 273, [45, 52, 57, 61, 64], 0.032, 0.6),    # A major
+        (271, DUR - 0.5, [38, 45, 50, 54, 57, 62, 66], 0.034, 0.55),   # D major (home)
     ]
-    for k, (a, b, notes, amp, br) in enumerate(chords):
+    for k, (a_, b_, notes, amp, br) in enumerate(chords):
         for j, m in enumerate(notes):
-            add(bed, a, pad_note(m, a, b, amp * (1.0 if m < 60 else 0.75), a=4.0, r=5.0, bright=br, seed=k * 10 + j))
-    for tc, amp in ((11.8, 0.20), (86.0, 0.30), (152.0, 0.14), (241.0, 0.16), (266.0, 0.24), (304.0, 0.30)):
-        s0, sw = sub_swell(tc, amp, rise=6.0, fall=7.0, f=36.71); add(bed, s0, sw)
-    # whale calls (distant, under the whales' sections)
-    for t0, d, f0, f1, amp in ((76.0, 4.5, 180, 320, 0.05), (82.0, 3.5, 260, 150, 0.04), (266.0, 6.0, 38, 22, 0.16), (276.0, 5.0, 40, 24, 0.13)):
-        add(bed, t0, whale_call(t0, d, f0, f1, amp, seed=int(t0)))
-    add(bed, 15.0, bubbles(15.0, 300.0, 0.03))
-    add(bed, 0, air_noise(0, 80, 0.006))
-    add(bed, 262, choir(262, 286, [53, 60, 65], 0.022, vowel=(350, 700, 2400), seed=8))
-    # hall reverb (big, watery)
+            add(bed, a_, pad_note(m, a_, b_, amp * (1.0 if m < 60 else 0.75), a=4.0 if a_ > 5 else 2.0, r=5.0 if abs(b_ - (TD + 0.2)) > 0.01 else 0.08, bright=br, seed=k * 10 + j))
+    for tc, amp in ((31.5, 0.14), (59.5, 0.20), (97.2, 0.14), (100.7, 0.14), (138.5, 0.16), (168.0, 0.20), (201.0, 0.16), (242.0, 0.22), (257.5, 0.30), (271.5, 0.20)):
+        s0, sw = sub_swell(tc, amp, rise=6.0, fall=7.0, f=36.71); add(bed, max(0, s0), sw)
+    # the clock: soft ticks while the on-screen clock runs in real time
+    for a_, b_, amp in ((TV + 1, 30.5, 0.030), (48.0, TD, 0.045), (72.5, 77.7, 0.035)):
+        tt = math.ceil(a_)
+        while tt < b_:
+            add(bed, tt, tick(amp * (1.0 if int(tt) % 2 == 0 else 0.7), f=1500 if int(tt) % 2 == 0 else 1250, seed=int(tt))); tt += 1.0
+    add(bed, 102, sparkles(102, 112, [74, 77, 81, 86, 89], 0.9, 0.012, seed=3))
+    add(bed, 201, sparkles(201, 236, [86, 89, 93, 98], 1.2, 0.007, seed=5))
+    # cold wind over the lake (band-limited noise, slow gusts); gone when the air is
+    for a_, b_, amp, lo, hi in ((111, 139, 0.012, 300, 2200), (200.5, 236, 0.016, 250, 1800)):
+        add(bed, a_, air_noise(a_, b_, amp, lo=lo, hi=hi, seed=int(a_)))
+    add(bed, 166, ocean_noise(166, 202, 0.10) * env_adsr(int(36 * SR), 3, 3)[:, None])
+    add(bed, 252.6, choir(252.6, 285, [50, 57, 62, 66], 0.020, vowel=(600, 1040, 2250), seed=8))
+    add(bed, 241, choir(241, 253, [50, 57], 0.010, vowel=(350, 700, 2400), seed=9))
+    # hall reverb
     n_ir = int(4.5 * SR); tt = np.arange(n_ir) / SR
     ir = np.stack([sosfilt(butter(2, [90, 5000], "band", fs=SR, output="sos"),
                            np.random.default_rng(c + 40).standard_normal(n_ir)) for c in range(2)], axis=1)
     ir *= np.exp(-6.91 * tt / 4.0)[:, None]; ir /= np.sqrt((ir ** 2).sum(axis=0, keepdims=True))
     wet = np.stack([fftconvolve(bed[:, c], ir[:, c])[:N] for c in range(2)], axis=1)
-    bed = 0.6 * bed + 0.6 * wet
+    # the two cut-offs stay dry for a moment: gate the reverb tail right after each
+    tN = np.arange(N) / SR
+    gate = np.interp(tN, [0, TV, TV + 0.02, TV + 2.5, TD, TD + 0.02, TD + 3.0, DUR], [1, 1, 0.25, 1, 1, 0.3, 1, 1])
+    bed = 0.6 * bed + 0.6 * wet * gate[:, None]
     bed = sosfilt(butter(2, 26, "high", fs=SR, output="sos"), bed, axis=0)
-    g = np.interp(np.arange(N) / SR, [0, 0.5, DUR - 2.5, DUR - 0.3, DUR], [0, 1, 1, 0, 0])
+    g = np.interp(tN, [0, 0.3, DUR - 2.5, DUR - 0.3, DUR], [0, 1, 1, 0, 0])
     return bed * g[:, None]
 
 # ------------------------------------------------------------------------------------- ducking
@@ -433,8 +453,8 @@ def main():
           f"measured_LRA={js['input_lra']}:measured_thresh={js['input_thresh']}:offset={js['target_offset']}:"
           f"linear=true:print_format=summary,aresample=48000,alimiter=limit=0.84:attack=5:release=80:level=false")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", P("mix_premaster.wav"), "-af", af,
-                    "-t", str(DUR), "-ar", "48000", "-c:a", "pcm_s24le", P("mix_megalodon.wav")], check=True)
-    cues = write_srt(placement, os.path.join(os.path.dirname(HERE), "megalodon-to-scale.srt"))
+                    "-t", str(DUR), "-ar", "48000", "-c:a", "pcm_s24le", P("mix_sun.wav")], check=True)
+    cues = write_srt(placement, os.path.join(os.path.dirname(HERE), "if-the-sun-vanished.srt"))
     print("SRT cues:", len(cues))
 
 if __name__ == "__main__":

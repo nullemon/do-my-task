@@ -1,0 +1,226 @@
+1
+00:00:01,000 --> 00:00:06,135
+The most distant thing humans have ever
+built is about to be one full day away.
+
+2
+00:00:06,135 --> 00:00:08,065
+At the speed of light.
+
+3
+00:00:08,800 --> 00:00:17,408
+On the eighteenth of November, twenty twenty-six, by NASA's
+calculation, Voyager 1 reaches one light-day from Earth.
+
+4
+00:00:17,408 --> 00:00:20,654
+Nearly twenty-six billion kilometres.
+
+5
+00:00:26,000 --> 00:00:29,531
+Light crosses to the Moon
+in just over a second.
+
+6
+00:00:29,531 --> 00:00:34,091
+To the Sun, in eight minutes.
+To Neptune, in about four hours.
+
+7
+00:00:34,091 --> 00:00:36,356
+To Voyager: twenty-four.
+
+8
+00:00:38,500 --> 00:00:45,494
+It left on the fifth of September, nineteen
+seventy-seven, on a Titan rocket from Cape Canaveral.
+
+9
+00:00:45,494 --> 00:00:48,518
+A machine built to last five years.
+
+10
+00:00:50,500 --> 00:00:57,066
+Eighteen months later it swept past Jupiter,
+and found volcanoes erupting on the moon Io:
+
+11
+00:00:57,066 --> 00:01:01,254
+the first active volcanoes
+ever seen beyond Earth.
+
+12
+00:01:03,000 --> 00:01:05,741
+In November nineteen eighty, Saturn.
+
+13
+00:01:05,741 --> 00:01:13,203
+A close pass by its giant moon, Titan, bent Voyager's
+path up and out of the plane of the planets.
+
+14
+00:01:13,203 --> 00:01:15,607
+No more worlds lay ahead.
+
+15
+00:01:18,000 --> 00:01:25,893
+But in nineteen ninety, at the urging of the astronomer
+Carl Sagan, its cameras were turned around one last time.
+
+16
+00:01:25,893 --> 00:01:32,680
+From six billion kilometres away, Earth was a
+point of light, smaller than a single pixel.
+
+17
+00:01:34,500 --> 00:01:36,830
+A pale blue dot, Sagan called it.
+
+18
+00:01:36,830 --> 00:01:39,585
+A mote of dust, suspended in a sunbeam.
+
+19
+00:01:39,585 --> 00:01:44,251
+Half an hour later, the cameras
+were switched off for good.
+
+20
+00:01:47,000 --> 00:01:48,378
+Voyager kept going.
+
+21
+00:01:48,378 --> 00:01:57,154
+In August twenty twelve, it crossed the boundary where the
+wind from the Sun gives way to the thin gas between the stars.
+
+22
+00:01:57,154 --> 00:02:02,006
+It became the first human-made
+object in interstellar space.
+
+23
+00:02:04,500 --> 00:02:06,795
+Bolted to its side is a message.
+
+24
+00:02:06,795 --> 00:02:13,319
+A gold-plated copper record, with instructions
+for playing it engraved on the cover.
+
+25
+00:02:14,500 --> 00:02:27,631
+It holds a hundred and fifteen images, greetings in fifty-five languages, the sounds of
+surf, thunder, birdsong and whales, and ninety minutes of music, from Bach to Chuck Berry.
+
+26
+00:02:30,000 --> 00:02:32,404
+And Voyager is still talking to us.
+
+27
+00:02:32,404 --> 00:02:36,250
+Its transmitter has a power
+of about twenty-three watts.
+
+28
+00:02:36,250 --> 00:02:39,634
+Roughly that of a refrigerator light bulb.
+
+29
+00:02:41,000 --> 00:02:48,014
+By the time that signal reaches Earth, it is far
+weaker than a billionth of a billionth of a watt.
+
+30
+00:02:48,014 --> 00:02:55,743
+To hear it, NASA's Deep Space Network uses dishes seventy
+metres across, in California, Spain and Australia.
+
+31
+00:02:55,743 --> 00:03:00,537
+The data trickles in at a hundred
+and sixty bits per second.
+
+32
+00:03:03,000 --> 00:03:10,279
+Its electricity comes from the heat of decaying
+plutonium, and every year there are about four watts less.
+
+33
+00:03:10,279 --> 00:03:13,987
+So the team has been switching
+things off, one by one.
+
+34
+00:03:13,987 --> 00:03:17,920
+Of ten science instruments,
+two are still running.
+
+35
+00:03:19,200 --> 00:03:25,397
+This year, engineers shut down one more, and
+reworked the power system to buy some time.
+
+36
+00:03:25,397 --> 00:03:28,213
+Every command now takes a day to arrive.
+
+37
+00:03:28,213 --> 00:03:31,671
+The answer takes another day to come back.
+
+38
+00:03:34,500 --> 00:03:36,416
+So here is the scale of it.
+
+39
+00:03:36,416 --> 00:03:41,597
+Almost fifty years of flight, at about
+seventeen kilometres every second.
+
+40
+00:03:41,597 --> 00:03:45,078
+And the distance covered is one light-day.
+
+41
+00:03:46,500 --> 00:03:50,161
+The nearest star is more
+than four light-years away.
+
+42
+00:03:50,161 --> 00:03:52,978
+That is over fifteen hundred light-days.
+
+43
+00:03:52,978 --> 00:03:58,899
+At Voyager's speed, the journey would
+take about seventy-five thousand years.
+
+44
+00:04:00,500 --> 00:04:03,221
+And Voyager is not even heading that way.
+
+45
+00:04:03,221 --> 00:04:10,691
+In about forty thousand years, it will drift within
+a light-year and a half of another star, and sail on.
+
+46
+00:04:14,000 --> 00:04:20,632
+Probably within the next ten years, the power
+will fall too low, and Voyager will go quiet.
+
+47
+00:04:22,500 --> 00:04:26,486
+But it will not stop. Nothing
+out there will slow it down.
+
+48
+00:04:26,486 --> 00:04:31,315
+And the record on its side is
+expected to last a billion years.
+
+49
+00:04:34,500 --> 00:04:37,787
+One light-day from home. And still going.
+

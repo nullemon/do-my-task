@@ -1,0 +1,195 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 6.5652083333333335,
+   "text": "The most distant thing humans have ever built is about to be one full day away. At the speed of light.",
+   "start": 1.0,
+   "end": 7.565,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 11.3545,
+   "text": "On the eighteenth of November, twenty twenty-six, by NASA's calculation, Voyager 1 reaches one light-day from Earth. Nearly twenty-six billion kilometres.",
+   "start": 8.8,
+   "end": 20.154,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "light",
+   "dur": 9.855583333333334,
+   "text": "Light crosses to the Moon in just over a second. To the Sun, in eight minutes. To Neptune, in about four hours. To Voyager: twenty-four.",
+   "start": 26.0,
+   "end": 35.856,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "launch",
+   "dur": 9.517833333333334,
+   "text": "It left on the fifth of September, nineteen seventy-seven, on a Titan rocket from Cape Canaveral. A machine built to last five years.",
+   "start": 38.5,
+   "end": 48.018,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "jupiter",
+   "dur": 10.253625,
+   "text": "Eighteen months later it swept past Jupiter, and found volcanoes erupting on the moon Io: the first active volcanoes ever seen beyond Earth.",
+   "start": 50.5,
+   "end": 60.754,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "saturn",
+   "dur": 12.107375,
+   "text": "In November nineteen eighty, Saturn. A close pass by its giant moon, Titan, bent Voyager's path up and out of the plane of the planets. No more worlds lay ahead.",
+   "start": 63.0,
+   "end": 75.107,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "pbd1",
+   "dur": 14.179791666666667,
+   "text": "But in nineteen ninety, at the urging of the astronomer Carl Sagan, its cameras were turned around one last time. From six billion kilometres away, Earth was a point of light, smaller than a single pixel.",
+   "start": 78.0,
+   "end": 92.18,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "pbd2",
+   "dur": 9.250791666666666,
+   "text": "A pale blue dot, Sagan called it. A mote of dust, suspended in a sunbeam. Half an hour later, the cameras were switched off for good.",
+   "start": 94.5,
+   "end": 103.751,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "helio",
+   "dur": 14.505625,
+   "text": "Voyager kept going. In August twenty twelve, it crossed the boundary where the wind from the Sun gives way to the thin gas between the stars. It became the first human-made object in interstellar space.",
+   "start": 107.0,
+   "end": 121.506,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "record1",
+   "dur": 8.319166666666666,
+   "text": "Bolted to its side is a message. A gold-plated copper record, with instructions for playing it engraved on the cover.",
+   "start": 124.5,
+   "end": 132.819,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "record2",
+   "dur": 12.63075,
+   "text": "It holds a hundred and fifteen images, greetings in fifty-five languages, the sounds of surf, thunder, birdsong and whales, and ninety minutes of music, from Bach to Chuck Berry.",
+   "start": 134.5,
+   "end": 147.131,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "signal1",
+   "dur": 9.13425,
+   "text": "And Voyager is still talking to us. Its transmitter has a power of about twenty-three watts. Roughly that of a refrigerator light bulb.",
+   "start": 150.0,
+   "end": 159.134,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "signal2",
+   "dur": 19.03654166666667,
+   "text": "By the time that signal reaches Earth, it is far weaker than a billionth of a billionth of a watt. To hear it, NASA's Deep Space Network uses dishes seventy metres across, in California, Spain and Australia. The data trickles in at a hundred and sixty bits per second.",
+   "start": 161.0,
+   "end": 180.037,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "power1",
+   "dur": 14.419875,
+   "text": "Its electricity comes from the heat of decaying plutonium, and every year there are about four watts less. So the team has been switching things off, one by one. Of ten science instruments, two are still running.",
+   "start": 183.0,
+   "end": 197.42,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "power2",
+   "dur": 11.971416666666666,
+   "text": "This year, engineers shut down one more, and reworked the power system to buy some time. Every command now takes a day to arrive. The answer takes another day to come back.",
+   "start": 199.2,
+   "end": 211.171,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "scale1",
+   "dur": 10.078166666666666,
+   "text": "So here is the scale of it. Almost fifty years of flight, at about seventeen kilometres every second. And the distance covered is one light-day.",
+   "start": 214.5,
+   "end": 224.578,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "scale2",
+   "dur": 11.8995,
+   "text": "The nearest star is more than four light-years away. That is over fifteen hundred light-days. At Voyager's speed, the journey would take about seventy-five thousand years.",
+   "start": 226.5,
+   "end": 238.399,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "scale3",
+   "dur": 9.691,
+   "text": "And Voyager is not even heading that way. In about forty thousand years, it will drift within a light-year and a half of another star, and sail on.",
+   "start": 240.5,
+   "end": 250.191,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "end1",
+   "dur": 6.132083333333333,
+   "text": "Probably within the next ten years, the power will fall too low, and Voyager will go quiet.",
+   "start": 254.0,
+   "end": 260.132,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "end2",
+   "dur": 8.314625,
+   "text": "But it will not stop. Nothing out there will slow it down. And the record on its side is expected to last a billion years.",
+   "start": 262.5,
+   "end": 270.815,
+   "tempo": 1.0
+  },
+  {
+   "i": 20,
+   "key": "end3",
+   "dur": 2.786791666666667,
+   "text": "One light-day from home. And still going.",
+   "start": 274.5,
+   "end": 277.287,
+   "tempo": 1.0
+  }
+ ]
+}

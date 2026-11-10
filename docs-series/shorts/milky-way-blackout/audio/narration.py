@@ -9,7 +9,7 @@ LINES = [
     ("quake", "Before dawn, the Northridge earthquake hit.", 0.70),
     ("dark", "And much of the city went dark.", 1.30),
     ("look", "Then they looked up.", 2.00),
-    ("cloud", "According to astronomers at Griffith Observatory, some callers asked about a strange, silvery cloud.", 0.35),
+    ("cloud", "According to astronomers at Griffith Observatory, people called about the strange sky. Some reportedly described a silver cloud.", 0.35),
     ("twist", "It was the Milky Way. They'd never seen it.", 0.45),
     ("fact", "Today, nearly {80%|eighty percent} of North Americans can't see it from home.", 0.55),
     ("end", "It's still there. Every night. Right above you.", 0.0),

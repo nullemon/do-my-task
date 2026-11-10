@@ -22,3 +22,6 @@ Pattern for a new Short (copy `sun-black-hole/`): `audio/narration.py` (LINES wi
 `short.py` (timeline from word times; `Scene.st(t)` state + `frame(t)`) → `audio/mix.py` → `short.py vert` →
 `encode.sh vert` → `thumbnail.py` → `short.py wide` → `encode.sh wide`. Render at most one heavy process at a time,
 under `nice -n 10`; about 2–3 s per 1080×1920 frame on the shared box.
+
+## User rule: no disclaimer captions
+No on-screen "not to scale" / "illustration" / "enlarged" / "time-compressed" / "time-lapse" / "brightened" style notes. Keep factual text only.

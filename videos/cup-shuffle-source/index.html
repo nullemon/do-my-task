@@ -1,0 +1,116 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(lat800.woff2) format('woff2');font-weight:800;}
+html,body{margin:0;background:#000}canvas{display:block}
+</style></head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+'use strict';
+/* "Watch the ball" cup shuffle with a change-blindness twist (the cups slowly change colour).
+   1080x1920, deterministic: render(t) draws any frame. */
+const W=1080,H=1920,FPS=60,DUR=12;
+const SLOT=[230,540,850],BASE=1120,START_SLOT=1;
+const T={drop:.55,land:.95,shuffle:1.3,ask:8.45,reveal:9.6,twist:10.6};
+const HUE0=355,HUE1=215;
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a)),lerp=(a,b,x)=>a+(b-a)*x;
+const io=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,eo=x=>1-Math.pow(1-x,3),back=x=>{const c=2.2;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---------- the shuffle: a list of swaps that get faster and faster ---------- */
+const SWAPS=(()=>{const r=rng(41),out=[];let t=T.shuffle,d=.66,prev='';
+  while(true){d=Math.max(.235,d*.925);if(t+d>T.ask-.25)break;
+    let a,b,key;do{const k=r();[a,b]=k<.4?[0,1]:k<.8?[1,2]:[0,2];key=a+''+b;}while(key===prev);prev=key;
+    out.push({t,d,a,b,front:r()<.5});t+=d+.025;}
+  return out;})();
+// which cup (id 0..2) sits in which slot after n swaps; cup 'START_SLOT' holds the ball
+const ORDER=(()=>{const o=[[0,1,2]];SWAPS.forEach(s=>{const c=o[o.length-1].slice();[c[s.a],c[s.b]]=[c[s.b],c[s.a]];o.push(c);});return o;})();
+const FINAL_SLOT=ORDER[ORDER.length-1].indexOf(START_SLOT);
+window.META={DUR,FPS,T,swaps:SWAPS.map(s=>({t:+s.t.toFixed(3),d:+s.d.toFixed(3),x:(SLOT[s.a]+SLOT[s.b])/2/W*2-1})),answer:FINAL_SLOT+1};
+
+function cupStates(t){ // -> [{x,dy,sc,tilt,lift,squash}] per cup id
+  let n=0;while(n<SWAPS.length&&t>=SWAPS[n].t+SWAPS[n].d)n++;
+  const ord=ORDER[n],st=[];
+  ord.forEach((id,slot)=>st[id]={x:SLOT[slot],dy:0,sc:1,tilt:0,lift:0,squash:1});
+  const s=SWAPS[n];
+  if(s&&t>=s.t){const p=io((t-s.t)/s.d),arc=Math.sin(Math.PI*p),dist=Math.abs(SLOT[s.a]-SLOT[s.b]),v=Math.sin(Math.PI*((t-s.t)/s.d));
+    [[ord[s.a],s.a,s.b,s.front?1:-1],[ord[s.b],s.b,s.a,s.front?-1:1]].forEach(([id,from,to,z])=>{
+      const dir=Math.sign(SLOT[to]-SLOT[from]);
+      st[id].x=lerp(SLOT[from],SLOT[to],p);st[id].dy=z*arc*(46+dist*.06);st[id].sc=1+z*arc*.085;st[id].tilt=dir*v*.11*(dist/310);});}
+  // intro: cups start lifted, drop and land with a squash
+  const lift=t<T.drop?1:1-seg(t,T.drop,T.land)**2;
+  const sq=t>T.land?1+.16*Math.exp(-(t-T.land)*11)*Math.cos((t-T.land)*30+Math.PI):1;
+  st.forEach(c=>{c.lift=lift*250;c.squash=sq;});
+  // reveal: the winning cup lifts; in the twist they all hop
+  if(t>T.reveal){const id=START_SLOT;st[id].lift=250*back(seg(t,T.reveal,T.reveal+.4));st[id].tilt=-.1*seg(t,T.reveal,T.reveal+.4);}
+  if(t>T.twist)st.forEach((c,i)=>{if(i!==START_SLOT){const d=t-T.twist-i*.07;if(d>0)c.lift=42*Math.abs(Math.sin(d*7))*Math.exp(-d*2.2);}});
+  return st;
+}
+const hueAt=t=>lerp(HUE0,HUE1,io(seg(t,T.shuffle+.4,T.ask-.3)));
+
+/* ---------- drawing ---------- */
+function txt(s,x,y,size,fill='#fff',alpha=1,stroke=0){g.save();g.globalAlpha=alpha;g.font=`800 ${size}px B`;g.textAlign='center';g.textBaseline='middle';
+  if(stroke){g.lineJoin='round';g.lineWidth=stroke;g.strokeStyle='#0b1024';g.strokeText(s,x,y);}g.fillStyle=fill;g.fillText(s,x,y);g.restore();}
+function cup(x,y,sc,tilt,squash,h,alpha=1){
+  g.save();g.globalAlpha=alpha;g.translate(x,y);g.rotate(tilt);g.scale(sc/Math.sqrt(squash),sc*squash);
+  const B=124,Tp=80,HH=300,dark=`hsl(${h},75%,30%)`;
+  const body=()=>{g.beginPath();g.moveTo(-B,0);g.lineTo(-Tp,-HH);g.ellipse(0,-HH,Tp,20,0,Math.PI,0);g.lineTo(B,0);g.ellipse(0,0,B,30,0,0,Math.PI);g.closePath();};
+  body();g.fillStyle=`hsl(${h},88%,56%)`;g.fill();
+  g.save();body();g.clip();
+  g.fillStyle=`hsl(${h},85%,43%)`;g.fillRect(34,-HH-30,B,HH+70);                       // shade side
+  g.fillStyle=`hsla(${h},100%,82%,.55)`;g.beginPath();g.moveTo(-70,-HH+30);g.lineTo(-48,-HH+30);g.lineTo(-74,-60);g.lineTo(-100,-60);g.closePath();g.fill();  // highlight
+  g.fillStyle=`hsl(${h},80%,36%)`;g.beginPath();g.ellipse(0,-44,B+6,34,0,0,Math.PI);g.ellipse(0,-18,B+6,34,0,Math.PI,0,true);g.closePath();g.fill();          // band
+  g.restore();
+  body();g.lineWidth=7;g.lineJoin='round';g.strokeStyle=dark;g.stroke();
+  g.beginPath();g.ellipse(0,-HH,Tp,20,0,0,7);g.fillStyle=`hsl(${h},88%,66%)`;g.fill();g.lineWidth=7;g.stroke();
+  g.restore();
+}
+function ball(x,y,r,a=1){g.save();g.globalAlpha=a;g.beginPath();g.arc(x,y-r,r,0,7);g.fillStyle='#ffd23f';g.fill();g.lineWidth=7;g.strokeStyle='#b8860b';g.stroke();
+  g.beginPath();g.ellipse(x-r*.32,y-r*1.38,r*.26,r*.16,-.5,0,7);g.fillStyle='rgba(255,255,255,.85)';g.fill();g.restore();}
+
+function render(t){
+  // stage
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#0d1330';g.fillRect(0,0,W,H);
+  const sp=g.createRadialGradient(540,900,80,540,900,980);sp.addColorStop(0,'rgba(120,150,255,.34)');sp.addColorStop(1,'rgba(13,19,48,0)');g.fillStyle=sp;g.fillRect(0,0,W,H);
+  g.fillStyle='#1b2452';g.fillRect(0,BASE-70,W,H);g.fillStyle='#2a3570';g.fillRect(0,BASE-70,W,10);
+  const tb=g.createLinearGradient(0,BASE-60,0,H);tb.addColorStop(0,'rgba(60,80,170,.35)');tb.addColorStop(1,'rgba(13,19,48,.9)');g.fillStyle=tb;g.fillRect(0,BASE-60,W,H);
+
+  const st=cupStates(t),h=hueAt(t);
+  const ballVisible=t<T.land+.02||t>T.reveal;
+  // shadows
+  st.forEach(c=>{const k=1-c.lift/420;g.beginPath();g.ellipse(c.x,BASE+c.dy+10,138*c.sc*k,30*c.sc*k,0,0,7);g.fillStyle=`rgba(4,6,20,${.5*k})`;g.fill();});
+  // ball sits on the table at its slot while visible
+  const bx=t<T.shuffle?SLOT[START_SLOT]:SLOT[FINAL_SLOT];
+  if(ballVisible){const pop=t>T.reveal?1+.25*Math.sin(Math.PI*seg(t,T.reveal+.1,T.reveal+.45)):1;ball(bx,BASE+8,52*pop);}
+  // cups, back to front
+  st.map((c,i)=>({c,i})).sort((a,b)=>a.c.dy-b.c.dy).forEach(({c})=>cup(c.x,BASE+c.dy-c.lift,c.sc,c.tilt,c.squash,h));
+  // reveal burst
+  if(t>T.reveal){const p=seg(t,T.reveal+.1,T.reveal+.7);if(p<1)for(let i=0;i<14;i++){const a=i/14*6.283,r1=90+p*190,r2=r1+50*(1-p);
+      g.beginPath();g.moveTo(bx+Math.cos(a)*r1,BASE-50+Math.sin(a)*r1);g.lineTo(bx+Math.cos(a)*r2,BASE-50+Math.sin(a)*r2);g.lineWidth=10*(1-p);g.lineCap='round';g.strokeStyle='#ffd23f';g.stroke();}}
+
+  // ---- text ----
+  const pulse=1+.035*Math.sin(t*6);
+  if(t<T.ask){g.save();g.translate(540,340);g.scale(pulse*back(seg(t,0,.3)),pulse*back(seg(t,0,.3)));txt('WATCH THE BALL',0,0,104,'#fff',1,18);g.restore();
+    // speed meter
+    let n=0;while(n<SWAPS.length&&t>=SWAPS[n].t)n++;
+    if(n>0){const s=SWAPS[n-1],sp=(.66/s.d),k=1+.15*Math.exp(-(t-s.t)*12);g.save();g.translate(540,1560);g.scale(k,k);txt('SPEED ×'+sp.toFixed(1),0,0,64,`hsl(${45-28*clamp((sp-1)/1.8)},100%,62%)`,1,12);g.restore();}
+  }else if(t<T.reveal){
+    const p=back(seg(t,T.ask,T.ask+.25));g.save();g.translate(540,340);g.scale(p,p);txt('WHICH CUP?',0,0,128,'#ffd23f',1,20);g.restore();
+    // countdown bar
+    const q=1-seg(t,T.ask+.2,T.reveal);g.fillStyle='rgba(255,255,255,.18)';g.beginPath();g.roundRect(240,440,600,18,9);g.fill();g.fillStyle='#ffd23f';g.beginPath();g.roundRect(240,440,600*q,18,9);g.fill();
+  }else if(t<T.twist){
+    const p=back(seg(t,T.reveal+.1,T.reveal+.35));g.save();g.translate(540,340);g.scale(p,p);txt('CUP '+(FINAL_SLOT+1)+'!',0,0,150,'#ffd23f',1,20);g.restore();
+  }else{
+    const p=back(seg(t,T.twist,T.twist+.28)),p2=back(seg(t,T.twist+.25,T.twist+.5));
+    g.save();g.translate(540,300);g.scale(p,p);txt('BUT DID YOU NOTICE',0,0,84,'#fff',1,16);g.restore();
+    g.save();g.translate(540,410);g.scale(p2,p2);txt('THE CUPS CHANGED COLOUR?',0,0,70,'#ffd23f',1,16);g.restore();
+    // proof: start vs now
+    const a=seg(t,T.twist+.45,T.twist+.7);
+    if(a>0){cup(400,1640,.42,0,1,HUE0,a);cup(680,1640,.42,0,1,HUE1,a);txt('START',400,1700,40,'#fff',a,10);txt('NOW',680,1700,40,'#fff',a,10);g.save();g.globalAlpha=a;g.lineWidth=12;g.lineCap='round';g.lineJoin='round';g.strokeStyle='#fff';g.beginPath();g.moveTo(490,1580);g.lineTo(590,1580);g.moveTo(560,1552);g.lineTo(590,1580);g.lineTo(560,1608);g.stroke();g.restore();}
+  }
+  // cup numbers
+  if(t>=T.ask&&t<T.twist){const a=seg(t,T.ask+.05,T.ask+.25);SLOT.forEach((x,i)=>{const win=t>T.reveal&&i===FINAL_SLOT;
+      g.beginPath();g.arc(x,1290,46,0,7);g.fillStyle=win?'#ffd23f':`rgba(255,255,255,${.16*a})`;g.fill();txt(String(i+1),x,1294,58,win?'#0b1024':'#fff',a);});}
+}
+window.render=render;
+</script></body></html>

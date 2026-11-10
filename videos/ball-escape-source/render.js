@@ -5,7 +5,7 @@ const {chromium}=require('playwright');const fs=require('fs');const path=require
   const b=await chromium.launch();const p=await b.newPage({viewport:{width:1080,height:1920}});
   const errs=[];p.on('pageerror',e=>errs.push(e.message));
   await p.goto('file://'+path.resolve(__dirname,'index.html'));
-  await p.evaluate(async()=>{await document.fonts.load('800 40px B','क्या आज़ाद');await document.fonts.load('800 40px B','123');await document.fonts.ready;});
+  await p.evaluate(async()=>{await document.fonts.load('800 40px B','WILL IT ESCAPE');await document.fonts.load('800 40px B','123');await document.fonts.ready;});
   if(errs.length){console.log('ERRORS',errs);process.exit(1);}
   const meta=await p.evaluate(()=>window.META);
   if(mode==='meta')fs.writeFileSync(out,JSON.stringify(meta));

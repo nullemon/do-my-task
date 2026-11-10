@@ -110,11 +110,11 @@ function scene(g,t){
       g.globalAlpha=Math.min(1,a*1.6);g.save();g.translate(x,y);g.rotate(c.rot+c.vr*fd);g.fillStyle=`hsl(${c.h},100%,65%)`;g.fillRect(-c.s,-c.s*.45,c.s*2,c.s*.9);g.restore();});
     g.restore();
     const p=seg(fd,.05,.3),sc=p<1?1.25-.25*p+.5*Math.sin(p*Math.PI):1+.03*Math.sin(fd*9);
-    g.save();g.scale(sc,sc);txt(g,'आज़ाद!',0,0,190,'#fff',clamp(fd/.08),50,`hsl(${HUE[3]},100%,60%)`);g.restore();}
+    g.save();g.scale(sc,sc);txt(g,'FREE!',0,0,230,'#fff',clamp(fd/.08),50,`hsl(${HUE[3]},100%,60%)`);g.restore();}
   // screen-space text
   g.setTransform(1,0,0,1,0,0);
-  const hook=1+.04*Math.sin(t*5);g.save();g.translate(CX,340);g.scale(hook,hook);txt(g,'क्या ये बाहर निकल पाएगी?',0,0,70,'#fff',1,18,`hsl(${hue},100%,60%)`);g.restore();
-  txt(g,'कितने बाउंस लगे? कमेंट करो',CX,1600,44,'#fff',.75);
+  const hook=1+.04*Math.sin(t*5);g.save();g.translate(CX,340);g.scale(hook,hook);txt(g,'WILL IT ESCAPE?',0,0,92,'#fff',1,18,`hsl(${hue},100%,60%)`);g.restore();
+  txt(g,'How many bounces? Comment below',CX,1600,46,'#fff',.75);
   // ring-progress dots
   for(let k=0;k<4;k++){g.beginPath();g.arc(CX-75+k*50,430,11,0,7);g.fillStyle=k<active?`hsl(${HUE[k]},95%,60%)`:'rgba(255,255,255,.18)';g.fill();}
   if(fd>=0&&fd<.3){g.fillStyle=`rgba(255,255,255,${.7*(1-fd/.3)})`;g.fillRect(0,0,W,H);}

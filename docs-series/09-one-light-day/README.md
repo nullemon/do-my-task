@@ -129,5 +129,5 @@ re-scaled. Captions are larger, wrapped and stacked.
   variation, a rim lip and uneven roughness to the reflector after review.
 - Compositor: 6,912 frames per format in 24 segments, about 0.8–1.0 s per frame per worker.
 - Audio: −14.1 LUFS integrated, −1.3 dBFS peak, measured with ebur128 on the final `-1080p-hq.mp4` and `-vertical.mp4` (the WAV mix itself is −14.0 LUFS, −1.5 dBTP).
-- Sizes: `-1080p-hq.mp4` 352.6 MB, `-vertical.mp4` 352.4 MB (both 288.0 s, 6,912 frames); `-4k.mp4` is capped at 19 Mb/s to stay under 740 MB.
+- Sizes: `-1080p-hq.mp4` 352.6 MB, `-vertical.mp4` 352.4 MB (both 288.0 s, 6,912 frames); `-4k.mp4` 694.5 MB (capped at 19 Mb/s to stay under 740 MB).
 - Checked before delivery: 21 frames of each format on contact sheets and 8 frames of the final 16:9 file at full size. Fixed along the way: two labels that ran off the right edge (the Sun note in the 23-watt shot, the Gliese 445 note), small print raised to 15 px in 16:9, and the dish re-rendered.

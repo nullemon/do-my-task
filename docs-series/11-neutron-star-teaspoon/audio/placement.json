@@ -1,0 +1,231 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 8.10125,
+   "text": "This is one teaspoon. Five millilitres. Fill it with matter from inside a neutron star, and it would outweigh a mountain.",
+   "start": 0.8,
+   "end": 8.901,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 7.301666666666667,
+   "text": "Billions of tonnes. More than every human being on Earth, combined. So what would it do, if you brought it home?",
+   "start": 9.9,
+   "end": 17.202,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "hook3",
+   "dur": 3.0280416666666667,
+   "text": "The honest answer is stranger than the question.",
+   "start": 18.2,
+   "end": 21.228,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "form1",
+   "dur": 11.819958333333334,
+   "text": "It begins with a giant star, at least eight times the mass of our Sun. For millions of years it shines. Then its core fills with iron, and iron gives no energy back.",
+   "start": 27.0,
+   "end": 38.82,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "form2",
+   "dur": 14.467791666666667,
+   "text": "The fire goes out. In less than a second, a core thousands of kilometres wide falls in on itself, to a ball about twenty kilometres across. The rest of the star is blown into space. A supernova.",
+   "start": 40.2,
+   "end": 54.668,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "size1",
+   "dur": 10.655833333333334,
+   "text": "What is left behind is a neutron star. Here is one, to scale, above New York. About twenty-five kilometres across. A little longer than Manhattan.",
+   "start": 58.0,
+   "end": 68.656,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "size2",
+   "dur": 3.9288333333333334,
+   "text": "And packed inside that sphere is more mass than the entire Sun.",
+   "start": 69.9,
+   "end": 73.829,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "dens1",
+   "dur": 15.864,
+   "text": "Ordinary atoms are almost entirely empty space. Here, that space has been crushed out. Electrons and protons are forced together into neutrons, packed about as tightly as the inside of an atomic nucleus.",
+   "start": 75.8,
+   "end": 91.664,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "dens2",
+   "dur": 14.975958333333333,
+   "text": "That is where the teaspoon comes from. Near the surface, the crust is far less dense. But averaged through the whole star, five millilitres holds about two billion tonnes. Deep in the core, perhaps five billion, or more.",
+   "start": 93.0,
+   "end": 107.976,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "grav1",
+   "dur": 13.78825,
+   "text": "Gravity at the surface is around a hundred billion times stronger than on Earth. Drop something from one metre, and it lands in about a millionth of a second, at well over a thousand kilometres per second.",
+   "start": 110.0,
+   "end": 123.788,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "grav2",
+   "dur": 10.427416666666666,
+   "text": "To leave again, you would need more than half the speed of light. Gravity here is strong enough to bend light itself, so you can see part of the star's far side.",
+   "start": 125.0,
+   "end": 135.427,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "spin1",
+   "dur": 9.0515,
+   "text": "And they spin. Beams of radiation sweep out from the magnetic poles, and if one crosses the Earth, we see a pulse. A pulsar.",
+   "start": 137.4,
+   "end": 146.452,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "spin2",
+   "dur": 8.989458333333333,
+   "text": "The fastest one known turns seven hundred and sixteen times every second. Its equator moves at nearly a quarter of the speed of light.",
+   "start": 147.7,
+   "end": 156.689,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "mag",
+   "dur": 9.284916666666666,
+   "text": "Some, called magnetars, carry magnetic fields around a thousand trillion times stronger than the Earth's. The strongest magnets known.",
+   "start": 158.2,
+   "end": 167.485,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "ans1",
+   "dur": 10.267458333333334,
+   "text": "So. The teaspoon. Here is the problem: you could not scoop it. This matter is only that dense because the weight of an entire star is pressing down on it.",
+   "start": 170.0,
+   "end": 180.267,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "ans2",
+   "dur": 15.047583333333334,
+   "text": "Take a spoonful away from that gravity, and nothing holds it together. It would expand, instantly, and violently. By rough estimates, the blast would dwarf the asteroid impact that ended the age of the dinosaurs.",
+   "start": 181.6,
+   "end": 196.648,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "thought1",
+   "dur": 9.679583333333333,
+   "text": "But suppose, purely as a thought experiment, that it somehow stayed compressed. A bead about two centimetres wide, weighing billions of tonnes.",
+   "start": 199.2,
+   "end": 208.88,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "thought2",
+   "dur": 9.650916666666667,
+   "text": "Within a few metres of it, its gravity would pull on you harder than the whole Earth does. And no spoon, no floor, no bedrock could hold it up.",
+   "start": 210.1,
+   "end": 219.751,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "thought3",
+   "dur": 13.534125,
+   "text": "It would fall straight through the ground, and the planet would barely slow it. Down to the centre in about twenty minutes. On, almost to the far side. And back. Again, and again, through the heart of the world.",
+   "start": 221.0,
+   "end": 234.534,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "kilo1",
+   "dur": 10.596833333333333,
+   "text": "Sometimes, though, neutron stars really do give their matter back. When two of them orbit each other, they spiral together over millions of years, and collide.",
+   "start": 237.0,
+   "end": 247.597,
+   "tempo": 1.0
+  },
+  {
+   "i": 20,
+   "key": "kilo2",
+   "dur": 15.13325,
+   "text": "On the seventeenth of August, 2017, detectors on Earth felt the ripples in space from exactly that: a merger, a hundred and thirty million light-years away. Then telescopes watched the wreckage glow. A kilonova.",
+   "start": 248.9,
+   "end": 264.033,
+   "tempo": 1.0
+  },
+  {
+   "i": 21,
+   "key": "kilo3",
+   "dur": 12.794833333333333,
+   "text": "This time, the matter did escape. And as it expanded, it forged heavy elements. Gold and platinum among them: by some estimates, several times the mass of the Earth in gold alone.",
+   "start": 265.4,
+   "end": 278.195,
+   "tempo": 1.0
+  },
+  {
+   "i": 22,
+   "key": "gold",
+   "dur": 6.492041666666666,
+   "text": "So the gold in a wedding ring was very likely made like this. In the collision of dead stars.",
+   "start": 279.6,
+   "end": 286.092,
+   "tempo": 1.0
+  },
+  {
+   "i": 23,
+   "key": "end1",
+   "dur": 9.24275,
+   "text": "A neutron star is the densest matter we can observe. Add a little more mass, and nothing can hold it up at all. It becomes a black hole.",
+   "start": 288.6,
+   "end": 297.843,
+   "tempo": 1.0
+  },
+  {
+   "i": 24,
+   "key": "end2",
+   "dur": 6.673916666666667,
+   "text": "So you were never going to hold a teaspoon of a neutron star. But you may already be wearing a little of one.",
+   "start": 299.4,
+   "end": 306.074,
+   "tempo": 1.0
+  }
+ ]
+}

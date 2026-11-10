@@ -12,7 +12,7 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 args = sys.argv[1:]
 MODE = args[0] if args else "test"
 NF = 80
-BEAD_R = float(os.environ.get("BEAD_R", "0.5"))
+BEAD_R = float(os.environ.get("BEAD_R", "0.2"))
 
 
 def ss(a, b, x):
@@ -140,7 +140,7 @@ def add_cam(sc, loc, target, lens):
 
 
 def spoon_scene(bead_on):
-    sc = setup((1800, 1200), SCR + "/tex/env_earth.hdr", 2.2, int(os.environ.get("SPP", "40")))
+    sc = setup((1800, 1200), SCR + "/tex/env_earth.hdr", 2.8, int(os.environ.get("SPP", "40")))
     sp = build_spoon(); sp.data.materials.append(steel())
     piv = bpy.data.objects.new("pivot", None); sc.collection.objects.link(piv); piv.location = (6.2, 0, 0.3)
     sp.parent = piv; sp.location = (-6.2, 0, -0.3)
@@ -149,10 +149,10 @@ def spoon_scene(bead_on):
     so.rotation_euler = Vector((-0.62, -0.50, 0.42)).to_track_quat("Z", "Y").to_euler()
     bead = None
     if bead_on:
-        bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, radius=BEAD_R, location=(2.3 - 6.2, 0, -0.86 + BEAD_R + 0.10 - 0.3))
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=48, ring_count=24, radius=BEAD_R, location=(2.3 - 6.2, 0, 0.22 - 0.3))
         bead = bpy.context.active_object; bead.parent = piv
         m = bpy.data.materials.new("bead"); m.use_nodes = True; N = m.node_tree.nodes; L = m.node_tree.links
-        em = N.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (0.62, 0.80, 1.0, 1); em.inputs["Strength"].default_value = 900.0
+        em = N.new("ShaderNodeEmission"); em.inputs["Color"].default_value = (0.62, 0.80, 1.0, 1); em.inputs["Strength"].default_value = 16000.0
         L.new(em.outputs[0], N["Material Output"].inputs["Surface"]); bead.data.materials.append(m)
     cam = add_cam(sc, (-13.0, -33.0, 17.0), (6.4, 0.0, 0.2), 86)
     return sc, piv, cam, bead
@@ -198,7 +198,7 @@ elif MODE in ("ring", "ringtest"):
     key = bpy.data.lights.new("k", "AREA"); key.energy = 60; key.size = 3; ko = bpy.data.objects.new("k", key); sc.collection.objects.link(ko)
     ko.location = (-5, -5, 6); ko.rotation_euler = (Vector((0, 0, 0)) - Vector(ko.location)).to_track_quat("-Z", "Y").to_euler()
     os.makedirs(f"{SCR}/spr/ring", exist_ok=True)
-    fr = [int(args[1]) if len(args) > 1 else 40] if MODE == "ringtest" else range(int(args[1]), int(args[2]))
+    fr = [int(args[1]) if len(args) > 1 else 40] if MODE == "ringtest" else range(int(args[1]), int(args[2]), int(args[3]) if len(args) > 3 else 1)
     for f in fr:
         u = f / (NF - 1)
         ring.rotation_euler = Euler((math.radians(62 - 10 * u), math.radians(14 + 8 * u), math.radians(-30 + 70 * u)), "XYZ")

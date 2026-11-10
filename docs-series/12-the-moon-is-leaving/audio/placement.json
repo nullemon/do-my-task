@@ -1,0 +1,186 @@
+{
+ "voice": "am_michael",
+ "speed": 0.94,
+ "lines": [
+  {
+   "i": 0,
+   "key": "hook1",
+   "dur": 8.389166666666666,
+   "text": "Every year, the Moon moves about three point eight centimetres farther from the Earth. Roughly the speed at which your fingernails grow.",
+   "start": 1.0,
+   "end": 9.389,
+   "tempo": 1.0
+  },
+  {
+   "i": 1,
+   "key": "hook2",
+   "dur": 8.493458333333333,
+   "text": "It has been leaving for more than four billion years. And one day, because of it, the Earth will see its last total eclipse of the Sun.",
+   "start": 10.4,
+   "end": 18.893,
+   "tempo": 1.0
+  },
+  {
+   "i": 2,
+   "key": "laser1",
+   "dur": 14.282166666666667,
+   "text": "We know the rate because we measure it. Apollo astronauts, and two Soviet Lunokhod rovers, left reflectors on the lunar surface: panels of glass prisms that send light straight back to where it came from.",
+   "start": 24.5,
+   "end": 38.782,
+   "tempo": 1.0
+  },
+  {
+   "i": 3,
+   "key": "laser2",
+   "dur": 17.796958333333333,
+   "text": "Observatories on Earth fire laser pulses at them, and time the echo. The round trip takes about two and a half seconds. Of all the light in each pulse, only a few photons make it back. But that is enough to track the distance to the Moon to within millimetres.",
+   "start": 40.2,
+   "end": 57.997,
+   "tempo": 1.0
+  },
+  {
+   "i": 4,
+   "key": "tide1",
+   "dur": 11.8645,
+   "text": "So why is it leaving? The answer is the tides. The Moon's gravity stretches the Earth, raising a bulge of ocean on the side facing it, and another on the far side.",
+   "start": 60.5,
+   "end": 72.364,
+   "tempo": 1.0
+  },
+  {
+   "i": 5,
+   "key": "tide2",
+   "dur": 13.076,
+   "text": "But the Earth spins much faster than the Moon orbits, so it carries that bulge ahead of the Moon. The bulge's own gravity tugs the Moon forward, and lifts it, very slowly, into a wider orbit.",
+   "start": 73.6,
+   "end": 86.676,
+   "tempo": 1.0
+  },
+  {
+   "i": 6,
+   "key": "tide3",
+   "dur": 6.938,
+   "text": "In return, the Moon pulls back on the bulge, like a brake. The spin the Earth loses, the Moon gains.",
+   "start": 87.9,
+   "end": 94.838,
+   "tempo": 1.0
+  },
+  {
+   "i": 7,
+   "key": "day1",
+   "dur": 14.364625,
+   "text": "So our days are getting longer. Tides alone should add about two point three milliseconds every century. The measured figure, from eclipse records reaching back twenty-seven centuries, is nearer one point eight.",
+   "start": 96.6,
+   "end": 110.965,
+   "tempo": 1.0
+  },
+  {
+   "i": 8,
+   "key": "past1",
+   "dur": 17.187416666666667,
+   "text": "It does not sound like much. But run the clock backwards. Seventy million years ago, in the last days of the dinosaurs, a fossil shell recorded a year of about three hundred and seventy-two days. Each one, about twenty-three and a half hours long.",
+   "start": 113.0,
+   "end": 130.187,
+   "tempo": 1.0
+  },
+  {
+   "i": 9,
+   "key": "past2",
+   "dur": 11.301291666666666,
+   "text": "Go back roughly four hundred million years, and corals were laying down about four hundred daily growth lines every year. A day lasted less than twenty-two hours.",
+   "start": 131.6,
+   "end": 142.901,
+   "tempo": 1.0
+  },
+  {
+   "i": 10,
+   "key": "origin1",
+   "dur": 14.74525,
+   "text": "And at the very beginning, about four and a half billion years ago, the leading theory says a body the size of Mars struck the young Earth. The debris gathered into a Moon that orbited more than ten times closer than it does today.",
+   "start": 145.2,
+   "end": 159.945,
+   "tempo": 1.0
+  },
+  {
+   "i": 11,
+   "key": "origin2",
+   "dur": 8.155375,
+   "text": "It would have hung in the sky more than ten times wider than the Moon we know, above a world that may have turned once every few hours.",
+   "start": 161.4,
+   "end": 169.555,
+   "tempo": 1.0
+  },
+  {
+   "i": 12,
+   "key": "ecl1",
+   "dur": 15.299375,
+   "text": "Which brings us to a coincidence. The Sun is about four hundred times wider than the Moon. It is also about four hundred times farther away. So in our sky, the two discs are almost exactly the same size.",
+   "start": 172.4,
+   "end": 187.699,
+   "tempo": 1.0
+  },
+  {
+   "i": 13,
+   "key": "ecl2",
+   "dur": 18.32375,
+   "text": "When they line up, the Moon covers the Sun's blinding face, and almost nothing more. Beads of sunlight shine through lunar valleys. A last diamond flares. And then, the corona: the Sun's outer atmosphere, visible to the naked eye only in these few minutes.",
+   "start": 189.2,
+   "end": 207.524,
+   "tempo": 1.0
+  },
+  {
+   "i": 14,
+   "key": "ecl3",
+   "dur": 9.915041666666667,
+   "text": "But the fit is already imperfect. When the Moon is at the far end of its orbit, it is too small, and leaves a ring of sunlight. An annular eclipse.",
+   "start": 211.0,
+   "end": 220.915,
+   "tempo": 1.0
+  },
+  {
+   "i": 15,
+   "key": "fut1",
+   "dur": 16.614041666666665,
+   "text": "As the Moon retreats, those rings will become the rule. In roughly six hundred million years, though estimates vary, the Moon will cover the Sun completely for the last time. After that, every eclipse will be partial, or a ring of fire.",
+   "start": 222.6,
+   "end": 239.214,
+   "tempo": 1.0
+  },
+  {
+   "i": 16,
+   "key": "far1",
+   "dur": 17.504583333333333,
+   "text": "Will the Moon ever escape? No. The retreat would only end when the Earth's day had slowed to match the Moon's month. That would take tens of billions of years. The Sun will swell into a red giant in about five billion. The process will never finish.",
+   "start": 241.5,
+   "end": 259.005,
+   "tempo": 1.0
+  },
+  {
+   "i": 17,
+   "key": "pay1",
+   "dur": 14.12425,
+   "text": "So consider the timing. For most of Earth's history, the Moon was larger than it needed to be. In the far future, it will be too small. We happen to live in between, in the long window when the Moon fits the Sun.",
+   "start": 261.5,
+   "end": 275.624,
+   "tempo": 1.0
+  },
+  {
+   "i": 18,
+   "key": "pay2",
+   "dur": 4.676541666666667,
+   "text": "It is still leaving. Three point eight centimetres this year. And the next.",
+   "start": 277.4,
+   "end": 282.077,
+   "tempo": 1.0
+  },
+  {
+   "i": 19,
+   "key": "pay3",
+   "dur": 7.324833333333333,
+   "text": "So when totality next crosses your part of the world, go and stand in the shadow. It will not always be there.",
+   "start": 283.8,
+   "end": 291.125,
+   "tempo": 1.0
+  }
+ ]
+}

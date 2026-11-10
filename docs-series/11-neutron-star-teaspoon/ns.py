@@ -46,46 +46,59 @@ def _eqdirs(Wm, Hm):
     return np.stack([np.cos(LAT) * np.cos(LON), np.cos(LAT) * np.sin(LON), np.sin(LAT)], -1), LAT, LON
 
 
+def voronoi(dirs, n, seed):
+    """cellular noise on the sphere: (F1, F2 - F1, cell id), distances in units of the mean cell spacing"""
+    from scipy.spatial import cKDTree
+    r = np.random.default_rng(seed); p = r.standard_normal((n, 3)); p /= np.linalg.norm(p, axis=1, keepdims=True)
+    dd, ii = cKDTree(p).query(dirs.reshape(-1, 3), k=2, workers=2)
+    sp = math.sqrt(4 * math.pi / n)
+    return (dd[:, 0] / sp).reshape(dirs.shape[:-1]).astype(F32), ((dd[:, 1] - dd[:, 0]) / sp).reshape(dirs.shape[:-1]).astype(F32), ii[:, 0].reshape(dirs.shape[:-1])
+
+
 @functools.lru_cache(None)
 def ns_tex(kind="ns"):
     """equirect RGB emission map in the star's magnetic frame (z = magnetic axis)"""
-    fn = f"{TEX}/tex_{kind}4.npy"
+    fn = f"{TEX}/tex_{kind}8.npy"
     if os.path.exists(fn): return np.load(fn)
     Wm, Hm = (5120, 2560) if kind == "ns" else (3072, 1536)
     d, LAT, LON = _eqdirs(Wm, Hm)
     if kind in ("ns", "mag"):
-        warp = np.stack([sphere_fbm(d, 3.0, 3, 11 + i) for i in range(3)], -1) * 0.10
+        # incandescent crust: plates (cellular noise at three scales) with hair-line fractures, fine granulation, hot polar caps
+        warp = np.stack([sphere_fbm(d, 5.0, 5, 11 + i, nw=20, H=0.6) for i in range(3)], -1) * 0.11
         dw = d + warp; dw /= np.linalg.norm(dw, axis=-1, keepdims=True)
-        big = sphere_fbm(dw, 2.2, 4, 1)                                   # large-scale temperature mottling
-        n1 = sphere_fbm(dw, 5.5, 4, 2, H=1.0); n2 = sphere_fbm(dw, 17.0, 4, 3, H=0.9); n3 = sphere_fbm(d, 60.0, 3, 8, H=0.8)
-        gran = sphere_fbm(d, 170.0, 3, 4, H=0.5)                          # granulation
-        # fracture networks = zero contours of smooth noise (connected, thin), three scales
-        cr1 = np.clip(1 - np.abs(n1) / 0.035, 0, 1) ** 1.5; cr2 = np.clip(1 - np.abs(n2) / 0.05, 0, 1) ** 1.5; cr3 = np.clip(1 - np.abs(n3) / 0.07, 0, 1) ** 1.5
-        glow1 = np.exp(-np.abs(n1) / 0.16)                                # heat leaking around the main fractures
-        hot = np.clip(sphere_fbm(dw, 3.5, 3, 12) - 0.45, 0, 1) * 2.0      # a few hot provinces
-        cap = np.exp(-((np.pi / 2 - np.abs(LAT)) / 0.33) ** 2)            # hot polar caps
-        ring = np.exp(-(((np.pi / 2 - np.abs(LAT)) - 0.50) / 0.10) ** 2)
-        strie = (0.5 + 0.5 * np.cos(LON * 46 + 6 * big + 3 * sphere_fbm(d, 6, 2, 9))) * np.exp(-((np.pi / 2 - np.abs(LAT)) / 0.75) ** 2)
-        plate = np.sign(n1) * 0.5 + np.sign(n2) * 0.25                    # each plate at a slightly different temperature
-        T = 0.34 + 0.13 * big + 0.045 * plate + 0.05 * gran + 0.75 * cr1 * (0.6 + 0.6 * hot) + 0.30 * cr2 + 0.13 * cr3 + 0.16 * glow1 + 0.35 * hot * glow1 \
-            + 1.15 * cap + 0.14 * ring * (0.6 + 0.4 * strie) + 0.10 * strie
-        T = np.clip(T, 0.02, 3)
+        warp2 = np.stack([sphere_fbm(d, 30.0, 3, 31 + i, nw=20) for i in range(3)], -1) * 0.008
+        dw2 = dw + warp2; dw2 /= np.linalg.norm(dw2, axis=-1, keepdims=True)
+        rr_ = np.random.default_rng(5)
+        f1a, ea, ia = voronoi(dw, 520, 1); f1b, eb, ib = voronoi(dw2, 5200, 2); f1c, ec, ic = voronoi(dw2, 60000, 3)
+        ta = rr_.uniform(-1, 1, 520)[ia]; tb = rr_.uniform(-1, 1, 5200)[ib]; tc = rr_.uniform(-1, 1, 60000)[ic]
+        big = sphere_fbm(dw, 2.0, 4, 1, nw=24); gran = sphere_fbm(d, 420.0, 2, 4, H=0.5, nw=60)
+        crA = np.exp(-(ea / 0.035) ** 2); crB = np.exp(-(eb / 0.055) ** 2); crC = np.exp(-(ec / 0.10) ** 2)
+        seamA = np.exp(-(ea / 0.16) ** 2)                                  # heat glowing along the big plate boundaries
+        colat = np.pi / 2 - np.abs(LAT)
+        cap = np.exp(-(colat / 0.22) ** 2); ring = np.exp(-((colat - 0.40) / 0.08) ** 2)
+        strie = (0.5 + 0.5 * np.cos(LON * 60 + 6 * big)) * np.exp(-(colat / 0.8) ** 2)
+        T = 0.70 + 0.12 * big + 0.04 * ta + 0.06 * tb + 0.05 * tc + 0.035 * gran - 0.08 * np.clip(f1b - 0.25, 0, 1) \
+            + 0.09 * seamA + 0.26 * crA + 0.26 * crB * (0.5 + 0.5 * seamA + 0.3 * (tb > 0.3)) + 0.12 * crC \
+            + 1.0 * cap + 0.14 * ring * (0.5 + 0.5 * strie) + 0.07 * strie
+        T = np.clip(T, 0.05, 3)
         if kind == "ns":
-            c0, c1, c2 = np.array([0.06, 0.18, 0.75], F32), np.array([0.42, 0.72, 1.0], F32), np.array([1.0, 1.0, 1.0], F32)
+            c0, c1, c2 = np.array([0.10, 0.30, 0.95], F32), np.array([0.50, 0.76, 1.0], F32), np.array([1.0, 1.0, 1.0], F32)
         else:
-            c0, c1, c2 = np.array([0.32, 0.08, 0.72], F32), np.array([0.80, 0.52, 1.0], F32), np.array([1.0, 0.97, 1.0], F32)
-        t1 = np.clip(T / 0.75, 0, 1)[..., None]; t2 = np.clip((T - 0.75) / 0.9, 0, 1)[..., None]
+            c0, c1, c2 = np.array([0.40, 0.14, 0.90], F32), np.array([0.78, 0.58, 1.0], F32), np.array([1.0, 0.97, 1.0], F32)
+        t1 = np.clip((T - 0.35) / 0.55, 0, 1)[..., None]; t2 = np.clip((T - 0.90) / 0.55, 0, 1)[..., None]
         rgb = (c0 + (c1 - c0) * t1) * (1 - t2) + c2 * t2
-        rgb = rgb * (0.28 + 1.0 * T[..., None])
-    else:                                                                # red supergiant: huge convection cells
-        warp = np.stack([sphere_fbm(d, 1.6, 3, 21 + i) for i in range(3)], -1) * 0.35
+        rgb = rgb * (0.10 + 1.02 * T[..., None])
+    else:                                                                # red supergiant: a few enormous convection cells
+        warp = np.stack([sphere_fbm(d, 2.5, 6, 21 + i, nw=24, H=0.55) for i in range(3)], -1) * 0.30
         dw = d + warp; dw /= np.linalg.norm(dw, axis=-1, keepdims=True)
-        cells = sphere_fbm(dw, 3.2, 5, 5, H=0.9, nw=30); lanes = sphere_fbm(dw, 6.0, 5, 6, H=0.8, ridged=True, nw=30)
-        gran = sphere_fbm(d, 40.0, 4, 7, H=0.6, nw=30)
-        T = np.clip(0.80 + 0.45 * cells - 0.30 * np.clip((lanes - 0.62) / 0.25, 0, 1) + 0.08 * gran, 0.25, 2)
-        c0, c1, c2 = np.array([0.75, 0.13, 0.02], F32), np.array([1.0, 0.50, 0.12], F32), np.array([1.0, 0.92, 0.66], F32)
+        f1, e1, i1 = voronoi(dw, 34, 7); f2, e2, i2 = voronoi(dw, 420, 8)
+        rr_ = np.random.default_rng(9); t1c = rr_.uniform(-1, 1, 34)[i1]
+        soft = sphere_fbm(dw, 3.0, 5, 5, H=0.9, nw=30); gran = sphere_fbm(d, 60.0, 4, 7, H=0.6, nw=40)
+        lanes = np.exp(-(e1 / 0.30)); lanes2 = np.exp(-(e2 / 0.22))
+        T = np.clip(0.92 + 0.16 * t1c + 0.30 * soft - 0.42 * lanes - 0.10 * lanes2 * (1 - lanes) + 0.25 * np.clip(0.45 - f1, 0, 1) + 0.07 * gran, 0.2, 2)
+        c0, c1, c2 = np.array([0.70, 0.10, 0.015], F32), np.array([1.0, 0.48, 0.11], F32), np.array([1.0, 0.93, 0.68], F32)
         t1 = np.clip(T / 0.7, 0, 1)[..., None]; t2 = np.clip((T - 0.7) / 0.6, 0, 1)[..., None]
-        rgb = ((c0 + (c1 - c0) * t1) * (1 - t2) + c2 * t2) * (0.45 + 0.85 * T[..., None])
+        rgb = ((c0 + (c1 - c0) * t1) * (1 - t2) + c2 * t2) * (0.40 + 0.85 * T[..., None])
     os.makedirs(TEX, exist_ok=True); np.save(fn, rgb.astype(F32)); return rgb.astype(F32)
 
 
@@ -101,7 +114,7 @@ def ns_tex_blur(kind, bw):
 def draw_star(img, cx, cy, Rapp, M, u=U_NS, kind="ns", gain=1.0, blur=0, limb=0.55, halo=1.0, halo_col=(0.35, 0.6, 1.0), alpha=1.0, grid=0.0, horizon=0.0):
     """Sphere of apparent radius Rapp px. M: body <- camera (camera x right, y up, z to viewer).
     u = rs/R sets the light bending (0 = none); returns nothing, composites into img."""
-    hs = max(2.0, Rapp * 0.035)
+    hs = max(2.0, Rapp * (0.075 if kind == 'rsg' else 0.042))
     g = _grid(cx, cy, Rapp, hs * 8 + 6)
     if g is None: return
     x0, y0, x1, y1, uu, vv = g
@@ -125,6 +138,11 @@ def draw_star(img, cx, cy, Rapp, M, u=U_NS, kind="ns", gain=1.0, blur=0, limb=0.
     hpx = np.clip((rho - 1) * Rapp, 0, None)
     hal = (np.exp(-hpx / hs) * 0.9 + np.exp(-hpx / (hs * 4)) * 0.22 + np.exp(-hpx / (hs * 14)) * 0.05) * halo * gain * np.clip(1 - hpx / (hs * 8), 0, 1) ** 1.5
     a = np.clip((1 - rho) * Rapp + 0.5, 0, 1)[..., None] * alpha
+    if kind == 'rsg':                                # no sharp edge: the photosphere of a supergiant is diffuse
+        a = (np.clip((1 - rho) / 0.09, 0, 1) ** 1.2)[..., None] * alpha
+        hal = (np.exp(-np.clip(rho - 0.93, 0, None) * Rapp / (hs * 2.2)) * 0.42 + np.exp(-np.clip(rho - 0.93, 0, None) * Rapp / (hs * 7)) * 0.10) * halo * gain * np.clip(1 - hpx / (hs * 8), 0, 1) ** 1.5
+    else:
+        surf = surf + (np.exp(-((1 - rho) * Rapp / (hs * 0.8))) * 0.55 * gain * halo)[..., None] * np.array([0.6, 0.8, 1.0], F32)   # bright rim of hot atmosphere
     reg = img[y0:y1, x0:x1]
     reg[:] = reg * (1 - a) + surf * a + (hal * (1 - a[..., 0]) * alpha)[..., None] * np.array(halo_col, F32)
 
@@ -287,7 +305,7 @@ def ns_face():
         ic = r < 0.42; oc = (r >= 0.42) & (r < 0.90); icr = (r >= 0.90) & (r < 0.967); ocr = r >= 0.967
         col[ic] = np.array([0.95, 0.30, 0.75], F32) * (0.45 + 0.45 * (1 - r[ic] / 0.42) + 0.10 * n1[ic])[..., None] + np.array([0.6, 0.6, 0.9], F32) * (np.clip(1 - r[ic] / 0.2, 0, 1) ** 2 * 0.5)[..., None]
         sw = 0.5 + 0.5 * np.sin(55 * r + 3.5 * n1 + 2 * n3)
-        col[oc] = np.array([0.16, 0.22, 0.95], F32) * (0.40 + 0.20 * sw[oc] + 0.12 * n2[oc] + 0.25 * (0.9 - r[oc]))[..., None]
+        col[oc] = np.array([0.16, 0.24, 0.95], F32) * (0.34 + 0.22 * sw[oc] + 0.14 * n2[oc] + 0.10 * n1[oc] + 0.9 * (0.9 - r[oc]))[..., None] + np.array([0.25, 0.1, 0.5], F32) * (np.clip(1 - (r[oc] - 0.42) / 0.2, 0, 1) ** 2 * 0.5)[..., None]
         lat_ = 0.5 + 0.5 * np.sin(q[..., 0] * 240 + 2 * n2) * np.sin(q[..., 1] * 240)
         col[icr] = np.array([0.25, 0.55, 1.0], F32) * (0.55 + 0.25 * lat_[icr] + 0.15 * n2[icr])[..., None]
         col[ocr] = np.array([0.75, 0.9, 1.0], F32) * (0.9 + 0.25 * n2[ocr])[..., None]

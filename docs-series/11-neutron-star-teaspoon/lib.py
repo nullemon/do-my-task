@@ -317,14 +317,15 @@ def bloom(img, thr=0.75, gain=0.55):
 
 
 def add_glint(img, x, y, amp, col=(1, 1, 1), sig=1.2, streak=0.0):
-    """additive gaussian point (with optional horizontal lens streak)"""
+    """additive gaussian point (with optional horizontal lens streak); only the part inside the frame is evaluated"""
+    if amp <= 1e-5: return
     r = int(max(4, sig * 4 + streak * 3)); x0, y0 = int(round(x)) - r, int(round(y)) - r
-    if x0 >= W or y0 >= H or x0 + 2 * r + 1 <= 0 or y0 + 2 * r + 1 <= 0: return
-    xs = np.arange(x0, x0 + 2 * r + 1) - x; ys = np.arange(y0, y0 + 2 * r + 1) - y
+    xa, xb = max(0, x0), min(W, x0 + 2 * r + 1); ya, yb = max(0, y0), min(H, y0 + 2 * r + 1)
+    if xa >= xb or ya >= yb: return
+    xs = (np.arange(xa, xb) - x).astype(F32); ys = (np.arange(ya, yb) - y).astype(F32)
     gx, gy = np.meshgrid(xs, ys); k = np.exp(-(gx * gx + gy * gy) / (2 * sig * sig))
     if streak > 0: k += 0.35 * np.exp(-(gx / (streak * 2.2)) ** 2 - (gy / (sig * 0.6)) ** 2) + 0.15 * np.exp(-(gy / (streak * 0.9)) ** 2 - (gx / (sig * 0.6)) ** 2)
-    xa, xb = max(0, x0), min(W, x0 + 2 * r + 1); ya, yb = max(0, y0), min(H, y0 + 2 * r + 1)
-    img[ya:yb, xa:xb] += (k[ya - y0:yb - y0, xa - x0:xb - x0] * amp)[..., None].astype(F32) * np.array(col, F32)
+    img[ya:yb, xa:xb] += (k * amp)[..., None] * np.array(col, F32)
 
 
 class Lines:

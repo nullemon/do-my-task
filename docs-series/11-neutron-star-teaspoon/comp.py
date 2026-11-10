@@ -49,7 +49,7 @@ def note(T, t, a, b, s, col=DIM, top=False):
     """small note (what is to scale / illustrative). top=True: in the dark sky (for shots whose lower part is the bright Earth)"""
     if isinstance(s, str): s = [s]
     for i, ln in enumerate(s):
-        if top: xy = hv((W - 120, 60 + i * 30), (W / 2, 1352 - (len(s) - 1 - i) * 36)); anc = hv("r", "c")
+        if top: xy = hv((W - 120, 60 + i * 30), (W / 2, 1290 - (len(s) - 1 - i) * 36)); anc = hv("r", "c")
         else: xy = (hv(120, W / 2), hv(1012, 1486) - (len(s) - 1 - i) * hv(30, 36)); anc = hv("l", "c")
         T.put(xy, ln, hv(19, 24), win(t, a, b, 0.8, 0.6) * 0.95, col=col, anchor=anc, wt="R")
 
@@ -71,8 +71,6 @@ def tag(T, x, y, s, al, col=TXT, size=None, dx=26, dy=-34, anchor="l"):
 
 def glare(img, x, y, amp, s=1.0, col=(0.72, 0.86, 1.0)):
     add_glint(img, x, y, 3.0 * amp, col, sig=9 * s); add_glint(img, x, y, 1.6 * amp, col, sig=30 * s)
-    for ang in (60, 120):
-        k = cv2.getRotationMatrix2D((x, y), ang, 1.0); tmp = np.zeros((161, 161, 3), F32)
     add_glint(img, x, y, 0.5 * amp, (0.55, 0.75, 1.0), sig=2.0 * s, streak=40 * s)
     add_glint(img, x, y, 0.30 * amp, (0.4, 0.6, 1.0), sig=85 * s)
     add_glint(img, x, y, 0.9 * amp, (0.5, 0.72, 1.0), sig=2.6 * s, streak=95 * s)
@@ -129,7 +127,7 @@ def earth_plate(t, key, apex=None, lon0=15.0, night=0.0, exposure=1.0):
     return img
 
 
-def ns_scene(key, cx, cy, Rapp, Mb, fov=40.0, sky_dir=(0.25, -0.93, -0.25), u=U_NS, kind="ns", drift=(0.0, 0.0), gain=1.0, lines=0.0, beam=0.0,
+def ns_scene(key, cx, cy, Rapp, Mb, fov=40.0, sky_dir=(0.25, -0.93, -0.25), u=U_NS, kind="ns", drift=(0.0, 0.0), gain=1.12, lines=0.0, beam=0.0,
              blur=0, lens=1.0, Mc=None, twist=0.0, shells=(1.8, 2.6, 3.8, 5.6, 8.5), naz=10, lcol=(0.45, 0.75, 1.0), grid=0.0, horizon=0.0,
              halo_col=(0.35, 0.6, 1.0), mw=2.2, bhalf=0.16, sky_gain=1.0, halo=1.0):
     f = FL(fov); m = 900
@@ -251,36 +249,39 @@ def shot_sn(t, lt):
 
 
 # ================================================================================================= 5  to scale over New York
-H_STAR = 17.0; R_STAR = 12.5
+H_STAR = 17.0; R_STAR = 12.5; STAR_XY = (13.0, -2.0)
 
 
 @functools.lru_cache(None)
 def nyc_lit():
     rgb, water = nyc_map()
     yy, xx = np.mgrid[0:rgb.shape[0], 0:rgb.shape[1]].astype(F32)
-    d2 = ((xx - MAN[0]) ** 2 + (yy - MAN[1]) ** 2) * (M_PER_PX / 1000) ** 2
+    kx = (xx - MAN[0]) * (M_PER_PX / 1000); ky = -(yy - MAN[1]) * (M_PER_PX / 1000)
+    d2 = (kx - STAR_XY[0]) ** 2 + (ky - STAR_XY[1]) ** 2
     Lm = H_STAR ** 3 / (d2 + H_STAR ** 2) ** 1.5
     lit = rgb * (0.50 + 5.0 * Lm[..., None] * np.array([0.72, 0.90, 1.25], F32))
     lit += (water * Lm ** 2)[..., None] * np.array([0.10, 0.20, 0.36], F32) * 0.6
+    fade = 1 - np.clip((np.sqrt(kx * kx + ky * ky) - 40) / 26, 0, 1); fade = fade * fade * (3 - 2 * fade)
+    lit = lit * fade[..., None] + np.array([0.010, 0.016, 0.028], F32) * (1 - fade[..., None])
     return np.ascontiguousarray(lit.astype(F32)), np.ascontiguousarray(water)
 
 
 PLACES = [("MANHATTAN", 40.790, -73.962, 1), ("BROOKLYN", 40.640, -73.950, 1), ("QUEENS", 40.735, -73.800, 1), ("THE BRONX", 40.855, -73.865, 1),
-          ("STATEN ISLAND", 40.580, -74.150, 1), ("NEWARK", 40.735, -74.185, 1), ("HUDSON RIVER", 40.98, -73.90, 0), ("LONG ISLAND SOUND", 40.93, -73.62, 0),
+          ("STATEN ISLAND", 40.580, -74.150, 1), ("HUDSON RIVER", 40.98, -73.90, 0), ("LONG ISLAND SOUND", 40.93, -73.62, 0),
           ("ATLANTIC OCEAN", 40.46, -73.80, 0), ("JFK AIRPORT", 40.645, -73.785, 1)]
 
 
 def shot_city(t, lt):
     e = ss(0.0, 17.0, lt); e2 = ss(0.0, 9.0, lt)
-    eye = np.array([lerp(-20, -34, e), lerp(-58, -96, e), lerp(26, 60, e)])
-    cam = Cam(eye, (0.0, lerp(0, 6, e), lerp(hv(15, 10), hv(7.5, 2.0), e2)), 44.0)
+    eye = np.array([lerp(-16, -30, e), lerp(-66, -98, e), lerp(30, 62, e)])
+    cam = Cam(eye, (lerp(11, hv(3, 8), e), lerp(0, 6, e), lerp(hv(15, 6), hv(8.0, 0.0), e2)), 44.0)
     lit, water = nyc_lit()
-    g, grd, dist = ground_view(cam, lit)
+    g, grd, dist = ground_view(cam, lit, haze=(0.010, 0.016, 0.028), haze_km=260.0)
     skyb = cached(("sky", "city"), lambda: render_sky(look_at((0, 0, 0), norm([0.3, 0.9, 0.3])), FL(44), gain=0.7, mw_gain=1.3))
     img = skyb * (1 - grd[..., None]) * 0.8 + g
-    sx, sy, rp, dd = cam.sphere((0, 0, H_STAR), R_STAR)
+    sx, sy, rp, dd = cam.sphere((STAR_XY[0], STAR_XY[1], H_STAR), R_STAR)
     # reflection of the star in the water
-    mx, my, mr, _ = cam.sphere((0, 0, -H_STAR), R_STAR)
+    mx, my, mr, _ = cam.sphere((STAR_XY[0], STAR_XY[1], -H_STAR), R_STAR)
     wm, _, _ = ground_view(cam, water, ss_=1, haze_km=1e9)
     refl = np.zeros_like(img); add_glint(refl, mx, my, 0.55, (0.55, 0.78, 1.0), sig=mr * 0.75); add_glint(refl, mx, my, 0.22, (0.5, 0.7, 1.0), sig=mr * 2.2)
     img += refl * wm[..., :1]
@@ -300,7 +301,7 @@ def shot_city(t, lt):
     a2 = win(t, 65.6, 74.4, 0.8, 0.6)
     if a2 > 0.004:
         A = np.array(ground_km(40.701, -74.016)); B = np.array(ground_km(40.876, -73.925)); dvec = (B - A) / np.linalg.norm(B - A); nvec = np.array([-dvec[1], dvec[0]])
-        off = nvec * 3.4
+        off = nvec * 3.0
         pts = np.array([[*(A + off), 0], [*(B + off), 0], [*(A + off - nvec * 0.7), 0], [*(A + off + nvec * 0.7), 0], [*(B + off - nvec * 0.7), 0], [*(B + off + nvec * 0.7), 0]])
         px, py, _ = cam.proj(pts)
         Lw.seg(px[0], py[0], px[1], py[1], 255 * a2, 2); Lw.seg(px[2], py[2], px[3], py[3], 255 * a2, 2); Lw.seg(px[4], py[4], px[5], py[5], 255 * a2, 2)
@@ -311,18 +312,18 @@ def shot_city(t, lt):
         Lc.seg(sx - rp, yb, sx + rp, yb, 255 * a3, 2); Lc.seg(sx - rp, yb - 9, sx - rp, yb + 9, 255 * a3, 2); Lc.seg(sx + rp, yb - 9, sx + rp, yb + 9, 255 * a3, 2)
         Lc.add_to(img, (0.75, 0.9, 1.0), gain=0.9, glow=0.3)
         T.put((sx, yb - hv(40, 50)), "≈ 25 KM", hv(28, 34), a3, anchor="c", wt="R")
-    Lw.add_to(img, (1.0, 0.78, 0.45), gain=1.0, glow=0.3)
+    Lw.add_to(img, (1.0, 0.72, 0.36), gain=0.8, glow=0.2)
     cap(T, t, 58.6, 64.6, ["A NEUTRON STAR"], hv(880, 1330), size=hv(44, 50), wt="XL")
     cap(T, t, 70.2, 74.4, hv(["MORE MASS THAN THE ENTIRE SUN"], ["MORE MASS THAN", "THE ENTIRE SUN"]), hv(880, 1300), size=hv(34, 42))
     cap(T, t, 71.4, 74.4, ["TYPICALLY ≈ 1.4 SOLAR MASSES"], hv(940, 1440), size=hv(22, 28), col=COOL)
-    note(T, t, 60.8, 74.4, hv("STAR AND MAP TO THE SAME SCALE · REAL ELEVATION DATA, RELIEF EXAGGERATED · A THOUGHT PICTURE: IT COULD NOT EXIST HERE",
+    note(T, t, 60.8, 74.4, hv("STAR AND MAP AT THE SAME SCALE · REAL ELEVATION DATA, RELIEF EXAGGERATED · PURELY A SIZE COMPARISON",
                              ["STAR AND MAP TO THE SAME SCALE", "REAL ELEVATION DATA · RELIEF EXAGGERATED"]))
     return T.add_to(img)
 
 
 # ================================================================================================= 6  inside (density)
 def shot_dens(t, lt):
-    R = hv(390, 400) * (1 + 0.006 * lt); cx, cy = hv((620, 520), (W / 2, 730)); ang = 50.0
+    R = hv(370, 400) * (1 + 0.006 * lt); cx, cy = hv((600, 470), (W / 2, 730)); ang = 50.0
     Mb, Mc = star_M(0.8 + 0.01 * lt, chi=20, incl=14, roll=-18)
     f = FL(40); m = 900
     skyc = cached(("skyL", "dens"), lambda: render_sky(look_at((0, 0, 0), norm([-0.5, -0.6, 0.6])), f, gain=0.9, mw_gain=1.8, size=(W + 2 * m, H + 2 * m)))
@@ -363,7 +364,7 @@ def shot_mass(t, lt):
     glare(img, bx, by - 6 * sc, 0.6 * (1 + 0.05 * math.sin(t * 9)), s=1.2)
     img = bloom(img, 0.72, 0.6)
     T = Text()
-    x0 = hv(120, 110); y0 = hv(180, 990); bw = hv(620, 860); rh = hv(98, 62)
+    x0 = hv(120, 110); y0 = hv(190, 990); bw = hv(720, 860); rh = hv(98, 62)
     T.put((x0, y0 - hv(82, 64)), "5 mL OF NEUTRON-STAR MATTER", hv(30, 30), win(t, 93.2, 109.0, 0.8, 0.6), col=TXT, wt="R")
     rows = [("CRUST, NEAR THE SURFACE", "≈ 5 TONNES", 5e3, 96.0, COOL), ("AVERAGE THROUGH THE STAR", "≈ 2 BILLION TONNES", 1.9e9, 99.4, YEL),
             ("DEEP IN THE CORE", "≈ 5 BILLION TONNES, OR MORE", 5e9, 104.4, YEL),
@@ -388,7 +389,7 @@ def shot_grav(t, lt):
     dip = ss(129.2, 130.2, t) * (1 - ss(131.6, 133.4, t))    # light bending switched off, then on again
     u = U_NS * (1 - dip)
     Rapp = lerp(1350.0, Rt_wide / math.sqrt(1 - u), e)
-    cx = W / 2; cy = lerp(H + hv(830, 560), hv(500, 760), e)
+    cx = W / 2; cy = lerp(H + hv(830, 790), hv(500, 760), e)
     Mb, Mc = star_M(1.9 + 0.035 * lt, chi=30, incl=18, roll=10)
     gr = ss(128.4, 129.4, t)
     img = ns_scene("grav", cx, cy, Rapp, Mb, Mc=Mc, u=u, drift=(lt * 4, 0), grid=0.75 * gr, horizon=gr, lines=0.0)
@@ -401,7 +402,7 @@ def shot_grav(t, lt):
     cap(T, t, 129.6, 131.7, hv(["WITHOUT LIGHT BENDING", "WE WOULD SEE HALF OF THE SURFACE"], ["WITHOUT LIGHT BENDING:", "HALF OF THE SURFACE"]), hv(860, 1270), size=hv(30, 38), stagger=0.0)
     cap(T, t, 132.2, 136.2, hv(["WITH IT: ROUGHLY THREE QUARTERS", "THE FAR SIDE IS PULLED INTO VIEW"], ["WITH IT: ROUGHLY", "THREE QUARTERS"]), hv(860, 1270), size=hv(30, 38), stagger=0.0)
     T.put(hv((W - 120, 880), (W / 2, 1400)), "AMBER LINE: THE EDGE WITHOUT BENDING", hv(19, 24), win(t, 132.4, 136.2, 0.6, 0.6), col=AMB, anchor=hv("r", "c"), wt="R")
-    note(T, t, 110.6, 136.2, hv("COMPUTED FOR 1.4 SOLAR MASSES AND A 12 KM RADIUS · SURFACE DETAIL IS AN ARTIST'S IMPRESSION", "1.4 SOLAR MASSES, 12 KM RADIUS · ARTIST'S IMPRESSION"))
+    note(T, t, 110.6, 136.2, hv("COMPUTED FOR 1.4 SOLAR MASSES AND A 12 KM RADIUS · SURFACE DETAIL IS AN ARTIST'S IMPRESSION", "1.4 SOLAR MASSES, 12 KM RADIUS · ARTIST'S IMPRESSION"), top=t < 125.2)
     return T.add_to(img)
 
 
@@ -427,7 +428,7 @@ def shot_pulsar(t, lt):
     T = Text()
     T.put(hv((120, 150), (W / 2, 260)), "PULSAR", hv(60, 68), win(t, 144.6, 157.2, 0.8, 0.6), anchor=hv("l", "c"), wt="XL", track=hv(14, 10))
     cap(T, t, 148.0, 157.2, hv(["FASTEST KNOWN: PSR J1748−2446ad", "716 ROTATIONS EVERY SECOND"], ["FASTEST KNOWN:", "PSR J1748−2446ad", "716 ROTATIONS A SECOND"]), hv(250, 370), size=hv(26, 32), col=TXT)
-    cap(T, t, 152.6, 157.2, hv(["EQUATOR ≈ 24 % OF THE SPEED OF LIGHT"], ["EQUATOR ≈ 24 % OF LIGHT SPEED"]), hv(340, 528), size=hv(22, 28), col=COOL)
+    cap(T, t, 152.6, 157.2, hv(["EQUATOR ≈ 24 % OF THE SPEED OF LIGHT"], ["EQUATOR ≈ 24 % OF LIGHT SPEED"]), hv(340, 528), size=hv(22, 28), col=TXT)
     # pulse trace
     al = win(t, 139.5, 157.2, 0.8, 0.6)
     if al > 0.004:

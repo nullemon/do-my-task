@@ -1,0 +1,181 @@
+1
+00:00:01,000 --> 00:00:06,344
+Every year, the Moon moves about three point
+eight centimetres farther from the Earth.
+
+2
+00:00:06,344 --> 00:00:09,889
+Roughly the speed at which
+your fingernails grow.
+
+3
+00:00:10,400 --> 00:00:13,759
+It has been leaving for more
+than four billion years.
+
+4
+00:00:13,759 --> 00:00:19,393
+And one day, because of it, the Earth will
+see its last total eclipse of the Sun.
+
+5
+00:00:24,500 --> 00:00:33,505
+We know the rate because we measure it. Apollo astronauts, and
+two Soviet Lunokhod rovers, left reflectors on the lunar surface:
+
+6
+00:00:33,505 --> 00:00:39,282
+panels of glass prisms that send light
+straight back to where it came from.
+
+7
+00:00:40,200 --> 00:00:44,873
+Observatories on Earth fire laser
+pulses at them, and time the echo.
+
+8
+00:00:44,873 --> 00:00:58,497
+The round trip takes about two and a half seconds. Of all the light in each pulse, only a few
+photons make it back. But that is enough to track the distance to the Moon to within millimetres.
+
+9
+00:01:00,500 --> 00:01:03,869
+So why is it leaving?
+The answer is the tides.
+
+10
+00:01:03,869 --> 00:01:12,864
+The Moon's gravity stretches the Earth, raising a bulge of
+ocean on the side facing it, and another on the far side.
+
+11
+00:01:13,600 --> 00:01:20,276
+But the Earth spins much faster than the Moon
+orbits, so it carries that bulge ahead of the Moon.
+
+12
+00:01:20,276 --> 00:01:27,176
+The bulge's own gravity tugs the Moon forward,
+and lifts it, very slowly, into a wider orbit.
+
+13
+00:01:27,900 --> 00:01:31,965
+In return, the Moon pulls back
+on the bulge, like a brake.
+
+14
+00:01:31,965 --> 00:01:35,338
+The spin the Earth loses, the Moon gains.
+
+15
+00:01:36,600 --> 00:01:38,721
+So our days are getting longer.
+
+16
+00:01:38,721 --> 00:01:51,465
+Tides alone should add about two point three milliseconds every century. The measured
+figure, from eclipse records reaching back twenty-seven centuries, is nearer one point eight.
+
+17
+00:01:53,000 --> 00:01:54,956
+It does not sound like much.
+
+18
+00:01:54,956 --> 00:02:10,687
+But run the clock backwards. Seventy million years ago, in the last days of the dinosaurs, a fossil shell
+recorded a year of about three hundred and seventy-two days. Each one, about twenty-three and a half hours long.
+
+19
+00:02:11,600 --> 00:02:20,093
+Go back roughly four hundred million years, and corals were
+laying down about four hundred daily growth lines every year.
+
+20
+00:02:20,093 --> 00:02:23,401
+A day lasted less than twenty-two hours.
+
+21
+00:02:25,200 --> 00:02:34,111
+And at the very beginning, about four and a half billion years ago,
+the leading theory says a body the size of Mars struck the young Earth.
+
+22
+00:02:34,111 --> 00:02:40,445
+The debris gathered into a Moon that orbited
+more than ten times closer than it does today.
+
+23
+00:02:41,400 --> 00:02:50,055
+It would have hung in the sky more than ten times wider than the Moon
+we know, above a world that may have turned once every few hours.
+
+24
+00:02:52,400 --> 00:02:54,899
+Which brings us to a coincidence.
+
+25
+00:02:54,899 --> 00:03:08,199
+The Sun is about four hundred times wider than the Moon. It is also about four hundred
+times farther away. So in our sky, the two discs are almost exactly the same size.
+
+26
+00:03:09,200 --> 00:03:21,847
+When they line up, the Moon covers the Sun's blinding face, and almost nothing more. Beads
+of sunlight shine through lunar valleys. A last diamond flares. And then, the corona:
+
+27
+00:03:21,847 --> 00:03:28,024
+the Sun's outer atmosphere, visible to
+the naked eye only in these few minutes.
+
+28
+00:03:31,000 --> 00:03:33,241
+But the fit is already imperfect.
+
+29
+00:03:33,241 --> 00:03:41,415
+When the Moon is at the far end of its orbit, it is too
+small, and leaves a ring of sunlight. An annular eclipse.
+
+30
+00:03:42,600 --> 00:03:46,488
+As the Moon retreats, those
+rings will become the rule.
+
+31
+00:03:46,488 --> 00:03:59,714
+In roughly six hundred million years, though estimates vary, the Moon will cover the Sun
+completely for the last time. After that, every eclipse will be partial, or a ring of fire.
+
+32
+00:04:01,500 --> 00:04:03,618
+Will the Moon ever escape? No.
+
+33
+00:04:03,618 --> 00:04:19,505
+The retreat would only end when the Earth's day had slowed to match the Moon's month. That would take tens of
+billions of years. The Sun will swell into a red giant in about five billion. The process will never finish.
+
+34
+00:04:21,500 --> 00:04:23,040
+So consider the timing.
+
+35
+00:04:23,040 --> 00:04:36,124
+For most of Earth's history, the Moon was larger than it needed to be. In the far future, it
+will be too small. We happen to live in between, in the long window when the Moon fits the Sun.
+
+36
+00:04:37,400 --> 00:04:42,577
+It is still leaving. Three point eight
+centimetres this year. And the next.
+
+37
+00:04:43,800 --> 00:04:49,243
+So when totality next crosses your part
+of the world, go and stand in the shadow.
+
+38
+00:04:49,243 --> 00:04:51,625
+It will not always be there.
+

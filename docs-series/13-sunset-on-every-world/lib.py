@@ -138,37 +138,31 @@ class _Overlay:
 
 
 class Overlay:
-    """records draw calls; identical consecutive frames reuse the rendered layer (text is static most of the time)"""
-    _key = None; _lay = None
-    def __init__(s): s.ops = []; s.dyn = []          # dyn: fast-changing text (the clock), drawn in its own small strip
+    """records draw calls; rendered layers are cached by content, and `gain` fades a whole layer without re-rendering it"""
+    _cache = {}
+    def __init__(s): s.ops = []; s.gain = 1.0
     def text(s, x, y, txt, size=30, wt="Light", col=(235, 240, 248), a=1.0, track=0.22, anchor="l", display=False, shadow=True, dyn=False):
         if a <= 0.003 or not txt: return 0
-        (s.dyn if dyn else s.ops).append(("text", round(x, 1), round(y, 1), txt, size, wt, tuple(col), round(a, 3), track, anchor, display, shadow)); return 0
+        s.ops.append(("text", round(x, 1), round(y, 1), txt, size, wt, tuple(col), round(a, 2), track, anchor, display, shadow)); return 0
     def line(s, pts, col=(235, 240, 248), a=1.0, width=1.5, dash=None):
-        if a > 0.003: s.ops.append(("line", tuple((round(p[0], 1), round(p[1], 1)) for p in pts), tuple(col), round(a, 3), width, dash))
+        if a > 0.003: s.ops.append(("line", tuple((round(p[0], 1), round(p[1], 1)) for p in pts), tuple(col), round(a, 2), width, dash))
     def circle(s, x, y, r, col=(235, 240, 248), a=1.0, width=1.5, fill=None):
-        if a > 0.003: s.ops.append(("circle", round(x, 1), round(y, 1), r, tuple(col), round(a, 3), width, fill))
-    _dkey = None; _dlay = None
+        if a > 0.003: s.ops.append(("circle", round(x, 1), round(y, 1), r, tuple(col), round(a, 2), width, fill))
     def apply(s, srgb):
-        if s.ops:
-            key = tuple(s.ops)
-            if key != Overlay._key:
-                o = _Overlay()
-                for op in s.ops:
-                    if op[0] == "text": o.text(*op[1:])
-                    elif op[0] == "line": o.line(list(op[1]), *op[2:])
-                    else: o.circle(*op[1:])
-                Overlay._lay = np.asarray(o.im.resize((W, H), Image.LANCZOS), f32) / 255; Overlay._key = key
-            o = Overlay._lay; a = o[..., 3:4]
-            srgb = srgb * (1 - a) + o[..., :3] * a
-        if s.dyn:
-            y0 = max(0, int(min(op[2] for op in s.dyn)) - 30); hh = min(H - y0, 150); key = tuple(s.dyn)
-            if key != Overlay._dkey:
-                o = _Overlay(h=hh, yoff=y0)
-                for op in s.dyn: o.text(*op[1:])
-                Overlay._dlay = np.asarray(o.im.resize((W, hh), Image.LANCZOS), f32) / 255; Overlay._dkey = key
-            o = Overlay._dlay; a = o[..., 3:4]
-            srgb[y0:y0 + hh] = srgb[y0:y0 + hh] * (1 - a) + o[..., :3] * a
+        if not s.ops or s.gain <= 0.004: return srgb
+        key = tuple(s.ops)
+        if key not in Overlay._cache:
+            if len(Overlay._cache) >= 10: Overlay._cache.pop(next(iter(Overlay._cache)))
+            o = _Overlay()
+            for op in s.ops:
+                if op[0] == "text": o.text(*op[1:])
+                elif op[0] == "line": o.line(list(op[1]), *op[2:])
+                else: o.circle(*op[1:])
+            lay = np.asarray(o.im.resize((W, H), Image.LANCZOS), f32) / 255
+            ys = np.where(lay[..., 3].max(axis=1) > 0)[0]; y0, y1 = (int(ys[0]), int(ys[-1]) + 1) if len(ys) else (0, 1)
+            Overlay._cache[key] = (y0, y1, np.ascontiguousarray(lay[y0:y1, :, :3]), np.ascontiguousarray(lay[y0:y1, :, 3:4]))
+        y0, y1, rgb, al = Overlay._cache[key]; a = al * s.gain
+        srgb[y0:y1] = srgb[y0:y1] * (1 - a) + rgb * a
         return srgb
 
 
@@ -180,15 +174,16 @@ def _png(path):
     a = a.astype(f32) / (65535.0 if a.dtype == np.uint16 else 255.0)
     return np.concatenate([a[..., 2::-1], a[..., 3:]], -1)
 
+PLATE_ZOOM = dict(titan=(1.0, 1.10))        # (16:9, 9:16): the 9:16 Titan frame is tightened so the near edge of the beach mesh stays out of shot
 class Plate:
     """one world's Blender passes, cropped for the current aspect ratio and resized to the output frame"""
     def __init__(s, world, pdir=None):
         pdir = pdir or os.environ.get("PLATES", os.path.join(SCR, "plates")); s.world = world
         m = json.load(open(os.path.join(pdir, f"{world}_meta.json"))); s.camh, s.dmax = m["camh"], m["dmax"]; s.meta = m
         P = {k: _png(os.path.join(pdir, f"{world}_{k}.png")) for k in ("beauty", "albedo", "normal", "depth")}
-        R = P["beauty"].shape[0]; cw = R * 9 / 16
-        if VERT: x0, x1, y0, y1 = (R - cw) / 2, (R + cw) / 2, 0, R
-        else: y0 = HORIZ * R - HY * cw; x0, x1, y1 = 0, R, y0 + cw
+        R = P["beauty"].shape[0]; z = PLATE_ZOOM.get(world, (1.0, 1.0))[1 if VERT else 0]      # >1: tighter framing, still below native resolution
+        ww, wh = ((R * 9 / 16, R) if VERT else (R, R * 9 / 16)); ww /= z; wh /= z
+        x0, x1 = (R - ww) / 2, (R + ww) / 2; y0 = HORIZ * R - HY * wh; y1 = y0 + wh
         x0, x1, y0, y1 = int(round(x0)), int(round(x1)), int(round(y0)), int(round(y1))
         def crop(a): return cv2.resize(a[y0:y1, x0:x1], (W, H), interpolation=cv2.INTER_AREA)
         b = crop(P["beauty"]); s.alpha = b[..., 3:4].copy(); s.sun, s.glow, s.amb = b[..., 0], b[..., 1], b[..., 2]
@@ -198,7 +193,8 @@ class Plate:
         s.ppd = s.f * math.radians(1.0)
         yy, xx = np.mgrid[0:H, 0:W].astype(f32)
         s.AZ = np.degrees(np.arctan((xx - s.cx) / s.f)); s.EL = np.degrees(np.arctan((s.yh - yy) / s.f * np.cos(np.radians(s.AZ))))
-        s.xx, s.yy = xx, yy
+        s.xx, s.yy = xx, yy; s.ELh = cv2.resize(s.EL, (W // 2, H // 2), interpolation=cv2.INTER_AREA); s.AZh = cv2.resize(s.AZ, (W // 2, H // 2), interpolation=cv2.INTER_AREA)
+        s.A_sun = s.alb * s.sun[..., None]; s.A_glow = s.alb * s.glow[..., None]; s.A_amb = s.alb * s.amb[..., None]
     def xy(s, el, az):
         """pixel position of a sky direction (degrees)"""
         x = s.cx + s.f * math.tan(math.radians(az)); y = s.yh - s.f * math.tan(math.radians(el)) / math.cos(math.radians(az)); return x, y
@@ -244,8 +240,13 @@ def tsample(T, u, v):
 
 def cloud_layer(EL, AZ, seed, lx, ly, du=0.0, dv=0.0, beta=1.6, elmin=0.25):
     """noise on a horizontal layer overhead seen in perspective (distance ~ 1/tan(el)): streaks that pile up towards the horizon"""
-    d = 1.0 / np.tan(np.radians(np.maximum(EL, elmin))); x = d * np.tan(np.radians(AZ))
+    k = (id(EL), elmin)
+    if k not in _clg:
+        if len(_clg) > 6: _clg.clear()
+        d = 1.0 / np.tan(np.radians(np.maximum(EL, elmin))); _clg[k] = (d * np.tan(np.radians(AZ)), d, EL)
+    x, d, _ = _clg[k]
     return tsample(tile(seed, beta), x / lx + du, d / ly + dv)
+_clg = {}
 
 _stars = {}
 def stars(seed=5, n=2600, mw=True):
@@ -277,44 +278,56 @@ def bbcolor(T):
     return (c / c.max()).astype(f32)
 
 # ------------------------------------------------------------------------------------------------ analytic sea
-def sea(pl, skyfn, t, sunL, sun_el, sun_az, sun_r_deg, deep=C(0.004, 0.012, 0.02), amp=1.0, wind=1.0, chop=1.0, speed=1.0, refl_alpha=None, sparkle=1.0):
-    """flat sea / lake seen from height pl.camh: three bands of travelling waves, Fresnel reflection of the sky function, sun glitter
-    with the correct energy (unresolved waves widen the glitter path), reflections of the rocks. Returns RGB for the whole frame."""
-    el = np.minimum(pl.EL, -0.012).astype(np.float64); az = pl.AZ.astype(np.float64); ta = np.tan(np.radians(-el)); y = pl.camh / ta; x = y * np.tan(np.radians(az))
-    foot = pl.camh / (np.sin(np.radians(-el)) ** 2 * pl.f)                      # metres of water per pixel row
-    sx = np.zeros(y.shape, f32); sy = np.zeros(y.shape, f32); var = np.zeros(y.shape, f32) + (0.02 * chop) ** 2
-    for k, (L, a, vx, vy, st) in enumerate(((140.0, 0.045, 0.3, -2.2, 0.3), (23.0, 0.07, -0.25, -1.1, 0.45), (4.1, 0.085, 0.15, -0.5, 0.7), (0.7, 0.085, 0.05, -0.22, 1.0))):
-        gx, gy = _grad_tile(300 + k)
-        u = x * st / L + vx * t * speed / L; v = y / L + vy * t * speed / L
-        wres = smooth(0.5, 1.6, L / 80.0 / np.maximum(foot, 1e-4)).astype(f32)   # 1 where the band is resolved by the pixel grid
+SEA_BANDS = ((140.0, 0.045, 0.3, -2.2, 0.3), (23.0, 0.07, -0.25, -1.1, 0.45), (4.1, 0.085, 0.15, -0.5, 0.7), (0.7, 0.085, 0.05, -0.22, 1.0))
+def _sea_geom(pl):
+    if not hasattr(pl, "_sea"):
+        y0 = max(int(pl.yh) - 1, 0); g = dict(y0=y0)
+        el = np.minimum(pl.EL[y0:], -0.012).astype(np.float64); az = pl.AZ[y0:].astype(np.float64)
+        y = pl.camh / np.tan(np.radians(-el)); x = y * np.tan(np.radians(az))
+        foot = pl.camh / (np.sin(np.radians(-el)) ** 2 * pl.f)                  # metres of water per pixel row
+        g["uv"] = [(((x * st / L) % 1.0).astype(f32), ((y / L) % 1.0).astype(f32)) for (L, a, vx, vy, st) in SEA_BANDS]
+        g["wres"] = [smooth(0.5, 1.6, L / 80.0 / np.maximum(foot, 1e-4)).astype(f32) for (L, a, vx, vy, st) in SEA_BANDS]
+        ce = np.cos(np.radians(el)); g["v"] = np.stack([np.sin(np.radians(az)) * ce, np.cos(np.radians(az)) * ce, np.sin(np.radians(el))], -1).astype(f32)
+        g["xx"] = pl.xx[y0:]; g["yy"] = pl.yy[y0:]
+        pl._sea = g
+    return pl._sea
+def sea(pl, sky_img, t, sunL, sun_el, sun_az, sun_r_deg, deep=C(0.004, 0.012, 0.02), amp=1.0, wind=1.0, chop=1.0, speed=1.0, refl_alpha=None, sparkle=1.0):
+    """flat sea / lake seen from height pl.camh: four bands of travelling waves (each only where the pixel grid resolves it, the rest
+    counted as roughness), Fresnel reflection of the rendered sky (mirrored and bent by the wave slopes), Cox-Munk style sun glitter,
+    reflections of the rocks. Returns RGB for the whole frame (rows above the horizon are zero)."""
+    g = _sea_geom(pl); y0 = g["y0"]; v = g["v"]; shp = v.shape[:2]
+    sx = np.zeros(shp, f32); sy = np.zeros(shp, f32); var = np.zeros(shp, f32) + (0.02 * chop) ** 2
+    for k, (L, a, vx, vy, st) in enumerate(SEA_BANDS):
+        gx, gy = _grad_tile(300 + k); u0, v0 = g["uv"][k]; wres = g["wres"][k]
+        u = u0 + (vx * t * speed / L) % 1.0; w_ = v0 + (vy * t * speed / L) % 1.0
         a_ = a * amp * (wind if k >= 2 else 1.0)
-        sx += tsample(gx, u, v) * a_ * st * wres; sy += tsample(gy, u, v) * a_ * wres; var += (a_ ** 2) * (1 - wres ** 2)
-    el = el.astype(f32); az = az.astype(f32)
-    n = np.stack([-sx, -sy, np.ones_like(sx)], -1); n /= np.linalg.norm(n, axis=2, keepdims=True)
-    ce = np.cos(np.radians(el)); v = np.stack([np.sin(np.radians(az)) * ce, np.cos(np.radians(az)) * ce, np.sin(np.radians(el))], -1)
+        sx += tsample(gx, u, w_) * (a_ * st) * wres; sy += tsample(gy, u, w_) * a_ * wres; var += (a_ ** 2) * (1 - wres ** 2)
+    n = np.stack([-sx, -sy, np.ones_like(sx)], -1); n /= np.sqrt(1 + sx * sx + sy * sy)[..., None]
     vn = (v * n).sum(-1, keepdims=True); r = v - 2 * vn * n
-    rz = np.clip(r[..., 2], 0.002, 1); rel = np.degrees(np.arcsin(rz)); raz = np.degrees(np.arctan2(r[..., 0], r[..., 1]))
     F = 0.02 + 0.98 * (1 - np.clip(-vn[..., 0], 0, 1)) ** 5
-    sig = np.sqrt(var)
-    blur_el = rel + np.degrees(sig) * 0.8                                         # rough water reflects sky from slightly higher up
-    refl = skyfn(blur_el, raz)
+    rz = np.clip(r[..., 2] + np.sqrt(var) * 0.8, 0.002, 0.9); rxy = np.maximum(r[..., 1], 0.05)
+    mx = (pl.cx + pl.f * r[..., 0] / rxy).astype(f32); my = np.maximum(pl.yh - pl.f * rz / rxy, 0).astype(f32)
+    refl = cv2.remap(sky_img, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
     if refl_alpha is not None:                                                    # rocks mirrored about the horizon, smeared by the waves
-        my = (2 * pl.yh - pl.yy - sy * pl.f * 1.2).astype(f32); mx = (pl.xx + sx * pl.f * 1.2).astype(f32)
-        ra = cv2.remap(refl_alpha, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        my2 = (2 * pl.yh - g["yy"] - sy * pl.f * 1.2).astype(f32); mx2 = (g["xx"] + sx * pl.f * 1.2).astype(f32)
+        ra = cv2.remap(refl_alpha, mx2, my2, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
         refl = refl * (1 - 0.92 * ra[..., None])
     else: ra = 0
     # sun glitter (Cox-Munk style): probability that a facet has the slope that mirrors the Sun into the lens
-    se, sa = math.radians(sun_el), math.radians(sun_az); S = np.array([math.sin(sa) * math.cos(se), math.cos(sa) * math.cos(se), math.sin(se)], f32)
-    hvec = S[None, None, :] - v; hvec /= np.linalg.norm(hvec, axis=2, keepdims=True); hz = np.maximum(hvec[..., 2], 0.05)
-    zx = -hvec[..., 0] / hz; zy = -hvec[..., 1] / hz; rs = math.radians(sun_r_deg)
-    s2 = var + (rs / 2) ** 2 + 2e-5
-    p = np.exp(-((zx - sx) ** 2 + (zy - sy) ** 2) / (2 * s2)) / (2 * math.pi * s2)
-    glit = p * (math.pi * rs * rs) / (4 * np.maximum(-v[..., 2], 0.004) * hz ** 4)
-    Fh = 0.02 + 0.98 * (1 - np.clip((hvec * S).sum(-1), 0, 1)) ** 5
-    spk = tsample(tile(390, 0.35), pl.xx / 700.0 + 0.371 * t * 3, pl.yy / 260.0 + 0.613 * t * 3)          # unresolved facets: sparkle
-    glit = np.minimum(glit * Fh * np.exp(1.5 * spk - 0.9) * sparkle + glit * Fh * (1 - sparkle), 0.03) / np.maximum(F, 1e-3)
-    out = deep[None, None, :] * (1 - F[..., None]) + refl * F[..., None] + (glit * F * (1 - ra))[..., None] * np.asarray(sunL, f32)
-    return out
+    out = deep[None, None, :] * (1 - F[..., None]) + refl * F[..., None]
+    if float(np.max(sunL)) > 0:
+        se, sa = math.radians(sun_el), math.radians(sun_az); S = np.array([math.sin(sa) * math.cos(se), math.cos(sa) * math.cos(se), math.sin(se)], f32)
+        hvec = S[None, None, :] - v; hvec /= np.linalg.norm(hvec, axis=2, keepdims=True); hz = np.maximum(hvec[..., 2], 0.05)
+        zx = -hvec[..., 0] / hz; zy = -hvec[..., 1] / hz; rs = math.radians(sun_r_deg)
+        s2 = var + (rs / 2) ** 2 + 2e-5
+        p = np.exp(-((zx - sx) ** 2 + (zy - sy) ** 2) / (2 * s2)) / (2 * math.pi * s2)
+        glit = p * (math.pi * rs * rs) / (4 * np.maximum(-v[..., 2], 0.004) * hz ** 4)
+        Fh = 0.02 + 0.98 * (1 - np.clip((hvec * S).sum(-1), 0, 1)) ** 5
+        spk = tsample(tile(390, 0.35), g["xx"] / 700.0 + 0.371 * t * 3, g["yy"] / 260.0 + 0.613 * t * 3)          # unresolved facets: sparkle
+        glit = np.minimum(glit * Fh * (np.exp(1.5 * spk - 0.9) * sparkle + (1 - sparkle)), 0.03)
+        out += (glit * (1 - ra))[..., None] * np.asarray(sunL, f32)
+    full = np.zeros((H, W, 3), f32); full[y0:] = out
+    return full
 
 # ------------------------------------------------------------------------------------------------ Saturn's rings from the cloud tops
 def ring_profile(r):

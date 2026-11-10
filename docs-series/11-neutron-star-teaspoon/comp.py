@@ -168,7 +168,7 @@ def shot_hook(t, lt):
     T = Text()
     T.put(hv((116, 96), (W / 2, 1000)), "1 TEASPOON", hv(92, 96), win(t, 0.9, 8.9, 0.7, 0.7), anchor=hv("l", "c"), wt="XL", track=hv(12, 9))
     T.put(hv((122, 214), (W / 2, 1122)), "5 mL OF NEUTRON-STAR MATTER", hv(27, 30), win(t, 2.8, 8.9, 0.8, 0.7), col=COOL, anchor=hv("l", "c"))
-    T.put(hv((122, 264), (W / 2, 1176)), "≈ A MOUNTAIN", hv(40, 46), win(t, 6.3, 8.9, 0.7, 0.7), col=YEL, anchor=hv("l", "c"), wt="R")
+    T.put(hv((122, 264), (W / 2, 1176)), "≈ A MOUNTAIN", hv(40, 46), win(t, 3.9, 8.9, 0.7, 0.7), col=YEL, anchor=hv("l", "c"), wt="R")
     T.put(hv((118, 110), (W / 2, 1010)), "BILLIONS OF TONNES", hv(54, 60), win(t, 10.0, 17.4, 0.7, 0.7), anchor=hv("l", "c"), wt="XL")
     cap(T, t, 12.0, 14.2, hv(["MORE THAN EVERY HUMAN ALIVE, COMBINED"], ["MORE THAN EVERY HUMAN", "ALIVE, COMBINED"]), hv(196, 1110), x=hv(122, W / 2), size=hv(26, 32), col=COOL)
     cap(T, t, 14.6, 20.9, hv(["SO WHAT WOULD IT DO, IF YOU BROUGHT IT HOME?"], ["SO WHAT WOULD IT DO,", "IF YOU BROUGHT IT HOME?"]), hv(196, 1110), x=hv(122, W / 2), size=hv(30, 38))
@@ -369,7 +369,7 @@ def shot_mass(t, lt):
     rows = [("CRUST, NEAR THE SURFACE", "≈ 5 TONNES", 5e3, 96.0, COOL), ("AVERAGE THROUGH THE STAR", "≈ 2 BILLION TONNES", 1.9e9, 99.4, YEL),
             ("DEEP IN THE CORE", "≈ 5 BILLION TONNES, OR MORE", 5e9, 104.4, YEL),
             ("GREAT PYRAMID OF GIZA", "≈ 6 MILLION TONNES", 6e6, 100.6, DIM), ("EVERY HUMAN ALIVE", "≈ 0.5 BILLION TONNES", 0.5e9, 101.2, DIM),
-            ("ONE CUBIC KILOMETRE OF GRANITE", "≈ 2.7 BILLION TONNES", 2.7e9, 101.8, DIM)]
+            ("1 KM³ OF GRANITE", "≈ 2.7 BILLION TONNES", 2.7e9, 101.8, DIM)]
     for i, (a_, b_, val, ta, col) in enumerate(rows):
         al = win(t, ta, 109.0, 0.8, 0.6); y = y0 + i * rh + (hv(26, 14) if i >= 3 else 0)
         if al <= 0.004: continue
@@ -481,8 +481,8 @@ def shot_answer(t, lt):
         img += np.array([0.95, 0.97, 1.0], F32) * 1.3 * math.exp(-tau / 0.55)
         img *= 1 - 0.25 * ss(4.0, 9.5, tau)
     T = Text()
-    cap(T, t, 172.6, 180.6, ["YOU COULD NOT SCOOP IT."], hv(150, 1010), x=hv(1000, W / 2), size=hv(44, 52), wt="XL")
-    cap(T, t, 175.6, 180.6, hv(["IT IS ONLY THIS DENSE BECAUSE THE WEIGHT", "OF A WHOLE STAR IS PRESSING DOWN ON IT"], ["THIS DENSE ONLY BECAUSE", "THE WEIGHT OF A WHOLE STAR", "PRESSES DOWN ON IT"]), hv(236, 1100), x=hv(1004, W / 2), size=hv(22, 28), col=COOL)
+    cap(T, t, 172.6, 180.6, ["YOU COULD NOT SCOOP IT."], hv(110, 1010), x=hv(120, W / 2), size=hv(44, 52), wt="XL")
+    cap(T, t, 175.6, 180.6, hv(["IT IS ONLY THIS DENSE BECAUSE THE WEIGHT", "OF A WHOLE STAR IS PRESSING DOWN ON IT"], ["THIS DENSE ONLY BECAUSE", "THE WEIGHT OF A WHOLE STAR", "PRESSES DOWN ON IT"]), hv(196, 1100), x=hv(122, W / 2), size=hv(22, 28), col=COOL)
     cap(T, t, 182.0, 188.0, hv(["AWAY FROM THAT GRAVITY,", "NOTHING HOLDS IT TOGETHER"], ["AWAY FROM THAT GRAVITY,", "NOTHING HOLDS IT TOGETHER"]), hv(150, 1030), x=hv(1000, W / 2), size=hv(30, 36))
     cap(T, t, 190.6, 197.8, hv(["IT EXPANDS · INSTANTLY · VIOLENTLY"], ["IT EXPANDS", "INSTANTLY · VIOLENTLY"]), hv(150, 350), size=hv(34, 42))
     cap(T, t, 192.0, 197.8, hv(["ROUGH ESTIMATE: THE ENERGY OF HUNDREDS TO THOUSANDS OF DINOSAUR-KILLING IMPACTS"], ["ROUGH ESTIMATE: THE ENERGY OF", "HUNDREDS TO THOUSANDS OF", "DINOSAUR-KILLING IMPACTS"]), hv(214, 500), size=hv(22, 26), col=AMB, wt="R", gap=1.4, stagger=0.0)

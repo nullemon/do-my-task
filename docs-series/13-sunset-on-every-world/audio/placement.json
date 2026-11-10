@@ -113,10 +113,10 @@
   {
    "i": 12,
    "key": "ura",
-   "dur": 21.702166666666667,
-   "text": "Uranus lies on its side, and one orbit takes eighty-four years. Near a pole, the Sun circles the sky without setting for about forty-two of them, spiralling lower with every turn. When it finally touches the horizon, the tiny disc is gone within a couple of days. But the twilight can linger for years.",
+   "dur": 25.913833333333333,
+   "text": "Uranus lies on its side, and one orbit takes eighty-four years. Near a pole, the Sun circles the sky without setting for about forty-two of them, spiralling lower with every turn. When it finally touches the horizon, the tiny disc is gone within a couple of days. But the twilight can linger for years. Farther out still, at Neptune, the Sun shrinks to a thirtieth the width.",
    "start": 193.75,
-   "end": 215.452,
+   "end": 219.664,
    "tempo": 1.0
   },
   {
@@ -124,8 +124,8 @@
    "key": "titan1",
    "dur": 17.603083333333334,
    "text": "Titan, Saturn's largest moon, has air thicker than Earth's, and an orange haze of organic smog. In two thousand and five, the Huygens probe landed here, among pebbles of water ice, in light about a thousand times dimmer than an Earth day.",
-   "start": 218.75,
-   "end": 236.353,
+   "start": 222.75,
+   "end": 240.353,
    "tempo": 1.0
   },
   {
@@ -133,8 +133,8 @@
    "key": "titan2",
    "dur": 16.20175,
    "text": "The haze lets red light through, and blocks the blue. So over a sea of liquid methane, the Sun never shows a clean edge. It sinks into a dull amber glow. And the dusk drags on, because one day on Titan lasts sixteen of ours.",
-   "start": 237.5,
-   "end": 253.702,
+   "start": 241.5,
+   "end": 257.702,
    "tempo": 1.0
   },
   {
@@ -142,8 +142,8 @@
    "key": "pluto1",
    "dur": 12.811166666666667,
    "text": "And Pluto. Forty times farther out than Earth. The Sun is no longer a disc. It is a star: a single point, yet still about two hundred and fifty times brighter than our full Moon.",
-   "start": 257.0,
-   "end": 269.811,
+   "start": 261.0,
+   "end": 273.811,
    "tempo": 1.0
   },
   {
@@ -151,8 +151,8 @@
    "key": "pluto2",
    "dur": 13.5265,
    "text": "Noon on Pluto is about as bright as Earth a few minutes after sunset. NASA calls that moment Pluto time. And when New Horizons looked back, it saw layer upon layer of haze, glowing blue.",
-   "start": 271.0,
-   "end": 284.526,
+   "start": 275.0,
+   "end": 288.526,
    "tempo": 1.0
   },
   {
@@ -160,8 +160,8 @@
    "key": "kep",
    "dur": 14.68675,
    "text": "Beyond our own Sun, it gets stranger. Kepler-16b circles two stars. It is a gas giant. But from a moon of it, if it has one, you would watch two suns go down together: one orange, one small and red.",
-   "start": 287.75,
-   "end": 302.437,
+   "start": 291.75,
+   "end": 306.437,
    "tempo": 1.0
   },
   {
@@ -169,8 +169,8 @@
    "key": "end1",
    "dur": 9.87875,
    "text": "Every one of these views is a reconstruction, built from measurements. Robots have photographed a few of them. No person has ever stood under any of them.",
-   "start": 305.75,
-   "end": 315.629,
+   "start": 309.75,
+   "end": 319.629,
    "tempo": 1.0
   },
   {
@@ -178,8 +178,8 @@
    "key": "end2",
    "dur": 9.057041666666667,
    "text": "There is only one sunset that human eyes have watched from the ground. This one. It happens every evening. It is worth looking up for.",
-   "start": 317.25,
-   "end": 326.307,
+   "start": 321.25,
+   "end": 330.307,
    "tempo": 1.0
   }
  ]

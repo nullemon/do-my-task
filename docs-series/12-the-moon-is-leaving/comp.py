@@ -95,7 +95,7 @@ def _pair(key, t, u, moon_p, earth_p0, earth_p1, moon_M, earth_lon, sky_gain=0.9
 def shot_hook(t, lt):
     u = lt / 23.6; us = ss(0, 1, u) * 0.5 + u * 0.5
     if not V: mp = (610, 590, 430); e0 = (1480, 330, 128); e1 = (1590, 262, 92)
-    else: mp = (500, 900, 370); e0 = (790, 440, 108); e1 = (860, 390, 80)
+    else: mp = (500, 950, 365); e0 = (810, 500, 104); e1 = (880, 455, 78)
     img, (ex, ey, er) = _pair("hook", t, us, mp, e0, e1, art_M(-12, 6, roll=14), -30)
     img = bloom(img, 0.8, 0.5)
     T = Text()
@@ -116,7 +116,7 @@ def shot_hook(t, lt):
     else:
         T.put((W / 2, 1320), "THE LAST TOTAL", 56, a2, wt="L", track=8, anchor="c"); T.put((W / 2, 1396), "ECLIPSE IS COMING", 56, a2, wt="L", track=8, anchor="c")
         T.put((W / 2, 1492), "LEAVING FOR 4 BILLION YEARS", 23, win(t, 11.8, 18.6), col=AMB, anchor="c")
-    foot(T, "NOT TO SCALE  ·  MOON: NASA LRO IMAGERY + LASER ALTIMETRY  ·  EARTH: NASA BLUE MARBLE", win(t, 1.5, 18.6) , y=(1040 if not V else 350))
+    foot(T, "NOT TO SCALE  ·  MOON: NASA LRO IMAGERY + LASER ALTIMETRY  ·  EARTH: NASA BLUE MARBLE", win(t, 1.5, 18.6) , y=(1040 if not V else 330))
     a3 = win(t, 19.4, 23.6, 1.0, 0.6)
     if a3 > 0:
         img *= (1 - 0.45 * a3)
@@ -143,15 +143,15 @@ def shot_reflector(t, lt):
     u = lt / 16.0
     P, pc, s = _refl_view(u)
     fr = plate_view(P, pc[0], pc[1], s)
-    img = np.zeros((H, W, 3), F32) + fr[..., :3] * 1.08
+    img = np.zeros((H, W, 3), F32) + fr[..., :3] * 1.3
     img = bloom(img, 0.85, 0.35)
     # inset: the near side with the five reflector sites
     al = win(t, 26.4, 39.6, 1.0, 0.6)
     T = Text()
     if al > 0:
-        ix, iy, ir = (1560, 330, 190) if not V else (W / 2, 570, 140)
+        ix, iy, ir = (1520, 335, 190) if not V else (W / 2, 570, 140)
         yy, xx = np.ogrid[0:H, 0:W]; img *= (1 - 0.55 * al * np.exp(-(np.clip(np.hypot(xx - ix, yy - iy) / ir - 1, 0, None) / 0.9) ** 2))[..., None]
-        ins = np.zeros((H, W, 3), F32); draw_moon(ins, ix, iy, ir, M_NEAR, norm([0.25, 0.2, 0.94]), exposure=0.95)
+        ins = np.zeros((H, W, 3), F32); draw_moon(ins, ix, iy, ir, M_NEAR, norm([0.25, 0.2, 0.94]), exposure=0.95, relief=0.45, detail=0.6)
         yy, xx = np.ogrid[0:H, 0:W]; m = np.clip(ir + 1.5 - np.hypot(xx - ix, yy - iy), 0, 1)[..., None] * al
         img = img * (1 - m) + ins * m
         L = Lines(); L.circle(ix, iy, ir + 5, 120, 1); L.add_to(img, (0.8, 0.85, 1.0), 0.5 * al, 0.3)
@@ -160,13 +160,14 @@ def shot_reflector(t, lt):
             c = M_NEAR.T @ lonlat(lon, lat); x, y = ix + ir * c[0], iy - ir * c[1]
             add_glint(img, x, y, 1.6 * a_k, (1.0, 0.85, 0.35), sig=2.2)
             left = lon < 0
-            dx = (-44 if left else 44) if k != 2 else 26; dy = (26, 40, -84, -40, -30)[k]
+            dx = (-44 if left else 44) if k != 2 else 30; dy = (26, 40, -96, -40, -30)[k]
             T.line((x + dx * 0.2, y + dy * 0.2), (x + dx, y + dy), a_k * 0.8, YEL)
             T.put((x + dx + (-8 if left else 8), y + dy - 13), f"{nm} · {yr}", 18, a_k, col=TXT, anchor="r" if left else "l", wt="R", track=1.5)
     put(T, "RETROREFLECTORS ON THE MOON", win(t, 24.2, 39.6, 0.8), (120, 96, 27), (W / 2, 250, 26))
     put(T, "LEFT BY THREE APOLLO CREWS AND TWO SOVIET ROVERS", win(t, 25.2, 39.6, 0.8), (120, 140, 20), (W / 2, 296, 19), col=AMB)
     put(T, "100 GLASS PRISMS  ·  EACH RETURNS LIGHT TO ITS SOURCE", win(t, 32.0, 39.6, 0.8), (120, 184, 20), (W / 2, 760, 20))
-    foot(T, "ILLUSTRATION  ·  LAYOUT AFTER THE APOLLO 11 ARRAY (LRRR)  ·  3D MODEL, NOT A PHOTOGRAPH", win(t, 24.6, 39.6), y=(1034 if not V else 370))
+    if V: foot(T, "ILLUSTRATION  ·  3D MODEL AFTER THE APOLLO 11 ARRAY (LRRR)", win(t, 24.6, 39.6), y=370)
+    else: T.put((120, 226), "ILLUSTRATION  ·  3D MODEL AFTER THE APOLLO 11 ARRAY (LRRR), NOT A PHOTOGRAPH", 16, win(t, 24.6, 39.6) * 0.9, col=DIM)
     return T.add_to(img)
 
 
@@ -175,7 +176,7 @@ def shot_obs(t, lt):
     u = lt / 12.8
     P = plate("observatory"); J = cached("obsj", lambda: json.load(open(SCR + "/plates/observatory.json")))
     if not V: s = lerp(0.90, 0.96, u); pc = (1180, 985); mpos = (1560, 170, 58)
-    else: s = lerp(1.18, 1.26, u); pc = (1050, 1130); mpos = (790, 360, 62)
+    else: s = lerp(1.18, 1.26, u); pc = (1050, 1130); mpos = (850, 500, 62)
     def bg():
         Rs = rot_axis((1, 0, 0), 0.5) @ look_at((0, 0, 0), norm([-0.25, 0.75, -0.45]))
         im = render_sky(Rs, FL(60), gain=1.25, mw_gain=2.0)
@@ -188,6 +189,8 @@ def shot_obs(t, lt):
         return im
     img = layer("obs_bg", bg).copy()
     fr = plate_view(P, pc[0], pc[1], s)
+    gy0 = plate_pt((0, 1230), pc[0], pc[1], s)[1]; yy = np.arange(H, dtype=F32)
+    fr = fr.copy(); fr[..., :3] *= (1 - 0.72 * np.clip((yy - gy0) / (260 * s), 0, 1))[:, None, None]
     ex, ey = plate_pt(J["exit"], pc[0], pc[1], s)
     # the beam: thin green column from the telescope to the Moon, with pulses running out
     mx, my = mpos[0] - mpos[2] * 0.25, mpos[1] + mpos[2] * 0.1
@@ -216,7 +219,7 @@ def shot_obs(t, lt):
     put(T, f"{val:4.2f} S", a_t, (120, 800, 92), (W / 2, 1310, 84), col=GRN, wt="XL", track=6)
     put(T, "ROUND TRIP  ·  ABOUT 2.5 SECONDS", a_t, (126, 912, 22), (W / 2, 1420, 21))
     put(T, "≈ 384,400 KM EACH WAY, ON AVERAGE", win(t, 46.0, 52.4, 0.7, 0.5), (126, 950, 20), (W / 2, 1462, 19), col=DIM)
-    foot(T, "ILLUSTRATION  ·  BEAM BRIGHTENED, MOON ENLARGED  ·  STAR FIELD FROM A REAL CATALOGUE", win(t, 40.4, 52.4))
+    foot(T, "ILLUSTRATION  ·  BEAM BRIGHTENED, MOON ENLARGED  ·  STAR FIELD FROM A REAL CATALOGUE", win(t, 40.4, 52.4), y=(1034 if not V else 370))
     return T.add_to(img)
 
 
@@ -224,11 +227,11 @@ def shot_ret(t, lt):
     u = lt / 7.2
     P, pc, s = _refl_view(u, close=True)
     fr = plate_view(P, pc[0], pc[1], s); gl = plate_view(plate("reflector_glow"), pc[0], pc[1], s)
-    img = np.zeros((H, W, 3), F32) + fr[..., :3] * 1.05
+    img = np.zeros((H, W, 3), F32) + fr[..., :3] * 1.3
     g = gl[..., :3].max(-1)[..., None] * np.array([0.22, 1.0, 0.42], F32)
     k = 0.25 + 0.75 * max(0.0, math.sin((t - 52.9) * 2 * math.pi / 2.4)) ** 6
     a = win(t, 52.9, 59.6, 0.5, 0.5)
-    img += (g * 0.30 + cv2.GaussianBlur(g, (0, 0), 5) * 0.35 + cv2.GaussianBlur(g, (0, 0), 30) * 0.30) * (k * a)
+    img += (g * 0.16 + cv2.GaussianBlur(g, (0, 0), 4) * 0.30 + cv2.GaussianBlur(g, (0, 0), 30) * 0.32) * (k * a)
     img = bloom(img, 0.85, 0.4)
     T = Text()
     put(T, "ONLY A FEW PHOTONS RETURN PER PULSE", win(t, 53.0, 59.6, 0.7), (120, 96, 27), (W / 2, 250, 23))
@@ -360,11 +363,13 @@ def shot_past(t, lt):
 def shot_coral(t, lt):
     a0, b0 = SHOT["coral"]; u = lt / (b0 - a0)
     P = plate("coral")
-    if not V: s = lerp(0.98, 1.10, u); pc = (lerp(1000, 1060, u), 1100)
-    else: s = lerp(1.0, 1.10, u); pc = (1080, lerp(1040, 1090, u))
+    if not V: s = lerp(0.89, 0.94, u); pc = (lerp(1070, 1085, u), lerp(1085, 1060, u))
+    else: s = lerp(0.92, 1.0, u); pc = (960, lerp(1060, 1090, u))
     fr = plate_view(P, pc[0], pc[1], s)
     img = np.zeros((H, W, 3), F32) + fr[..., :3]
     vign_dark(img, -100, 340 if not V else 420, 0.55)
+    if V: vign_dark(img, 1200, 1620, 0.6)
+    else: img[-80:] *= np.linspace(1, 0.4, 80, dtype=F32)[:, None, None]
     img = bloom(img, 0.85, 0.3)
     T = Text()
     put(T, "ABOUT 400 MILLION YEARS AGO", win(t, a0 + 0.8, b0, 0.8), (120, 96, 27), (W / 2, 250, 26))
@@ -415,7 +420,7 @@ def shot_origin(t, lt):
     disc(True)
     # Theia approaching (before), the young Moon gathering in the disc (after)
     if t < ti + 0.2:
-        k = (t - a0) / (ti - a0)
+        k = min(max((t - a0) / (ti - a0), 0.0), 1.0)
         tx = lerp(ec[0] + ER * (4.2 if not V else 2.2), ec[0] + ER * 1.25, k ** 1.5); ty = lerp(ec[1] - ER * (1.6 if not V else 3.2), ec[1] - ER * 0.55, k ** 1.5)
         draw_molten(img, tx, ty, ER * 0.53, art_M(200 + t * 3, -20, roll=30), sunv, heat=0.55, exposure=1.1, rock=(0.13, 0.09, 0.075), haze=0.5)
     age = max(0.0, t - ti)
@@ -433,10 +438,10 @@ def shot_origin(t, lt):
     T = Text()
     put(T, "ABOUT 4.5 BILLION YEARS AGO", win(t, a0 + 0.8, b0, 0.8), (120, 96, 27), (W / 2, 250, 26))
     put(T, "THE GIANT-IMPACT HYPOTHESIS", win(t, a0 + 1.8, b0, 0.8), (120, 140, 20), (W / 2, 296, 20), col=AMB)
-    put(T, "A MARS-SIZED BODY STRIKES THE YOUNG EARTH", win(t, S['origin1'] + 4.4, ti + 2.6, 0.7), (120, 968, 22), (W / 2, 1440, 20))
+    put(T, "A MARS-SIZED BODY STRIKES THE YOUNG EARTH", win(t, S['origin1'] + 4.4, ti + 2.6, 0.7), (120, 968, 22), (W / 2, 1360, 20))
     put(T, "THE DEBRIS GATHERS INTO THE MOON  ·  MORE THAN 10× CLOSER THAN TODAY", win(t, ti + 3.2, b0, 0.8), (120, 968, 22), None)
     if V:
-        T.put((W / 2, 1410), "THE DEBRIS GATHERS INTO THE MOON", 20, win(t, ti + 3.2, b0, 0.8), anchor="c"); T.put((W / 2, 1446), "MORE THAN 10× CLOSER THAN TODAY", 20, win(t, ti + 3.2, b0, 0.8), anchor="c", col=YEL)
+        T.put((W / 2, 1340), "THE DEBRIS GATHERS INTO THE MOON", 20, win(t, ti + 3.2, b0, 0.8), anchor="c"); T.put((W / 2, 1376), "MORE THAN 10× CLOSER THAN TODAY", 20, win(t, ti + 3.2, b0, 0.8), anchor="c", col=YEL)
     foot(T, "ARTIST'S IMPRESSION  ·  NOT TO SCALE  ·  TIMESCALE COMPRESSED (THE MOON MAY HAVE TAKEN MONTHS TO YEARS TO FORM)", win(t, a0 + 1.0, b0))
     return T.add_to(img)
 
@@ -445,7 +450,7 @@ def shot_ancient(t, lt):
     a0, b0 = SHOT["ancient"]; u = lt / (b0 - a0)
     f = FL(16)
     if not V: yh = 800; mp = (lerp(1010, 990, u), lerp(455, 430, u), 395)
-    else: yh = 1330; mp = (540, lerp(830, 800, u), 440)
+    else: yh = 1330; mp = (540, lerp(890, 860, u), 400)
     def skyl():
         Rs = rot_axis((0, 1, 0), 0.4) @ SKY_R
         im = render_sky(Rs, FL(30), gain=0.8, mw_gain=1.2)
@@ -456,11 +461,11 @@ def shot_ancient(t, lt):
     sk = layer("anc_sky", skyl).copy()
     def moonl():
         im = np.zeros((H, W, 3), F32)
-        draw_moon(im, mp[0], 0 + (455 if not V else 830), mp[2], art_M(-8, -4, roll=28), norm([0.55, 0.42, 0.72]), exposure=1.25, tint=(1.0, 0.93, 0.82), glow=((1.0, 0.30, 0.06), 0.55), relief=1.3)
-        yy, xx = np.mgrid[0:H, 0:W].astype(F32); al = np.clip(mp[2] - np.hypot(xx - mp[0], yy - (455 if not V else 830)) + 0.5, 0, 1)
+        draw_moon(im, mp[0], 0 + (455 if not V else 890), mp[2], art_M(-8, -4, roll=28), norm([0.55, 0.42, 0.72]), exposure=1.25, tint=(1.0, 0.93, 0.82), glow=((1.0, 0.30, 0.06), 0.55), relief=1.3)
+        yy, xx = np.mgrid[0:H, 0:W].astype(F32); al = np.clip(mp[2] - np.hypot(xx - mp[0], yy - (455 if not V else 890)) + 0.5, 0, 1)
         return im, al
     mim, mal = layer("anc_moon", moonl)
-    dy = mp[1] - (455 if not V else 830); Mt = np.array([[1, 0, 0], [0, 1, dy]], F32)
+    dy = mp[1] - (455 if not V else 890); Mt = np.array([[1, 0, 0], [0, 1, dy]], F32)
     mim = cv2.warpAffine(mim, Mt, (W, H)); mal = cv2.warpAffine(mal, Mt, (W, H))
     # atmospheric reddening of the Moon toward the horizon
     yy = np.arange(H, dtype=F32)[:, None]; ext = np.clip((yy - (yh - 420)) / 420, 0, 1)
@@ -469,20 +474,22 @@ def shot_ancient(t, lt):
     # halo
     y_, x_ = np.mgrid[0:H, 0:W].astype(F32); d = np.clip(np.hypot(x_ - mp[0], y_ - mp[1]) / mp[2] - 1, 0, None)
     sk += (0.22 * np.exp(-d / 0.25))[..., None] * np.array([1.0, 0.62, 0.36], F32) * (1 - mal[..., None])
-    img = sea(sk * 1.0, yh, t, f, cxp=W / 2, base=(0.012, 0.010, 0.012), rough=1.0, speed=1.0, gain=1.25, horizon_col=(0.30, 0.13, 0.06))
+    img = sea(sk * 1.0, yh, t, f, cxp=W / 2, base=(0.012, 0.010, 0.012), rough=1.0, speed=0.55, gain=1.25, horizon_col=(0.30, 0.13, 0.06))
     img = bloom(img, 0.75, 0.6)
-    if not V: img[-64:] *= np.linspace(1, 0.35, 64, dtype=F32)[:, None, None]
     T = Text()
     put(T, "THE YOUNG MOON", win(t, a0 + 0.8, b0, 0.8), (120, 96, 27), (W / 2, 250, 26))
     put(T, "MORE THAN 10× WIDER IN THE SKY THAN TODAY", win(t, a0 + 1.8, b0, 0.8), (120, 140, 20), (W / 2, 296, 19), col=AMB)
     # today's Moon at the same angular scale
     al = win(t, a0 + 4.0, b0, 0.8)
-    tx, ty, tr = (1660, 250, 395 / 11.0) if not V else (900, 420, 440 / 11.0)
+    tx, ty, tr = (1660, 250, 395 / 11.0) if not V else (935, 480, 400 / 11.0)
     if al > 0:
         tm = np.zeros((H, W, 3), F32); draw_moon(tm, tx, ty, tr, M_NEAR, norm([0.3, 0.3, 0.9]), exposure=1.1)
         img += tm * al
         T.put((tx, ty + tr + 16), "TODAY'S MOON", 16 if not V else 17, al, anchor="c"); T.put((tx, ty + tr + 40), "SAME SCALE", 15 if not V else 16, al, col=DIM, anchor="c")
-    foot(T, "ARTIST'S IMPRESSION  ·  THE EARLY SURFACE IS UNKNOWN (TODAY'S LUNAR MAP IS USED)  ·  THE FIRST SEAS CAME LATER, AS THE MOON RETREATED", win(t, a0 + 1.0, b0), y=(1040 if not V else 1508))
+    af = win(t, a0 + 1.0, b0)
+    if V: foot(T, "ARTIST'S IMPRESSION  ·  THE EARLY SURFACE IS UNKNOWN (TODAY'S LUNAR MAP IS USED)  ·  THE FIRST SEAS CAME LATER, AS THE MOON RETREATED", af, y=400)
+    else:
+        T.put((120, 190), "ARTIST'S IMPRESSION  ·  EARLY SURFACE UNKNOWN", 16, af * 0.9, col=DIM); T.put((120, 216), "TODAY'S LUNAR MAP IS USED", 16, af * 0.9, col=DIM); T.put((120, 242), "THE FIRST SEAS CAME LATER", 16, af * 0.9, col=DIM)
     return T.add_to(img)
 
 
@@ -497,20 +504,21 @@ def shot_coin(t, lt):
     put(T, "A COINCIDENCE", win(t, a0 + 0.6, b0, 0.8), (120, 96, 27), (W / 2, 250, 26))
     if p1 > 0:
         if not V: sx, sy, sr = 1250, 600, 400
-        else: sx, sy, sr = 540, 900, 420
+        else: sx, sy, sr = 540, 850, 400
         lay = np.zeros((H, W, 3), F32); put_disc(lay, sp, sx, sy, sr * (1 + 0.02 * (t - a0) / 8)); 
         y_, x_ = np.mgrid[0:H, 0:W].astype(F32); d = np.clip(np.hypot(x_ - sx, y_ - sy) / sr - 1, 0, None)
         lay += (0.5 * np.exp(-d / 0.05) + 0.12 * np.exp(-d / 0.4))[..., None] * np.array([1.0, 0.55, 0.15], F32) * (d > 0)[..., None]
         img += lay * p1
-        mx_, my_ = (sx - sr - 210, sy + 40) if not V else (sx - 250, sy + sr + 130)
+        mx_, my_ = (sx - sr - 210, sy + 40) if not V else (250, sy + sr + 150)
         add_glint(img, mx_, my_, 1.4 * p1, (0.95, 0.95, 1.0), sig=0.85)
         L.circle(mx_, my_, 16, int(170 * p1), 1)
         al = win(t, S['ecl1'] + 1.6, S['ecl1'] + 6.0, 0.7, 0.8)
-        T.put((mx_, my_ + 30), "THE MOON, TO SCALE", 18 if not V else 19, al, anchor="c"); T.put((mx_, my_ + 56), "3,474 KM", 16 if not V else 17, al, col=DIM, anchor="c")
+        T.put((mx_, my_ + 30) if not V else (mx_ + 34, my_ - 12), "THE MOON, TO SCALE" if not V else "THE MOON, TO SCALE  ·  3,474 KM", 18 if not V else 19, al, anchor="c" if not V else "l")
+        if not V: T.put((mx_, my_ + 56), "3,474 KM", 16, al, col=DIM, anchor="c")
         put(T, "THE SUN  ·  1,392,000 KM ACROSS", al, (120, 470, 22), (W / 2, 330, 20), col=DIM)
         put(T, "400×", win(t, S['ecl1'] + 2.6, S['ecl1'] + 6.0, 0.6, 0.8), (120, 520, 130), (W / 2, 1300, 0), col=YEL, wt="XL", track=4)
         put(T, "WIDER", win(t, S['ecl1'] + 2.6, S['ecl1'] + 6.0, 0.6, 0.8), (126, 676, 30), None, col=YEL)
-        if V: T.put((W / 2 + 160, sy + sr + 80), "400× WIDER", 46, win(t, S['ecl1'] + 2.6, S['ecl1'] + 6.0, 0.6, 0.8), col=YEL, anchor="c", wt="XL")
+        if V: T.put((W / 2, sy + sr + 40), "400× WIDER", 60, win(t, S['ecl1'] + 2.6, S['ecl1'] + 6.0, 0.6, 0.8), col=YEL, anchor="c", wt="XL")
     if p2 > 0:
         # Earth - Moon - Sun distances to scale along one line (sizes not to scale)
         if not V: A = np.array([200.0, 640.0]); B = np.array([1690.0, 640.0])
@@ -576,10 +584,10 @@ def shot_eclipse(t, lt):
     put(T, "BAILY'S BEADS", win(t, t2 - 6.3, t2 - 3.0, 0.6, 0.5), (120, 940, 30), (W / 2, 1400, 28), col=TXT)
     put(T, "SUNLIGHT THROUGH LUNAR VALLEYS", win(t, t2 - 5.9, t2 - 3.0, 0.6, 0.5), (120, 986, 19), (W / 2, 1444, 19), col=DIM)
     put(T, "THE DIAMOND RING", win(t, t2 - 2.7, t2 - 0.1, 0.5, 0.4), (120, 940, 30), (W / 2, 1400, 28), col=TXT)
-    put(T, "THE CORONA", win(t, t2 + 0.8, b0, 1.0, 0.6), (120, 940, 30), (W / 2, 1400, 28), col=TXT)
+    put(T, "THE CORONA", win(t, t2 + 0.8, b0, 1.0, 0.6), (120, 940, 30), (W / 2, 1370, 28), col=TXT)
     put(T, "THE SUN'S OUTER ATMOSPHERE  ·  TOTALITY LASTS A FEW MINUTES AT MOST", win(t, t2 + 1.8, b0, 1.0, 0.6), (120, 986, 19), (W / 2, 1444, 0), col=DIM)
-    if V: T.put((W / 2, 1444), "THE SUN'S OUTER ATMOSPHERE", 19, win(t, t2 + 1.8, b0, 1.0, 0.6), col=DIM, anchor="c")
-    foot(T, "SIMULATION  ·  LUNAR LIMB RELIEF EXAGGERATED  ·  NEVER LOOK AT THE SUN WITHOUT PROPER ECLIPSE FILTERS (EXCEPT DURING TOTALITY)", win(t, a0 + 1.0, b0), y=(1040 if not V else 1508))
+    if V: T.put((W / 2, 1414), "THE SUN'S OUTER ATMOSPHERE", 19, win(t, t2 + 1.8, b0, 1.0, 0.6), col=DIM, anchor="c")
+    foot(T, "SIMULATION  ·  LUNAR LIMB RELIEF EXAGGERATED  ·  NEVER LOOK AT THE SUN WITHOUT PROPER ECLIPSE FILTERS (EXCEPT DURING TOTALITY)" if not V else "SIMULATION  ·  LIMB RELIEF EXAGGERATED  ·  NEVER LOOK AT THE SUN WITHOUT ECLIPSE FILTERS", win(t, a0 + 1.0, b0), y=(1040 if not V else 1508))
     return T.add_to(img)
 
 
@@ -606,10 +614,10 @@ def shot_annular(t, lt):
     put(T, "THE MOON'S APPARENT WIDTH", a1, (120, 420, 20), (W / 2, 1380, 20), col=DIM)
     put(T, "29.4′ – 33.5′", a1, (120, 456, 58), (W / 2, 1412, 50), wt="XL", track=3)
     put(T, "THE SUN'S", a1, (120, 580, 20), None, col=DIM)
-    put(T, "31.5′ – 32.5′", a1, (120, 616, 58), None, col=YEL, wt="XL", track=3)
-    if V: T.put((W / 2, 1482), "THE SUN'S:  31.5′ – 32.5′", 22, a1, col=YEL, anchor="c")
-    put(T, "ALREADY, MOST CENTRAL ECLIPSES ARE NOT TOTAL", win(t, S['ecl3'] + 5.4, b0, 0.8), (120, 740, 19), None, col=AMB)
-    foot(T, "SIMULATED VIEW THROUGH A SOLAR FILTER  ·  ARCMINUTES (′) = SIXTIETHS OF A DEGREE", win(t, a0 + 1.0, b0), y=(1034 if not V else 340))
+    put(T, "31.6′ – 32.7′", a1, (120, 616, 58), None, col=YEL, wt="XL", track=3)
+    if V: T.put((W / 2, 1482), "THE SUN'S:  31.6′ – 32.7′", 22, a1, col=YEL, anchor="c")
+    put(T, "RINGS ALREADY SLIGHTLY OUTNUMBER TOTAL ECLIPSES", win(t, S['ecl3'] + 5.4, b0, 0.8), (120, 740, 19), None, col=AMB)
+    foot(T, "SIMULATED VIEW THROUGH A SOLAR FILTER  ·  ARCMINUTES (′) = SIXTIETHS OF A DEGREE", win(t, a0 + 1.0, b0), y=(1034 if not V else 380))
     return T.add_to(img)
 
 
@@ -633,7 +641,7 @@ def shot_future(t, lt):
     a2 = win(t, S['fut1'] + 11.6, b0, 0.9)
     put(T, "THE LAST TOTAL SOLAR ECLIPSE", a2, (120, 740, 30), (W / 2, 1430, 27), col=TXT)
     put(T, "AFTER IT: PARTIAL OR ANNULAR ONLY", a2, (120, 786, 20), (W / 2, 1474, 20), col=AMB)
-    foot(T, "ROUGH ESTIMATE: ≈ 600 MILLION YEARS  ·  PUBLISHED FIGURES RANGE TO OVER A BILLION  ·  THE RECESSION RATE IS NOT CONSTANT", win(t, a0 + 1.0, b0), y=(1034 if not V else 500))
+    foot(T, "ROUGH ESTIMATE: ≈ 600 MILLION YEARS  ·  PUBLISHED FIGURES RANGE TO OVER A BILLION  ·  THE RECESSION RATE IS NOT CONSTANT", win(t, a0 + 1.0, b0), y=(1034 if not V else 540))
     return T.add_to(img)
 
 
@@ -727,7 +735,7 @@ def shot_window(t, lt):
     if V: T.put((W / 2, 296), "THE MOON'S APPARENT WIDTH vs THE SUN'S", 19, win(t, a0 + 1.6, b0, 0.8), col=AMB, anchor="c")
     sz = 17 if not V else 18
     al = win(t, a0 + 2.0, b0, 0.8)
-    T.put((X1 + 8 if not V else X1, Y(1.0) - (10 if not V else 30)), "SUN" if not V else "= THE SUN'S WIDTH", sz, al, anchor="l" if not V else "r")
+    T.put((X1 + 8 if not V else X0, Y(1.0) - 10 if not V else Y(1.0) + 10), "SUN" if not V else "= THE SUN'S WIDTH", sz, al, anchor="l")
     for tv, lb in ((-4, "4"), (-3, "3"), (-2, "2"), (-1, "1")):
         T.put((X(tv), Y0 + 20), lb + (" BILLION YEARS AGO" if tv == -4 and not V else " BN" if tv == -4 else ""), sz, al, col=DIM, anchor="c")
     T.put((X(1.0), Y0 + 20), "+1" + (" BILLION" if not V else " BN"), sz, al, col=DIM, anchor="c")

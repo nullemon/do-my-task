@@ -107,81 +107,81 @@ countless pieces of ice,
 catching the last light.
 
 24
-00:03:13,750 --> 00:03:18,292
+00:03:13,750 --> 00:03:18,115
 Uranus lies on its side, and one
 orbit takes eighty-four years.
 
 25
-00:03:18,292 --> 00:03:35,952
-Near a pole, the Sun circles the sky without setting for about forty-two of them, spiralling lower with every turn. When
-it finally touches the horizon, the tiny disc is gone within a couple of days. But the twilight can linger for years.
+00:03:18,115 --> 00:03:40,164
+Near a pole, the Sun circles the sky without setting for about forty-two of them, spiralling lower with every turn. When it finally touches the horizon, the
+tiny disc is gone within a couple of days. But the twilight can linger for years. Farther out still, at Neptune, the Sun shrinks to a thirtieth the width.
 
 26
-00:03:38,750 --> 00:03:45,806
+00:03:42,750 --> 00:03:49,806
 Titan, Saturn's largest moon, has air thicker
 than Earth's, and an orange haze of organic smog.
 
 27
-00:03:45,806 --> 00:03:56,853
+00:03:49,806 --> 00:04:00,853
 In two thousand and five, the Huygens probe landed here, among pebbles
 of water ice, in light about a thousand times dimmer than an Earth day.
 
 28
-00:03:57,500 --> 00:04:01,351
+00:04:01,500 --> 00:04:05,351
 The haze lets red light
 through, and blocks the blue.
 
 29
-00:04:01,351 --> 00:04:14,202
+00:04:05,351 --> 00:04:18,202
 So over a sea of liquid methane, the Sun never shows a clean edge. It sinks into a
 dull amber glow. And the dusk drags on, because one day on Titan lasts sixteen of ours.
 
 30
-00:04:17,000 --> 00:04:23,442
+00:04:21,000 --> 00:04:27,442
 And Pluto. Forty times farther out than Earth.
 The Sun is no longer a disc. It is a star:
 
 31
-00:04:23,442 --> 00:04:30,311
+00:04:27,442 --> 00:04:34,311
 a single point, yet still about two hundred
 and fifty times brighter than our full Moon.
 
 32
-00:04:31,000 --> 00:04:36,045
+00:04:35,000 --> 00:04:40,045
 Noon on Pluto is about as bright as
 Earth a few minutes after sunset.
 
 33
-00:04:36,045 --> 00:04:45,026
+00:04:40,045 --> 00:04:49,026
 NASA calls that moment Pluto time. And when New Horizons
 looked back, it saw layer upon layer of haze, glowing blue.
 
 34
-00:04:47,750 --> 00:05:00,200
+00:04:51,750 --> 00:05:04,200
 Beyond our own Sun, it gets stranger. Kepler-16b circles two stars. It is a gas giant.
 But from a moon of it, if it has one, you would watch two suns go down together:
 
 35
-00:05:00,200 --> 00:05:02,937
+00:05:04,200 --> 00:05:06,937
 one orange, one small and red.
 
 36
-00:05:05,750 --> 00:05:10,270
+00:05:09,750 --> 00:05:14,270
 Every one of these views is a
 reconstruction, built from measurements.
 
 37
-00:05:10,270 --> 00:05:16,129
+00:05:14,270 --> 00:05:20,129
 Robots have photographed a few of them. No
 person has ever stood under any of them.
 
 38
-00:05:17,250 --> 00:05:22,017
+00:05:21,250 --> 00:05:26,017
 There is only one sunset that human
 eyes have watched from the ground.
 
 39
-00:05:22,017 --> 00:05:26,807
+00:05:26,017 --> 00:05:30,807
 This one. It happens every evening.
 It is worth looking up for.
 

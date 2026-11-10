@@ -15,9 +15,9 @@ X, Y = np.meshgrid(m, m)
 Z = 0.55 * fbm(X, Y, 5, 0.03, 0.5, 1) + 0.10 * fbm(X, Y, 5, 0.35, 0.5, 2) + 0.018 * fbm(X, Y, 5, 3.0, 0.55, 3) + 0.004 * fbm(X, Y, 4, 25.0, 0.6, 4)
 Z += 0.0016 * fbm(X, Y, 3, 140.0, 0.6, 5) * (np.hypot(X, Y) < 3)
 # craters: power-law sizes, bowl + raised rim + faint ejecta
-nc = 900
+nc = 2600
 cr = 0.04 * (1 - rng.uniform(0, 1, nc)) ** (-1 / 1.9); cr = np.clip(cr, 0.04, 4.0)
-cxy = rng.uniform(-1, 1, (nc, 2)); cxy = np.sign(cxy) * np.abs(cxy) ** 1.8 * 30
+cxy = rng.uniform(-1, 1, (nc, 2)); cxy = np.sign(cxy) * np.abs(cxy) ** 2.2 * 30
 for (cx, cy), r in zip(cxy, cr):
     if math.hypot(cx - 0.0, cy - 0.0) < 0.55 + r: continue            # keep the pallet's footing clear
     sel = (np.abs(X - cx) < 2.2 * r) & (np.abs(Y - cy) < 2.2 * r)
@@ -33,14 +33,14 @@ def boot(bx, by, ang, left):
     u = (X[sel] - bx) * c + (Y[sel] - by) * s_; v = -(X[sel] - bx) * s_ + (Y[sel] - by) * c
     w = 0.075 - 0.012 * np.cos(u / 0.165 * 2.2)                       # waist
     inside = np.clip((1 - np.abs(u) / 0.165) / 0.08, 0, 1) * np.clip((1 - np.abs(v) / w) / 0.12, 0, 1)
-    ribs = 0.5 + 0.5 * np.sign(np.sin(u / 0.027 * math.pi))
-    Z[sel] += (-0.007 - 0.006 * ribs) * inside + 0.004 * np.exp(-((np.abs(v) / w - 1.15) / 0.2) ** 2) * (np.abs(u) < 0.19)
+    ribs = 0.5 + 0.5 * np.tanh(4 * np.sin(u / 0.016 * math.pi))
+    Z[sel] += (-0.006 - 0.0022 * ribs) * inside + 0.004 * np.exp(-((np.abs(v) / w - 1.15) / 0.2) ** 2) * (np.abs(u) < 0.19)
 ang0 = 2.35
-for k in range(9):
+for k in range(5):
     px = -1.9 + k * 0.42 * math.cos(ang0 + 3.14) * -1; py = -0.25 + k * 0.42 * math.sin(ang0) * 0.2
-    px = 0.80 + k * 0.56; py = -0.35 + k * 0.30 + (0.12 if k % 2 else -0.12)
+    px = 1.05 + k * 0.60; py = 0.30 + k * 0.42 + (0.12 if k % 2 else -0.12)
     boot(px, py, 0.49 + rng.uniform(-0.12, 0.12), k % 2)
-for (px, py, an) in ((-0.72, -0.30, 1.2), (-0.95, -0.12, 1.35), (0.50, 0.85, 0.3), (0.80, 0.72, 0.15)):
+for (px, py, an) in ((0.55, 0.95, 0.3), (0.85, 0.80, 0.15)):
     boot(px, py, an, 0)
 
 reg, nt, b = new_mat("regolith")
@@ -58,7 +58,7 @@ m3 = nt.nodes.new("ShaderNodeMath"); m3.operation = "MULTIPLY"; m3.inputs[1].def
 nt.links.new(m3.outputs[0], ramp.inputs[0]); nt.links.new(ramp.outputs[0], b.inputs["Base Color"])
 b.inputs["Roughness"].default_value = 1.0
 if "Diffuse Roughness" in b.inputs: b.inputs["Diffuse Roughness"].default_value = 1.0
-b1 = nt.nodes.new("ShaderNodeBump"); b1.inputs["Strength"].default_value = 0.55; b1.inputs["Distance"].default_value = 0.004; nt.links.new(n1.outputs[0], b1.inputs["Height"])
+b1 = nt.nodes.new("ShaderNodeBump"); b1.inputs["Strength"].default_value = 0.9; b1.inputs["Distance"].default_value = 0.006; nt.links.new(n1.outputs[0], b1.inputs["Height"])
 b2 = nt.nodes.new("ShaderNodeBump"); b2.inputs["Strength"].default_value = 0.5; b2.inputs["Distance"].default_value = 0.01; nt.links.new(n2.outputs[0], b2.inputs["Height"]); nt.links.new(b1.outputs["Normal"], b2.inputs["Normal"])
 b3 = nt.nodes.new("ShaderNodeBump"); b3.inputs["Strength"].default_value = 0.35; b3.inputs["Distance"].default_value = 0.004; b3.invert = True
 nt.links.new(vor.outputs["Distance"], b3.inputs["Height"]); nt.links.new(b2.outputs["Normal"], b3.inputs["Normal"]); nt.links.new(b3.outputs["Normal"], b.inputs["Normal"])
@@ -85,15 +85,15 @@ for k in range(8):
     sx = r_.uniform(0.6, 1.2, 3); co2 = co * sx
     disp = 1 + 0.35 * fbm(co[:, 0] * 1.3 + 7 * k, co[:, 1] * 1.3 + co[:, 2] * 2.1, 4, 1.0, 0.55, 30 + k) + 0.10 * fbm(co[:, 0] * 6 + co[:, 2] * 3, co[:, 1] * 6 - co[:, 2] * 2, 3, 1.0, 0.6, 50 + k)
     # a few flat fracture facets
-    for _ in range(4):
-        nrm = r_.standard_normal(3); nrm /= np.linalg.norm(nrm); d = co @ nrm; cut = r_.uniform(0.45, 0.8)
+    for _ in range(9):
+        nrm = r_.standard_normal(3); nrm /= np.linalg.norm(nrm); d = co @ nrm; cut = r_.uniform(0.5, 0.85)
         disp = np.where(d * disp > cut, cut / np.maximum(d, 1e-3), disp)
     for v, c_, dd in zip(bm.verts, co2, disp): v.co = Vector(c_ * dd)
-    me = bpy.data.meshes.new("rock%d" % k); bm.to_mesh(me); bm.free(); me.polygons.foreach_set("use_smooth", [True] * len(me.polygons)); me.materials.append(rockm); protos.append(me)
-nr = 520
+    me = bpy.data.meshes.new("rock%d" % k); bm.to_mesh(me); bm.free(); me.polygons.foreach_set("use_smooth", [False] * len(me.polygons)); me.materials.append(rockm); protos.append(me)
+nr = 1900
 for k in range(nr):
-    r = 0.012 * (1 - rng.uniform()) ** (-1 / 1.6); r = min(r, 0.35)
-    p = rng.uniform(-1, 1, 2); p = np.sign(p) * np.abs(p) ** 1.6 * 16
+    r = 0.006 * (1 - rng.uniform()) ** (-1 / 1.45); r = min(r, 0.35)
+    p = rng.uniform(-1, 1, 2); p = np.sign(p) * np.abs(p) ** 2.0 * 16
     if math.hypot(p[0], p[1]) < 0.5: continue
     if r > 0.12 and math.hypot(p[0], p[1] + 2.2) < 2.0: continue     # nothing big between camera and array
     o = bpy.data.objects.new("r", protos[k % 8]); sc.collection.objects.link(o)
@@ -170,4 +170,4 @@ import json
 bpy.context.view_layer.update()
 json.dump(dict(center=project(Mw @ Vector((0, 0, TH / 2))), normal=list((Mw.to_3x3() @ Vector((0, 0, 1)))[:]),
                corners=[project(Mw @ Vector((sx * PW / 2, sy * PW / 2, TH / 2))) for sx in (-1, 1) for sy in (-1, 1)]), open(SCR + "/plates/reflector.json", "w"))
-render(SCR + "/plates/reflector_glow.png" if GLOW else SCR + "/plates/reflector.png")
+render(SCR + "/plates/reflector_glow.png" if GLOW else SCR + "/plates/reflector%s.png" % os.environ.get("TAG", ""))

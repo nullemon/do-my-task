@@ -114,7 +114,7 @@ def w_mercury():
         st["mid"] = craters(X, Y, Z, 300, 45, 5000, 0.2, 1.5, 6, depth=0.18)
         craters(X, Y, Z, 1800, 45, 1500, 0.03, 0.2, 7, depth=0.2)
         # a lobate scarp / crater wall on the horizon
-        Z += sm(5200, 8500, Y) * (260 * np.clip(1 - np.abs(N(25, X, Y, 12000, 2.0)) * 0.8, 0, 2) ** 1.4 + 55 * (1 - np.abs(N(26, X, Y, 1500, 1.9))) + 10 * N(27, X, Y, 300, 1.8)) * sm(14500, 11000, Y)
+        Z += sm(5200, 8500, Y) * (260 * np.clip(1 - np.abs(N(25, X, Y, 12000, 2.0)) * 0.8, 0, 2) ** 1.4 + 40 * (1 - np.abs(N(26, X, Y, 2500, 2.1))) + 5 * N(27, X, Y, 400, 2.0)) * sm(14500, 11000, Y)
         return Z
     def colour(X, Y, Z):
         a = np.array([0.20, 0.185, 0.17]); b = np.array([0.30, 0.285, 0.265]); br = np.array([0.42, 0.40, 0.38])
@@ -129,25 +129,25 @@ def w_mercury():
     return height, colour
 
 def w_venus():
-    P.update(camh=1.5, y1=240, yfar=7000, far=(7000, 26000, 500), sun_ang=40.0, sun_el=14.0, glow_el=16, glow_ang=70, bump=(1.2, 0.035), rough_tex=(14.0, 1.3))
+    P.update(camh=1.5, y1=240, yfar=7000, far=(7000, 26000, 500), sun_ang=40.0, sun_el=14.0, glow_el=16, glow_ang=70, bump=(0.5, 0.02), rough_tex=(14.0, 1.3))
     def height(X, Y):
         Z = 3.5 * N(41, X, Y, 2400, 2.5) + 0.12 * N(42, X, Y, 30, 2.2)
         # platy basalt: three scales of cracked slabs, each slab tilted and stepped a little
-        for (L, amp, s) in ((6.0, 0.10, 1), (1.7, 0.05, 2), (0.45, 0.02, 3)):
+        for (L, amp, s) in ((7.0, 0.07, 1), (2.2, 0.06, 2), (0.6, 0.022, 3)):
             F1, F2, ID = cell(X + 0.3 * L * N(43 + s, X, Y, L * 4, 2.0), Y + 0.3 * L * N(46 + s, X, Y, L * 4, 2.0), L, s)
             fade = sm(L * 330, L * 110, Y)
-            Z += fade * (amp * (ID - 0.5) * 2 + amp * 0.7 * (ID - 0.5) * (X % L) / L - amp * 1.6 * (1 - sm(0.0, 0.07 * L, F2 - F1)))
-        Z += 0.012 * N(49, X, Y, 0.5, 1.7)
+            Z += fade * amp * (ID - 0.5) * 2 - sm(L * 45, L * 18, Y) * amp * 2.2 * (1 - sm(0.0, 0.045 * L, F2 - F1))
+        Z += 0.004 * N(49, X, Y, 0.5, 1.7)
         Z += sm(3000, 9000, Y) * (420 * np.clip(N(50, X, Y, 30000, 2.6) * 0.5 + 0.5, 0, 2) ** 1.5 + 30 * N(51, X, Y, 3000, 2.2)) * sm(26500, 20000, Y)   # a shield volcano
         return Z
     def colour(X, Y, Z):
         slab = np.array([0.36, 0.33, 0.30]); dark = np.array([0.16, 0.145, 0.13]); soil = np.array([0.10, 0.09, 0.08])
-        F1, F2, ID = cell(X + 0.3 * 1.7 * N(45, X, Y, 6.8, 2.0), Y + 0.3 * 1.7 * N(48, X, Y, 6.8, 2.0), 1.7, 2)
+        F1, F2, ID = cell(X + 0.3 * 2.2 * N(45, X, Y, 8.8, 2.0), Y + 0.3 * 2.2 * N(48, X, Y, 8.8, 2.0), 2.2, 2)
         c = mixc(dark, slab, np.clip(ID * 0.8 + 0.3 * N(52, X, Y, 12, 2.0) + 0.3, 0, 1))
-        c = mixc(c, soil, (1 - sm(0.0, 0.12, F2 - F1)) * sm(400, 100, Y) * 0.85)
+        c = mixc(c, soil, (1 - sm(0.0, 0.12, F2 - F1)) * sm(90, 35, Y) * 0.85)
         c = mixc(c, soil, sm(0.2, 1.2, N(53, X, Y, 25, 2.2)) * 0.7)
         return c * (0.88 + 0.12 * N(54, X, Y, 0.4, 1.6))[..., None]
-    ROCKS.extend([(1500, 7, 200, 0.03, 0.35, "slab", 0.3, (0.12, 0.11, 0.10), (0.34, 0.31, 0.28), None)])
+    ROCKS.extend([(900, 7, 200, 0.04, 0.4, "slab", 0.3, (0.12, 0.11, 0.10), (0.34, 0.31, 0.28), None)])
     return height, colour
 
 def w_titan():
@@ -171,7 +171,7 @@ def w_titan():
     return height, colour
 
 def w_pluto():
-    P.update(camh=2.0, y1=320, yfar=9000, far=(9000, 42000, 950), sun_ang=0.02, sun_el=3.5, bump=(0.7, 0.04), rough_tex=(7.0, 0.5))
+    P.update(camh=2.0, y1=320, yfar=20000, n_mid=700, far=(20000, 42000, 1100), sun_ang=0.02, sun_el=4.5, bump=(0.7, 0.04), rough_tex=(7.0, 0.5))
     def height(X, Y):
         Z = 1.2 * N(81, X, Y, 2500, 2.4) + 0.10 * N(82, X, Y, 40, 2.2)
         # nitrogen-ice plain: sublimation pits in rows, shallow troughs between convection cells
@@ -183,19 +183,20 @@ def w_pluto():
         Z -= 5.0 * (1 - sm(0, 90, Fb - Fa)) + 1.2 * (1 - sm(0, 260, Fb - Fa))
         # scalloped wind / sublimation texture
         Z += 0.035 * np.abs(N(86, X, Y * 0.5, 2.2, 2.0)) * sm(120, 30, Y) + 0.004 * N(87, X, Y, 0.4, 1.7)
-        # water-ice mountains: jumbled angular blocks kilometres high
-        mt = sm(9500, 17000, Y) * sm(42500, 36000, Y)
-        r1 = 1 - np.abs(N(88, X, Y, 14000, 1.9)); r2 = 1 - np.abs(N(89, X, Y, 3500, 1.8)); r3 = 1 - np.abs(N(90, X, Y, 800, 1.7))
-        Fc, Fd, IDc = cell(X + 400 * N(91, X, Y, 5000, 2.0), Y, 3200, 8)
-        blocks = (0.35 + IDc) * sm(0, 500, Fd - Fc)
-        Z += mt * np.clip(0.2 + 0.8 * N(92, X, Y, 30000, 2.2) + 0.5, 0.15, 2) * (1500 * np.clip(r1, 0, 1) ** 1.5 * (0.5 + 0.7 * blocks) + 520 * r2 * r1 + 110 * r3 * r1 + 25 * N(93, X, Y, 150, 1.8))
+        # water-ice mountains: a jumble of tilted blocks one to two kilometres high, floating in the nitrogen ice
+        mt = sm(20000, 26000, Y + 2500 * N(92, X, Y, 12000, 2.1)) * sm(42500, 37000, Y)
+        Fc, Fd, IDc = cell(X + 500 * N(91, X, Y, 5000, 2.0), Y + 500 * N(99, X, Y, 5000, 2.0), 3600, 8)
+        tilt = 0.4 * N(87, X, Y, 6000, 2.2)
+        block = sm(60, 700, Fd - Fc) ** 0.7 * (0.45 + 0.75 * IDc + 0.5 * tilt)
+        r1 = 1 - np.abs(N(88, X, Y, 16000, 2.0)); r2 = 1 - np.abs(N(89, X, Y, 2500, 1.9))
+        Z += mt * (780 * block * (0.5 + 0.7 * np.clip(r1, 0, 1)) + 330 * np.clip(r1, 0, 1) ** 2 + 110 * r2 * block + 22 * N(90, X, Y, 500, 1.8) + 6 * N(93, X, Y, 90, 1.8))
         return Z
     def colour(X, Y, Z):
         n2 = np.array([0.80, 0.76, 0.70]); cream = np.array([0.74, 0.62, 0.50]); red = np.array([0.36, 0.17, 0.10]); h2o = np.array([0.62, 0.64, 0.68])
         c = mixc(n2, cream, sm(-0.5, 1.5, N(94, X, Y, 600, 2.2) + 0.4 * N(95, X, Y, 6, 1.9)))
-        mt = sm(9500, 13000, Y)
-        rock = mixc(red, h2o, sm(150, 1300, Z + 300 * N(96, X, Y, 4000, 2.0)))
-        rock = mixc(rock, n2, sm(1500, 2600, Z + 400 * N(97, X, Y, 2500, 2.0)) * 0.8)     # methane / nitrogen frost on the summits
+        mt = sm(19000, 23000, Y)
+        rock = mixc(red, h2o, sm(60, 500, Z + 150 * N(96, X, Y, 4000, 2.0)))
+        rock = mixc(rock, n2, sm(700, 1100, Z + 200 * N(97, X, Y, 2500, 2.0)) * 0.8)     # methane / nitrogen frost on the summits
         c = mixc(c, rock, mt * sm(15, 120, Z))
         return c * (0.92 + 0.08 * N(98, X, Y, 0.5, 1.6))[..., None]
     ROCKS.extend([(700, 10, 500, 0.05, 0.7, "angular", 0.35, (0.50, 0.53, 0.60), (0.80, 0.82, 0.86), None),
@@ -212,8 +213,8 @@ def w_kepler():
             e = F2 - F1; fade = sm(L * 300, L * 90, Y)
             Z += fade * (amp * 0.6 * sm(0.30 * L, 0.06 * L, e) - amp * 2.2 * sm(0.035 * L, 0.0, e))
         Z += 0.004 * N(107, X, Y, 0.3, 1.7)
-        mesa = sm(0.25, 0.5, N(108, X, Y, 9000, 2.0) * 0.5 + 0.3 * N(109, X, Y, 1500, 1.9)) * sm(5500, 8000, Y) * sm(20500, 17000, Y)
-        Z += mesa * (330 + 60 * N(110, X, Y, 2500, 2.0)) + sm(5500, 8000, Y) * 30 * (1 - np.abs(N(111, X, Y, 1200, 1.9))) * sm(20500, 17000, Y)
+        far = sm(5500, 9000, Y) * sm(20500, 16000, Y)                                  # low worn hills on the horizon
+        Z += far * (90 * np.clip(N(108, X, Y, 12000, 2.3) + 0.6, 0, 3) + 35 * (1 - np.abs(N(109, X, Y, 4000, 2.2))) + 6 * N(110, X, Y, 600, 2.0))
         return Z
     def colour(X, Y, Z):
         a = np.array([0.50, 0.44, 0.40]); b = np.array([0.66, 0.60, 0.55]); crack = np.array([0.12, 0.10, 0.10]); red = np.array([0.36, 0.20, 0.15])
@@ -222,8 +223,9 @@ def w_kepler():
         strata = 0.8 + 0.2 * np.sin(Z * 0.07 + 2 * N(113, X, Y, 3000, 2.0))
         c = mixc(c, red * strata[..., None], sm(8, 40, Z))
         return c * (0.92 + 0.08 * N(117, X, Y, 0.4, 1.6))[..., None]
-    ROCKS.extend([(900, 9, 300, 0.03, 0.4, "angular", 0.3, (0.10, 0.08, 0.08), (0.30, 0.22, 0.19), None),
-                  (34, 25, 420, 2.2, 7.5, "spire", 0.1, (0.16, 0.10, 0.09), (0.36, 0.22, 0.17), None)])
+    ROCKS.extend([(1100, 9, 300, 0.03, 0.4, "angular", 0.3, (0.10, 0.08, 0.08), (0.30, 0.22, 0.19), None),
+                  (2200, 9, 60, 0.012, 0.06, "angular", 0.3, (0.10, 0.08, 0.08), (0.30, 0.22, 0.19), None),
+                  (30, 14, 200, 0.5, 1.8, "angular", 0.3, (0.12, 0.09, 0.09), (0.32, 0.22, 0.18), None)])
     return height, colour
 
 def w_earth():
@@ -231,17 +233,15 @@ def w_earth():
     P.update(camh=3.0, y1=300, yfar=900, n_mid=200, sun_ang=0.53, sun_el=3.0, bump=(1.0, 0.05), rough_tex=(8.0, 0.8))
     def lump(X, Y, x, y, rx, ry): return np.exp(-(((X - x) / rx) ** 2 + ((Y - y) / ry) ** 2) ** 1.5)
     def height(X, Y):
-        # wave-cut rock platform at the lower corners: flat-topped, stepped along bedding planes, with tide pools
-        reef = lump(X, Y, -5.2, 19, 3.6, 7) + lump(X, Y, 6.4, 24, 3.4, 9) + lump(X, Y, -11, 42, 5, 14) * 0.9 + lump(X, Y, 14, 58, 6, 18) * 0.8
-        reef = np.clip(reef + 0.18 * N(121, X, Y, 6, 1.9) * (reef > 0.02), 0, 1.2)
-        step = np.floor(reef * 3.2 + 0.4 * N(122, X, Y, 7, 2.0)) / 3.2
-        top = 0.75 * sm(0.0, 0.25, reef) * (0.35 + 0.65 * np.clip(step, 0, 1)) + 0.05 * N(123, X, Y, 1.2, 1.8) + 0.012 * N(124, X, Y, 0.2, 1.7)
-        return -1.2 + sm(0.02, 0.2, reef) * 1.25 + top * sm(0.05, 0.3, reef)
+        # smooth wave-worn rock (whalebacks) at the lower corners, just breaking the surface
+        reef = lump(X, Y, -5.6, 19, 3.2, 7) + lump(X, Y, 6.8, 24, 3.0, 9) + lump(X, Y, -12, 44, 4.5, 14) * 0.85 + lump(X, Y, 15, 60, 5.5, 18) * 0.8
+        reef = np.clip(reef * (1 + 0.35 * N(121, X, Y, 9, 2.2)), 0, 1.3)
+        return -1.2 + 1.75 * reef ** 0.8 + 0.10 * N(122, X, Y, 2.5, 2.1) * reef + 0.02 * N(123, X, Y, 0.5, 1.9) * reef
     def colour(X, Y, Z):
         a = np.array([0.05, 0.045, 0.04]); b = np.array([0.14, 0.12, 0.10]); weed = np.array([0.05, 0.07, 0.03])
         c = mixc(a, b, sm(-1, 1, N(124, X, Y, 1.5, 1.9) + 0.5 * N(125, X, Y, 12, 2.0)))
         return mixc(c, weed, sm(0.45, 0.05, Z) * 0.7 * sm(-0.5, 0.5, N(126, X, Y, 4, 2.0)))
-    ROCKS.extend([(6, 260, 900, 9, 20, "stack", 0.0, (0.04, 0.035, 0.03), (0.13, 0.11, 0.09), None),
+    ROCKS.extend([(6, 480, 1500, 8, 16, "stack", 0.0, (0.04, 0.035, 0.03), (0.13, 0.11, 0.09), None),
                   (90, 12, 70, 0.12, 0.55, "boulder", 0.4, (0.04, 0.035, 0.03), (0.14, 0.12, 0.10), None)])
     HOOK["sea"] = 0.0; HOOK["rock_ok"] = lambda x, y: (y > 120 and abs(x / y) > 0.05) or (y < 80 and abs(x / y) > 0.14)
     return height, colour
@@ -251,45 +251,46 @@ def clouds(kind):
     Clouds are as tall as they are wide: cauliflower billows (|noise| at four scales) on convective towers and a stratiform floor."""
     def billow(X, Y, seeds, Ls, amps, squash=1.0):
         out = 0
-        for sd, L, a in zip(seeds, Ls, amps): out = out + a * np.abs(N(sd, X * squash, Y, L, 1.75))
+        for sd, L, a in zip(seeds, Ls, amps): out = out + a * 1.25 * np.tanh(1.3 * np.abs(N(sd, X * squash, Y, L, 2.0)))        # rounded domes, creased valleys
         return out
+    def smin(a, b, k): return -k * np.logaddexp(-a / k, -b / k)
+    def ceiling(Z, Y, camh, k=700.0):                      # keep the nearest tops just under the camera, softly (no flat cuts)
+        return smin(Z, camh - 1400 + 5000 * sm(5e4, 3.0e5, Y), k)
     def w():
         if kind == "jupiter":
-            P.update(camh=4500.0, y1=6e5, yfar=2.6e6, n_near=1300, n_mid=450, cloud=True, sun_ang=0.102, sun_el=5.0, glow_el=13, bump=(0.5, 120.0), rough_tex=(0.004, 0.0006))
+            P.update(camh=7000.0, y1=6e5, yfar=2.6e6, n_near=1300, n_mid=450, cloud=True, sun_ang=0.102, sun_el=5.0, glow_el=13, bump=(0.5, 120.0), rough_tex=(0.004, 0.0006))
             def height(X, Y):
-                cov = N(134, X, Y, 2.4e5, 2.1) + 0.45 * N(135, X, Y, 6e4, 1.9)                      # where convection breaks through
-                tow = sm(0.25, 1.25, cov) ** 0.6; anv = sm(1.2, 1.9, cov)
-                bil = billow(X, Y, (131, 132, 133, 130), (3.6e4, 1.1e4, 3200, 900), (2600, 1100, 380, 110))
-                floor = -5200 + 0.35 * bil + 900 * N(136, X * 0.2, Y, 2.5e5, 2.2)
-                top = -1200 + tow * (6500 + 2500 * N(137, X, Y, 1.2e5, 2.0)) + bil * (0.35 + 0.65 * tow) - anv * 0.5 * bil
-                Z = np.maximum(floor, floor + (top - floor) * tow)
-                return np.minimum(Z, P["camh"] - 600 + 3200 * sm(4e4, 2.5e5, Y)) * sm(1.0e4, 2.6e4, Y) + (-5200) * (1 - sm(1.0e4, 2.6e4, Y))
+                cov = N(134, X, Y, 2.6e5, 2.3) + 0.30 * N(135, X, Y, 8e4, 2.2)                      # where convection breaks through
+                tow = sm(-0.2, 1.6, cov) ** 1.3
+                bil = billow(X, Y, (131, 132, 133, 130), (3.0e4, 9000, 2700, 800), (3300, 1000, 300, 90))
+                Z = -4500 + 0.55 * bil + tow * (7000 + 1.1 * bil) + 900 * N(136, X * 0.2, Y, 2.5e5, 2.3)
+                return ceiling(Z, Y, P["camh"]) * sm(1.0e4, 3.0e4, Y) + (-4500) * (1 - sm(1.0e4, 3.0e4, Y))
             def colour(X, Y, Z):
                 cream = np.array([0.88, 0.82, 0.70]); och = np.array([0.74, 0.54, 0.34]); rust = np.array([0.52, 0.30, 0.19]); wh = np.array([0.96, 0.95, 0.92])
                 band = N(138, X * 0.05, Y, 6e5, 2.2)
                 c = mixc(cream, och, sm(-0.6, 0.8, band + 0.3 * N(139, X, Y, 5e4, 2.0))); c = mixc(c, rust, sm(0.6, 1.8, band) * 0.8)
-                return mixc(c, wh, sm(-2500, 2500, Z))
+                return mixc(c, wh, sm(-2500, 3500, Z))
             return height, colour
         if kind == "saturn":
-            P.update(camh=3800.0, y1=6e5, yfar=3.2e6, n_near=1300, n_mid=450, cloud=True, sun_ang=0.055, sun_el=5.0, glow_el=13, bump=(0.4, 100.0), rough_tex=(0.003, 0.0005))
+            P.update(camh=6000.0, y1=6e5, yfar=3.2e6, n_near=1300, n_mid=450, cloud=True, sun_ang=0.055, sun_el=5.0, glow_el=13, bump=(0.4, 100.0), rough_tex=(0.003, 0.0005))
             def height(X, Y):
                 # ammonia-ice haze deck: long soft rolls stretched east-west, with low cumulus heads pushing through here and there
-                rolls = billow(X, Y, (141, 142, 143), (5.5e4, 1.4e4, 3500), (2300, 800, 230), squash=0.35)
-                cov = sm(0.5, 1.5, N(145, X, Y, 3.0e5, 2.1) + 0.4 * N(146, X, Y, 5e4, 1.9)) ** 0.7
-                heads = cov * (3800 + billow(X, Y, (147, 148, 149), (2.2e4, 6000, 1500), (2400, 800, 220)))
-                Z = -4600 + rolls + heads + 1200 * N(144, X * 0.2, Y, 5e5, 2.3)
-                return np.minimum(Z, P["camh"] - 600 + 3000 * sm(4e4, 2.5e5, Y)) * sm(1.0e4, 2.4e4, Y) + (-4600) * (1 - sm(1.0e4, 2.4e4, Y))
+                rolls = billow(X, Y, (141, 142, 143), (6.0e4, 1.5e4, 3600), (2600, 750, 200), squash=0.35)
+                cov = sm(0.2, 1.8, N(145, X, Y, 3.2e5, 2.3) + 0.25 * N(146, X, Y, 7e4, 2.2)) ** 1.2
+                heads = cov * (3600 + billow(X, Y, (147, 148, 149), (2.4e4, 7000, 2000), (2600, 750, 210)))
+                Z = -4200 + rolls + heads + 1000 * N(144, X * 0.2, Y, 5e5, 2.3)
+                return ceiling(Z, Y, P["camh"]) * sm(1.0e4, 3.0e4, Y) + (-4200) * (1 - sm(1.0e4, 3.0e4, Y))
             def colour(X, Y, Z):
                 gold = np.array([0.84, 0.72, 0.48]); pale = np.array([0.93, 0.87, 0.72]); tan = np.array([0.68, 0.54, 0.36])
-                c = mixc(gold, tan, sm(-0.5, 1.2, N(150, X * 0.05, Y, 7e5, 2.2))); return mixc(c, pale, sm(-3500, 500, Z))
+                c = mixc(gold, tan, sm(-0.5, 1.2, N(150, X * 0.05, Y, 7e5, 2.2))); return mixc(c, pale, sm(-3500, 1500, Z))
             return height, colour
-        P.update(camh=3200.0, y1=6e5, yfar=3.0e6, n_near=1300, n_mid=450, cloud=True, sun_ang=0.028, sun_el=4.5, glow_el=12, bump=(0.35, 80.0), rough_tex=(0.003, 0.0005))
+        P.update(camh=5000.0, y1=6e5, yfar=3.0e6, n_near=1300, n_mid=450, cloud=True, sun_ang=0.028, sun_el=4.5, glow_el=12, bump=(0.35, 80.0), rough_tex=(0.003, 0.0005))
         def height(X, Y):
             # methane-ice cloud field: closed convection cells (a mackerel sky seen from above) over smooth haze, in streets
             F1, F2, ID = cell(X + 3000 * N(151, X, Y, 4e4, 2.0), Y + 3000 * N(152, X, Y, 4e4, 2.0), 9000, 21)
             dome = np.sqrt(np.clip(sm(0.0, 3800, F2 - F1), 0, 1)) * (0.45 + 0.55 * ID)
             cov = sm(-0.5, 0.5, N(153, X * 0.3, Y, 3.5e5, 2.2) + 0.3 * N(158, X, Y, 6e4, 2.0))
-            Z = -3600 + cov * (2600 * dome + 500 * np.abs(N(154, X, Y, 2600, 1.8)) + 150 * np.abs(N(159, X, Y, 700, 1.7))) + 700 * N(155, X, Y, 8e5, 2.4) + 250 * N(156, X * 0.3, Y, 3e4, 2.1)
+            Z = -3600 + cov * (2600 * dome + 260 * np.abs(N(154, X, Y, 2600, 2.0)) + 60 * np.abs(N(159, X, Y, 700, 1.9))) + 700 * N(155, X, Y, 8e5, 2.4) + 250 * N(156, X * 0.3, Y, 3e4, 2.1)
             return Z * sm(1.0e4, 2.2e4, Y) + (-3600) * (1 - sm(1.0e4, 2.2e4, Y))
         def colour(X, Y, Z):
             teal = np.array([0.52, 0.80, 0.82]); deep = np.array([0.30, 0.62, 0.70]); wh = np.array([0.88, 0.96, 0.97])
@@ -449,16 +450,16 @@ def stack_mesh(name, seed):
     ledge = (bed - np.floor(bed)); ledge = np.where(ledge < 0.82, 0.0, -1.0) + 0.35 * (np.floor(bed) % 3 == 0)
     joints = n1(T, 5.0, seed + 2) * 0.035 + (np.abs(np.sin(T * r.integers(5, 9) + n1(Hg, 3.0, seed + 3))) < 0.08) * -0.05
     taper = 1 - 0.30 * Hg ** 1.6 + 0.10 * np.sin(Hg * 5 + seed)
-    notch = 1 - 0.16 * np.exp(-((Hg - 0.05) / 0.035) ** 2) + 0.25 * np.exp(-Hg / 0.02)
+    notch = 1 - 0.14 * np.exp(-((Hg - 0.05) / 0.035) ** 2) + 0.10 * np.exp(-Hg / 0.015)
     rad = prof[None, :] * taper * notch * (1 + 0.045 * ledge + joints + 0.02 * n1(T * 3 + Hg * 40, 1.0, seed + 4))
-    ztop = Hh * (1 + 0.10 * n1(th, 1.0, seed + 5) + 0.05 * (np.abs(n1(th, 3.0, seed + 6)) > 0.6))
+    ztop = Hh * (1 + 0.05 * n1(th, 1.0, seed + 5))
     Zs = Hg * ztop[None, :]
     Xs = rad * np.cos(T) + lean * Zs; Ys = rad * np.sin(T)
     rings = [np.stack([Xs, Ys, Zs], -1)]
     cap = []
     for j in range(1, ncap + 1):
         q = 1 - j / ncap
-        cap.append(np.stack([Xs[-1] * q + lean * ztop.mean() * (1 - q) * 0, Ys[-1] * q, Zs[-1] + (1 - q) ** 2 * 0.05 * Hh * (1 + 0.5 * n1(th * 2 + j, 1.0, seed + 7))], -1))
+        cap.append(np.stack([Xs[-1] * q + lean * ztop.mean() * (1 - q) * 0, Ys[-1] * q, Zs[-1] + (1 - q) ** 2 * 0.04 * Hh], -1))
     V = np.concatenate([rings[0], np.stack(cap, 0)], 0); nv = V.shape[0]
     idx = np.arange(nv * nt, dtype=np.int32).reshape(nv, nt); nx = np.roll(idx, -1, axis=1)
     faces = np.stack([idx[:-1].ravel(), nx[:-1].ravel(), nx[1:].ravel(), idx[1:].ravel()], 1)

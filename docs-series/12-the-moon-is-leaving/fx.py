@@ -243,7 +243,7 @@ def sea(sky, yh, t, f, cxp=None, cam_h=1.0, base=(0.010, 0.016, 0.026), rough=1.
         mx = (xw * sc_ + t * vx * speed * 14) % 1024; my = (np.broadcast_to(zd, (n, W)) * sc_ + t * vz * speed * 14) % 1024
         # fade scales that would alias at this distance
         px = zd * sc_ / f * (zd / cam_h)                     # texels per pixel along depth
-        fade = np.clip(1.6 / np.maximum(px, 1e-3), 0, 1) ** 0.7
+        fade = np.clip(0.8 / np.maximum(px, 1e-3), 0, 1) ** 1.0
         slope += cv2.remap(G, mx.astype(F32), my.astype(F32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP) * (amp * fade)[..., None]
     slope *= 0.055 * rough
     xr = np.broadcast_to(np.arange(W, dtype=F32)[None, :], (n, W)) + slope[..., 0] * f * 1.0
@@ -254,6 +254,7 @@ def sea(sky, yh, t, f, cxp=None, cam_h=1.0, base=(0.010, 0.016, 0.026), rough=1.
     Fr = 0.03 + 0.97 * (1 - cosi) ** 5
     out = sky.copy()
     wat = np.asarray(base, F32) * (1 - Fr[..., None]) + refl * Fr[..., None] * gain
+    wat = cv2.GaussianBlur(wat, (0, 0), sigmaX=1.7, sigmaY=0.85)
     if horizon_col is not None:
         hz = np.exp(-ys / 5.0)[..., None]; wat = wat * (1 - 0.6 * hz) + np.asarray(horizon_col, F32) * 0.6 * hz
     out[yh:] = wat

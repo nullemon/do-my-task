@@ -18,7 +18,7 @@ def plate(w):
 def mixa(a, b, t): return a * (1 - t[..., None]) + b * t[..., None]
 def ang(EL, AZ, se, sa): return np.hypot((AZ - sa) * np.cos(np.radians(np.clip(EL, -5, 30))), EL - se)
 def ground(pl, sunc, glowc, ambc):
-    return pl.alb * (pl.sun[..., None] * np.asarray(sunc, f32) + pl.glow[..., None] * np.asarray(glowc, f32) + pl.amb[..., None] * np.asarray(ambc, f32))
+    return pl.A_sun * np.asarray(sunc, f32) + pl.A_glow * np.asarray(glowc, f32) + pl.A_amb * np.asarray(ambc, f32)
 def hazed(L, pl, hcol, dh, power=1.0, floor=0.0):
     T = np.exp(-(pl.dist / dh) ** power)[..., None] * (1 - floor); return L * T + hcol * (1 - T)
 def compose(pl, sky, L):
@@ -33,29 +33,31 @@ def horizon_sky(pl, skyfn, el=0.35):
     """sky colour just above the horizon in each column: the colour distance fades into"""
     return skyfn(np.full((1, W), el, f32), pl.AZ[int(pl.yh) - 2:int(pl.yh) - 1, :])
 def sky_half(pl, skyfn):
-    return up(skyfn(half(pl.EL), half(pl.AZ)))
+    return up(skyfn(pl.ELh, pl.AZh))
 
 # ------------------------------------------------------------------------------------------------ HUD
 INFO = dict(
-    earth=("EARTH", "1.00", "8.3 LIGHT-MINUTES", "ONE DAY  24 H", "PHOTOGRAPHED BY EVERYONE. THIS ONE IS A RENDER TOO."),
+    earth=("EARTH", "1.00", "8.3 LIGHT-MINUTES", "ONE DAY  24 H", "COMPUTER-GENERATED LIKE THE OTHERS, FOR A FAIR COMPARISON"),
     mars=("MARS", "0.66", "12.7 LIGHT-MINUTES", "ONE DAY  24 H 40 MIN", "ARTIST'S RECONSTRUCTION BASED ON ROVER SUNSET IMAGES (SPIRIT, CURIOSITY, PERSEVERANCE)"),
     mercury=("MERCURY", "2.1 - 3.3", "3.2 LIGHT-MINUTES", "ONE DAY  176 EARTH DAYS", "ARTIST'S RECONSTRUCTION BASED ON MESSENGER IMAGING AND MERCURY'S ORBIT"),
     venus=("VENUS", "1.38", "6.0 LIGHT-MINUTES", "ONE DAY  117 EARTH DAYS", "ARTIST'S RECONSTRUCTION BASED ON VENERA 13 AND 14 SURFACE PANORAMAS"),
     jupiter=("JUPITER", "0.19", "43 LIGHT-MINUTES", "ONE DAY  9 H 56 MIN", "ARTIST'S RECONSTRUCTION BASED ON JUNO AND GALILEO DATA.  SKY COLOURS ARE AN INFORMED GUESS"),
     saturn=("SATURN", "0.10", "80 LIGHT-MINUTES", "ONE DAY  ABOUT 10 H 33 MIN", "ARTIST'S RECONSTRUCTION BASED ON CASSINI DATA AND RING GEOMETRY"),
-    uranus=("URANUS", "0.05", "2 H 40 MIN OF LIGHT TRAVEL", "ONE YEAR  84 EARTH YEARS", "ARTIST'S RECONSTRUCTION BASED ON VOYAGER 2 DATA AND URANUS'S 98-DEGREE TILT"),
+    uranus=("URANUS", "0.05", "2.7 LIGHT-HOURS", "ONE YEAR  84 EARTH YEARS", "ARTIST'S RECONSTRUCTION BASED ON VOYAGER 2 DATA AND URANUS'S 98-DEGREE TILT"),
     titan=("TITAN", "0.10", "80 LIGHT-MINUTES", "ONE DAY  16 EARTH DAYS", "ARTIST'S RECONSTRUCTION BASED ON HUYGENS SURFACE IMAGES AND CASSINI RADAR OF THE SEAS"),
     pluto=("PLUTO", "0.03", "5.5 LIGHT-HOURS", "ONE DAY  6.4 EARTH DAYS", "ARTIST'S RECONSTRUCTION BASED ON NEW HORIZONS IMAGES OF SPUTNIK PLANITIA"),
-    kepler=("KEPLER-16 b", "0.9 + 0.3", "ABOUT 245 LIGHT-YEARS FROM EARTH", "TWO SUNS, ONE ORBIT EVERY 41 DAYS", "IMAGINED MOON OF A REAL GAS GIANT.  ARTIST'S IMPRESSION BASED ON KEPLER DATA"),
+    kepler=("KEPLER-16 b", "0.9 + 0.3", "ABOUT 245 LIGHT-YEARS", "TWO SUNS, ONE ORBIT EVERY 41 DAYS", "IMAGINED MOON OF A REAL GAS GIANT.  ARTIST'S IMPRESSION BASED ON KEPLER DATA"),
 )
 def scrim(y, x0, y0, x1, y1, a=0.42, soft=90):
     """darken a soft-edged box so thin type stays readable over bright sky"""
     if a <= 0.004: return y
-    key = (x0, y0, x1, y1, soft)
-    if scrim.k != key:
-        m = np.zeros((H, W), f32); m[max(0, int(y0)):int(y1), max(0, int(x0)):int(x1)] = 1; scrim.m = cv2.GaussianBlur(m, (0, 0), soft)[..., None]; scrim.k = key
-    return y * (1 - a * scrim.m)
-scrim.k = None
+    key = (int(x0), int(y0), int(x1), int(y1), soft)
+    if key not in scrim.c:
+        if len(scrim.c) > 12: scrim.c.clear()
+        m = np.zeros((H // 8, W // 8), f32); m[max(0, key[1] // 8):key[3] // 8, max(0, key[0] // 8):key[2] // 8] = 1
+        scrim.c[key] = cv2.resize(cv2.GaussianBlur(m, (0, 0), soft / 8), (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
+    return y * (1 - a * scrim.c[key])
+scrim.c = {}
 def hud(ov, w, a, speed="TIME-LAPSE", extra=None):
     """world name, Sun's apparent size (number + to-scale icon against Earth's), distance in light-time, day length, credit line"""
     if a <= 0.004: return []
@@ -65,29 +67,29 @@ def hud(ov, w, a, speed="TIME-LAPSE", extra=None):
         ov.text(x, y, name, size=58, wt="ExtraLight", a=a, track=0.34, display=True)
         ov.line([(x, y + 84), (x + 420, y + 84)], a=0.5 * a, width=1.0)
         ov.text(x, y + 100, "SUN'S APPARENT SIZE", size=17, a=0.8 * a, track=0.26); ov.text(x + 330, y + 96, size + " x", size=23, wt="Regular", col=(255, 214, 120), a=a, track=0.1); ov.text(x + 330 + 16 * len(size) + 44, y + 100, "EARTH'S", size=17, a=0.8 * a, track=0.26)
-        ov.text(x, y + 134, "DISTANCE FROM THE SUN", size=17, a=0.8 * a, track=0.26); ov.text(x + 330, y + 134, dist, size=17, wt="Regular", a=a, track=0.2)
+        ov.text(x, y + 134, "DISTANCE FROM EARTH" if w == "kepler" else "DISTANCE FROM THE SUN", size=17, a=0.8 * a, track=0.26); ov.text(x + 330, y + 134, dist, size=17, wt="Regular", a=a, track=0.2)
         ov.text(x, y + 168, day, size=17, a=0.8 * a, track=0.26)
         ov.text(W - 96, y + 6, "SAME LENS ON EVERY WORLD", size=15, a=0.75 * a, track=0.3, anchor="r"); ov.text(W - 96, y + 32, "24-DEGREE FIELD OF VIEW  .  " + speed, size=15, a=0.75 * a, track=0.3, anchor="r")
-        ov.text(W / 2, H - 58, credit, size=15, a=0.8 * a, track=0.24, anchor="m")
-        return [(40, 40, 760, 320, 0.22 * a), (W - 600, 50, W - 40, 180, 0.2 * a), (W / 2 - 700, H - 90, W / 2 + 700, H - 20, 0.3 * a)]
+        ov.text(W / 2, H - 58, credit, size=15, wt="Regular", a=0.92 * a, track=0.24, anchor="m")
+        return [(40, 40, 760, 320, 0.22 * a), (W - 600, 50, W - 40, 180, 0.2 * a), (W / 2 - 9.5 * len(credit) - 30, H - 76, W / 2 + 9.5 * len(credit) + 30, H - 30, 0.5 * a)]
     x, y = 70, int(H * 0.125)
     ov.text(x, y, name, size=76, wt="ExtraLight", a=a, track=0.3, display=True)
     ov.line([(x, y + 108), (W - 70, y + 108)], a=0.5 * a, width=1.2)
     ov.text(x, y + 128, "SUN'S APPARENT SIZE", size=24, a=0.85 * a, track=0.22); ov.text(x + 400, y + 122, size + " x", size=32, wt="Regular", col=(255, 214, 120), a=a, track=0.1); ov.text(x + 400 + 23 * len(size) + 60, y + 128, "EARTH'S", size=24, a=0.85 * a, track=0.22)
-    ov.text(x, y + 174, "DISTANCE", size=24, a=0.85 * a, track=0.22); ov.text(x + 400, y + 174, dist if len(dist) < 22 else dist.replace(" OF LIGHT TRAVEL", "").replace(" FROM EARTH", ""), size=24, wt="Regular", a=a, track=0.16)
+    ov.text(x, y + 174, "DISTANCE FROM EARTH" if w == "kepler" else "DISTANCE", size=24, a=0.85 * a, track=0.22); ov.text(x + 400, y + 174, dist.replace("ABOUT ", ""), size=24, wt="Regular", a=a, track=0.16)
     ov.text(x, y + 220, day, size=24, a=0.85 * a, track=0.22)
     ov.text(x, y + 266, "SAME 24-DEGREE LENS  .  " + speed, size=20, a=0.7 * a, track=0.24)
     words = credit.split(" "); l1 = []; 
     while words and len(" ".join(l1 + [words[0]])) < 46: l1.append(words.pop(0))
-    ov.text(W / 2, H * 0.80 - 74, " ".join(l1), size=19, a=0.8 * a, track=0.2, anchor="m"); ov.text(W / 2, H * 0.80 - 44, " ".join(words), size=19, a=0.8 * a, track=0.2, anchor="m")
-    return [(0, y - 60, W, y + 330, 0.26 * a), (0, H * 0.80 - 100, W, H * 0.80, 0.3 * a)]
+    ov.text(W / 2, H * 0.80 - 74, " ".join(l1), size=19, wt="Regular", a=0.92 * a, track=0.2, anchor="m"); ov.text(W / 2, H * 0.80 - 44, " ".join(words), size=19, wt="Regular", a=0.92 * a, track=0.2, anchor="m")
+    return [(0, y - 60, W, y + 330, 0.26 * a), (0, H * 0.80 - 86, W, H * 0.80 - 10, 0.5 * a)]
 def caption(ov, txt, a, sub=None, y=None):
     """one fact line, low centre (16:9) or above the credit (9:16)"""
     if a <= 0.004: return []
     if not VERT:
         yy = y or H - 150; ov.text(W / 2, yy, txt, size=27, a=a, track=0.26, anchor="m")
-        if sub: ov.text(W / 2, yy + 44, sub, size=18, a=0.8 * a, track=0.26, anchor="m")
-        return [(W / 2 - 16 * len(txt) - 60, yy - 22, W / 2 + 16 * len(txt) + 60, yy + (84 if sub else 52), 0.38 * a)]
+        if sub: ov.text(W / 2, yy + 44, sub, size=18, wt="Regular", a=0.92 * a, track=0.26, anchor="m")
+        return [(W / 2 - 16 * max(len(txt), len(sub or "")) - 40, yy - 16, W / 2 + 16 * max(len(txt), len(sub or "")) + 40, yy + (78 if sub else 46), 0.5 * a)]
     yy = y or H * 0.80 - 190
     lines = [txt] if len(txt) <= 30 else None
     if lines is None:
@@ -95,8 +97,14 @@ def caption(ov, txt, a, sub=None, y=None):
         while ws and len(" ".join(l1 + [ws[0]])) <= max(len(txt) // 2 + 3, 18): l1.append(ws.pop(0))
         lines = [" ".join(l1), " ".join(ws)]; yy -= 48
     for i, l in enumerate(lines): ov.text(W / 2, yy + 48 * i, l, size=33, a=a, track=0.2, anchor="m")
-    if sub: ov.text(W / 2, yy + 48 * len(lines) + 4, sub, size=21, a=0.8 * a, track=0.2, anchor="m")
-    return [(30, yy - 26, W - 30, yy + 48 * len(lines) + (50 if sub else 16), 0.4 * a)]
+    if sub:
+        subs = [sub] if len(sub) <= 44 else None
+        if subs is None:
+            ws = sub.split(" "); l1 = []
+            while ws and len(" ".join(l1 + [ws[0]])) <= len(sub) // 2 + 4: l1.append(ws.pop(0))
+            subs = [" ".join(l1), " ".join(ws)]
+        for i, l in enumerate(subs): ov.text(W / 2, yy + 48 * len(lines) + 6 + 32 * i, l, size=21, wt="Regular", a=0.92 * a, track=0.18, anchor="m")
+    return [(0, yy - 20, W, yy + 48 * len(lines) + (84 if sub else 16), 0.5 * a)]
 def fade(t, a, b, fi=0.8, fo=0.8): return ease((t - a) / fi) * (1 - ease((t - (b - fo)) / fo))
 
 # ------------------------------------------------------------------------------------------------ MARS
@@ -106,7 +114,7 @@ def sky_mars(se, sa, k=1.0):
         base = mixa(C(0.40, 0.255, 0.135), C(0.115, 0.075, 0.048), 1 - np.exp(-e / 6.0))
         base = base * (1 - 0.55 * np.exp(-e / 1.0))[..., None]                        # dust murk hugging the horizon
         psi2 = np.hypot((AZ - sa) * 1.25, (EL - se) * 0.8)                       # the glow is a little taller than wide
-        g = C(0.16, 0.40, 1.0) * (1.15 * np.exp(-psi2 / 1.7) + 0.30 * np.exp(-psi2 / 5.0))[..., None] + C(0.70, 0.86, 1.0) * (1.1 * np.exp(-psi2 / 0.42))[..., None]
+        g = C(0.13, 0.38, 1.0) * (1.45 * np.exp(-psi2 / 1.7) + 0.36 * np.exp(-psi2 / 5.0))[..., None] + C(0.62, 0.82, 1.0) * (0.9 * np.exp(-psi2 / 0.42))[..., None]
         g = g * (1 - 0.75 * np.exp(-e / 0.8))[..., None]
         return (base * (0.4 + 0.6 * k) + g * k)
     return f
@@ -149,7 +157,7 @@ def sky_earth(se, sa, clouds=None):
 _cl = {}
 def earth_clouds(pl, t):
     """two decks of streaky cloud in perspective; `edge` marks thin parts and undersides that catch the low Sun"""
-    EL, AZ = half(pl.EL), half(pl.AZ)
+    EL, AZ = pl.ELh, pl.AZh
     a = cloud_layer(EL, AZ, 11, 7.0, 26.0, du=0.002 * t, beta=1.75) + 0.45 * cloud_layer(EL, AZ, 12, 1.6, 6.0, du=0.004 * t, beta=1.5)
     b = cloud_layer(EL, AZ, 13, 16.0, 60.0, du=0.001 * t, beta=1.8)
     d = smooth(0.25, 1.5, a + 0.5 * b) * smooth(0.5, 2.0, EL) * (1 - 0.6 * smooth(6.0, 10.0, EL))
@@ -158,13 +166,13 @@ def earth_clouds(pl, t):
 def sh_earth(tl, u, ov, se0=2.3, se1=-0.25):
     pl = plate("earth"); se = se0 + (se1 - se0) * u; sa = 0.0
     cl = earth_clouds(pl, tl); fn = sky_earth(se, sa, cl)
-    sky = up(fn(half(pl.EL), half(pl.AZ), True))
+    sky = up(fn(pl.ELh, pl.AZh, True)); sky0 = sky.copy()
     red = float(np.clip(se / 2.5, 0, 1)); sunc = C(1.0, 0.36 + 0.34 * red, 0.07 + 0.25 * red) * (7 + 6 * red)
     x, y = pl.xy(se, sa); r = 0.2665 * pl.ppd; sq = 1 - 0.13 * math.exp(-max(se, 0) / 0.8)
     sun_disc(sky, x, y, r, sunc, limb=0.45, squash=sq, tint_bottom=C(0.92, 0.72, 0.6))
     cover = float(np.clip((se + 0.2665) / 0.533, 0, 1)); vis = cover * (1 - 0.0)
     rock_a = pl.alpha[..., 0] * (1 - smooth(0.72, 0.97, pl.flag))
-    water = sea(pl, fn, tl, sunc * 110 * cover, se, sa, 0.2665, deep=C(0.006, 0.014, 0.022) * (0.5 + 0.5 * red), amp=1.25, refl_alpha=rock_a)
+    water = sea(pl, sky0, tl, sunc * 110 * cover, se, sa, 0.2665, deep=C(0.020, 0.030, 0.045) * (0.5 + 0.5 * red), amp=1.0, refl_alpha=rock_a)
     L = ground(pl, sunc * 0.6 * vis, C(1.0, 0.5, 0.2) * 1.3 * (0.4 + 0.6 * red), C(0.20, 0.20, 0.34) * 0.5)
     L = L * 0.7 + pl.alb * (np.clip(pl.nrm[..., 2:3], 0, 1) ** 3) * C(1.0, 0.5, 0.25) * 0.5          # wet rock: a little sky sheen on up-facing faces
     hz = horizon_sky(pl, fn, 0.3)
@@ -192,14 +200,14 @@ def sh_venus(tl, u, ov):
     pl = plate("venus"); k = 1.0 - 0.72 * ease(u)
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = np.hypot(AZ * 0.8, EL - 5.0)
-        base = mixa(C(0.95, 0.50, 0.12), C(0.55, 0.26, 0.05), 1 - np.exp(-e / 9.0))
-        base = base * (1 + 0.55 * np.exp(-(psi / 7.0) ** 2))[..., None]
-        base = base * (1 - 0.30 * np.exp(-e / 1.4))[..., None] + C(0.50, 0.24, 0.05) * (0.30 * np.exp(-e / 1.4))[..., None]
+        base = mixa(C(0.66, 0.25, 0.035), C(0.34, 0.115, 0.016), 1 - np.exp(-e / 9.0))
+        base = base * (1 + 0.35 * np.exp(-(psi / 8.0) ** 2))[..., None]
+        base = base * (1 - 0.30 * np.exp(-e / 1.4))[..., None] + C(0.36, 0.125, 0.018) * (0.30 * np.exp(-e / 1.4))[..., None]
         return base * k
     sky = sky_half(pl, fn)
-    m = cloud_layer(half(pl.EL), half(pl.AZ), 21, 9.0, 30.0, du=0.0015 * tl, beta=2.0, elmin=0.6)
+    m = cloud_layer(pl.ELh, pl.AZh, 21, 9.0, 30.0, du=0.0015 * tl, beta=2.0, elmin=0.6)
     sky = sky * up(1 + 0.10 * m)[..., None]
-    L = ground(pl, C(1.0, 0.52, 0.14) * 0.9 * k, C(1.0, 0.50, 0.13) * 1.0 * k, C(1.0, 0.47, 0.11) * 0.75 * k)
+    L = ground(pl, C(1.0, 0.42, 0.08) * 1.1 * k, C(1.0, 0.40, 0.08) * 1.2 * k, C(1.0, 0.38, 0.07) * 0.55 * k)
     L = hazed(L, pl, horizon_sky(pl, fn, 0.6), 5200.0)
     img = compose(pl, sky, L)
     # dense air: slow shimmer near the ground
@@ -208,6 +216,8 @@ def sh_venus(tl, u, ov):
 
 # ------------------------------------------------------------------------------------------------ giant planets (cloud tops)
 def cloud_ground(pl, sunc, glowc, ambc, fn, dh, sss=0.0):
+    if not getattr(pl, "soft", False):            # let the far end of the deck dissolve into the sky instead of ending on an edge
+        pl.alpha = pl.alpha * (1 - smooth(0.40 * pl.dmax, 0.68 * pl.dmax, pl.dist))[..., None]; pl.soft = True
     L = ground(pl, sunc, glowc, ambc)
     return hazed(L, pl, horizon_sky(pl, fn, 0.25), dh)
 def sh_jupiter(tl, u, ov):
@@ -222,14 +232,14 @@ def sh_jupiter(tl, u, ov):
         glow = C(1.0, 0.66, 0.36) * (0.9 * np.exp(-psi / 1.1))[..., None] + C(1.0, 0.9, 0.75) * (2.2 * np.exp(-psi / 0.22))[..., None]
         return base * 0.85 + glow
     sky = sky_half(pl, fn)
-    EL, AZ = half(pl.EL), half(pl.AZ)
+    EL, AZ = pl.ELh, pl.AZh
     ci = smooth(0.5, 1.6, cloud_layer(EL, AZ, 41, 9.0, 80.0, du=0.004 * tl, beta=1.7) + 0.4 * cloud_layer(EL, AZ, 42, 2.0, 20.0, du=0.008 * tl, beta=1.5)) * smooth(0.3, 1.5, EL)
     psi_h = ang(EL, AZ, se, sa)
     sky = sky * up(1 - 0.45 * ci)[..., None] + up(ci * (0.25 + 1.2 * np.exp(-psi_h / 5.0)))[..., None] * C(1.0, 0.55, 0.32) * 0.55
     x, y = pl.xy(se, sa); r = r_deg * pl.ppd
     sun_disc(sky, x, y, r, C(1.0, 0.95, 0.85) * 60, limb=0.3)
     vis = sunvis(pl, x, y, r + 1)
-    L = cloud_ground(pl, C(1.0, 0.62, 0.32) * 5.0 * (0.25 + 0.75 * vis), C(1.0, 0.55, 0.30) * 1.5, C(0.34, 0.36, 0.52) * 0.42, fn, 5.5e5)
+    L = cloud_ground(pl, C(1.0, 0.62, 0.32) * 5.0 * (0.25 + 0.75 * vis), C(1.0, 0.55, 0.30) * 1.6, C(0.34, 0.36, 0.52) * 0.34, fn, 8.0e5)
     return compose(pl, sky, L), 1.2
 def sh_saturn(tl, u, ov):
     pl = plate("saturn"); off = hv(-4.0, -4.2); sa = -off; se = 2.3 - 1.9 * u
@@ -240,21 +250,22 @@ def sh_saturn(tl, u, ov):
         glow = C(1.0, 0.78, 0.45) * (0.8 * np.exp(-psi / 1.4))[..., None] + C(1.0, 0.92, 0.8) * (2.0 * np.exp(-psi / 0.18))[..., None]
         return base * 0.8 + glow
     sky = sky_half(pl, fn)
-    rc, ra = rings(pl.EL, pl.AZ, 6.0, 2.0, off)
-    ext = (1 - np.exp(-np.maximum(pl.EL, 0) / 2.2)) ** 1.3                         # the rings sink into the haze near the horizon
-    ringL = rc * (C(1.0, 0.88, 0.70) * 1.25)
-    aa = (ra * ext)[..., None]; sky = sky * (1 - aa * 0.9) + ringL * aa
+    if not hasattr(pl, "ring"):
+        rc, ra = rings(pl.EL, pl.AZ, 6.0, 2.0, off)
+        ext = (1 - np.exp(-np.maximum(pl.EL, 0) / 2.2)) ** 1.3                     # the rings sink into the haze near the horizon
+        pl.ring = (rc * (C(1.0, 0.88, 0.70) * 1.25), (ra * ext)[..., None])
+    ringL, aa = pl.ring; sky = sky * (1 - aa * 0.9) + ringL * aa * (0.75 + 0.25 * float(np.clip(se / 2.3, 0, 1)))
     x, y = pl.xy(se, sa); r = 0.104 * 0.2665 * pl.ppd
     sun_disc(sky, x, y, r, C(1.0, 0.95, 0.85) * 150, limb=0.3)
     vis = sunvis(pl, x, y, r + 1)
-    L = cloud_ground(pl, C(1.0, 0.70, 0.38) * 4.5 * vis, C(1.0, 0.66, 0.36) * 1.3, C(0.40, 0.40, 0.50) * 0.40, fn, 6.5e5)
+    L = cloud_ground(pl, C(1.0, 0.70, 0.38) * 4.5 * vis, C(1.0, 0.66, 0.36) * 1.5, C(0.40, 0.40, 0.50) * 0.33, fn, 9.0e5)
     return compose(pl, sky, L), 1.2
 def sh_uranus(tl, u, ov):
     pl = plate("uranus"); sl = skyline(pl, 0.0); wdt = hv(8.0, 4.6)
-    sa = -wdt + 2 * wdt * u; se = sl + 0.75 - 0.80 * u ** 1.3
+    sa = -wdt + 2 * wdt * u; se = sl + 0.75 - 0.95 * min(u / 0.70, 1.25) ** 1.3
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = ang(EL, AZ, se, sa)
-        base = mixa(C(0.52, 0.80, 0.78), C(0.02, 0.10, 0.17), 1 - np.exp(-e / 4.5))
+        base = mixa(C(0.46, 0.76, 0.76), C(0.015, 0.085, 0.16), 1 - np.exp(-e / 3.6))
         base = base + C(0.9, 0.8, 0.5) * (0.22 * np.exp(-e / 1.0) * np.exp(-np.abs(AZ - sa) / 8.0))[..., None]
         glow = C(0.75, 0.95, 0.9) * (0.6 * np.exp(-psi / 1.2))[..., None] + C(1.0, 1.0, 0.95) * (1.6 * np.exp(-psi / 0.16))[..., None]
         return base * 0.75 + glow
@@ -262,7 +273,10 @@ def sh_uranus(tl, u, ov):
     x, y = pl.xy(se, sa); r = 0.052 * 0.2665 * pl.ppd
     sun_disc(sky, x, y, max(r, 1.7), C(1.0, 1.0, 0.95) * 90, limb=0.2)
     vis = sunvis(pl, x, y, 2)
-    L = cloud_ground(pl, C(0.9, 1.0, 0.95) * 4.0 * vis, C(0.75, 0.95, 0.9) * 1.3, C(0.30, 0.50, 0.55) * 0.45, fn, 6.0e5)
+    # the Sun travels sideways here, so the directional part of the light is computed from the normal pass for the current azimuth
+    sd = np.array([math.sin(math.radians(sa)) * 0.985, math.cos(math.radians(sa)) * 0.985, 0.17], f32)
+    pl.A_glow = pl.alb * ((0.10 + 0.55 * np.clip((pl.nrm * sd).sum(-1), 0, 1) ** 1.5 + 0.12 * np.clip(pl.nrm[..., 2], 0, 1)) * (0.5 + 0.5 * pl.amb) * (0.45 + 0.55 * np.exp(-np.abs(pl.AZ - sa) / 6.0)))[..., None]
+    L = cloud_ground(pl, C(0.9, 1.0, 0.95) * 0.0, C(0.75, 0.95, 0.9) * 3.0 * (0.45 + 0.55 * vis), C(0.22, 0.42, 0.50) * 0.26, fn, 2.2e6)
     return compose(pl, sky, L), 1.2
 
 # ------------------------------------------------------------------------------------------------ TITAN
@@ -275,8 +289,8 @@ def sh_titan(tl, u, ov):
         glow = C(1.0, 0.50, 0.12) * (0.62 * np.exp(-(psi / 3.6) ** 1.3) + 0.5 * np.exp(-(psi / 1.3) ** 1.5))[..., None]
         return (base + glow * (0.35 + 0.65 * float(np.clip((se + 1.0) / 3.0, 0, 1)))) * k
     sky = sky_half(pl, fn)
-    m = cloud_layer(half(pl.EL), half(pl.AZ), 51, 12.0, 60.0, du=0.001 * tl, beta=2.0, elmin=0.6); sky = sky * up(1 + 0.07 * m)[..., None]
-    water = sea(pl, fn, tl, C(1.0, 0.56, 0.16) * 0.0, se, sa, 1.5, deep=C(0.010, 0.005, 0.002), amp=0.10, wind=0.6, chop=0.25, speed=0.35, refl_alpha=pl.alpha[..., 0] * (1 - smooth(0.72, 0.97, pl.flag)))
+    m = cloud_layer(pl.ELh, pl.AZh, 51, 12.0, 60.0, du=0.001 * tl, beta=2.0, elmin=0.6); sky = sky * up(1 + 0.07 * m)[..., None]
+    water = sea(pl, sky, tl, C(1.0, 0.56, 0.16) * 0.0, se, sa, 1.5, deep=C(0.010, 0.005, 0.002), amp=0.10, wind=0.6, chop=0.25, speed=0.35, refl_alpha=pl.alpha[..., 0] * (1 - smooth(0.72, 0.97, pl.flag)))
     L = ground(pl, C(1.0, 0.55, 0.16) * 0.9 * k, C(1.0, 0.55, 0.16) * 1.3 * k, C(0.9, 0.42, 0.10) * 0.55 * k)
     hz = horizon_sky(pl, fn, 0.5)
     L = hazed(L, pl, hz, 6500.0); T = np.exp(-pl.dist / 9000.0)[..., None]; water = water * T + hz * (1 - T)
@@ -298,13 +312,14 @@ def sh_pluto(tl, u, ov):
     pl = plate("pluto"); sl = skyline(pl, 0.0); se = sl + 2.3 - 2.25 * u; sa = 0.0
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = ang(EL, AZ, se, sa)
-        lay = 0.55 + 0.45 * np.sin(e * 5.2 + 0.6 * np.sin(AZ * 0.35) + 0.8) * np.exp(-e / 5.0) + 0.25 * np.sin(e * 13.0 + 1.7)
-        h = (0.55 * np.exp(-e / 1.5) + 0.10 * np.exp(-e / 5.0)) * lay * (0.22 + 1.5 * np.exp(-psi / 3.2) + 2.2 * np.exp(-psi / 0.9))
+        strat = np.interp(np.clip(e, 0, 8) / 8.0, np.linspace(0, 1, 1024), tile(61, 1.0, lo=5, hi=50)[0])       # irregular thin layers
+        lay = 1 + 0.30 * strat * np.exp(-e / 3.0)
+        h = (0.50 * np.exp(-e / 1.1) + 0.11 * np.exp(-e / 4.0)) * lay * (0.20 + 1.4 * np.exp(-psi / 3.2) + 2.2 * np.exp(-psi / 0.9))
         return h[..., None] * C(0.20, 0.42, 1.0)
     sky = sky_half(pl, fn) + stars(9) * 0.55
     x, y = pl.xy(se, sa); vis = sunvis(pl, x, y, 2)
     if vis > 0.01: star_sun(sky, x, y, vis)
-    L = ground(pl, C(1.0, 0.98, 0.95) * 5.0 * vis, C(0.4, 0.6, 1.0) * 0.20, C(0.35, 0.5, 0.9) * 0.035)
+    L = ground(pl, C(1.0, 0.98, 0.95) * 5.0 * vis, C(0.4, 0.6, 1.0) * 0.25, C(0.35, 0.5, 0.9) * 0.045)
     L = hazed(L, pl, horizon_sky(pl, fn, 0.3) * 0.6, 150000.0)
     return compose(pl, sky, L), 1.3
 
@@ -332,7 +347,8 @@ def finish(img, expo, ov, scr=()):
     if expo < 0: y = tonemap(bloom(img, 0.55), -expo)                 # airless worlds: tighter glare, no lens streak
     else: y = tonemap(anamorphic(bloom(img), thr=3.0, amt=0.03), expo)
     for (x0, y0, x1, y1, a) in scr: y = scrim(y, x0, y0, x1, y1, a)
-    return ov.apply(y)
+    for o in (ov if isinstance(ov, (list, tuple)) else [ov]): y = o.apply(y)
+    return y
 def zoom(img, z, cx=None, cy=None):
     if abs(z - 1) < 1e-4: return img
     cx = W / 2 if cx is None else cx; cy = HY * H if cy is None else cy
@@ -354,7 +370,8 @@ CAPS = dict(
              _c("jup", 17.0, "jup", 1.6, "THE DISC SETS IN ABOUT 10 SECONDS", "SHOWN IN REAL TIME")],
     saturn=[_c("sat", 5.0, "sat", 1.6, "THE RINGS, SEEN FROM THE CLOUD TOPS", "WATER ICE, FROM DUST GRAINS TO BOULDERS")],
     uranus=[_c("ura", 4.5, "ura", -8.5, "NEAR A POLE: 42 YEARS OF DAYLIGHT, THEN 42 OF NIGHT", "THE SUN CIRCLES THE SKY ONCE EVERY 17 HOURS"),
-            _c("ura", 16.0, "ura", 1.6, "THE DISC SETS WITHIN DAYS", "THE TWILIGHT CAN LINGER FOR YEARS")],
+            (S_["ura"] + 16.0, E_["ura"] - 6.6, "THE DISC SETS WITHIN DAYS", "THE TWILIGHT CAN LINGER FOR YEARS"),
+            (E_["ura"] - 5.6, E_["ura"] + 1.5, "NEPTUNE: THE SUN IS 1/30 THE WIDTH", "ABOUT FOUR LIGHT-HOURS FROM THE SUN.  NOT SHOWN SEPARATELY")],
     titan=[_c("titan1", 7.5, "titan1", 0.8, "DAYLIGHT ABOUT 1,000 TIMES DIMMER THAN ON EARTH", "MEASURED BY THE HUYGENS LANDER IN 2005"),
            _c("titan2", 0.8, "titan2", 0.8, "THE HAZE PASSES RED LIGHT AND BLOCKS BLUE", "THE SUN NEVER SHOWS A CLEAN EDGE")],
     pluto=[_c("pluto1", 4.5, "pluto1", 0.8, "THE SUN IS A POINT OF LIGHT", "YET ABOUT 250 TIMES BRIGHTER THAN OUR FULL MOON"),
@@ -367,11 +384,15 @@ def world_shot(w, t, shot=None, se=None):
     a, b = TL.SH[shot or w]; tl = t - a; u = float(np.clip(tl / (b - a), 0, 1)); ov = Overlay()
     img, ex = WFN[w](tl, u, ov) if se is None else WFN[w](tl + 40, u, ov, *se)
     img = zoom(img, 1.0 + 0.045 * u)
-    scr = []
+    scr = []; ovs = []
     if shot is None:
-        scr += hud(ov, w, fade(t, a + 0.5, b - 0.2, 1.0, 0.7), SPEED.get(w, "TIME-LAPSE"))
-        for (c0, c1, txt, sub) in CAPS.get(w, []): scr += caption(ov, txt, fade(t, c0, c1, 0.7, 0.7), sub)
-    return img, ex, ov, scr
+        k = fade(t, a + 0.5, b - 0.2, 1.0, 0.7); o = Overlay(); o.gain = k; ovs.append(o)
+        scr += [(x0, y0, x1, y1, al * k) for (x0, y0, x1, y1, al) in hud(o, w, 1.0, SPEED.get(w, "TIME-LAPSE"))]
+        for (c0, c1, txt, sub) in CAPS.get(w, []):
+            k = fade(t, c0, c1, 0.7, 0.7)
+            if k > 0.004:
+                o = Overlay(); o.gain = k; ovs.append(o); scr += [(x0, y0, x1, y1, al * k) for (x0, y0, x1, y1, al) in caption(o, txt, 1.0, sub)]
+    return img, ex, ovs, scr
 
 # ---- cached stills of every world (for the opening montage and the recap grid)
 _st = {}
@@ -405,12 +426,12 @@ def sh_intro(t):
     ov = Overlay(); k = fade(t, a + 0.6, b - 0.1, 0.8, 0.6)
     if not VERT:
         ov.text(W / 2, H / 2 - 150, "SUNSET ON EVERY WORLD", size=66, wt="ExtraLight", a=k, track=0.34, anchor="m", display=True)
-        ov.text(W / 2, H / 2 - 50, "ONE MOMENT.  ONE LENS.  ELEVEN HORIZONS", size=20, a=0.9 * k, track=0.36, anchor="m")
+        ov.text(W / 2, H / 2 - 50, "ONE MOMENT.  ONE LENS.  TEN HORIZONS", size=20, a=0.9 * k, track=0.36, anchor="m")
         ov.text(96, H - 80, INFO[MONT[i]][0], size=20, a=0.9 * fade(tl, 0.3, d, 0.4, 0.4), track=0.4)
         y = scrim(y, 300, H / 2 - 200, W - 300, H / 2 + 10, 0.3 * k)
     else:
         ov.text(W / 2, H * 0.30, "SUNSET ON", size=80, wt="ExtraLight", a=k, track=0.26, anchor="m", display=True); ov.text(W / 2, H * 0.30 + 108, "EVERY WORLD", size=80, wt="ExtraLight", a=k, track=0.26, anchor="m", display=True)
-        ov.text(W / 2, H * 0.30 + 250, "ONE MOMENT.  ONE LENS.  ELEVEN HORIZONS", size=22, a=0.9 * k, track=0.26, anchor="m")
+        ov.text(W / 2, H * 0.30 + 250, "ONE MOMENT.  ONE LENS.  TEN HORIZONS", size=22, a=0.9 * k, track=0.26, anchor="m")
         ov.text(W / 2, H * 0.76, INFO[MONT[i]][0], size=26, a=0.9 * fade(tl, 0.3, d, 0.4, 0.4), track=0.4, anchor="m")
         y = scrim(y, 0, H * 0.27, W, H * 0.30 + 310, 0.3 * k)
     return ov.apply(y)

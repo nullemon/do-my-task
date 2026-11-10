@@ -214,7 +214,12 @@ def draw_moon(img, cx, cy, R, M, sun, exposure=1.0, relief=1.0, earthshine=0.0, 
         alb = cv2.remap(tl, mx * (w2 / w), my * (h2 / h), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP).astype(F32) / 255
     d = tex("moondem"); hd, wd = d.shape[:2]
     dmx = (((lon / (2 * np.pi) + 0.5) % 1.0) * wd - 0.5).astype(F32); dmy = ((0.5 - lat / np.pi) * hd - 0.5).astype(F32)
-    b = cv2.remap(d[..., :2], dmx, dmy, cv2.INTER_CUBIC, borderMode=cv2.BORDER_WRAP)
+    dtex = (np.pi * R) / hd                                   # screen px per DEM texel
+    if dtex < 0.4:                                           # minified: use prefiltered slopes so small Moons do not sparkle
+        kd = int(min(16, max(2, round(0.8 / dtex)))); dl_ = _dem_lod(kd)
+        b = cv2.remap(dl_, dmx / kd, dmy / kd, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP); detail = detail * min(1.0, dtex / 0.4)
+    else:
+        b = cv2.remap(d[..., :2], dmx, dmy, cv2.INTER_CUBIC, borderMode=cv2.BORDER_WRAP)
     # micro relief from the albedo's fine structure where the DEM runs out of resolution
     lum = alb.mean(-1)
     k_ex = 2.6 * relief                                      # slope exaggeration
@@ -238,6 +243,11 @@ def draw_moon(img, cx, cy, R, M, sun, exposure=1.0, relief=1.0, earthshine=0.0, 
         surf += gm[..., None] * np.asarray(gc, F32) * ga
     a = np.clip((1 - np.sqrt(rr)) * R + 0.5, 0, 1)[..., None]
     reg = img[y0:y1, x0:x1]; reg[:] = reg * (1 - a) + surf * a
+
+
+@functools.lru_cache(None)
+def _dem_lod(k):
+    d = tex("moondem"); return np.ascontiguousarray(cv2.resize(d[..., :2], (d.shape[1] // k, d.shape[0] // k), interpolation=cv2.INTER_AREA))
 
 
 @functools.lru_cache(None)

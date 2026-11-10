@@ -18,7 +18,7 @@ STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Sh
 | S9 | What if Betelgeuse exploded tonight? | A2_park | delivered |
 | S10 | Your sky in 1 million years (real proper motions, HYG catalogue) | B_valley, night | in progress (A2_park) |
 | S11 | Planets at the Moon's distance | B_valley | delivered |
-| S12 | Everything that happens in space while you watch this Short (30 s counters) | A_park | in progress (B_valley) |
+| S12 | Everything that happens in space while you watch this Short (30 s counters) | A_park | delivered |
 | S13 | The dinosaur asteroid, seen from the ground | C_city | delivered |
 
 NOTE: user loved S4 'Other Stars' format (locked shot, sky swaps huge real-size objects with flash + scene relight). S11 Planets at the Moon's distance moved up to run next.
@@ -26,4 +26,4 @@ NOTE: user loved S4 'Other Stars' format (locked shot, sky swaps huge real-size 
 USER: at the very end, deliver ZIP(s) of all thumbnails (every docs-series/*/out and shorts/*/out thumb*.jpg). Keep all thumbnails until then.
 | S14 | What if other moons replaced our Moon? (swap format) | A2_park | in progress |
 | S15 | What if other planets orbited where Earth is (their skies) | ? | idea |
-| S16 | Famous nebulas if they were in our sky | ? | idea |
+| S16 | Famous nebulas if they were in our sky | ? | in progress (C_city) |

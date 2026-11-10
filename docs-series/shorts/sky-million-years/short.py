@@ -118,6 +118,9 @@ def bv_temp(ci):
 def fmt_int(n): return f"{int(round(n)):,}"
 
 
+def win(d, rad): return np.clip(1 - (d / rad) ** 2, 0, 1) ** 2          # smooth splat edge (no square cut-offs)
+
+
 # ------------------------------------------------------------------------------------------------- glowing text
 _gl = {}
 def glow_text(txt, size, col, wt="Black", maxw=None):
@@ -327,7 +330,7 @@ class Scene:
             for j in np.where(ok & (x > 0) & (x < W) & (y > 0) & (y < H))[0]:
                 g = 4.5 * 10 ** (-0.4 * 0.9 * m1[hb[j]]) * 0.05 * (1 + 0.3 * math.sin(t * 5 + self.ph[hb[j]]))
                 c = self.scol[hb[j]] * 0.6 + 0.4
-                splat(st, x[j], y[j], 60, lambda d, dx, dy: ((np.exp(-np.abs(dy) / 0.8) * np.exp(-np.abs(dx) / 16) + np.exp(-np.abs(dx) / 0.8) * np.exp(-np.abs(dy) / 16)) * g)[..., None] * c)
+                splat(st, x[j], y[j], 60, lambda d, dx, dy: ((np.exp(-np.abs(dy) / 0.8) * np.exp(-np.abs(dx) / 16) + np.exp(-np.abs(dx) / 0.8) * np.exp(-np.abs(dy) / 16)) * g * win(d, 60))[..., None] * c)
         return st
 
     # ----------------------------------------------------------------------------------------------- featured FX
@@ -349,8 +352,8 @@ class Scene:
             cv2.circle(fx, (int(x * 4), int(y * 4)), int((R + off) * 4), tuple(c), max(2, int(5 * (1 - u))), cv2.LINE_AA, 2)
         fl = math.exp(-u / 0.12) * 22 * big
         col = np.array(col, f32)
-        splat(fx, x, y, 120, lambda d, dx, dy: (np.exp(-d / 3) * fl + np.exp(-d / 16) * fl * 0.12)[..., None] * (col * 0.6 + 0.4)
-              + ((np.exp(-np.abs(dy) / 1.6) * np.exp(-np.abs(dx) / 60) + np.exp(-np.abs(dx) / 1.6) * np.exp(-np.abs(dy) / 60)) * fl * 0.08)[..., None] * col)
+        splat(fx, x, y, 160, lambda d, dx, dy: ((np.exp(-d / 3) * fl + np.exp(-d / 16) * fl * 0.12) * win(d, 160))[..., None] * (col * 0.6 + 0.4)
+              + ((np.exp(-np.abs(dy) / 1.6) * np.exp(-np.abs(dx) / 60) + np.exp(-np.abs(dx) / 1.6) * np.exp(-np.abs(dy) / 60)) * fl * 0.08 * win(d, 160))[..., None] * col)
 
     def figure(self, fx, t, segs, base_col, alpha, labels):
         """rubber-band stick figure: tension colour + vibration, snaps at SNAPS times (halves recoil, sparks)"""
@@ -385,7 +388,7 @@ class Scene:
                 self.poly4(fx, pts, col * g, th)
                 bead = (t * 0.9 + (hash(s) % 97) / 97.0) % 1.0                   # energy bead running along the line
                 bp = p0 + d * bead + nrm * amp * math.sin(np.pi * bead)
-                splat(fx, bp[0], bp[1], 26, lambda dd, dx, dy: (np.exp(-dd / 2.2) * 5.0 + np.exp(-dd / 8) * 0.6)[..., None] * (col * 0.5 + 0.5) * g * math.sin(np.pi * bead))
+                splat(fx, bp[0], bp[1], 34, lambda dd, dx, dy: ((np.exp(-dd / 2.2) * 5.0 + np.exp(-dd / 8) * 0.6) * win(dd, 34))[..., None] * (col * 0.5 + 0.5) * g * math.sin(np.pi * bead))
             else:
                 u_ = t - ts                                                    # recoil: halves fly back with a decaying wobble
                 if u_ < 1.2:
@@ -510,7 +513,7 @@ class Scene:
                 self.draw_path(fx, pts, okk, (1.0, 0.85, 0.7), 2.0 * a, 1.5)
                 x, y = pts[-1]
                 if okk[-1]:
-                    splat(fx, x, y, 90, lambda d, dx, dy: (np.exp(-d / 2.5) * 30 + np.exp(-d / 14) * 2.0)[..., None] * np.array([1.0, 0.45, 0.30], f32) * a)
+                    splat(fx, x, y, 110, lambda d, dx, dy: ((np.exp(-d / 2.5) * 30 + np.exp(-d / 14) * 2.0) * win(d, 110))[..., None] * np.array([1.0, 0.45, 0.30], f32) * a)
                     self.ring(fx, x, y, 22 * sc * pulse, RED, 2.5 * a, 2)
                     tl = wt("ff", "BARNARD'S")
                     self.burst(fx, x, y, t - tl, RED, 0.9)

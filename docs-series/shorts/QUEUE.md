@@ -26,4 +26,6 @@ NOTE: user loved S4 'Other Stars' format (locked shot, sky swaps huge real-size 
 USER: at the very end, deliver ZIP(s) of all thumbnails (every docs-series/*/out and shorts/*/out thumb*.jpg). Keep all thumbnails until then.
 | S14 | What if other moons replaced our Moon? (swap format) | A2_park | delivered |
 | S15 | What if other planets orbited where Earth is (their skies) | ? | skipped (overlaps doc 13) |
-| S16 | Famous nebulas if they were in our sky | ? | in progress (C_city) |
+| S16 | Famous nebulas if they were in our sky | ? | delivered |
+
+Thumbnails zip delivered (44 files) after S16.

@@ -1,11 +1,11 @@
-"""Real sky geometry for a locked camera: horizon frame (x = East, y = North, z = Up) at latitude LAT, local sidereal
+"""(Copied from ../star-dates, LAT and lens_for changed.) Real sky geometry for a locked camera: horizon frame (x = East, y = North, z = Up) at latitude LAT, local sidereal
 time LST (hours) turns the celestial sphere about the true pole. The lens is a tilted stereographic projection
 (conformal: star patterns keep their shapes; wide field with a straight-ish horizon behind the mountains)."""
 import math
 import numpy as np
 from lib.core import f32
 
-LAT = 34.0                                    # a mid-latitude mountain valley (~34 deg N)
+LAT = 52.0                                    # a mid-latitude park (~52 deg N); Orion due south near the meridian
 EQ2GAL = np.array([[-0.0548755604, -0.8734370902, -0.4838350155],
                    [0.4941094279, -0.4448296300, 0.7469822445],
                    [-0.8676661490, -0.1980763734, 0.4559837762]])        # J2000 equatorial -> galactic
@@ -52,5 +52,6 @@ class Lens:
         return v.astype(f32)
 
 
-def lens_for(vertical, hz):
-    return Lens(1080, 1920, 180.0, 56.0, 700.0, hz + 10) if vertical else Lens(1920, 1080, 180.0, 68.0, 440.0, hz + 10)
+def lens_for(vertical, hy):
+    """hy = frame row of the true horizon (just behind the far hedge of the park plate)"""
+    return Lens(1080, 1920, 174.0, 30.0, 1100.0, hy) if vertical else Lens(1920, 1080, 166.0, 34.0, 700.0, hy)

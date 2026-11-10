@@ -232,18 +232,18 @@ def sh_jupiter(tl, u, ov):
     L = cloud_ground(pl, C(1.0, 0.62, 0.32) * 5.0 * (0.25 + 0.75 * vis), C(1.0, 0.55, 0.30) * 1.5, C(0.34, 0.36, 0.52) * 0.42, fn, 5.5e5)
     return compose(pl, sky, L), 1.2
 def sh_saturn(tl, u, ov):
-    pl = plate("saturn"); off = hv(-5.2, -1.6); sa = -off; se = 2.3 - 1.9 * u
+    pl = plate("saturn"); off = hv(-4.0, -4.2); sa = -off; se = 2.3 - 1.9 * u
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = ang(EL, AZ, se, sa)
-        base = mixa(C(0.86, 0.66, 0.36), C(0.055, 0.075, 0.15), 1 - np.exp(-e / 4.8))
+        base = mixa(C(0.86, 0.66, 0.36), C(0.03, 0.05, 0.12), 1 - np.exp(-e / 3.6))
         base = base + C(1.0, 0.6, 0.25) * (0.35 * np.exp(-e / 1.2))[..., None]
         glow = C(1.0, 0.78, 0.45) * (0.8 * np.exp(-psi / 1.4))[..., None] + C(1.0, 0.92, 0.8) * (2.0 * np.exp(-psi / 0.18))[..., None]
         return base * 0.8 + glow
     sky = sky_half(pl, fn)
-    rc, ra = rings(pl.EL, pl.AZ, 24.0, 5.0, off)
+    rc, ra = rings(pl.EL, pl.AZ, 6.0, 2.0, off)
     ext = (1 - np.exp(-np.maximum(pl.EL, 0) / 2.2)) ** 1.3                         # the rings sink into the haze near the horizon
-    ringL = rc * (C(1.0, 0.86, 0.66) * 0.95)
-    aa = (ra * ext)[..., None]; sky = sky * (1 - aa * 0.85) + ringL * aa
+    ringL = rc * (C(1.0, 0.88, 0.70) * 1.25)
+    aa = (ra * ext)[..., None]; sky = sky * (1 - aa * 0.9) + ringL * aa
     x, y = pl.xy(se, sa); r = 0.104 * 0.2665 * pl.ppd
     sun_disc(sky, x, y, r, C(1.0, 0.95, 0.85) * 150, limb=0.3)
     vis = sunvis(pl, x, y, r + 1)
@@ -270,9 +270,9 @@ def sh_titan(tl, u, ov):
     pl = plate("titan"); se = 3.2 - 3.4 * u; sa = 0.0; k = 1.0 - 0.55 * ease(u)
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = np.hypot((AZ - sa) * 0.9, EL - max(se, 0.3))
-        base = mixa(C(0.62, 0.30, 0.065), C(0.20, 0.085, 0.018), 1 - np.exp(-e / 7.0))
+        base = mixa(C(0.50, 0.215, 0.04), C(0.15, 0.058, 0.012), 1 - np.exp(-e / 7.0))
         base = base * (1 - 0.35 * np.exp(-e / 1.2))[..., None]
-        glow = C(1.0, 0.56, 0.16) * (0.75 * np.exp(-(psi / 3.6) ** 1.3) + 0.5 * np.exp(-(psi / 1.3) ** 1.5))[..., None]
+        glow = C(1.0, 0.50, 0.12) * (0.62 * np.exp(-(psi / 3.6) ** 1.3) + 0.5 * np.exp(-(psi / 1.3) ** 1.5))[..., None]
         return (base + glow * (0.35 + 0.65 * float(np.clip((se + 1.0) / 3.0, 0, 1)))) * k
     sky = sky_half(pl, fn)
     m = cloud_layer(half(pl.EL), half(pl.AZ), 51, 12.0, 60.0, du=0.001 * tl, beta=2.0, elmin=0.6); sky = sky * up(1 + 0.07 * m)[..., None]
@@ -355,7 +355,7 @@ CAPS = dict(
     saturn=[_c("sat", 5.0, "sat", 1.6, "THE RINGS, SEEN FROM THE CLOUD TOPS", "WATER ICE, FROM DUST GRAINS TO BOULDERS")],
     uranus=[_c("ura", 4.5, "ura", -8.5, "NEAR A POLE: 42 YEARS OF DAYLIGHT, THEN 42 OF NIGHT", "THE SUN CIRCLES THE SKY ONCE EVERY 17 HOURS"),
             _c("ura", 16.0, "ura", 1.6, "THE DISC SETS WITHIN DAYS", "THE TWILIGHT CAN LINGER FOR YEARS")],
-    titan=[_c("titan1", 7.5, "titan1", 0.8, "DAYLIGHT ABOUT 1,000 TIMES DIMMER THAN ON EARTH", "HUYGENS LANDED HERE IN 2005"),
+    titan=[_c("titan1", 7.5, "titan1", 0.8, "DAYLIGHT ABOUT 1,000 TIMES DIMMER THAN ON EARTH", "MEASURED BY THE HUYGENS LANDER IN 2005"),
            _c("titan2", 0.8, "titan2", 0.8, "THE HAZE PASSES RED LIGHT AND BLOCKS BLUE", "THE SUN NEVER SHOWS A CLEAN EDGE")],
     pluto=[_c("pluto1", 4.5, "pluto1", 0.8, "THE SUN IS A POINT OF LIGHT", "YET ABOUT 250 TIMES BRIGHTER THAN OUR FULL MOON"),
            _c("pluto2", 5.5, "pluto2", 1.0, "BLUE HAZE, LAYER UPON LAYER", "SEEN BY NEW HORIZONS IN 2015")],

@@ -98,7 +98,7 @@ def corona_img(Rs, cx, cy, seed=2, rot=0.35):
         mx = ((ths / (2 * np.pi)) % 1.0 * 2048).astype(F32); my = np.clip(lx / 1.9 * 255, 0, 255).astype(F32)
         n1 = cv2.remap(N1, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP); n2 = cv2.remap(N2, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         pol = np.abs(np.sin(th)) ** 3                                   # polar plumes are finer and crisper
-        stri = np.clip(0.62 + 1.25 * n1 + (0.5 + 0.9 * pol) * n2, 0.08, 2.6)
+        stri = np.clip(0.66 + 1.0 * n1 + (0.35 + 0.7 * pol) * n2, 0.10, 2.4)
         I = (K * A + S) * stri
         I = np.where(r >= 0.985, I, 0)
         I = 1 - np.exp(-I * 1.9)
@@ -145,7 +145,7 @@ def eclipse(cx, cy, Rs, ratio, off, sky_day=(0.16, 0.25, 0.42), sky_dark=(0.012,
     img = np.empty((H, W, 3), F32); img[:] = sky
     if stars is not None: img += stars * dark
     if corona:
-        cg = cor_gain * (1 - ss(0.00004, 0.004, F))
+        cg = cor_gain * (1 - 0.8 * ss(0.000002, 0.0012, F)) * (1 - ss(0.001, 0.01, F))
         if cg > 0.002:
             cor = corona_img(Rs, cx, cy)
             img += cor * cg
@@ -159,14 +159,16 @@ def eclipse(cx, cy, Rs, ratio, off, sky_day=(0.16, 0.25, 0.42), sky_dark=(0.012,
         g1 = cv2.GaussianBlur(small, (0, 0), 2.2); g2 = cv2.GaussianBlur(small, (0, 0), 9); g3 = cv2.resize(cv2.GaussianBlur(cv2.resize(small, (W // 8, H // 8), interpolation=cv2.INTER_AREA), (0, 0), 14), (W // 2, H // 2))
         g4 = cv2.resize(cv2.GaussianBlur(cv2.resize(small, (W // 16, H // 16), interpolation=cv2.INTER_AREA), (0, 0), 26), (W // 2, H // 2))
         gl = g1 * 2.2 + g2 * 2.6 + g3 * 5.0 + g4 * 9.0
+        spk = 0 * gl
         if spikes > 0:
             sp = cv2.GaussianBlur(small, (0, 0), sigmaX=70, sigmaY=0.8) + cv2.GaussianBlur(small, (0, 0), sigmaX=0.8, sigmaY=70)
             Mr = cv2.getRotationMatrix2D((cx / 2, cy / 2), 45, 1.0); sp2 = cv2.warpAffine(sp, Mr, (W // 2, H // 2))
             # only sources near the limb gap throw long spikes; weight by how point-like the source is
             pk = min(1.0, 0.004 / max(F, 1e-6)) ** 1.5
-            gl += (sp * 26 + sp2 * 9) * spikes * pk
-        expo = float(np.clip((0.004 / (F + 0.000002)) ** 0.95, 0.05, 400.0)) * (1 + 2.5 * (1 - ss(0.0005, 0.01, F)))
-        gl = cv2.resize(gl, (W, H), interpolation=cv2.INTER_LINEAR) * glare * expo * (1 - 0.6 * moon)
+            spk = (sp * 2.2 + sp2 * 0.7) * spikes * pk
+        expo = float(np.clip((0.004 / (F + 0.000002)) ** 0.9, 0.05, 150.0))
+        gl = cv2.resize(gl, (W, H), interpolation=cv2.INTER_LINEAR) * glare * expo * 5.0 * (1 - 0.6 * moon)
+        gl += np.minimum(cv2.resize(spk, (W, H), interpolation=cv2.INTER_LINEAR) * expo * 3.0, 0.7) * (1 - 0.92 * moon)
         img += gl[..., None] * np.array([1.0, 0.96, 0.88], F32)
         img += (P * 30 * min(max(expo, 0.2), 8.0))[..., None]
     return img, F

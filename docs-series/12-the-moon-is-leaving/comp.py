@@ -31,7 +31,7 @@ def sky(key, R, fov, **kw):
 def put(T, s, al, h, v, col=TXT, wt="L", track=None):
     """h / v = (x, y, size[, anchor]) for the 16:9 / 9:16 layout"""
     p = v if V else h
-    if p is None: return
+    if p is None or p[2] <= 0: return
     T.put((p[0], p[1]), s, p[2], al, col=col, anchor=p[3] if len(p) > 3 else ("c" if V else "l"), wt=wt, track=track)
 
 
@@ -95,32 +95,33 @@ def _pair(key, t, u, moon_p, earth_p0, earth_p1, moon_M, earth_lon, sky_gain=0.9
 def shot_hook(t, lt):
     u = lt / 23.6; us = ss(0, 1, u) * 0.5 + u * 0.5
     if not V: mp = (610, 590, 430); e0 = (1480, 330, 128); e1 = (1590, 262, 92)
-    else: mp = (500, 1085, 395); e0 = (760, 470, 112); e1 = (835, 405, 82)
+    else: mp = (500, 900, 370); e0 = (790, 440, 108); e1 = (860, 390, 80)
     img, (ex, ey, er) = _pair("hook", t, us, mp, e0, e1, art_M(-12, 6, roll=14), -30)
     img = bloom(img, 0.8, 0.5)
     T = Text()
     put(T, "THE MOON", win(t, 0.3, 18.6, 0.6), (120, 96, 27), (W / 2, 250, 30))
     a1 = win(t, 1.1, 9.8, 0.7, 0.7)
-    put(T, "3.8 CM", a1, (1060, 640, 150), (W / 2, 1420, 150), col=YEL, wt="XL", track=8)
+    put(T, "3.8 CM", a1, (1060, 640, 150), None, col=YEL, wt="XL", track=8)
+    if V: T.put((W / 2, 1335), "3.8 CM A YEAR", 96, a1, col=YEL, wt="XL", track=5, anchor="c")
     put(T, "A YEAR", a1, (1066, 808, 62), (W / 2, 1586, 0), col=YEL, wt="L", track=18)
-    if V: T.put((W / 2, 1330), "FARTHER FROM THE EARTH, EVERY YEAR", 25, win(t, 1.7, 9.8, 0.7), anchor="c")
+    if V: T.put((W / 2, 1462), "FARTHER FROM THE EARTH, EVERY YEAR", 24, win(t, 1.7, 9.8, 0.7), anchor="c")
     else:
         T.put((1066, 900), "FARTHER FROM THE EARTH, EVERY YEAR", 25, win(t, 1.7, 9.8, 0.7))
         T.put((1066, 940), "ABOUT THE SPEED YOUR FINGERNAILS GROW", 21, win(t, 5.6, 9.8, 0.7), col=DIM)
-    if V: T.put((W / 2, 1290), "ABOUT THE SPEED YOUR FINGERNAILS GROW", 21, win(t, 5.6, 9.8, 0.7), col=DIM, anchor="c")
+    if V: T.put((W / 2, 1504), "ABOUT THE SPEED YOUR FINGERNAILS GROW", 20, win(t, 5.6, 9.8, 0.7), col=DIM, anchor="c")
     a2 = win(t, 10.6, 18.6, 0.9, 0.7)
     if not V:
         T.put((1066, 690), "THE LAST TOTAL", 64, a2, wt="T", track=9); T.put((1066, 774), "ECLIPSE IS COMING", 64, a2, wt="T", track=9)
         T.put((1066, 884), "MEASURED WITH LASERS  ·  LEAVING FOR 4 BILLION YEARS", 21, win(t, 11.8, 18.6), col=AMB)
     else:
-        T.put((W / 2, 1300), "THE LAST TOTAL", 56, a2, wt="T", track=8, anchor="c"); T.put((W / 2, 1376), "ECLIPSE IS COMING", 56, a2, wt="T", track=8, anchor="c")
-        T.put((W / 2, 1476), "LEAVING FOR 4 BILLION YEARS", 23, win(t, 11.8, 18.6), col=AMB, anchor="c")
-    foot(T, "NOT TO SCALE  ·  MOON: NASA LRO IMAGERY + LASER ALTIMETRY  ·  EARTH: NASA BLUE MARBLE", win(t, 1.5, 18.6) , y=(1040 if not V else 300))
+        T.put((W / 2, 1320), "THE LAST TOTAL", 56, a2, wt="L", track=8, anchor="c"); T.put((W / 2, 1396), "ECLIPSE IS COMING", 56, a2, wt="L", track=8, anchor="c")
+        T.put((W / 2, 1492), "LEAVING FOR 4 BILLION YEARS", 23, win(t, 11.8, 18.6), col=AMB, anchor="c")
+    foot(T, "NOT TO SCALE  ·  MOON: NASA LRO IMAGERY + LASER ALTIMETRY  ·  EARTH: NASA BLUE MARBLE", win(t, 1.5, 18.6) , y=(1040 if not V else 350))
     a3 = win(t, 19.4, 23.6, 1.0, 0.6)
     if a3 > 0:
         img *= (1 - 0.45 * a3)
-        put(T, "THE MOON IS LEAVING", a3, (W / 2, 470, 88, "c"), (W / 2, 800, 62, "c"), wt="T", track=22 if not V else 10)
-        put(T, "3.8 CENTIMETRES EVERY YEAR", win(t, 20.2, 23.6, 1.0, 0.6), (W / 2, 598, 25, "c"), (W / 2, 900, 25, "c"), col=AMB)
+        put(T, "THE MOON IS LEAVING", a3, (W / 2, 470, 88, "c"), (W / 2, 1340, 62, "c"), wt="T" if not V else "L", track=22 if not V else 10)
+        put(T, "3.8 CENTIMETRES EVERY YEAR", win(t, 20.2, 23.6, 1.0, 0.6), (W / 2, 598, 25, "c"), (W / 2, 1440, 25, "c"), col=AMB)
     return T.add_to(img)
 
 
@@ -148,7 +149,7 @@ def shot_reflector(t, lt):
     al = win(t, 26.4, 39.6, 1.0, 0.6)
     T = Text()
     if al > 0:
-        ix, iy, ir = (1560, 330, 190) if not V else (W / 2, 520, 150)
+        ix, iy, ir = (1560, 330, 190) if not V else (W / 2, 570, 140)
         yy, xx = np.ogrid[0:H, 0:W]; img *= (1 - 0.55 * al * np.exp(-(np.clip(np.hypot(xx - ix, yy - iy) / ir - 1, 0, None) / 0.9) ** 2))[..., None]
         ins = np.zeros((H, W, 3), F32); draw_moon(ins, ix, iy, ir, M_NEAR, norm([0.25, 0.2, 0.94]), exposure=0.95)
         yy, xx = np.ogrid[0:H, 0:W]; m = np.clip(ir + 1.5 - np.hypot(xx - ix, yy - iy), 0, 1)[..., None] * al
@@ -164,8 +165,8 @@ def shot_reflector(t, lt):
             T.put((x + dx + (-8 if left else 8), y + dy - 13), f"{nm} · {yr}", 18, a_k, col=TXT, anchor="r" if left else "l", wt="R", track=1.5)
     put(T, "RETROREFLECTORS ON THE MOON", win(t, 24.2, 39.6, 0.8), (120, 96, 27), (W / 2, 250, 26))
     put(T, "LEFT BY THREE APOLLO CREWS AND TWO SOVIET ROVERS", win(t, 25.2, 39.6, 0.8), (120, 140, 20), (W / 2, 296, 19), col=AMB)
-    put(T, "100 GLASS PRISMS  ·  EACH RETURNS LIGHT TO ITS SOURCE", win(t, 32.0, 39.6, 0.8), (120, 184, 20), (W / 2, 1420, 20))
-    foot(T, "ILLUSTRATION  ·  LAYOUT AFTER THE APOLLO 11 ARRAY (LRRR)  ·  3D MODEL, NOT A PHOTOGRAPH", win(t, 24.6, 39.6))
+    put(T, "100 GLASS PRISMS  ·  EACH RETURNS LIGHT TO ITS SOURCE", win(t, 32.0, 39.6, 0.8), (120, 184, 20), (W / 2, 760, 20))
+    foot(T, "ILLUSTRATION  ·  LAYOUT AFTER THE APOLLO 11 ARRAY (LRRR)  ·  3D MODEL, NOT A PHOTOGRAPH", win(t, 24.6, 39.6), y=(1034 if not V else 370))
     return T.add_to(img)
 
 
@@ -232,7 +233,7 @@ def shot_ret(t, lt):
     T = Text()
     put(T, "ONLY A FEW PHOTONS RETURN PER PULSE", win(t, 53.0, 59.6, 0.7), (120, 96, 27), (W / 2, 250, 23))
     put(T, "ENOUGH TO TRACK THE DISTANCE TO MILLIMETRES", win(t, 54.6, 59.6, 0.7), (120, 140, 20), (W / 2, 296, 19), col=AMB)
-    foot(T, "ILLUSTRATION  ·  THE RETURNING LIGHT IS FAR TOO FAINT TO SEE", win(t, 52.8, 59.6))
+    foot(T, "ILLUSTRATION  ·  THE RETURNING LIGHT IS FAR TOO FAINT TO SEE", win(t, 52.8, 59.6), y=(1034 if not V else 340))
     return T.add_to(img)
 
 
@@ -308,7 +309,7 @@ def shot_tides(t, lt):
 def shot_day(t, lt):
     a0, b0 = SHOT["day"]; u = lt / (b0 - a0)
     if not V: ex, ey, ER = 1360, 620, 640
-    else: ex, ey, ER = 540, 1560, 760
+    else: ex, ey, ER = 540, 1660, 760
     def bg(): return render_sky(rot_axis((0, 1, 0), 0.8) @ SKY_R, FL(50), gain=0.7, mw_gain=1.2)
     img = layer("day_bg", bg).copy()
     draw_earth(img, ex, ey, ER, art_M(-20 + (t - a0) * 1.6, 28, roll=-23.4), norm([-0.72, 0.28, 0.62]), t=t, night_gain=1.5, glint=0.22)
@@ -323,15 +324,15 @@ def shot_day(t, lt):
     put(T, "+1.8", a2, (120, 610, 120), (W / 2, 590, 104), col=YEL, wt="XL", track=4)
     put(T, "MILLISECONDS PER CENTURY", a2, (126, 754, 22), (W / 2, 714, 21))
     put(T, "MEASURED  ·  ECLIPSE RECORDS, 720 BC TO AD 2015", a2, (126, 790, 19), (W / 2, 748, 19), col=DIM)
-    put(T, "THE GAP: THE EARTH ITSELF IS CHANGING SHAPE", win(t, S['day1'] + 11.0, b0, 0.8), (126, 860, 19), (W / 2, 820, 19), col=AMB)
-    foot(T, "STEPHENSON, MORRISON & HOHENKERK 2016  ·  EARTH: NASA BLUE MARBLE, CLOUDS, NIGHT LIGHTS", win(t, a0 + 1.0, b0), y=(1034 if not V else 880))
+    put(T, "THE GAP: THE EARTH ITSELF IS CHANGING SHAPE", win(t, S['day1'] + 11.0, b0, 0.8), (126, 860, 19), (W / 2, 800, 19), col=AMB)
+    foot(T, "STEPHENSON, MORRISON & HOHENKERK 2016  ·  EARTH: NASA BLUE MARBLE, CLOUDS, NIGHT LIGHTS", win(t, a0 + 1.0, b0), y=(1034 if not V else 872))
     return T.add_to(img)
 
 
 def shot_past(t, lt):
     a0, b0 = SHOT["past"]
     if not V: ex, ey, ER = 1330, 560, 360
-    else: ex, ey, ER = 540, 1050, 330
+    else: ex, ey, ER = 540, 1080, 305
     def bg(): return render_sky(rot_axis((0, 1, 0), 1.6) @ SKY_R, FL(50), gain=0.7, mw_gain=1.2)
     img = layer("past_bg", bg).copy()
     k = ss(S['past1'] + 3.2, S['past1'] + 15.5, t)                   # rewind progress
@@ -418,7 +419,7 @@ def shot_origin(t, lt):
         tx = lerp(ec[0] + ER * (4.2 if not V else 2.2), ec[0] + ER * 1.25, k ** 1.5); ty = lerp(ec[1] - ER * (1.6 if not V else 3.2), ec[1] - ER * 0.55, k ** 1.5)
         draw_molten(img, tx, ty, ER * 0.53, art_M(200 + t * 3, -20, roll=30), sunv, heat=0.55, exposure=1.1, rock=(0.13, 0.09, 0.075), haze=0.5)
     age = max(0.0, t - ti)
-    if age > 2.0:
+    if age > 3.6:
         g_ = ss(2.0, 8.5, age); am = 2.75 + 0.07 * age; mrad = 2.9 if not V else 1.95
         mx_ = ec[0] + ER * mrad * math.cos(am); my_ = ec[1] - ER * mrad * math.sin(am) * math.cos(tilt)
         if math.sin(am) > 0 or math.hypot(mx_ - ec[0], my_ - ec[1]) > ER:

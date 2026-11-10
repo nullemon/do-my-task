@@ -323,8 +323,8 @@ def ring_profile(r):
     def band(a, b, v, e=0.006): return v * smooth(a - e, a + e, r) * (1 - smooth(b - e, b + e, r))
     t += band(1.239, 1.526, 0.16) + band(1.526, 1.950, 1.0) + band(1.950, 2.025, 0.10) + band(2.025, 2.269, 0.62) + band(2.320, 2.332, 0.25, 0.003)
     t *= 1 - 0.9 * band(2.212, 2.219, 1.0, 0.002)
-    n = tile(77, 1.0, lo=6)[0]; fine = np.interp((r * 9.0) % 1.0, np.linspace(0, 1, 1024), n); n2 = tile(78, 0.7, lo=40)[0]; fine2 = np.interp((r * 31.0) % 1.0, np.linspace(0, 1, 1024), n2)
-    return np.clip(t * (1 + 0.28 * fine + 0.14 * fine2), 0, 1.6), fine
+    n = tile(77, 1.1, lo=3, hi=60)[0]; fine = np.interp((r * 2.0) % 1.0, np.linspace(0, 1, 1024), n); n2 = tile(78, 0.8, lo=20, hi=120)[0]; fine2 = np.interp((r * 3.0) % 1.0, np.linspace(0, 1, 1024), n2)
+    return np.clip(t * (1 + 0.30 * fine + 0.10 * fine2), 0, 1.6), fine
 
 def rings(EL, AZ, lat, sun_dec, view_az_offset=0.0):
     """rings seen from latitude `lat` (deg, north) at the cloud tops, for a view centred `view_az_offset` degrees from the point

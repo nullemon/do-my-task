@@ -141,8 +141,8 @@ def glow_text(txt, size, col, wt="Black", maxw=None):
     halo = cv2.GaussianBlur(a_s, (0, 0), f.size * 0.16) * 0.9 + cv2.GaussianBlur(a_s, (0, 0), f.size * 0.45) * 0.6
     glow = halo[..., None] * np.array(col, f32)
     sh = cv2.GaussianBlur(a_s, (0, 0), f.size * 0.10)
-    _gl[k] = (rgba.astype(np.uint8), glow.astype(f32), sh.astype(f32), w)
     if len(_gl) > 600: _gl.clear()
+    _gl[k] = (rgba.astype(np.uint8), glow.astype(f32), sh.astype(f32), w)
     return _gl[k]
 
 
@@ -669,6 +669,7 @@ class Scene:
         speed = abs(E_of(t + 0.05) - E_of(t - 0.05)) / 0.1
         col = tuple(float(c) for c in np.clip(palette((0.58 + 0.25 * math.log10(1 + speed) / 5.5) % 1.0) * 1.1 + 0.15, 0, 1))
         if t > T_RW1 - 0.1 or t < T_FF0: col = (0.45, 0.80, 1.0)
+        col = tuple(round(c * 40) / 40 for c in col)                            # quantised: glyph cache stays small
         hud_text(out, "YEAR", cx, cy - ys * 0.95, int(34 * sc), "Bold", (230, 236, 255), 1.0, 0.45, display=True)
         put_glow_digits(out, fmt_int(year) if year >= 10000 else str(int(round(year))), ys, col, cx, cy, 1.0)
         if speed > 50:

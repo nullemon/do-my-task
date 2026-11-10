@@ -171,7 +171,7 @@ def write_srt(path, placement, pieces_of, max_words=7):
         cur = []
         for i, w in enumerate(pcs):
             cur.append(i)
-            if len(cur) >= max_words or (w[-1] in ".?!" and len(cur) >= 2) or (w[-1] == "," and len(cur) >= 4) or i == len(pcs) - 1:
+            if len(cur) >= max_words or (w[-1] in ".?!" and len(cur) >= 2) or (w[-1] == "," and len(cur) >= 3) or i == len(pcs) - 1:
                 items.append((ws[cur[0]]["t0"], ws[cur[-1]]["t1"] + 0.15, " ".join(pcs[j] for j in cur))); cur = []
     with open(path, "w") as f:
         for k, (a, b, s) in enumerate(items, 1):

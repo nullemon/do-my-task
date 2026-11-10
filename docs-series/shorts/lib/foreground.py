@@ -51,7 +51,7 @@ class Foreground:
         self.horizon = self._horizon(self.a)
         col = self.a > 0.5
         self.skyline = np.where(col.any(0), col.argmax(0), H).astype(f32)
-        self.lamps = [(x * s, y * s + oy) for (x, y) in lamps]
+        self.lamps = [(l[0] * s, l[1] * s + oy, (l[2] if len(l) > 2 else None) and l[2] * s + oy) for l in lamps]
         self._prep()
 
     @staticmethod
@@ -70,7 +70,17 @@ class Foreground:
         Y = lum(rgb)
         sig = 14 * self.s
         num = cv2.GaussianBlur(Y * a, (0, 0), sig); den = cv2.GaussianBlur(a, (0, 0), sig)
-        lo = num / np.maximum(den, 1e-3)
+        lo_t = num / np.maximum(den, 1e-3)
+        # on the lawn, shadows are perspective-flattened bands: wide, short kernel (grows towards the camera)
+        lo_g = np.zeros_like(Y); hz = int(self.horizon)
+        for y0, y1, sy in ((hz, hz + 120, 3.0), (hz + 120, hz + 280, 6.0), (hz + 280, H, 11.0)):
+            y0, y1 = max(0, min(H, y0)), max(0, min(H, y1))
+            if y1 <= y0: continue
+            pa, pb = max(0, y0 - 60), min(H, y1 + 60)
+            n2 = cv2.GaussianBlur((Y * a)[pa:pb], (0, 0), sigmaX=sy * 3.5 * self.s, sigmaY=sy * self.s)
+            d2 = cv2.GaussianBlur(a[pa:pb], (0, 0), sigmaX=sy * 3.5 * self.s, sigmaY=sy * self.s)
+            lo_g[y0:y1] = (n2 / np.maximum(d2, 1e-3))[y0 - pa:y1 - pa]
+        lo = lo_g * self.ground + lo_t * (1 - self.ground)
         gmask = self.ground > 0.5
         g_ref = np.percentile(lo[gmask], 70) if gmask.any() else lo.mean()
         t_ref = np.percentile(lo[(a > 0.5) & ~gmask], 60) if ((a > 0.5) & ~gmask).any() else g_ref
@@ -87,7 +97,9 @@ class Foreground:
             k_ = cv2.getRotationMatrix2D((7, 7), ang, 1.0); ker = np.zeros((15, 15), f32); ker[7, :] = 1
             ker = cv2.warpAffine(ker, k_, (15, 15)); ker /= ker.sum()
             streak += cv2.filter2D(fine, -1, ker)
-        self.crystal = np.clip(0.55 + 0.35 * streak + 0.25 * fine, 0, 1.6).astype(f32)
+        self.crystal = np.clip(0.88 + 0.10 * streak + 0.05 * fine, 0.7, 1.2).astype(f32)
+        Yf = lum(self.flat)
+        self.hf = np.clip(Yf / np.maximum(cv2.GaussianBlur(Yf, (0, 0), 2.0), 1e-4), 0.3, 2.5).astype(f32)   # blade / leaf texture
         # frost front: starts at the near lawn and the tops of things, creeps up and back
         up = 1 - yy / H
         edge = np.clip(a - cv2.erode(a, np.ones((5, 5), np.uint8)), 0, 1)
@@ -122,15 +134,16 @@ class Foreground:
         thr = amount * 1.35 - 0.25
         m = smooth(-0.06, 0.06, thr - self.frost_front) * self.frost_cover
         m = m * (0.55 + 0.45 * smooth(0.0, 1.0, amount))
-        base = lum(self.flat)[..., None]
-        fcol = (0.22 + 0.55 * base / (base + 0.12)) * self.crystal[..., None] * np.array([0.62, 0.78, 1.15], f32) * level
-        out = img * (1 - m[..., None] * 0.85) + fcol * m[..., None]
+        y = lum(img)[..., None]
+        tex = (self.hf ** 1.6 * self.crystal)[..., None]
+        fcol = (y * 2.6 + 0.0045 * level / 0.084) * tex * np.array([0.78, 0.90, 1.12], f32)
+        out = img * (1 - m[..., None]) + fcol * m[..., None]
         # glints (sparkle as starlight / lamplight catches ice facets)
         g = self.glint_xy
         mg = m[g[:, 1], g[:, 0]]
         tw = np.clip(np.sin(t * self.glint_fr * 6.283 + self.glint_ph), 0, 1) ** 12
-        val = mg * tw * self.glint_sz * 3.0 * level
-        sel = val > 0.01
+        val = mg * tw * self.glint_sz * 1.5 * level
+        sel = val > 1e-4 * level
         if sel.any():
             lay = np.zeros(img.shape[:2], f32)
             np.add.at(lay, (g[sel, 1], g[sel, 0]), val[sel])
@@ -144,25 +157,20 @@ class Foreground:
         col = np.array(col, f32)
         out = img.copy()
         alb = np.clip(self.flat, 0, 1)
-        for i, (lx, ly) in enumerate(self.lamps):
+        for i, (lx, ly, by) in enumerate(self.lamps):
             fl = on * (1 + 0.03 * noise1(t, 40 + i, 9.0))
             if pools:
-                # ground point below the head: first lawn row under the lamp
-                gy = self.horizon + 0.10 * (self.L.H - self.horizon) * 0.4 + (ly - self.horizon) * -0.0
-                xs = int(np.clip(lx, 0, self.L.W - 1))
-                colg = np.where(self.ground[:, xs] > 0.5)[0]
-                gy = float(colg[colg > ly][0]) + 4 * self.s if (colg > ly).any() else self.horizon
-                h = gy - ly
-                rx, ry = h * 1.1, h * 0.22
-                y0, y1 = int(max(0, ly - 4)), int(min(self.L.H, gy + ry * 3))
+                gy = by if by is not None else self.horizon + 20 * self.s      # light pool centred at the pole base
+                h = max(gy - ly, 30 * self.s)
+                rx, ry = h * 0.55, h * 0.10
+                y0, y1 = int(max(0, ly - 4)), int(min(self.L.H, gy + ry * 4))
                 x0, x1 = int(max(0, lx - rx * 3)), int(min(self.L.W, lx + rx * 3))
                 if y1 > y0 and x1 > x0:
                     yy, xx = np.mgrid[y0:y1, x0:x1].astype(f32)
-                    d2 = ((xx - lx) / rx) ** 2 + ((yy - gy) / ry) ** 2
-                    pool = np.exp(-d2 * 1.2) * self.ground[y0:y1, x0:x1]
-                    # the pole and nearby foliage catch a little light from above
-                    near = np.exp(-(((xx - lx) / (rx * 0.6)) ** 2 + ((yy - ly) / (h * 0.9)) ** 2)) * (1 - self.ground[y0:y1, x0:x1]) * self.a[y0:y1, x0:x1]
-                    out[y0:y1, x0:x1] += alb[y0:y1, x0:x1] * col * ((pool * 1.6 + near * 0.35) * fl)[..., None]
+                    d2 = ((xx - lx) / rx) ** 2 + ((yy - gy - ry * 0.4) / ry) ** 2
+                    pool = np.exp(-d2 * 1.4) * (yy > gy - 6 * self.s)
+                    near = np.exp(-(((xx - lx) / (rx * 0.35)) ** 2 + ((yy - ly) / (h * 0.5)) ** 2)) * (yy < gy)
+                    out[y0:y1, x0:x1] += alb[y0:y1, x0:x1] * col * ((pool * 0.6 + near * 0.05) * fl * self.a[y0:y1, x0:x1])[..., None]
             r = 3.2 * self.s
             splat(out, lx, ly + r * 0.6, r * 60, lambda d, dx, dy: (
                 (np.clip(r - d + 0.5, 0, 1) * 40.0 + np.exp(-d / (r * 1.6)) * 4.0 + np.exp(-d / (r * 8)) * 0.35 + np.exp(-d / (r * 25)) * 0.05) * fl

@@ -43,7 +43,7 @@ def tonemap(img, expo=1.0):
 
 
 _vig = {}
-def finish(srgb, t, grain=0.018, vignette=0.22, seed=0):
+def finish(srgb, t, grain=0.011, vignette=0.22, seed=0):
     H, W = srgb.shape[:2]
     if (H, W) not in _vig:
         yy, xx = np.mgrid[0:H, 0:W].astype(f32)
@@ -53,7 +53,7 @@ def finish(srgb, t, grain=0.018, vignette=0.22, seed=0):
     rng = np.random.default_rng(int(t * 1000) + seed)
     g = rng.standard_normal((H // 2, W // 2)).astype(f32)
     g = cv2.resize(g, (W, H), interpolation=cv2.INTER_LINEAR)
-    lw = 0.5 + 0.5 * (1 - np.abs(out.mean(2, keepdims=True) - 0.45) * 1.6)
+    lw = np.clip(0.25 + 0.75 * (1 - np.abs(out.mean(2, keepdims=True) - 0.45) * 1.8), 0.2, 1)
     return np.clip(out + g[..., None] * grain * lw, 0, 1)
 
 

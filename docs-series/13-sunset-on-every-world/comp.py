@@ -246,7 +246,10 @@ def sh_saturn(tl, u, ov):
         return base * 0.8 + glow
     sky = sky_half(pl, fn)
     if not hasattr(pl, "ring"):
-        rc, ra = rings(pl.EL, pl.AZ, hv(14.0, 8.0), 2.0, off)
+        # the ring arc is drawn as a wider-angle view of the sky (k x the lens) from mid-northern latitude, looking south-west, so it
+        # reads as a thin bright band arching across the sky and down towards the sunset rather than as near-vertical streaks
+        k_, lat_, roff_ = float(os.environ.get("RK", hv(4.0, 4.0))), float(os.environ.get("RLAT", hv(47.0, 47.0))), float(os.environ.get("ROFF", hv(-70.0, -70.0)))
+        rc, ra = rings(pl.EL * k_, pl.AZ * k_, lat_, 2.0, roff_)
         ext = (1 - np.exp(-np.maximum(pl.EL, 0) / 2.2)) ** 1.3                     # the rings sink into the haze near the horizon
         pl.ring = (rc * (C(1.0, 0.90, 0.74) * 1.45), (ra * ext)[..., None])
     ringL, aa = pl.ring; sky = sky * (1 - aa * 0.9) + ringL * aa * (0.75 + 0.25 * float(np.clip(se / 2.3, 0, 1)))
@@ -260,18 +263,21 @@ def sh_uranus(tl, u, ov):
     sa = -wdt + 2 * wdt * u; se = sl + 0.75 - 0.95 * min(u / 0.70, 1.25) ** 1.3
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = ang(EL, AZ, se, sa)
-        base = mixa(C(0.46, 0.76, 0.76), C(0.015, 0.085, 0.16), 1 - np.exp(-e / 3.6))
-        base = base + C(0.9, 0.8, 0.5) * (0.22 * np.exp(-e / 1.0) * np.exp(-np.abs(AZ - sa) / 8.0))[..., None]
-        glow = C(0.75, 0.95, 0.9) * (0.6 * np.exp(-psi / 1.2))[..., None] + C(1.0, 1.0, 0.95) * (1.6 * np.exp(-psi / 0.16))[..., None]
+        # deeper, more saturated gradient: pale cyan haze only in a thin layer at the horizon, deep ocean blue above
+        base = mixa(C(0.40, 0.72, 0.74), C(0.006, 0.035, 0.085), 1 - np.exp(-e / 1.9))
+        base = base * (0.62 + 0.38 * np.exp(-np.abs(AZ - sa) / 14.0))[..., None]        # the sky darkens away from the Sun
+        base = base + C(0.9, 0.8, 0.5) * (0.20 * np.exp(-e / 0.7) * np.exp(-np.abs(AZ - sa) / 6.0))[..., None]
+        glow = C(0.62, 0.95, 0.92) * (0.75 * np.exp(-psi / 1.0))[..., None] + C(1.0, 1.0, 0.95) * (1.8 * np.exp(-psi / 0.14))[..., None]
         return base * 0.75 + glow
     sky = sky_half(pl, fn)
     x, y = pl.xy(se, sa); r = 0.052 * 0.2665 * pl.ppd
     sun_disc(sky, x, y, max(r, 1.7), C(1.0, 1.0, 0.95) * 90, limb=0.2)
     vis = sunvis(pl, x, y, 2)
     # the Sun travels sideways here, so the directional part of the light is computed from the normal pass for the current azimuth
-    sd = np.array([math.sin(math.radians(sa)) * 0.985, math.cos(math.radians(sa)) * 0.985, 0.17], f32)
-    pl.A_glow = pl.alb * ((0.10 + 0.55 * np.clip((pl.nrm * sd).sum(-1), 0, 1) ** 1.5 + 0.12 * np.clip(pl.nrm[..., 2], 0, 1)) * (0.5 + 0.5 * pl.amb) * (0.45 + 0.55 * np.exp(-np.abs(pl.AZ - sa) / 6.0)))[..., None]
-    L = cloud_ground(pl, C(0.9, 1.0, 0.95) * 0.0, C(0.75, 0.95, 0.9) * 3.0 * (0.45 + 0.55 * vis), C(0.22, 0.42, 0.50) * 0.26, fn, 2.2e6)
+    sd = np.array([math.sin(math.radians(sa)) * 0.95, math.cos(math.radians(sa)) * 0.95, 0.31], f32)
+    # low grazing light: lit cloud flanks against deep blue shadowed troughs (contrast and depth instead of a flat teal deck)
+    pl.A_glow = pl.alb * ((0.012 + 2.4 * np.clip((pl.nrm * sd).sum(-1) - 0.05, 0, 1) ** 1.1 + 0.05 * np.clip(pl.nrm[..., 2], 0, 1) ** 8) * (0.2 + 0.8 * pl.amb ** 2) * (0.35 + 0.65 * np.exp(-np.abs(pl.AZ - sa) / 7.0)))[..., None]
+    L = cloud_ground(pl, C(0.9, 1.0, 0.95) * 0.0, C(0.80, 0.97, 0.90) * 3.4 * (0.45 + 0.55 * vis), C(0.03, 0.14, 0.34) * 0.10, fn, 9.0e5)
     return compose(pl, sky, L), 1.2
 
 # ------------------------------------------------------------------------------------------------ TITAN

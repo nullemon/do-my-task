@@ -326,8 +326,9 @@ class Scene:
         R = (100 + 42 * ease(ramp(t, T_BLAZE - 0.1, T_BLAZE + 0.6))) * sc
         if mp:
             def halo(d, R=R, ml=ml):
-                return (np.exp(-np.maximum(d - R, 0) / (55 * sc)) * 1.5 + np.exp(-np.maximum(d - R, 0) / (210 * sc)) * 0.45
-                        + np.exp(-d / (500 * sc)) * 0.04) * ml * smooth(0.7, 1.0, d / R)
+                # centre-peaked bloom halo (no bright rim: the orb must read as a filled ball, not a ring)
+                return (np.exp(-d / (0.55 * R)) * 0.8 + np.exp(-d / (190 * sc)) * 0.50
+                        + np.exp(-d / (500 * sc)) * 0.05) * ml
             self.hglow(hb, *mp, halo, (0.85, 0.55, 1.35), 1500 * sc)
             # shock ring at the blaze
             u = (t - T_BLAZE) / 1.3
@@ -374,15 +375,15 @@ class Scene:
             pulse = 1 + 0.07 * math.sin(t * 3.3) + 0.04 * math.sin(t * 7.1 + 1)
             def orb(d, dx, dy, R=R, ml=ml):
                 q = d / R
-                body = smooth(1.18, 0.80, q)                                    # soft, PSF-blurred edge
+                body = smooth(1.20, 0.55, q)                                    # soft, PSF-blurred edge
                 u = ((dx / R * 0.5 + 0.5 + 0.03 * t) * (tw - 1)).astype(np.int32) % tw
                 v = ((dy / R * 0.5 + 0.5 - 0.02 * t) * (th - 1)).astype(np.int32) % th
                 n = tex[v, u]
-                core = np.exp(-(q / 0.55) ** 2)
+                core = np.exp(-(q / 0.50) ** 2)
                 mid = np.array([0.95, 0.36, 1.9], f32); hot = np.array([2.3, 1.8, 2.9], f32)
-                val = body[..., None] * mid * (0.75 + 0.45 * n)[..., None] + core[..., None] * hot * (0.85 + 0.3 * n)[..., None]
+                val = body[..., None] * mid * (0.45 + 0.85 * n)[..., None] + core[..., None] * hot * 1.6 * (0.65 + 0.6 * n)[..., None]
                 return val * ml * pulse
-            splat(img, mp[0], mp[1], R * 1.25, orb)
+            splat(img, mp[0], mp[1], R * 1.3, orb)
             for r in self.rays:                                               # impact flashes on the limb
                 du = t - r["ta"]
                 if 0 <= du < 0.25:

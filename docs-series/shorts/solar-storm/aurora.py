@@ -42,7 +42,7 @@ class Aurora:
         self.tex = np.stack([fbm2((4, 8192), seed + k, 1.1)[0] for k in range(4)])          # 1-D ray textures
         self.tex = (self.tex - self.tex.min(1, keepdims=True)) / np.ptp(self.tex, 1, keepdims=True)
         # crown rays (angle) texture
-        self.ctex = fbm2((2, NT), seed + 9, 0.9)[0]; self.ctex = (self.ctex - self.ctex.min()) / np.ptp(self.ctex)
+        self.ctex = fbm2((2, NT), seed + 9, 1.5)[0]; self.ctex = (self.ctex - self.ctex.min()) / np.ptp(self.ctex)
         # curtains: final lower-border distance Z (km, forward), lateral half span, folds
         Zs = [38, 62, 92, 125, 175, 260, 400, 650]
         self.cur = []
@@ -52,7 +52,7 @@ class Aurora:
                                  A1=r.uniform(0.10, 0.22) * Z + 6, m1=r.uniform(0.6, 1.4), w1=r.uniform(0.15, 0.35) * r.choice([-1, 1]), p1=r.uniform(0, 6.3),
                                  A2=r.uniform(0.04, 0.08) * Z + 2, m2=r.uniform(2.5, 4.5), w2=r.uniform(0.5, 1.1) * r.choice([-1, 1]), p2=r.uniform(0, 6.3),
                                  F=r.uniform(0.05, 0.09) * span, n3=r.uniform(2.0, 3.5), w3=r.uniform(0.3, 0.7) * r.choice([-1, 1]), p3=r.uniform(0, 6.3),
-                                 drift=r.uniform(-1.0, 1.0), off=r.uniform(0, 8192), I=r.uniform(0.8, 1.15) * (0.45 if Z < 80 else 1.0), tk=k % 4,
+                                 drift=r.uniform(-1.0, 1.0), off=r.uniform(0, 8192), I=r.uniform(0.8, 1.15) * (0.35 if Z < 80 else (1.3 if Z < 300 else 1.0)), tk=k % 4,
                                  hred=r.uniform(210, 270)))
         u = np.linspace(0, 1, 104, dtype=f32)
         self.h = (-14 + 420 * u ** 1.7).astype(f32)                                           # km above lower border
@@ -70,7 +70,7 @@ class Aurora:
         Yb = 100.0 + 5.0 * np.sin(7.0 * s + 0.8 * t + c["p2"])
         # ray structure along the curtain: drifting fine rays * fast flicker * travelling surges
         tx = self.tex[c["tk"]]
-        i1 = ((s * 2600 + c["off"] + c["drift"] * t * 90.0) % 8192).astype(np.int32)
+        i1 = ((s * 1500 + c["off"] + c["drift"] * t * 90.0) % 8192).astype(np.int32)
         i2 = ((s * 700 + c["off"] * 0.5 - t * 260.0 * (1 if c["drift"] > 0 else -1)) % 8192).astype(np.int32)
         rays = (0.22 + 1.0 * tx[i1] ** 2.0) * (0.50 + 0.70 * tx[(i2 + 1000) % 8192])
         surge = 1 + 1.3 * np.exp(-(((s - (((t * 0.45 + c["p1"]) % 2.6) - 1.3)) / 0.10) ** 2))
@@ -121,8 +121,8 @@ class Aurora:
         gpro = smooth(30 * sc, 150 * sc, rpx) * np.exp(-np.maximum(rpx - rg, 0) / (260 * sc)) * smooth(rg * 2.8, rg * 1.2, rpx)
         rpro = np.exp(-rpx / (210 * sc)) * smooth(0, 60 * sc, rpx)
         mpro = np.exp(-((rpx - rg * 1.45) / (90 * sc)) ** 2)
-        acc[0] += (gpro[:, None] * rays[None, :]) * 2.2 * crown
-        acc[1] += (rpro[:, None] * (0.35 + rays[None, :])) * 2.0 * crown
+        acc[0] += (gpro[:, None] * rays[None, :]) * 1.6 * crown
+        acc[1] += (rpro[:, None] * (0.25 + rays[None, :])) * 1.1 * crown
         acc[2] += (mpro[:, None] * rays[None, :] ** 2) * 1.2 * crown
 
     def render(self, t, level, prog=1.0, storm=1.0, crown=1.0):
@@ -132,12 +132,13 @@ class Aurora:
         acc = [np.zeros((self.NR, self.NT), np.float64) for _ in range(3)]
         for c in self.cur: self._curtain(c, t, prog, acc, storm)
         if crown > 0: self._crown(t, acc, crown * prog ** 3)
-        out = np.zeros((H, W, 3), f32)
+        out = np.zeros((H, W, 3), f32); tint = np.zeros(3, f32)
         for k, col in enumerate((G_COL, R_COL, M_COL)):
             a = acc[k].astype(f32)
             a = cv2.GaussianBlur(a, (0, 0), sigmaX=1.5, sigmaY=2.2) + cv2.GaussianBlur(a, (0, 0), sigmaX=6, sigmaY=14) * 0.35
             img = cv2.remap(a, self.map_t, self.map_r, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
             out += img[..., None] * col
+            tint += float(img[: int(self.hz)].mean()) * col
         out *= 0.12 * level
         # diffuse storm glow: blood-red dome overhead, green band low, flickering
         fl = 1 + 0.18 * noise1(t, 5, 3.0, 2)
@@ -146,5 +147,6 @@ class Aurora:
         out += (redwash * prog + grn) * level * fl
         y = out @ np.array([0.2126, 0.7152, 0.0722], f32)
         out = np.maximum(y[..., None] + (out - y[..., None]) * 1.35, 0)
-        mean = out[: int(self.hz)].reshape(-1, 3).mean(0)
-        return out, mean.astype(f32)
+        # light cast on the ground: the emission-weighted, fully saturated line colours (+ the diffuse glow)
+        tint = tint * 0.12 * level + (R_COL * 0.020 * 0.5 * prog + G_COL * 0.012 * 0.3 * prog) * level
+        return out, tint.astype(f32)

@@ -53,4 +53,4 @@ class Lens:
 
 
 def lens_for(vertical, hz):
-    return Lens(1080, 1920, 180.0, 50.0, 740.0, hz + 10) if vertical else Lens(1920, 1080, 180.0, 38.0, 620.0, hz + 10)
+    return Lens(1080, 1920, 180.0, 50.0, 740.0, hz + 10) if vertical else Lens(1920, 1080, 180.0, 50.0, 520.0, hz + 10)

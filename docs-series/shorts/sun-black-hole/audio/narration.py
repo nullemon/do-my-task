@@ -6,29 +6,30 @@ import re
 LINES = [
     ("hook", "If the Sun became a black hole right now, you wouldn't notice.", 0.30),
     ("delay", "For {8 MIN|eight minutes} {AND 20 SEC|and twenty seconds}, its last light keeps arriving.", 0.30),
-    ("then", "Then the Sun just", 0.55),
-    ("out", "goes out.", 0.65),
+    ("then", "Then the Sun just", 0.50),
+    ("out", "goes out.", 0.60),
     ("twi", "No sunset. No twilight.", 0.25),
-    ("sky", "The blue sky is just scattered sunlight, so the day turns black, and the stars come out at noon.", 0.45),
-    ("orbit", "Earth's orbit? Unchanged. Same mass, same gravity. Nothing gets sucked in.", 0.40),
-    ("bh", "The black hole is only {6 KM|six kilometers} wide, with no glowing disk.", 0.20),
-    ("scope", "Through a telescope, you'd just see starlight bending around it.", 0.45),
-    ("cold", "Then the cold. Within a week, below {−18°C|minus eighteen}. Within a year, around {−73°C|minus seventy-three}.", 0.45),
+    ("sky", "The blue sky is scattered sunlight, so day turns black, and stars come out at noon.", 0.40),
+    ("orbit", "Earth's orbit? Unchanged. Same mass, same gravity. Nothing gets sucked in.", 0.35),
+    ("bh", "The black hole is only {6 KM|six kilometers} wide. No glowing disk.", 0.20),
+    ("scope", "Through a telescope, you'd see starlight bending around it.", 0.40),
+    ("cold", "Then the cold. In a week, below {−18°C|minus eighteen}. In a year, around {−73°C|minus seventy-three}.", 0.40),
     ("end", "And Earth keeps orbiting perfectly. A frozen world, circling a hole you can't even see.", 0.0),
 ]
 
-TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}|(\S+)")
+TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")
 
 
 def tokens(text):
     """-> list of (caption, [spoken words]) in order"""
     out = []
     for m in TOK.finditer(text):
-        if m.group(3):
-            w = m.group(3)
+        if m.group(4):
+            w = m.group(4)
             out.append((w, [w]))
         else:
-            out.append((m.group(1), m.group(2).split()))
+            ws = m.group(2).split(); ws[-1] += m.group(3)
+            out.append((m.group(1), ws))
     return out
 
 

@@ -8,7 +8,7 @@ Run one Short at a time, reusing docs-series/shorts/lib/ (built by the Black Hol
 | # | Short | Background | Status |
 |---|---|---|---|
 | S1 | What If the Sun Became a Black Hole? | A_park | in progress |
-| S2 | In 1994, people called 911 about a strange cloud. It was the Milky Way (Northridge blackout; "according to Griffith Observatory staff") | C_city | queued |
+| S2 | In 1994, people called 911 about a strange cloud. It was the Milky Way (Northridge blackout; "according to Griffith Observatory staff") | C_city | in progress |
 | S3 | If your eyes saw gamma rays, the Moon would outshine the Sun (radio, microwave/CMB and gamma-ray real all-sky maps) | A2_park | queued |
 | S4 | What if other stars replaced our Sun? (Sirius, Arcturus, Rigel, Betelgeuse, UY Scuti; real angular sizes and colours) | A2_park | queued |
 | S5 | Every star is a date (light-departure year on real stars; myth-bust: almost none are dead) | A_park, night | queued |

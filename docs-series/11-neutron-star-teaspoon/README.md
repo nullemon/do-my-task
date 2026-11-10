@@ -107,7 +107,14 @@ with the same timeline, voice and subtitles.
   Blue Marble via the `three-globe` package. Stars: `d3-celestial` catalogue.
 
 ## Deliverables (`out/`, measured)
-See the table at the end of this file after the final encode.
+| file | size | notes |
+|---|---|---|
+| `neutron-star-teaspoon-1080p-hq.mp4` | 348 MB | 1920×1080, 24 fps, 5:13.0, x264 CRF 18 (9 Mb/s cap), AAC 256k, soft subtitles |
+| `neutron-star-teaspoon-4k.mp4` | 505 MB | 3840×2160 lanczos **upscale** of the 1080p render, CRF 20 (16 Mb/s cap) |
+| `neutron-star-teaspoon-vertical.mp4` | 318 MB | 1080×1920 recomposition, same audio and subtitles |
+| `neutron-star-teaspoon.srt`, `thumb.jpg` (1280×720), `thumb-vertical.jpg` (1080×1920) | | |
+
+Audio: integrated −14.0 LUFS, loudness range 2.5 LU, peak −1.3 dBFS (ebur128 on the muxed file).
 
 ## Honest limitations
 - Nobody has seen a neutron star's surface; the crust pattern, colours and hot spots are an artist's impression. The star
@@ -120,7 +127,10 @@ See the table at the end of this file after the final encode.
 - The New York map is a shaded-relief rendering of elevation data only (no buildings, roads or satellite imagery; the
   open tile servers for those were not reachable). Its water mask is "elevation below 1.5 m", so tidal marsh reads as
   water and a few small islands are dropped.
-- The spoon and ring are Blender models rendered at 40 spp with denoising; the frames between rendered ones are
-  cross-blended in the compositor (the motion is under two pixels per rendered frame).
+- The spoon and ring are Blender models rendered at 40 spp with denoising. Only every second frame of their 80-frame
+  moves was path-traced (and, for the bead-off spoon and the ring, only the parts of the move the film uses); the
+  compositor cross-blends between rendered frames (a few pixels of motion at most), which softens the handle tip slightly.
+- The film says "roughly twenty-five kilometres" for both the collapsed core and the star; the Chandra page it draws on
+  says 19 km, and measured radii (12-13 km) give 24-26 km.
 - The bead in the spoon is symbolic (a small emitter with glare); 5 mL as a sphere would be 2.1 cm across.
 - Voice is synthetic (Kokoro); "J1748−2446ad" is shown on screen but not spoken.

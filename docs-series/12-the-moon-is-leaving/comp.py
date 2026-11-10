@@ -233,6 +233,7 @@ def shot_ret(t, lt):
     a = win(t, 52.9, 59.6, 0.5, 0.5)
     img += (g * 0.16 + cv2.GaussianBlur(g, (0, 0), 4) * 0.30 + cv2.GaussianBlur(g, (0, 0), 30) * 0.32) * (k * a)
     img = bloom(img, 0.85, 0.4)
+    if V: vign_dark(img, -100, 430, 0.55)
     T = Text()
     put(T, "ONLY A FEW PHOTONS RETURN PER PULSE", win(t, 53.0, 59.6, 0.7), (120, 96, 27), (W / 2, 250, 23))
     put(T, "ENOUGH TO TRACK THE DISTANCE TO MILLIMETRES", win(t, 54.6, 59.6, 0.7), (120, 140, 20), (W / 2, 296, 19), col=AMB)

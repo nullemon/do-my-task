@@ -93,9 +93,9 @@ T_WO0 = T_BACK - 0.70
 T_SPECK = wt("pho", "SPECK")
 SWAPS = [(T_SW[k], k) for k in ("pho", "eur", "io", "tit", "gan")] + [(T_BACK, "moon2")]
 COLLAPSE, BLOOM = 0.42, 0.65
-# the finale: the others pop in one by one around Ganymede (order, then 0.21 s apart)
+# the finale: the others pop in one by one around Ganymede (order, then 0.17 s apart)
 POP_ORDER = ["moon", "eur", "io", "tri", "cal", "tit", "pho"]
-T_POP = {k: T_ALL + 0.10 + 0.21 * i for i, k in enumerate(POP_ORDER)}
+T_POP = {k: T_ALL + 0.10 + 0.17 * i for i, k in enumerate(POP_ORDER)}
 PULSES = [wt("hook", "MOONS"), wt("moon", "SCALE"), T_SPECK, wt("eur", "ICE"), wt("io", "VOLCANOES"), wt("tit", "HAZE"),
           wt("gan", "BIGGEST"), wt("gan", "MERCURY"), wt("all", "ONCE"), wt("end", "BIGGEST")]
 
@@ -429,11 +429,11 @@ class Scene:
             return (sp * 1.6 + np.exp(-d / 1.2) * 4)[..., None] * np.array([1.0, 0.85, 0.72], f32) * I * tw
         splat(img, x, y, 30, fn)
 
-    def shock(self, img, cx, cy, u, col, size=1.0):
+    def shock(self, img, cx, cy, u, col, size=1.0, decay=0.55):
         R = 2400 * size * (max(u, 0) / 1.4) ** 0.6; wdt = (18 + 60 * u) * size
         dd = np.sqrt((self.xx - cx) ** 2 + (self.yy - cy) ** 2)
         for ch, off in ((0, 10), (1, 0), (2, -10)):
-            img[..., ch] += np.exp(-((dd - R - off * size) / wdt) ** 2) * 2.0 * math.exp(-max(u, 0) / 0.55) * (0.6 + 0.4 * col[ch])
+            img[..., ch] += np.exp(-((dd - R - off * size) / wdt) ** 2) * 2.0 * math.exp(-max(u, 0) / decay) * (0.6 + 0.4 * col[ch])
 
     # -------------------------------------------------------------------------------------------- frame
     def frame(self, t):
@@ -503,11 +503,11 @@ class Scene:
         if cur == "gan" and t > T_ALL:
             for k in POP_ORDER:
                 u = t - T_POP[k]
-                if -0.03 < u < 1.0:
+                if -0.03 < u < 0.5:
                     fc = np.array({"moon": (0.8, 0.85, 1.0), "eur": (0.6, 0.9, 1.0), "io": (1.0, 0.9, 0.3), "tri": (1.0, 0.7, 0.8),
                                    "cal": (0.9, 0.8, 0.7), "tit": (1.0, 0.55, 0.15), "pho": (0.4, 1.0, 0.8)}[k], f32)
                     img += 0.8 * math.exp(-max(u, 0) / 0.07) * ease((u + 0.03) / 0.03) * fc
-                    self.shock(img, *self.PA[k], u * 1.3, fc, size=0.45)
+                    self.shock(img, *self.PA[k], u * 2.4, fc, size=0.55, decay=0.30)     # passes in ~0.5 s
         # ---- final white-out -> our lone Moon
         if T_WO0 < t < T_BACK:
             v = ease((t - T_WO0) / (T_BACK - T_WO0))

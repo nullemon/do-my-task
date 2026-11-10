@@ -11,7 +11,7 @@ LINES = [
     ("io", "Io. A little bigger, and covered in erupting volcanoes.", 0.20),
     ("tit", "Titan. {1.5×|One and a half times} wider, wrapped in thick orange haze.", 0.20),
     ("gan", "Ganymede. The biggest moon in the solar system, even wider than Mercury.", 0.30),
-    ("all", "Now imagine all of them at once.", 0.45),
+    ("all", "Now imagine all of them at once.", 1.60),
     ("end", "Still, compared to its planet, ours is the biggest moon of any planet.", 0.0),
 ]
 

@@ -248,7 +248,7 @@ def sh_saturn(tl, u, ov):
     if not hasattr(pl, "ring"):
         # the ring arc is drawn as a wider-angle view of the sky (k x the lens) from mid-northern latitude, looking south-west, so it
         # reads as a thin bright band arching across the sky and down towards the sunset rather than as near-vertical streaks
-        k_, lat_, roff_ = float(os.environ.get("RK", hv(4.0, 4.0))), float(os.environ.get("RLAT", hv(47.0, 47.0))), float(os.environ.get("ROFF", hv(-70.0, -70.0)))
+        k_, lat_, roff_ = float(os.environ.get("RK", hv(5.5, 4.0))), float(os.environ.get("RLAT", hv(47.0, 47.0))), float(os.environ.get("ROFF", hv(-70.0, -70.0)))
         rc, ra = rings(pl.EL * k_, pl.AZ * k_, lat_, 2.0, roff_)
         ext = (1 - np.exp(-np.maximum(pl.EL, 0) / 2.2)) ** 1.3                     # the rings sink into the haze near the horizon
         pl.ring = (rc * (C(1.0, 0.90, 0.74) * 1.45), (ra * ext)[..., None])
@@ -277,7 +277,16 @@ def sh_uranus(tl, u, ov):
     sd = np.array([math.sin(math.radians(sa)) * 0.95, math.cos(math.radians(sa)) * 0.95, 0.31], f32)
     # low grazing light: lit cloud flanks against deep blue shadowed troughs (contrast and depth instead of a flat teal deck)
     pl.A_glow = pl.alb * ((0.012 + 2.4 * np.clip((pl.nrm * sd).sum(-1) - 0.05, 0, 1) ** 1.1 + 0.05 * np.clip(pl.nrm[..., 2], 0, 1) ** 8) * (0.2 + 0.8 * pl.amb ** 2) * (0.35 + 0.65 * np.exp(-np.abs(pl.AZ - sa) / 7.0)))[..., None]
+    if not hasattr(pl, "lowdeck"):
+        # the near part of the plate is a smooth plain: give it billows of its own and sink it into shadow as a lower, darker deck
+        nzb = cv2.GaussianBlur(pl.nrm[..., 2].copy(), (0, 0), 9); m = smooth(0.975, 0.995, nzb) * smooth(1.5e5, 1.0e5, pl.dist) * pl.alpha[..., 0]
+        gx = pl.dist * np.tan(np.radians(pl.AZ)); gz = pl.dist.copy()
+        n1 = tsample(tile(61, 1.8), gx / 52000.0, gz / 52000.0) + 0.55 * tsample(tile(62, 1.6), gx / 17000.0 + 0.3, gz / 17000.0 + 0.7)
+        n2 = tsample(tile(61, 1.8), gx / 52000.0, (gz + 900.0) / 52000.0) + 0.55 * tsample(tile(62, 1.6), gx / 17000.0 + 0.3, (gz + 900.0) / 17000.0 + 0.7)
+        lit = np.clip(0.35 + 2.2 * (n2 - n1), 0, 1) ** 1.4 * smooth(-1.2, 1.2, n1)      # flanks facing the Sun (away from camera) catch light
+        pl.lowdeck = (m[..., None], (0.04 + 0.8 * lit)[..., None] * (0.55 + 0.45 * pl.alb))
     L = cloud_ground(pl, C(0.9, 1.0, 0.95) * 0.0, C(0.80, 0.97, 0.90) * 3.4 * (0.45 + 0.55 * vis), C(0.03, 0.14, 0.34) * 0.10, fn, 9.0e5)
+    m_, sh_ = pl.lowdeck; L = L * (1 - m_) + m_ * (sh_ * C(0.70, 0.92, 0.95) * 0.55 * (0.45 + 0.55 * vis) + C(0.02, 0.07, 0.17) * 0.6)
     return compose(pl, sky, L), 1.2
 
 # ------------------------------------------------------------------------------------------------ TITAN

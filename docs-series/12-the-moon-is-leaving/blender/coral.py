@@ -51,13 +51,13 @@ bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.35;
 nt.links.new(n2.outputs[0], bp.inputs["Height"]); nt.links.new(bp.outputs["Normal"], b.inputs["Normal"])
 
 X, Y, Z = coral_mesh(seed=1)
-c1 = grid_mesh(X, Y, Z, "coral1", cm); c1.rotation_euler = (math.radians(86), math.radians(-8), math.radians(38)); c1.location = (-0.040, -0.030, 0.021)
+c1 = grid_mesh(X, Y, Z, "coral1", cm); c1.rotation_euler = (math.radians(86), math.radians(-8), math.radians(38)); c1.location = (-0.040, -0.030, 0.027)
 X, Y, Z = coral_mesh(length=0.07, rtop=0.015, nu=2400, nv=320, bands=8, seed=5, curl=0.6)
-c2 = grid_mesh(X, Y, Z, "coral2", cm); c2.rotation_euler = (math.radians(95), math.radians(14), math.radians(160)); c2.location = (0.085, 0.075, 0.014)
+c2 = grid_mesh(X, Y, Z, "coral2", cm); c2.rotation_euler = (math.radians(95), math.radians(14), math.radians(160)); c2.location = (0.062, 0.050, 0.018)
 
 # slab
 s = np.linspace(-1, 1, 1500); SX, SY = np.meshgrid(s * 0.35, s * 0.35)
-SZ = 0.006 * fbm(SX, SY, 6, 14, 0.55, 3) + 0.0018 * fbm(SX, SY, 5, 120, 0.6, 4) + 0.0007 * fbm(SX, SY, 4, 700, 0.6, 5)
+SZ = 0.006 * fbm(SX, SY, 6, 14, 0.55, 3) + 0.0010 * fbm(SX, SY, 5, 120, 0.6, 4) + 0.00035 * fbm(SX, SY, 4, 700, 0.6, 5)
 SZ += 0.003 * np.floor(fbm(SX, SY, 3, 6, 0.5, 6) * 4) / 4                                   # bedding steps
 for k in range(60):                                                                          # small fossil debris: crinoid ossicle rings, shell hash
     cx, cy = rng.uniform(-0.3, 0.3, 2); r = rng.uniform(0.002, 0.006)
@@ -65,7 +65,7 @@ for k in range(60):                                                             
     SZ += 0.0012 * np.exp(-((d - 1) / 0.28) ** 2) + 0.0006 * np.exp(-(d / 0.3) ** 2)
 sm, nt, b = new_mat("slab")
 tc = nt.nodes.new("ShaderNodeTexCoord"); n1 = nt.nodes.new("ShaderNodeTexNoise"); n1.inputs["Scale"].default_value = 30; n1.inputs["Detail"].default_value = 12; nt.links.new(tc.outputs["Object"], n1.inputs["Vector"])
-ramp = nt.nodes.new("ShaderNodeValToRGB"); e = ramp.color_ramp.elements; e[0].position = 0.3; e[0].color = (0.035, 0.034, 0.036, 1); e[1].position = 0.8; e[1].color = (0.13, 0.12, 0.11, 1)
+ramp = nt.nodes.new("ShaderNodeValToRGB"); e = ramp.color_ramp.elements; e[0].position = 0.3; e[0].color = (0.022, 0.022, 0.025, 1); e[1].position = 0.8; e[1].color = (0.075, 0.07, 0.066, 1)
 nt.links.new(n1.outputs[0], ramp.inputs[0]); nt.links.new(ramp.outputs[0], b.inputs["Base Color"]); b.inputs["Roughness"].default_value = 0.8
 n2 = nt.nodes.new("ShaderNodeTexNoise"); n2.inputs["Scale"].default_value = 2500; n2.inputs["Detail"].default_value = 4; nt.links.new(tc.outputs["Object"], n2.inputs["Vector"])
 bp = nt.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.5; bp.inputs["Distance"].default_value = 0.0003
@@ -79,5 +79,5 @@ def area(loc, target, size, power, col):
 area((-0.42, 0.18, 0.13), (0, 0, 0.01), 0.10, 9.0, (1.0, 0.86, 0.68))        # raking warm key
 area((0.30, -0.35, 0.30), (0, 0, 0.0), 0.5, 0.9, (0.55, 0.7, 1.0))            # cool fill
 area((0.1, 0.45, 0.10), (0, 0, 0.02), 0.2, 2.2, (0.8, 0.9, 1.0))              # rim
-camera((0.0, -0.20, 0.34), (0.0, 0.0, 0.012), lens=60, dof=0.385, fstop=5.6)
+camera((0.02, -0.21, 0.33), (0.016, -0.004, 0.022), lens=92, dof=0.372, fstop=9.0)
 render(SCR + "/plates/coral%s.png" % os.environ.get("TAG", ""))

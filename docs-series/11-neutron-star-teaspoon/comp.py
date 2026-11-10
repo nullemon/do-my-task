@@ -56,9 +56,9 @@ def note(T, t, a, b, s, col=DIM, top=False):
 
 def banner(T, t, a, b, s, col=AMB):
     """persistent top label for hypotheticals"""
-    al = win(t, a, b, 0.8, 0.6); y = hv(64, 252); x = hv(120, W / 2); size = hv(22, 28)
-    T.put((x, y), s, size, al, col=col, anchor=hv("l", "c"), wt="M")
-    w = text_w(s, size, size * 0.16, "M"); x0 = x if not VERT else x - w / 2
+    al = win(t, a, b, 0.8, 0.6); y = hv(64, 252); x = hv(120, 110); size = hv(22, 28)
+    T.put((x, y), s, size, al, col=col, anchor="l", wt="M")
+    w = text_w(s, size, size * 0.16, "M"); x0 = x
     T.line((x0, y + size * 1.55), (x0 + w, y + size * 1.55), al * 0.8, col)
 
 
@@ -153,7 +153,7 @@ FIRE_COLS = [(0.85, 0.92, 1.0), (1.0, 0.85, 0.55), (1.0, 0.55, 0.20), (1.0, 0.35
 # ================================================================================================= 1  hook
 def spoon_pose():
     """(bead x, bead y, scale, angle) of the hero spoon over the Earth plate"""
-    return hv((600, 520, 0.96, 0.0), (330, 930, 0.82, 52.0))
+    return hv((600, 520, 0.96, 0.0), (350, 760, 0.82, 52.0))
 
 
 def shot_hook(t, lt):
@@ -163,15 +163,15 @@ def shot_hook(t, lt):
     b = ss(2.5, 3.9, t)
     spoon(img, u, bx, by, sc, ang, bead=b)
     fl = 1 + 0.05 * math.sin(t * 9.0) + 0.03 * math.sin(t * 23.0)
-    glare(img, bx, by - 6 * sc, 0.55 * b * fl, s=hv(1.0, 1.0))
+    glare(img, bx, by, 0.8 * b * fl, s=1.0)
     img = bloom(img, 0.72, 0.6)
     T = Text()
-    T.put(hv((116, 96), (W / 2, 250)), "1 TEASPOON", hv(92, 96), win(t, 0.9, 8.9, 0.7, 0.7), anchor=hv("l", "c"), wt="XL", track=hv(12, 9))
-    T.put(hv((122, 214), (W / 2, 372)), "5 mL OF NEUTRON-STAR MATTER", hv(27, 30), win(t, 2.8, 8.9, 0.8, 0.7), col=COOL, anchor=hv("l", "c"))
-    T.put(hv((122, 264), (W / 2, 426)), "≈ A MOUNTAIN", hv(40, 46), win(t, 6.3, 8.9, 0.7, 0.7), col=YEL, anchor=hv("l", "c"), wt="R")
-    T.put(hv((118, 110), (W / 2, 260)), "BILLIONS OF TONNES", hv(54, 60), win(t, 10.0, 17.4, 0.7, 0.7), anchor=hv("l", "c"), wt="XL")
-    cap(T, t, 12.0, 14.2, hv(["MORE THAN EVERY HUMAN ALIVE, COMBINED"], ["MORE THAN EVERY HUMAN", "ALIVE, COMBINED"]), hv(196, 356), x=hv(122, W / 2), size=hv(26, 32), col=COOL)
-    cap(T, t, 14.6, 20.9, hv(["SO WHAT WOULD IT DO, IF YOU BROUGHT IT HOME?"], ["SO WHAT WOULD IT DO,", "IF YOU BROUGHT IT HOME?"]), hv(196, 1200), x=hv(122, W / 2), size=hv(30, 38))
+    T.put(hv((116, 96), (W / 2, 1000)), "1 TEASPOON", hv(92, 96), win(t, 0.9, 8.9, 0.7, 0.7), anchor=hv("l", "c"), wt="XL", track=hv(12, 9))
+    T.put(hv((122, 214), (W / 2, 1122)), "5 mL OF NEUTRON-STAR MATTER", hv(27, 30), win(t, 2.8, 8.9, 0.8, 0.7), col=COOL, anchor=hv("l", "c"))
+    T.put(hv((122, 264), (W / 2, 1176)), "≈ A MOUNTAIN", hv(40, 46), win(t, 6.3, 8.9, 0.7, 0.7), col=YEL, anchor=hv("l", "c"), wt="R")
+    T.put(hv((118, 110), (W / 2, 1010)), "BILLIONS OF TONNES", hv(54, 60), win(t, 10.0, 17.4, 0.7, 0.7), anchor=hv("l", "c"), wt="XL")
+    cap(T, t, 12.0, 14.2, hv(["MORE THAN EVERY HUMAN ALIVE, COMBINED"], ["MORE THAN EVERY HUMAN", "ALIVE, COMBINED"]), hv(196, 1110), x=hv(122, W / 2), size=hv(26, 32), col=COOL)
+    cap(T, t, 14.6, 20.9, hv(["SO WHAT WOULD IT DO, IF YOU BROUGHT IT HOME?"], ["SO WHAT WOULD IT DO,", "IF YOU BROUGHT IT HOME?"]), hv(196, 1110), x=hv(122, W / 2), size=hv(30, 38))
     note(T, t, 1.5, 20.9, "ILLUSTRATION · BEAD AND EARTH NOT TO SCALE", top=True)
     return T.add_to(img)
 
@@ -305,7 +305,7 @@ def shot_city(t, lt):
         pts = np.array([[*(A + off), 0], [*(B + off), 0], [*(A + off - nvec * 0.7), 0], [*(A + off + nvec * 0.7), 0], [*(B + off - nvec * 0.7), 0], [*(B + off + nvec * 0.7), 0]])
         px, py, _ = cam.proj(pts)
         Lw.seg(px[0], py[0], px[1], py[1], 255 * a2, 2); Lw.seg(px[2], py[2], px[3], py[3], 255 * a2, 2); Lw.seg(px[4], py[4], px[5], py[5], 255 * a2, 2)
-        T.put((px[0] - 14, py[0] - hv(4, 6)), hv("MANHATTAN: 21.6 KM LONG", "MANHATTAN: 21.6 KM"), hv(20, 24), a2, col=AMB, anchor="r", wt="R")
+        T.put((px[0] - 14, py[0] - hv(4, 6)), hv("MANHATTAN: 21.6 KM LONG", "21.6 KM"), hv(20, 24), a2, col=AMB, anchor="r", wt="R")
     a3 = win(t, 63.4, 74.4, 0.8, 0.6)
     if a3 > 0.004:
         yb = sy - rp - hv(34, 40); Lc = Lines()
@@ -313,9 +313,9 @@ def shot_city(t, lt):
         Lc.add_to(img, (0.75, 0.9, 1.0), gain=0.9, glow=0.3)
         T.put((sx, yb - hv(40, 50)), "≈ 25 KM", hv(28, 34), a3, anchor="c", wt="R")
     Lw.add_to(img, (1.0, 0.72, 0.36), gain=0.8, glow=0.2)
-    cap(T, t, 58.6, 64.6, ["A NEUTRON STAR"], hv(880, 1330), size=hv(44, 50), wt="XL")
-    cap(T, t, 70.2, 74.4, hv(["MORE MASS THAN THE ENTIRE SUN"], ["MORE MASS THAN", "THE ENTIRE SUN"]), hv(880, 1300), size=hv(34, 42))
-    cap(T, t, 71.4, 74.4, ["TYPICALLY ≈ 1.4 SOLAR MASSES"], hv(940, 1440), size=hv(22, 28), col=COOL)
+    cap(T, t, 58.6, 64.6, ["A NEUTRON STAR"], hv(880, 1300), size=hv(44, 50), wt="XL")
+    cap(T, t, 70.2, 74.4, hv(["MORE MASS THAN THE ENTIRE SUN"], ["MORE MASS THAN", "THE ENTIRE SUN"]), hv(880, 1220), size=hv(34, 42))
+    cap(T, t, 71.4, 74.4, ["TYPICALLY ≈ 1.4 SOLAR MASSES"], hv(940, 1362), size=hv(22, 28), col=COOL)
     note(T, t, 60.8, 74.4, hv("STAR AND MAP AT THE SAME SCALE · REAL ELEVATION DATA, RELIEF EXAGGERATED · PURELY A SIZE COMPARISON",
                              ["STAR AND MAP TO THE SAME SCALE", "REAL ELEVATION DATA · RELIEF EXAGGERATED"]))
     return T.add_to(img)
@@ -361,7 +361,7 @@ def shot_mass(t, lt):
     img = skyb.copy()
     bx, by, sc, ang = hv((1210 + lt * 2.0, 560 - lt * 0.8, 1.22, -8.0), (330, 560 - lt * 1.2, 0.90, 50.0))
     spoon(img, 0.25 + lt / 16.8 * 0.4, bx, by, sc, ang, bead=1.0)
-    glare(img, bx, by - 6 * sc, 0.6 * (1 + 0.05 * math.sin(t * 9)), s=1.2)
+    glare(img, bx, by, 0.8 * (1 + 0.05 * math.sin(t * 9)), s=1.2)
     img = bloom(img, 0.72, 0.6)
     T = Text()
     x0 = hv(120, 110); y0 = hv(190, 990); bw = hv(720, 860); rh = hv(98, 62)
@@ -468,11 +468,11 @@ def shot_answer(t, lt):
     fl = 1 + 0.05 * math.sin(t * 9.0) + pre * 0.25 * math.sin(t * 31.0)
     sa = 1 - ss(0.0, 0.22, tau)
     if sa > 0.003: spoon(img, u, bx, by, sc, ang, bead=1.0, gain=1 + 1.2 * pre * ss(-0.4, 0, tau), alpha=sa)
-    glare(img, bx, by - 6 * sc, (0.55 + 1.6 * pre ** 2) * fl * (1 - ss(0.3, 2.0, tau)) + 0.001, s=1.0 + 0.8 * pre)
+    glare(img, bx, by, (0.8 + 1.6 * pre ** 2) * fl * (1 - ss(0.3, 2.0, tau)) + 0.001, s=1.0 + 0.8 * pre)
     if tau > 0:
         L = cached(("expl", "blast"), lambda: expl_layers(2, kind="ball"))
         Rb = 40 + 3300 * (1 - math.exp(-tau / 2.6))
-        k = (0.5 + 1.5 * math.exp(-tau / 1.2)) * (1 - 0.55 * ss(3.0, 9.5, tau))
+        k = (0.22 + 1.6 * math.exp(-tau / 1.0)) * (1 - 0.5 * ss(3.0, 9.5, tau))
         cols = [tuple(lerp(np.array(b_), np.array(f_), ss(0.3, 3.5, tau))) for b_, f_ in zip(BLUE_COLS, FIRE_COLS)]
         draw_expl(img, L, bx, by, Rb, cols, [1.1 * k, 0.9 * k, 0.8 * k, 0.7 * k, 0.6 * k, 0.5 * k], rot=tau * 2.0, spread=0.02)
         add_glint(img, bx, by, 2.4 * math.exp(-tau / 1.4), (1.0, 0.95, 0.85), sig=220 + 500 * tau)
@@ -481,13 +481,14 @@ def shot_answer(t, lt):
         img += np.array([0.95, 0.97, 1.0], F32) * 1.3 * math.exp(-tau / 0.55)
         img *= 1 - 0.25 * ss(4.0, 9.5, tau)
     T = Text()
-    cap(T, t, 172.6, 180.6, ["YOU COULD NOT SCOOP IT."], hv(150, 262), x=hv(1000, W / 2), size=hv(44, 52), wt="XL")
-    cap(T, t, 175.6, 180.6, hv(["IT IS ONLY THIS DENSE BECAUSE THE WEIGHT", "OF A WHOLE STAR IS PRESSING DOWN ON IT"], ["THIS DENSE ONLY BECAUSE", "THE WEIGHT OF A WHOLE STAR", "PRESSES DOWN ON IT"]), hv(236, 356), x=hv(1004, W / 2), size=hv(22, 28), col=COOL)
-    cap(T, t, 182.0, 188.0, hv(["AWAY FROM THAT GRAVITY,", "NOTHING HOLDS IT TOGETHER"], ["AWAY FROM THAT GRAVITY,", "NOTHING HOLDS IT TOGETHER"]), hv(150, 262), x=hv(1000, W / 2), size=hv(30, 36))
-    cap(T, t, 190.6, 197.8, hv(["IT EXPANDS · INSTANTLY · VIOLENTLY"], ["IT EXPANDS", "INSTANTLY · VIOLENTLY"]), hv(880, 1250), size=hv(34, 42))
-    cap(T, t, 192.0, 197.8, hv(["ROUGH ESTIMATE: THE ENERGY OF HUNDREDS TO THOUSANDS OF DINOSAUR-KILLING IMPACTS"], ["ROUGH ESTIMATE: THE ENERGY OF", "HUNDREDS TO THOUSANDS OF", "DINOSAUR-KILLING IMPACTS"]), hv(940, 1380), size=hv(22, 26), col=AMB, wt="R", gap=1.4, stagger=0.0)
-    banner(T, t, 181.8, 197.8, "WHAT PHYSICS SAYS WOULD REALLY HAPPEN · ORDER-OF-MAGNITUDE ONLY" if not VERT else "WHAT WOULD REALLY HAPPEN")
+    cap(T, t, 172.6, 180.6, ["YOU COULD NOT SCOOP IT."], hv(150, 1010), x=hv(1000, W / 2), size=hv(44, 52), wt="XL")
+    cap(T, t, 175.6, 180.6, hv(["IT IS ONLY THIS DENSE BECAUSE THE WEIGHT", "OF A WHOLE STAR IS PRESSING DOWN ON IT"], ["THIS DENSE ONLY BECAUSE", "THE WEIGHT OF A WHOLE STAR", "PRESSES DOWN ON IT"]), hv(236, 1100), x=hv(1004, W / 2), size=hv(22, 28), col=COOL)
+    cap(T, t, 182.0, 188.0, hv(["AWAY FROM THAT GRAVITY,", "NOTHING HOLDS IT TOGETHER"], ["AWAY FROM THAT GRAVITY,", "NOTHING HOLDS IT TOGETHER"]), hv(150, 1030), x=hv(1000, W / 2), size=hv(30, 36))
+    cap(T, t, 190.6, 197.8, hv(["IT EXPANDS · INSTANTLY · VIOLENTLY"], ["IT EXPANDS", "INSTANTLY · VIOLENTLY"]), hv(150, 350), size=hv(34, 42))
+    cap(T, t, 192.0, 197.8, hv(["ROUGH ESTIMATE: THE ENERGY OF HUNDREDS TO THOUSANDS OF DINOSAUR-KILLING IMPACTS"], ["ROUGH ESTIMATE: THE ENERGY OF", "HUNDREDS TO THOUSANDS OF", "DINOSAUR-KILLING IMPACTS"]), hv(214, 500), size=hv(22, 26), col=AMB, wt="R", gap=1.4, stagger=0.0)
+    banner(T, t, 181.8, 197.8, "WHAT WOULD REALLY HAPPEN")
     note(T, t, 170.4, 188.0, "ILLUSTRATION · BEAD AND EARTH NOT TO SCALE", top=True)
+    note(T, t, 190.8, 197.8, "ORDER-OF-MAGNITUDE ESTIMATE · SEE SOURCES", top=True)
     return T.add_to(img)
 
 
@@ -501,7 +502,7 @@ def shot_thoughtA(t, lt):
     spoon(img, u, bx, by, sc, ang + (2.5 * ss(0, 3, tau) if tau > 0 else 0), bead=present)
     fl = 1 + 0.05 * math.sin(t * 9.0)
     if tau <= 0:
-        glare(img, bx, by - 6 * sc, 0.55 * fl)
+        glare(img, bx, by, 0.8 * fl)
     else:                                                    # the bead drops straight "down", toward the Earth
         y = by + 0.5 * 2100 * tau * tau; ylimb = hv(770, 1420) + 30
         if y < H + 200:
@@ -511,11 +512,11 @@ def shot_thoughtA(t, lt):
         if ta2 > 0: add_glint(img, bx, ylimb + 120, 0.9 * math.exp(-ta2 / 0.5), (1.0, 0.85, 0.6), sig=26 + 60 * ta2)
     img = bloom(img, 0.72, 0.6)
     T = Text()
-    banner(T, t, 198.8, 220.2, "THOUGHT EXPERIMENT · IF IT SOMEHOW STAYED COMPRESSED" if not VERT else "THOUGHT EXPERIMENT")
-    cap(T, t, 203.2, 209.4, hv(["A BEAD ≈ 2 CM WIDE", "WEIGHING BILLIONS OF TONNES"], ["A BEAD ≈ 2 CM WIDE", "BILLIONS OF TONNES"]), hv(150, 340), x=hv(1000, W / 2), size=hv(34, 42))
-    cap(T, t, 210.4, 216.0, hv(["WITHIN A FEW METRES OF IT,", "ITS GRAVITY BEATS THE EARTH'S"], ["WITHIN A FEW METRES,", "ITS GRAVITY BEATS", "THE EARTH'S"]), hv(150, 340), x=hv(1000, W / 2), size=hv(30, 38))
-    cap(T, t, 211.6, 216.0, ["≈ 1 g AT 3–6 METRES"], hv(250, 520), x=hv(1004, W / 2), size=hv(22, 28), col=COOL)
-    cap(T, t, 216.6, 220.0, ["NOTHING COULD HOLD IT UP"], hv(880, 1250), size=hv(34, 40))
+    banner(T, t, 198.8, 220.2, "THOUGHT EXPERIMENT")
+    cap(T, t, 203.2, 209.4, hv(["A BEAD ≈ 2 CM WIDE", "WEIGHING BILLIONS OF TONNES"], ["A BEAD ≈ 2 CM WIDE", "BILLIONS OF TONNES"]), hv(150, 1030), x=hv(1000, W / 2), size=hv(34, 42))
+    cap(T, t, 210.4, 216.0, hv(["WITHIN A FEW METRES OF IT,", "ITS GRAVITY BEATS THE EARTH'S"], ["WITHIN A FEW METRES,", "ITS GRAVITY BEATS", "THE EARTH'S"]), hv(150, 1000), x=hv(1000, W / 2), size=hv(30, 38))
+    cap(T, t, 211.6, 216.0, ["≈ 1 g AT 3–6 METRES"], hv(250, 1180), x=hv(1004, W / 2), size=hv(22, 28), col=COOL)
+    cap(T, t, 216.6, 220.0, ["NOTHING COULD HOLD IT UP"], hv(150, 1040), x=hv(1000, W / 2), size=hv(34, 40))
     note(T, t, 199.0, 220.0, "NOT PHYSICALLY POSSIBLE · BEAD AND EARTH NOT TO SCALE", top=True)
     return T.add_to(img)
 
@@ -535,7 +536,7 @@ def sim_minutes(t):
 
 
 def shot_thoughtB(t, lt):
-    R = hv(400, 430) * (1 + 0.004 * lt); cx, cy = hv((W * 0.44, 540), (W / 2, 800)); ang = 54.0
+    R = hv(370, 400) * (1 + 0.004 * lt); cx, cy = hv((W * 0.40, 560), (W / 2, 800)); ang = 54.0
     skyb = cached(("sky", "thB"), lambda: render_sky(look_at((0, 0, 0), norm([0.7, -0.3, 0.64])), FL(46), gain=0.7, mw_gain=1.4))
     bg = skyb.copy(); img = bg.copy()
     M = nyc_up_M() @ rot_axis((0, 1, 0), math.radians(-12))
@@ -552,7 +553,7 @@ def shot_thoughtB(t, lt):
     glare(img, cx, cy - R * pos, 0.34, s=0.6)
     img = bloom(img, 0.74, 0.6)
     T = Text()
-    banner(T, t, 220.8, 236.2, "THOUGHT EXPERIMENT · IF IT SOMEHOW STAYED COMPRESSED" if not VERT else "THOUGHT EXPERIMENT")
+    banner(T, t, 220.8, 236.2, "THOUGHT EXPERIMENT")
     a = win(t, 221.6, 236.2, 0.8, 0.6)
     tag(T, cx, cy - R, "NEW YORK", a, dx=hv(40, 30), dy=-30)
     tag(T, cx, cy + R, hv("FAR SIDE: INDIAN OCEAN, SOUTH-WEST OF AUSTRALIA", "FAR SIDE: INDIAN OCEAN"), a * ss(229.0, 230.0, t), dx=hv(40, 30), dy=hv(34, 40))
@@ -580,9 +581,9 @@ def orbit(t):
 
 def shot_merger(t, lt):
     a, ph = orbit(t); zoom = 1 + 0.5 * ss(236.4, 259.9, t)
-    Rp = hv(52, 56) * zoom; cx, cy = W / 2, hv(500, 800); inc = math.radians(62)
+    Rp = hv(72, 70) * zoom; cx, cy = W / 2, hv(500, 800); inc = math.radians(62)
     f = FL(40); m = 300
-    skyc = cached(("skyL", "merge"), lambda: render_sky(look_at((0, 0, 0), norm([0.6, 0.6, -0.5])), f, gain=1.0, mw_gain=2.0, size=(W + 2 * m, H + 2 * m)))
+    skyc = cached(("skyL", "merge"), lambda: render_sky(look_at((0, 0, 0), norm([0.25, -0.93, -0.25]), up=(1, 0, 0.3)), f, gain=1.0, mw_gain=1.6, size=(W + 2 * m, H + 2 * m)))
     # gravitational waves: a two-armed spiral of tiny radial displacements of the background (plus a faint glow)
     xs = np.arange(W, dtype=F32) + 0.5 - cx; ys = np.arange(H, dtype=F32) + 0.5 - cy; X, Y = np.meshgrid(xs, ys)
     Yd = Y / math.cos(inc) * 0.75 + Y * 0.25
@@ -592,7 +593,7 @@ def shot_merger(t, lt):
     wave = np.sin(2 * (th - ph) + kr * r) * np.clip((r - a * Rp * 0.5) / (Rp * 2.5), 0, 1) * np.exp(-r / hv(1500, 1700))
     dsp = amp * wave
     img = cv2.remap(skyc, (X + cx + m + X / r * dsp).astype(F32), (Y + cy + m + Y / r * dsp).astype(F32), cv2.INTER_LINEAR)
-    img += (np.clip(wave, 0, 1) ** 3 * amp / 21.0 * 0.11)[..., None] * np.array([0.45, 0.65, 1.0], F32)
+    img += (np.clip(wave, 0, 1) ** 2 * amp / 21.0 * 0.30)[..., None] * np.array([0.40, 0.62, 1.0], F32)
     # the two stars
     stars = []
     for sgn in (1, -1):
@@ -642,7 +643,7 @@ def shot_kilonova(t, lt):
     tau = t - T_MERGE
     img, cx, cy, Rk = kilonova_img(t, max(tau, 0.0))
     img = bloom(img, 0.70, 0.8)
-    img += np.array([0.95, 0.97, 1.0], F32) * 1.2 * math.exp(-max(tau, 0) / 0.6)
+    img += np.array([0.95, 0.97, 1.0], F32) * 1.2 * math.exp(-max(tau, 0) / 0.22)
     T = Text()
     T.put(hv((120, 130), (W / 2, 250)), "KILONOVA", hv(60, 68), win(t, 261.6, 279.0, 0.8, 0.6), anchor=hv("l", "c"), wt="XL", track=hv(14, 10))
     cap(T, t, 266.0, 271.2, hv(["THIS TIME THE MATTER ESCAPES"], ["THIS TIME THE MATTER ESCAPES"]), hv(880, 1260), size=hv(30, 34))
@@ -651,7 +652,7 @@ def shot_kilonova(t, lt):
     for i, (z, sym, name, col) in enumerate(((78, "Pt", "PLATINUM", (215, 225, 235)), (79, "Au", "GOLD", YEL))):
         al = win(t, 269.2 + 0.6 * i, 279.0, 0.8, 0.6)
         if al <= 0.004: continue
-        s_ = hv(150, 170); x0 = hv(1470 + i * 180, W / 2 - 185 + i * 200); y0 = hv(150, 300)
+        s_ = hv(150, 170); x0 = hv(1470 + i * 180, W / 2 - 185 + i * 200); y0 = hv(150, 352)
         for (p0, p1) in (((x0, y0), (x0 + s_, y0)), ((x0 + s_, y0), (x0 + s_, y0 + s_)), ((x0 + s_, y0 + s_), (x0, y0 + s_)), ((x0, y0 + s_), (x0, y0))): T.line(p0, p1, al * 0.9, col)
         T.put((x0 + 12, y0 + 10), str(z), hv(20, 22), al, col=col, wt="R", track=1)
         T.put((x0 + s_ / 2, y0 + s_ * 0.24), sym, hv(62, 70), al, col=col, anchor="c", wt="L", track=2)
@@ -683,8 +684,8 @@ def shot_gold(t, lt):
 def shot_end(t, lt):
     q = ss(293.8, 297.4, t)
     Mb, Mc = star_M(0.5 + 0.06 * lt, chi=28, incl=24, roll=-14)
-    R = hv(230, 230) * (1 + 0.010 * lt) * (1 + 0.22 * q); cx, cy = W / 2, hv(470, 780)
-    img = ns_scene("title", cx, cy, R, Mb, Mc=Mc, lines=0.20 * (1 - q), beam=0.28 * (1 - q), drift=(60 + lt * 5, 20 + lt * 1.5), gain=(1 - q) ** 1.5, lens=1 + 1.3 * q, halo=1 - q)
+    R = hv(230, 230) * (1 + 0.010 * lt) * (1 + 0.12 * q); cx, cy = W / 2, hv(470, 780)
+    img = ns_scene("title", cx, cy, R, Mb, Mc=Mc, lines=0.20 * (1 - q), beam=0.28 * (1 - q), drift=(60 + lt * 5, 20 + lt * 1.5), gain=(1 - q) ** 1.5, lens=1 + 0.18 * q, halo=1 - q)
     if q > 0:
         Lr = Lines(); Lr.circle(cx, cy, R + 1.5, 255 * q, 2); Lr.add_to(img, (1.0, 0.9, 0.75), gain=0.55, glow=1.2)
     img = bloom(img, 0.7, 0.75)
@@ -712,7 +713,7 @@ def shot_final(t, lt):
         r = bloom(r, 0.72, 0.7)
         img = r if img is None else img * (1 - w) + r * w
     T = Text()
-    cap(T, t, 299.8, 303.2, hv(["YOU WERE NEVER GOING TO HOLD IT."], ["YOU WERE NEVER", "GOING TO HOLD IT."]), hv(150, 270), x=hv(1000, W / 2), size=hv(34, 42))
+    cap(T, t, 299.8, 303.2, hv(["YOU WERE NEVER GOING TO HOLD IT."], ["YOU WERE NEVER", "GOING TO HOLD IT."]), hv(150, 1030), x=hv(1000, W / 2), size=hv(34, 42))
     cap(T, t, 304.6, 310.4, hv(["BUT YOU MAY ALREADY BE WEARING A LITTLE OF ONE."], ["BUT YOU MAY ALREADY BE", "WEARING A LITTLE OF ONE."]), hv(850, 1230), x=W / 2, anchor="c", size=hv(32, 38))
     a = win(t, 307.4, 312.2, 0.9, 0.9)
     T.put((W / 2, hv(950, 1400)), "ONE TEASPOON OF A NEUTRON STAR", hv(20, 24), a, col=COOL, anchor="c", wt="R", track=hv(6, 4))

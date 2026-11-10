@@ -648,13 +648,13 @@ def shot_future(t, lt):
 # ================================================================================================= 14 far future
 def shot_far(t, lt):
     a0, b0 = SHOT["far"]; u = lt / (b0 - a0)
-    def bg(): return render_sky(rot_axis((0, 1, 0), 5.0) @ SKY_R, FL(50), gain=0.6, mw_gain=1.3)
+    def bg(): return render_sky(rot_axis((0, 1, 0), 5.0) @ SKY_R, FL(50), gain=1.0, mw_gain=2.6)
     img = layer("far_bg", bg).copy()
     rg = ss(S['far1'] + 9.6, S['far1'] + 14.5, t)                    # the red giant rises
-    if not V: E = np.array([150.0, 600.0]); ER = 27.0; dirn = np.array([1.0, 0.0]); gx, gy, gr = 2500 - 500 * rg, 1500, 1500
+    if not V: E = np.array([150.0, 600.0]); ER = 27.0; dirn = np.array([1.0, 0.0]); gx, gy, gr = 2750 - 400 * rg, 1500, 1500
     else: E = np.array([540.0, 520.0]); ER = 15.5; dirn = np.array([0.0, 1.0]); gx, gy, gr = 540, 3350 - 520 * rg, 1500
     if rg > 0:
-        lay = np.zeros((H, W, 3), F32); put_disc(lay, sun_sprite(1500, "giant"), gx, gy, gr)
+        lay = np.zeros((H, W, 3), F32); put_disc(lay, sun_sprite(3000, "giant"), gx, gy, gr)
         y_, x_ = np.mgrid[0:H, 0:W].astype(F32); d = np.clip(np.hypot(x_ - gx, y_ - gy) / gr - 1, 0, None)
         lay += (0.55 * np.exp(-d / 0.02) + 0.22 * np.exp(-d / 0.12))[..., None] * np.array([1.0, 0.30, 0.08], F32) * (d > 0)[..., None]
         img = img * (1 - 0.6 * rg) + lay * rg
@@ -685,7 +685,8 @@ def shot_far(t, lt):
     if V:
         T.put((90, 760), "≈ 50 BILLION YEARS", 40, a1, wt="XL", anchor="l", track=2); T.put((92, 814), "FOR EARTH'S DAY TO", 18, a1, col=DIM, anchor="l"); T.put((92, 842), "MATCH THE MOON'S MONTH", 18, a1, col=DIM, anchor="l")
         T.put((90, 930), "≈ 5 BILLION YEARS", 40, a2, col=RED, wt="XL", anchor="l", track=2); T.put((92, 984), "UNTIL THE SUN SWELLS", 18, a2, col=DIM, anchor="l"); T.put((92, 1012), "INTO A RED GIANT", 18, a2, col=DIM, anchor="l")
-    foot(T, "EARTH, MOON AND THEIR SEPARATION TO SCALE  ·  RED GIANT: ARTIST'S IMPRESSION, NOT TO SCALE", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
+    if V: foot(T, "EARTH, MOON AND THEIR SEPARATION TO SCALE  ·  RED GIANT: ARTIST'S IMPRESSION, NOT TO SCALE", win(t, a0 + 1.0, b0), y=440)
+    else: T.put((120, 1034), "EARTH, MOON AND SEPARATION TO SCALE  ·  RED GIANT: ARTIST'S IMPRESSION", 16, win(t, a0 + 1.0, b0) * 0.9, col=DIM)
     return T.add_to(img)
 
 
@@ -708,18 +709,20 @@ def shot_window(t, lt):
     dist = np.where(tt < 0, (np.clip(1 + tt / 4.56, 1e-4, None)) ** 0.42, 1 + tt * 3.8e-5 * 1e9 / 384400e0 / 1e0 * 1.0)     # schematic past; linear future (3.8 cm/yr)
     dist = np.where(tt < 0, dist, 1 + tt * 1e9 * 3.8e-5 / 384400.0)
     hi = 1.062 / dist; lo = 0.905 / dist
-    rev = ss(a0 + 0.6, a0 + 5.0, t)
+    rev = ss(a0 + 0.5, a0 + 3.6, t)
     n = max(2, int(len(tt) * rev))
     L = Lines(); Lb = Lines(); Ly = Lines()
     L.seg(X0, Y(1.0), X1, Y(1.0), 255, 1)
     top = RB + 0.12; hid = np.where(hi > top, np.nan, hi); lod = np.where(lo > top, np.nan, lo); hi = np.minimum(hi, top); lo = np.minimum(lo, top)
     Lb.poly(X(tt[:n]), Y(hid[:n]), 255, 2); Lb.poly(X(tt[:n]), Y(lod[:n]), 150, 1)
+    Lb.l[:] = (Lb.l.astype(F32) * np.clip((np.arange(H, dtype=F32)[:, None] - (Y(top) + 6)) / 90.0, 0, 1)).astype(np.uint8)
     # band fill
     band = np.zeros((H, W), np.uint8)
     pts = np.concatenate([np.stack([X(tt[:n]), Y(hi[:n])], 1), np.stack([X(tt[:n]), Y(lo[:n])], 1)[::-1]]).astype(np.int32)
     cv2.fillPoly(band, [pts], 255, cv2.LINE_AA)
     bf = band.astype(F32) / 255
     xx = np.arange(W, dtype=F32)[None, :]; yy = np.arange(H, dtype=F32)[:, None]
+    bf = bf * np.clip((yy - (Y(top) + 6)) / 90.0, 0, 1) * np.clip((X(tt[n - 1]) - xx) / 46.0, 0, 1) if rev < 1 else bf * np.clip((yy - (Y(top) + 6)) / 90.0, 0, 1)
     above = (yy < Y(1.0)).astype(F32)
     img = img * (1 - 0.35 * bf[..., None])
     img += (bf * above)[..., None] * np.array([0.30, 0.50, 0.95], F32) * 0.34 + (bf * (1 - above))[..., None] * np.array([1.0, 0.50, 0.12], F32) * 0.26

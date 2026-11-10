@@ -66,8 +66,9 @@ Neptune 4.2 h; Pluto 5.5 h (mean distance; 4.6 h at the 2015 fly-by).
   the 0.10° disc crosses a level horizon in ≈ 10 s at the equator, ignoring refraction *(computed; "about ten seconds")*.
 - **Saturn.** Rotation ≈ 10 h 33 min *(from memory; Cassini ring-seismology value)*. Ring radii used (Saturn radii):
   C 1.24–1.53, B 1.53–1.95, Cassini division 1.95–2.03, A 2.03–2.27, Encke gap 2.21, F 2.33 *(from memory)*. The view
-  is computed for 6° north with the Sun 2° north of the ring plane: the rings rise from the horizon 3–8° south of
-  the sunset point, almost vertically.
+  is computed for 14° north (8° north in the 9:16 film) with the Sun 2° north of the ring plane: the outer edge of
+  the A ring meets the horizon about 9° south of the sunset point and the band leans away from the vertical by the
+  latitude. The apparent curvature of the arch is real but small inside a 24° frame.
 - **Uranus.** Tilt 97.8°, orbit 84 years, each pole ≈ 42 years of sunlight then 42 of darkness (JPL Night Sky Network;
   Guinness World Records; Britannica; EBSCO). Rotation 17 h 14 min *(from memory)*. *(Computed)* at a pole the Sun's
   elevation changes by at most ≈ 0.02° per day near equinox, so the 0.028° disc itself crosses the horizon in a day or

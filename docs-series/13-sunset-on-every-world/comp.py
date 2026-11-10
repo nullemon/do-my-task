@@ -71,7 +71,7 @@ def hud(ov, w, a, speed="TIME-LAPSE", extra=None):
         ov.text(x, y + 168, day, size=17, a=0.8 * a, track=0.26)
         ov.text(W - 96, y + 6, "SAME LENS ON EVERY WORLD", size=15, a=0.75 * a, track=0.3, anchor="r"); ov.text(W - 96, y + 32, "24-DEGREE FIELD OF VIEW  .  " + speed, size=15, a=0.75 * a, track=0.3, anchor="r")
         ov.text(W / 2, H - 58, credit, size=15, wt="Regular", a=0.92 * a, track=0.24, anchor="m")
-        return [(40, 40, 760, 320, 0.22 * a), (W - 600, 50, W - 40, 180, 0.2 * a), (W / 2 - 9.5 * len(credit) - 30, H - 76, W / 2 + 9.5 * len(credit) + 30, H - 30, 0.5 * a)]
+        return [(40, 40, 760, 320, 0.30 * a), (W - 600, 50, W - 40, 180, 0.2 * a), (W / 2 - 9.5 * len(credit) - 30, H - 76, W / 2 + 9.5 * len(credit) + 30, H - 30, 0.5 * a)]
     x, y = 70, int(H * 0.125)
     ov.text(x, y, name, size=76, wt="ExtraLight", a=a, track=0.3, display=True)
     ov.line([(x, y + 108), (W - 70, y + 108)], a=0.5 * a, width=1.2)
@@ -242,7 +242,7 @@ def sh_jupiter(tl, u, ov):
     L = cloud_ground(pl, C(1.0, 0.62, 0.32) * 5.0 * (0.25 + 0.75 * vis), C(1.0, 0.55, 0.30) * 1.6, C(0.34, 0.36, 0.52) * 0.34, fn, 8.0e5)
     return compose(pl, sky, L), 1.2
 def sh_saturn(tl, u, ov):
-    pl = plate("saturn"); off = hv(-4.0, -4.2); sa = -off; se = 2.3 - 1.9 * u
+    pl = plate("saturn"); off = hv(-8.0, -5.4); sa = -off; se = 2.3 - 1.9 * u
     def fn(EL, AZ):
         e = np.maximum(EL, 0); psi = ang(EL, AZ, se, sa)
         base = mixa(C(0.86, 0.66, 0.36), C(0.03, 0.05, 0.12), 1 - np.exp(-e / 3.6))
@@ -251,9 +251,9 @@ def sh_saturn(tl, u, ov):
         return base * 0.8 + glow
     sky = sky_half(pl, fn)
     if not hasattr(pl, "ring"):
-        rc, ra = rings(pl.EL, pl.AZ, 6.0, 2.0, off)
+        rc, ra = rings(pl.EL, pl.AZ, hv(14.0, 8.0), 2.0, off)
         ext = (1 - np.exp(-np.maximum(pl.EL, 0) / 2.2)) ** 1.3                     # the rings sink into the haze near the horizon
-        pl.ring = (rc * (C(1.0, 0.88, 0.70) * 1.25), (ra * ext)[..., None])
+        pl.ring = (rc * (C(1.0, 0.90, 0.74) * 1.45), (ra * ext)[..., None])
     ringL, aa = pl.ring; sky = sky * (1 - aa * 0.9) + ringL * aa * (0.75 + 0.25 * float(np.clip(se / 2.3, 0, 1)))
     x, y = pl.xy(se, sa); r = 0.104 * 0.2665 * pl.ppd
     sun_disc(sky, x, y, r, C(1.0, 0.95, 0.85) * 150, limb=0.3)
@@ -326,17 +326,17 @@ def sh_pluto(tl, u, ov):
 # ------------------------------------------------------------------------------------------------ KEPLER-16 (imagined moon)
 def sh_kepler(tl, u, ov):
     pl = plate("kepler"); s2 = pl.meta["second_sun"]; drop = 3.3 * u
-    seA = 3.2 - drop; saA = 0.0; seB = seA - 1.25; saB = s2["az"]
+    seA = 3.3 - drop; saA = 0.6; seB = seA - 0.45; saB = saA + s2["az"]
     colA = bbcolor(4450); colB = bbcolor(3300)
     def fn(EL, AZ):
         e = np.maximum(EL, 0); pA = ang(EL, AZ, seA, saA); pB = ang(EL, AZ, seB, saB)
         base = mixa(C(0.62, 0.30, 0.22), C(0.045, 0.04, 0.10), 1 - np.exp(-e / 5.0))
         base = base + C(1.0, 0.45, 0.16) * (0.4 * np.exp(-e / 1.3))[..., None]
-        g = colA * (0.9 * np.exp(-pA / 2.0) + 1.6 * np.exp(-pA / 0.6))[..., None] + colB * (0.35 * np.exp(-pB / 1.2) + 0.9 * np.exp(-pB / 0.3))[..., None]
+        g = colA * (0.8 * np.exp(-pA / 2.0) + 0.9 * np.exp(-pA / 0.6))[..., None] + colB * (0.30 * np.exp(-pB / 1.2) + 0.5 * np.exp(-pB / 0.3))[..., None]
         return base * 0.8 + g
     sky = sky_half(pl, fn) + stars(13, mw=False) * 0.12 * up(smooth(3.0, 8.0, half(pl.EL)))[..., None]
     xA, yA = pl.xy(seA, saA); rA = 0.92 * 0.2665 * pl.ppd; xB, yB = pl.xy(seB, saB); rB = 0.32 * 0.2665 * pl.ppd
-    sun_disc(sky, xB, yB, rB, colB * 9, limb=0.7); sun_disc(sky, xA, yA, rA, colA * 14, limb=0.6)
+    sun_disc(sky, xB, yB, rB, colB * 1.9, limb=0.5); sun_disc(sky, xA, yA, rA, colA * 2.4, limb=0.5)
     vA = sunvis(pl, xA, yA, rA); vB = sunvis(pl, xB, yB, rB)
     L = ground(pl, colA * 5.5 * vA, colB * 2.0 * vB, C(0.42, 0.30, 0.40) * 0.30)
     L = hazed(L, pl, horizon_sky(pl, fn, 0.4), 30000.0)

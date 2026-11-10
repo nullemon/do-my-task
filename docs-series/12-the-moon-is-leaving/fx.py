@@ -58,8 +58,11 @@ def sun_sprite(n=1500, kind="sun"):
             I += 0.10 * fac * (1 - mu) ** 0.5
             col = np.stack([I * 1.0, I ** 1.18 * 0.74, I ** 1.9 * 0.30], -1) * 1.18
         else:
-            g = cv2.GaussianBlur(wn, (0, 0), 26); g /= g.std(); g2 = cv2.GaussianBlur(wn, (0, 0), 7); g2 /= g2.std(); g3 = cv2.GaussianBlur(wn, (0, 0), 2.2); g3 /= g3.std()
-            cell = np.clip(0.5 + 0.30 * g + 0.20 * g2 + 0.10 * g3, 0, 1.3)
+            q = n / 1500.0
+            g = cv2.GaussianBlur(wn, (0, 0), 26 * q); g /= g.std(); g2 = cv2.GaussianBlur(wn, (0, 0), 9 * q); g2 /= g2.std(); g3 = cv2.GaussianBlur(wn, (0, 0), 3.5 * q); g3 /= g3.std()
+            g4 = cv2.GaussianBlur(wn, (0, 0), 1.6 * q) - cv2.GaussianBlur(wn, (0, 0), 3.5 * q); g4 /= g4.std()
+            lanes = np.clip(1 - np.abs(cv2.GaussianBlur(rng.standard_normal((n, n)).astype(F32), (0, 0), 12 * q)) * 12 * q * 6, 0, 1) ** 2
+            cell = np.clip(0.5 + 0.26 * g + 0.20 * g2 + 0.13 * g3 + 0.07 * g4 - 0.22 * lanes, 0, 1.3)
             ld = 1 - 0.75 * (1 - mu) - 0.15 * (1 - mu) ** 2
             I = ld * (0.45 + 0.75 * cell)
             col = np.stack([I * 1.0, I ** 1.8 * 0.36, I ** 2.8 * 0.08], -1) * 0.95

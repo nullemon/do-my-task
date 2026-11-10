@@ -9,7 +9,7 @@ PIC = dict(hook1="MARS (Blender plate, 24-degree lens): the small white Sun insi
  merc1="MERCURY from a crater rim: cratered regolith, black sky, the Sun 3.25 x wide (perihelion size).", merc2="Time-lapse: the disc sets, stops, climbs back, sets again; stars and the corona show while it is hidden.",
  venus1="VENUS: cracked basalt slabs under a dim orange overcast; no disc, only a brighter patch of cloud.", venus2="The overcast slowly darkens; heat shimmer near the ground.",
  jup="JUPITER cloud tops: billows and towers, high haze streaks; the tiny disc sets in real time (36 degrees per hour).",
- sat="SATURN cloud tops at 6 degrees north: the rings rise almost vertically out of the haze (C, B, Cassini division, A, Encke gap, F).",
+ sat="SATURN cloud tops at 14 degrees north: the rings rise out of the haze as a leaning band (C, B, Cassini division, A, Encke gap, F).",
  ura="URANUS near a pole: the Sun skims sideways along a teal cloud field and sinks; twilight glow remains. Neptune caption at the end.",
  titan1="TITAN: pebble shore of a hydrocarbon sea under orange haze, low hills across the bay.", titan2="The glow sinks and dims; the sea stays almost flat.",
  pluto1="PLUTO: pitted nitrogen-ice plain, water-ice blocks and mountains; the Sun as a point with diffraction spikes; stars.", pluto2="Blue haze layers hug the horizon as the Sun goes behind the mountains.",

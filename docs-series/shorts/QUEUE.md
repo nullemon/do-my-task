@@ -20,3 +20,5 @@ STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Sh
 | S11 | Planets at the Moon's distance | B_valley | queued |
 | S12 | Everything that happens in space while you watch this Short (30 s counters) | A_park | queued |
 | S13 | The dinosaur asteroid, seen from the ground | C_city | queued |
+
+NOTE: user loved S4 'Other Stars' format (locked shot, sky swaps huge real-size objects with flash + scene relight). S11 Planets at the Moon's distance moved up to run next.

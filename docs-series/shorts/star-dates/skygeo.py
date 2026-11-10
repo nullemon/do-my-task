@@ -5,7 +5,7 @@ import math
 import numpy as np
 from lib.core import f32
 
-LAT = 47.0                                    # a mid-northern-latitude valley (Alps / Carpathians latitude)
+LAT = 34.0                                    # a mid-latitude mountain valley (~34 deg N)
 EQ2GAL = np.array([[-0.0548755604, -0.8734370902, -0.4838350155],
                    [0.4941094279, -0.4448296300, 0.7469822445],
                    [-0.8676661490, -0.1980763734, 0.4559837762]])        # J2000 equatorial -> galactic
@@ -53,4 +53,4 @@ class Lens:
 
 
 def lens_for(vertical, hz):
-    return Lens(1080, 1920, 180.0, 50.0, 740.0, hz + 10) if vertical else Lens(1920, 1080, 180.0, 50.0, 520.0, hz + 10)
+    return Lens(1080, 1920, 180.0, 56.0, 700.0, hz + 10) if vertical else Lens(1920, 1080, 180.0, 68.0, 440.0, hz + 10)

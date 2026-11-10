@@ -90,7 +90,7 @@ def bv_temp(ci):
 
 def year_str(ly):
     y = int(round(YEAR_NOW - ly))
-    return f"{y}" if y >= 1 else f"{1 - y} BC"
+    return (f"{y}" if y >= 500 else f"{y} AD") if y >= 1 else f"{1 - y} BC"
 
 
 # ------------------------------------------------------------------------------------------------- text layers
@@ -187,10 +187,11 @@ def m31_sprite(S=640, seed=31):
 class Scene:
     def __init__(self, vertical=True):
         self.L = Layout(vertical); L = self.L; W, H = L.W, L.H
-        self.fg = Foreground(FG_PATH, L, hz_frac=0.80)
+        self.fg = Foreground(FG_PATH, L, hz_frac=0.80 if vertical else 0.88)
         self.hz = self.fg.horizon
         self.lens = lens_for(vertical, self.hz)
-        L.cap_y = 1495 if vertical else 948
+        L.cap_y = 1000 if vertical else 790                                   # 9:16: ~52 % height (clear of the Shorts UI)
+        self.mx = int(0.08 * W)                                                # side margin for all labels
         if not vertical: L.cap_size = 104
         self.caps = Captions(L, WORDS, emphasis={"STAR", "2017", "COLUMBUS", "DATE", "1989", "2001", "ROMAN", "EMPIRE", "ANDROMEDA",
                                                  "2.5", "MILLION", "HUMANS", "TIME", "MACHINE", "DEAD", "BILLIONS", "CENTURIES", "BACK"})
@@ -214,6 +215,10 @@ class Scene:
         glow += np.array([0.022, 0.050, 0.25], f32) * (1 - 0.45 * e[..., None])
         self.dusk = glow.astype(f32)
         self.above = smooth(-0.01, 0.05, alt).astype(f32)                     # below-horizon mask for stars
+        if not vertical:                                                        # 16:9 ultra-wide: the true horizon arcs up at the
+            yy = np.arange(H, dtype=f32)[:, None] * np.ones((1, W), f32)       # far sides; fade stars at the plate's skyline instead
+            self.above = smooth(self.hz + 20, self.hz - 60, yy).astype(f32)
+        self.zmin = 0.0 if vertical else -0.45
         # foreground states
         fg = self.fg; f = fg.flat; y = lum(f)[..., None]
         self.fg_night = ((f * 0.40 + y * 0.60) * np.array([0.21, 0.21, 0.52], f32) * 1.15).astype(f32)
@@ -234,18 +239,21 @@ class Scene:
         self.bright = np.where(mag < 4.6)[0]; self.glint = np.where(mag < 1.3)[0]
         # tiny year labels for the swirl: reasonably well-measured, bright stars
         ly = z["ly"]; names = z["name"]
-        cand = np.where((mag < 4.5) & (ly > 4) & (ly < 2500))[0]
+        cand = np.where((mag < 4.2) & (ly > 4) & (ly < 2500))[0]
         cand = cand[np.argsort(mag[cand])]; keep = []
-        for i in cand:                                                          # one label per spot (drop close pairs)
-            if all(float(self.sv[i] @ self.sv[j]) < math.cos(math.radians(1.2)) for j in keep): keep.append(i)
+        for i in cand:                                                          # one year per patch of sky (~6 deg apart)
+            if all(float(self.sv[i] @ self.sv[j]) < math.cos(math.radians(6.5)) for j in keep): keep.append(i)
         tiny = np.array(keep)
         self.tiny = tiny
-        yrs = YEAR_NOW - ly[tiny]
-        age = np.clip(np.log10(np.maximum(YEAR_NOW - yrs, 1)) / np.log10(2500), 0, 1)       # recent -> ancient
-        self.tiny_col = [tuple(np.clip(palette(0.50 - 0.62 * a) * 1.0 + 0.30, 0, 1) * 255) for a in age]
         self.tiny_txt = [year_str(ly[i]) for i in tiny]
+        age = np.clip(np.log10(np.maximum(ly[tiny], 1)) / np.log10(2500), 0, 1)                   # recent -> ancient
+        self.tiny_col = [tuple(float(c) for c in np.clip(palette(0.50 - 0.62 * a) * 0.9 + 0.12, 0, 1)) for a in age]
+        depth = np.clip((4.2 - mag[tiny]) / 5.0, 0, 1)                         # bright = "near": bigger + brighter
+        base = 30 if vertical else 27
+        self.tiny_size = [int(base + 30 * d) for d in depth]
+        for j in range(min(7, len(tiny))): self.tiny_size[j] = int(base * 2.3)   # a handful of hero years
+        self.tiny_alpha = 0.55 + 0.45 * depth; self.tiny_alpha[:7] = 1.0
         rr = np.random.default_rng(9); self.tiny_t = rr.uniform(0, 1, len(tiny)).astype(f32)
-        self.tiny_size = 26 if vertical else 23
         self.lab_eq = {lb[0]: eq_vec(lb[1], lb[2]) for lb in LABELS}
         self.mw = canvas(os.path.join(SCR, "mw_gal.npz"))
         self.gal = m31_sprite()
@@ -289,9 +297,10 @@ class Scene:
             lst = l0 + (l1 - l0) * u
             vis = visall if (K == 1 or k == K - 1) else visb                    # faint stars: only the head
             x, y, ok, z = self.proj(self.sv[vis], lst)
-            sel = ok & (x > -3) & (x < W + 3) & (y > -3) & (y < H + 3) & (z > 0)
+            sel = ok & (x > -3) & (x < W + 3) & (y > -3) & (y < H + 3) & (z > self.zmin)
             if not sel.any(): continue
             idx = vis[sel]; xs = x[sel]; ys = y[sel]; zz = z[sel]
+            zz = np.maximum(zz, 0.10) if not L.vertical else zz
             ext = np.clip(zz / 0.12, 0, 1) ** 0.7
             sig = np.clip(0.10 + 0.35 * np.exp(-zz / 0.15), 0.08, 0.6)
             ntv = nt[np.searchsorted(visall, idx)]
@@ -312,8 +321,8 @@ class Scene:
         acc = acc[:H, :W]
         # 4-point glints on the brightest stars
         x, y, ok, z = self.proj(self.sv[self.glint], l1)
-        for j in np.where(ok & (z > 0.03) & (x > 0) & (x < W) & (y > 0) & (y < H))[0]:
-            i = self.glint[j]; g = self.flux[i] * on[i] * 0.06 * (1 + 0.3 * math.sin(t * 5 + self.ph[i])) * min(1.0, z[j] / 0.15)
+        for j in np.where(ok & (z > (0.03 if L.vertical else -0.4)) & (x > 0) & (x < W) & (y > 0) & (y < H))[0]:
+            i = self.glint[j]; g = self.flux[i] * on[i] * 0.06 * (1 + 0.3 * math.sin(t * 5 + self.ph[i])) * (min(1.0, z[j] / 0.15) if L.vertical else 1.0)
             c = self.scol[i] * 0.6 + 0.4
             splat(acc, x[j], y[j], 60, lambda d, dx, dy: ((np.exp(-np.abs(dy) / 0.8) * np.exp(-np.abs(dx) / 16) + np.exp(-np.abs(dx) / 0.8) * np.exp(-np.abs(dy) / 16)) * g)[..., None] * c)
         st = cv2.GaussianBlur(acc, (0, 0), 0.7) * 2.4
@@ -354,11 +363,28 @@ class Scene:
         x, y, ok, z = self.proj(self.lab_eq[key], lst)
         return float(x), float(y), bool(ok and z > 0.02)
 
-    def label_side(self, x, y):
-        L = self.L
-        side = 1 if x < L.W * 0.52 else -1
-        below = y < (560 if L.vertical else 330)
-        return side, below
+    def label_dims(self):
+        v = self.L.vertical
+        return (118 if v else 100), (34 if v else 30), (560 if v else 640)
+
+    def label_place(self, lb, x, y, rr):
+        """anchor (start of the name line / leader end) for a label: inside the 8 % side margins, never over the captions"""
+        L = self.L; W = L.W; mx = self.mx
+        ys, ns, maxw = self.label_dims(); sc = 1.0 if L.vertical else 0.85
+        bw = max(glow_text(lb[5], ys, lb[3], "Black", maxw)[3], font(ns, "Bold", True).getlength(lb[4]) + 0.10 * ns * len(lb[4]))
+        dx = 125 * sc + rr * 0.45
+        side = 1 if x < W / 2 else -1
+        if side > 0 and x + dx + bw > W - mx and x - dx - bw > mx: side = -1
+        elif side < 0 and x - dx - bw < mx and x + dx + bw < W - mx: side = 1
+        top = L.safe_top * (0.55 if L.vertical else 0.4)
+        above_h, below_h = ns * 1.4, ys * 1.3 + (ns * 1.2 if lb[6] else 0)        # block extent above / below the anchor
+        ay = y - (120 * sc + rr * 0.45)
+        if ay - above_h < top: ay = y + 130 * sc + rr * 0.45
+        b0, b1 = L.cap_y - L.cap_size * 0.75, L.cap_y + L.cap_size * 0.75       # caption band
+        if ay + below_h > b0 and ay - above_h < b1:
+            ay = b0 - below_h - 6 if y > b0 - 40 or ay < L.cap_y else b1 + above_h + 6
+        ax = x + side * dx
+        return ax, ay, side
 
     def label_fx(self, fx, t, lst, gal):
         """rings, ring bursts, flares, leader lines into the HDR layer; returns display-space label jobs"""
@@ -379,7 +405,7 @@ class Scene:
             for tp, big in ((tn, 1.0), (tb, 1.5)):                               # ring bursts at the name and at the year
                 u = t - tp
                 if 0 <= u < 0.7:
-                    R = rr + (40 + 200 * big * sc) * (u / 0.7) ** 0.55
+                    R = rr + (40 + (110 if key == "m31" else 190) * big * sc) * (u / 0.7) ** 0.55
                     k = (1 - u / 0.7) ** 1.8 * 3.5 * big
                     for ch, off in ((0, 7), (1, 0), (2, -7)):
                         c = [0.0, 0.0, 0.0]; c[ch] = float(k * (0.6 + 0.8 * col[ch]))
@@ -388,30 +414,28 @@ class Scene:
                     splat(fx, x, y, 140, lambda d, dx, dy: ((np.exp(-d / 3) * fl + np.exp(-d / 18) * fl * 0.12))[..., None] * (col * 0.6 + 0.4)
                           + ((np.exp(-np.abs(dy) / 1.6) * np.exp(-np.abs(dx) / 70) + np.exp(-np.abs(dx) / 1.6) * np.exp(-np.abs(dy) / 70)) * fl * 0.08)[..., None] * col)
             # leader line, drawn out over 0.25 s
-            side, below = self.label_side(x, y)
-            ox, oy = 125 * sc * side, (130 if below else -120) * sc
-            if key == "m31" and gal: ox, oy = ox + side * rr * 0.6, oy + (rr * 0.5 if below else -rr * 0.5)
-            ax, ay = x + ox, y + oy
+            ax, ay, side = self.label_place(lb, x, y, rr)
+            ox, oy = ax - x, ay - y; below = oy > 0
             dl = math.hypot(ox, oy); p = ease((t - tn) / 0.28)
             sx0, sy0 = x + ox / dl * (rr + 6), y + oy / dl * (rr + 6)
             ex, ey = sx0 + (ax - sx0) * p, sy0 + (ay - sy0) * p
             cv2.line(fx, (int(sx0 * 4), int(sy0 * 4)), (int(ex * 4), int(ey * 4)), tuple(float(c) for c in col * 2.6 * a), 2, cv2.LINE_AA, 2)
-            hx2 = ex + side * 90 * sc * p
+            hx2 = ex + side * 60 * sc * p
             cv2.line(fx, (int(ex * 4), int(ey * 4)), (int(hx2 * 4), int(ey * 4)), tuple(float(c) for c in col * 2.6 * a), 2, cv2.LINE_AA, 2)
             jobs.append((lb, ax, ay, side, below, a, p))
         return jobs
 
     def draw_labels(self, out, t, jobs):
         L = self.L; W, H = L.W, L.H; v = L.vertical
-        ys = 118 if v else 100; ns = 34 if v else 30; maxw = 560 if v else 640
+        ys, ns, maxw = self.label_dims(); mx = self.mx
         for lb, ax, ay, side, below, a, p in jobs:
             col = tuple(int(c * 255) for c in np.clip(np.array(lb[3]) * 0.85 + 0.15, 0, 1))
             tn, tb = lb[7], lb[8]
             # name line sits on the horizontal leader; big text under it
             nx = ax + side * 6
             ny = ay - ns * 0.85
-            tw = font(ns, "Bold", True).getlength(lb[4]) * 1.12
-            nx = min(max(nx, 40 + (0 if side > 0 else tw)), W - 40 - (tw if side > 0 else 0))
+            tw = font(ns, "Bold", True).getlength(lb[4]) + 0.10 * ns * len(lb[4]) + 8
+            nx = min(max(nx, mx + (0 if side > 0 else tw)), W - mx - (tw if side > 0 else 0))
             hud_text(out, lb[4], nx, ny, ns, "Bold", (240, 244, 255), a * ease((t - tn) / 0.25), 0.10, display=True, anchor="l" if side > 0 else "r")
             u = t - tb
             if u < -0.03: continue
@@ -420,13 +444,13 @@ class Scene:
             lay = glow_text(lb[5], int(ys * s), lb[3], "Black", int(maxw * s))
             hw = lay[3] / 2
             cx = ax + side * hw
-            cx = min(max(cx, 30 + hw), W - 30 - hw)
+            cx = min(max(cx, mx + hw), W - mx - hw)
             cy = ay + ys * 0.62
             al = a * min(1.0, (u + 0.03) / 0.08)
             put_glow(out, lay, cx, cy, al)
             if lb[6]:
                 sw_ = font(int(ns * 0.85), "Bold", True).getlength(lb[6]) * 1.14 / 2
-                hud_text(out, lb[6], min(max(cx, 30 + sw_), W - 30 - sw_), cy + ys * 0.75, int(ns * 0.85), "Bold", col, al * ease((u - 0.25) / 0.3), 0.12, display=True)
+                hud_text(out, lb[6], min(max(cx, mx + sw_), W - mx - sw_), cy + ys * 0.75, int(ns * 0.85), "Bold", col, al * ease((u - 0.25) / 0.3), 0.12, display=True)
 
     # ----------------------------------------------------------------------------------------------- frame
     def frame(self, t):
@@ -489,18 +513,32 @@ class Scene:
     # ----------------------------------------------------------------------------------------------- overlay
     def overlay(self, out, t, lst, jobs):
         L = self.L; W, H = L.W, L.H
-        # tiny years (swirl -> start of the myth beat), fading as the "alive" wave passes
-        a0 = T_SWIRL0 + 0.3
+        # tiny years (swirl -> start of the myth beat): ~50 glowing years riding the turning sky, near ones bigger
+        a0 = T_SWIRL0 + 0.2
         if a0 - 0.1 < t < T_WAVE + 2.4:
             x, y, ok, z = self.proj(self.sv[self.tiny], lst)
-            appear = a0 + self.tiny_t * 1.4
-            for i in np.where(ok & (z > 0.05) & (x > 20) & (x < W - 90) & (y > 40) & (y < self.hz - 40))[0]:
-                a = min(1.0, max(0.0, (t - appear[i]) / 0.25))
-                if T_WAVE <= t:
-                    d = math.hypot(x[i] - W / 2, y[i] - H * 1.05)
-                    if d < (t - T_WAVE) * 1500: a *= 0.0
+            appear = a0 + self.tiny_t * 1.2
+            b0, b1 = L.cap_y - L.cap_size * 0.8, L.cap_y + L.cap_size * 0.8
+            idx = np.where(ok & (z > (0.06 if L.vertical else -0.4)) & (y > 30) & (y < self.hz - 30))[0]
+            boxes, keep = [], []
+            for i in idx[np.argsort(-np.array([self.tiny_size[k] for k in idx]))]:           # big first: no overlaps, <= 56
+                sz = self.tiny_size[i]; bw = sz * 0.62 * len(self.tiny_txt[i]); bx0 = x[i] + 12; by0 = y[i] - sz
+                if by0 < 8 or self.fg.a[int(min(max(y[i], 0), H - 1)), int(min(max(x[i], 0), W - 1))] > 0.3: continue   # star hidden / off top
+                if any(bx0 < c1 + 10 and bx0 + bw > c0 - 10 and by0 < d1 + 4 and by0 + sz * 1.1 > d0 for c0, d0, c1, d1 in boxes): continue
+                boxes.append((bx0, by0, bx0 + bw, by0 + sz * 1.1)); keep.append(i)
+                if len(keep) >= 56: break
+            for i in keep[::-1]:                                                                # small first, heroes on top
+                age = t - appear[i]
+                a = min(1.0, max(0.0, age / 0.2)) * self.tiny_alpha[i]
+                if T_WAVE <= t and math.hypot(x[i] - W / 2, y[i] - H * 1.05) < (t - T_WAVE) * 1500: a = 0.0
                 if a <= 0.02: continue
-                composite(out, tiny_layer(self.tiny_txt[i], self.tiny_size, tuple(int(v) for v in self.tiny_col[i])), x[i] + 10 + len(self.tiny_txt[i]) * self.tiny_size * 0.3, y[i] - self.tiny_size * 0.55, a * 0.95)
+                sz = self.tiny_size[i]
+                sz = int(round(sz * (1 + 0.5 * math.exp(-max(age, 0) / 0.08)) / 2) * 2)
+                lay = glow_text(self.tiny_txt[i], sz, self.tiny_col[i], "Black")
+                hw = lay[3] / 2; cx = x[i] + 12 + hw; cy = y[i] - sz * 0.45
+                if cx - hw < self.mx * 0.6 or cx + hw > W - self.mx * 0.6: continue
+                if b0 < cy < b1: a *= 0.15
+                put_glow(out, lay, cx, cy, a, glow_k=0.7)
         self.draw_labels(out, t, jobs)
         # factual lifetime labels (myth beat)
         v = L.vertical
@@ -510,7 +548,7 @@ class Scene:
             a = ramp(t, tt - 0.05, tt + 0.2) * (1 - ramp(t, LN["end"]["start"] - 0.2, LN["end"]["start"] + 0.2))
             if a > 0.01:
                 hud_text(out, txt, W / 2, yy, fs, "Bold", (235, 240, 255), a, 0.18, display=True)
-                put_glow(out, glow_text(big, 76 if v else 72, col, "Black", 960 if v else 1300), W / 2, yy + (88 if v else 80), a)
+                put_glow(out, glow_text(big, 62 if v else 64, col, "Black", int(W * 0.80)), W / 2, yy + (80 if v else 74), a, glow_k=0.35)
         self.caps.draw(out, t)
 
 

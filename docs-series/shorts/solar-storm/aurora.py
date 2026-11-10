@@ -70,8 +70,8 @@ class Aurora:
         Yb = 100.0 + 5.0 * np.sin(7.0 * s + 0.8 * t + c["p2"])
         # ray structure along the curtain: drifting fine rays * fast flicker * travelling surges
         tx = self.tex[c["tk"]]
-        i1 = ((s * 1500 + c["off"] + c["drift"] * t * 90.0) % 8192).astype(np.int32)
-        i2 = ((s * 700 + c["off"] * 0.5 - t * 260.0 * (1 if c["drift"] > 0 else -1)) % 8192).astype(np.int32)
+        i1 = np.floor(s * 1500 + c["off"] + c["drift"] * t * 90.0).astype(np.int64) % 8192
+        i2 = np.floor(s * 700 + c["off"] * 0.5 - t * 260.0 * (1 if c["drift"] > 0 else -1)).astype(np.int64) % 8192
         rays = (0.40 + 0.9 * tx[i1] ** 2.0) * (0.55 + 0.65 * tx[(i2 + 1000) % 8192])
         surge = 1 + 1.3 * np.exp(-(((s - (((t * 0.45 + c["p1"]) % 2.6) - 1.3)) / 0.10) ** 2))
         A = rays * surge * c["I"]
@@ -110,9 +110,9 @@ class Aurora:
         """corona: rays radiating from the magnetic zenith (end-on view of the overhead curtains)"""
         NT, NR = self.NT, self.NR
         th = np.arange(NT, dtype=f32)
-        a = self.ctex[((th * 1.0 + t * 26.0) % NT).astype(np.int32)]
-        b = self.ctex[((th * 3.0 - t * 61.0 + 1500) % NT).astype(np.int32)]
-        fl = self.ctex[((th * 0.5 + t * 140.0 + 700) % NT).astype(np.int32)]
+        a = self.ctex[np.floor(th * 1.0 + t * 26.0).astype(np.int64) % NT]
+        b = self.ctex[np.floor(th * 3.0 - t * 61.0 + 1500).astype(np.int64) % NT]
+        fl = self.ctex[np.floor(th * 0.5 + t * 140.0 + 700).astype(np.int64) % NT]
         rays = (a ** 3 * 1.2 + b ** 4 * 0.9) * (0.5 + 0.8 * fl)
         rpx = (np.arange(NR, dtype=f32) + 0.5) * self.RMAX / NR
         sc = self.H / 1920.0 if self.H > self.W else self.H / 1080.0 * 0.8

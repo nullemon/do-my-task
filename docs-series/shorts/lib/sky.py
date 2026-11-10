@@ -288,7 +288,7 @@ class LensSky:
             splat(tex, (gx + half) / res, (gy + half) / res, R * 5, fn)
         self.tex = tex
 
-    def view(self, size, field, thetaE, lens_off, shadow=0.3, ss=2, seeing=0.5, bg=(0.0005, 0.0006, 0.0010)):
+    def view(self, size, field, thetaE, lens_off, shadow=0.3, ss=2, seeing=0.5, bg=(0.00032, 0.00038, 0.00065)):
         n = size * ss
         g = (np.arange(n, dtype=f32) + 0.5) / n * field - field / 2
         tx, ty = np.meshgrid(g, g)

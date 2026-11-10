@@ -14,7 +14,7 @@ def _noise(H, W, seed, beta, scale=1):
     return cv2.resize(n, (W, H), interpolation=cv2.INTER_CUBIC) if scale > 1 else n
 
 
-def milky_way(W, H, core, ang_deg, s=1.0, seed=5, n_stars=150000, gain=1.0):
+def milky_way(W, H, core, ang_deg, s=1.0, seed=5, n_stars=150000, gain=1.0, vivid=False):
     """core: frame (x, y) of the galactic centre; ang_deg: band direction, degrees above the +x axis (towards up-right)."""
     cx, cy = core
     a = math.radians(ang_deg); dx, dy = math.cos(a), -math.sin(a)
@@ -42,12 +42,27 @@ def milky_way(W, H, core, ang_deg, s=1.0, seed=5, n_stars=150000, gain=1.0):
     patches = np.clip(nE * 0.5 + nA * 0.4 - 0.45, 0, 1) * np.exp(-(vw / (w * 0.9)) ** 2)
     dust = np.clip(rift * 0.90 + fil * 0.75 + patches * 0.8, 0, 0.96)
     glow = (band * clouds + halo) * (1 - dust) * A
-    warm = np.exp(-(u / (330 * s)) ** 2) * np.exp(-(vw / (w * 1.2)) ** 2)
-    col = np.array([0.66, 0.78, 1.0], f32) * (1 - warm[..., None]) + np.array([1.0, 0.76, 0.48], f32) * warm[..., None]
-    # faint H-alpha pink knots along the band edges, very subtle
-    ha = np.clip(nB * 0.6 + nA * 0.5 - 0.9, 0, 1) * band * 0.25
-    img = glow[..., None] * col + ha[..., None] * np.array([1.0, 0.35, 0.45], f32) * glow[..., None]
-    img = cv2.GaussianBlur(img, (0, 0), 1.3) * 0.75 + cv2.GaussianBlur(img, (0, 0), 16) * 0.55
+    warm = np.exp(-(u / ((480 if vivid else 330) * s)) ** 2) * np.exp(-(vw / (w * 1.3)) ** 2)
+    if vivid:
+        # stylised, saturated palette: gold core with pink fringes, teal / violet nebula tints in the arms
+        nT = _noise(H, W, seed + 7, 3.0, 4)
+        teal = np.clip(0.5 + 0.9 * nT, 0, 1)[..., None]
+        arm = np.array([0.30, 0.80, 1.00], f32) * teal + np.array([0.70, 0.42, 1.00], f32) * (1 - teal)
+        core_col = np.array([1.00, 0.60, 0.20], f32)
+        pinkz = np.clip(np.exp(-(u / (420 * s)) ** 2) * (np.abs(vw) / w) * 1.4, 0, 1)[..., None]
+        core_col = core_col * (1 - pinkz) + np.array([1.0, 0.40, 0.70], f32) * pinkz
+        col = arm * (1 - warm[..., None]) + core_col * warm[..., None]
+        neb = np.clip(nA * 0.7 + nT * 0.5, 0, 1.5) * np.exp(-(vw / (w * 2.2)) ** 2) * 0.22
+        img = glow[..., None] * col + neb[..., None] * arm * 0.5
+        ha = np.clip(nB * 0.6 + nA * 0.5 - 0.6, 0, 1) * band * 0.6
+        img += ha[..., None] * np.array([1.0, 0.25, 0.55], f32) * glow[..., None]
+        img *= (1 + 1.0 * warm)[..., None]
+        img = cv2.GaussianBlur(img, (0, 0), 1.0) * 0.95 + cv2.GaussianBlur(img, (0, 0), 14) * 0.45 + cv2.GaussianBlur(img, (0, 0), 60) * 0.22
+    else:
+        col = np.array([0.66, 0.78, 1.0], f32) * (1 - warm[..., None]) + np.array([1.0, 0.76, 0.48], f32) * warm[..., None]
+        ha = np.clip(nB * 0.6 + nA * 0.5 - 0.9, 0, 1) * band * 0.25
+        img = glow[..., None] * col + ha[..., None] * np.array([1.0, 0.35, 0.45], f32) * glow[..., None]
+        img = cv2.GaussianBlur(img, (0, 0), 1.3) * 0.75 + cv2.GaussianBlur(img, (0, 0), 16) * 0.55
     img *= 0.020
     # faint stars, concentrated in the bright clouds
     r = np.random.default_rng(seed)

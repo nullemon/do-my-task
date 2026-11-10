@@ -46,6 +46,8 @@ T_MW0 = wt("look", "UP") - 0.10; T_MW1 = T_MW0 + 3.2     # the Milky Way rises o
 T_RET0 = wt("end", "RIGHT") - 0.25         # the lights come back
 T_RET1 = DUR - 0.15
 LAMP_OFF = [T_OFF0 + 0.15 + k for k in (0.55, 0.30, 0.95, 0.75, 1.15)]     # each street lamp dies with its block
+FLASH_T = [T_OFF0 + 0.02, T_OFF0 + 0.70, T_OFF0 + 1.25]                    # transformer flashes
+METEOR_T = [T_MW0 + 0.9, T_MW1 + 3.6, LN["twist"]["start"] + 0.5]
 LAMP_ON = [T_RET0 + 0.3 + k for k in (0.5, 0.2, 0.7, 0.9, 1.1)]
 
 
@@ -152,7 +154,7 @@ class City:
             pre = (t < self.t_off).astype(f32)
             on = pre * fl + (1 - pre) * dying * 0.6
             # last-gasp flash right before death
-            on += np.exp(-((t - self.t_off + 0.06) / 0.035) ** 2) * 0.6
+            on += np.exp(-((t - self.t_off + 0.06) / 0.035) ** 2) * 1.6
         if t > T_RET0:
             back = np.clip((t - self.t_on) / 0.10, 0, 1)
             back *= 0.85 + 0.15 * (np.sin(t * 90 + self.ph) > -0.6)
@@ -201,59 +203,122 @@ class Scene:
         self.caps = Captions(self.L, WORDS, emphasis={"1994", "SKY", "HIT", "DARK", "UP", "MILKY", "WAY", "NEVER", "80%", "YOU", "CLOUD"})
         # Milky Way placement: core low in the gap between the towers, band rising to the upper right
         if vertical:
-            self.mw = dict(cx=2073, cy=704, rot=4.0); self.mw_core, self.mw_ang, self.mw_s = (430.0, 1330.0), 60.0, 1.0
+            self.mw = dict(cx=2073, cy=704, rot=4.0); self.mw_core, self.mw_ang, self.mw_s = (450.0, 1240.0), 60.0, 1.55
         else:
-            self.mw = dict(cx=2050, cy=1300, rot=-38.0); self.mw_core, self.mw_ang, self.mw_s = (760.0, 615.0), 40.0, 0.85
+            self.mw = dict(cx=2050, cy=1300, rot=-38.0); self.mw_core, self.mw_ang, self.mw_s = (760.0, 640.0), 38.0, 1.25
         self._prep_sky()
 
     def _prep_sky(self):
-        """static parts of the sky (locked camera): Milky Way plate + faint stars, enhanced; light-pollution dome"""
+        """static parts of the sky (locked camera, but the sky turns slowly): vivid Milky Way canvas with a top margin
+        for the rotation, airglow, deep-blue night base, light-pollution dome"""
         cam, W, H = self.cam, self.L.W, self.L.H
+        M = self.margin = 320
         el = cam.up(np.maximum(cam.el, 0))
-        mw, self.mw_band = milky_way(W, H, self.mw_core, self.mw_ang, s=self.mw_s, seed=5, gain=3.2)
-        ext = 1 - 0.80 * np.exp(-el / 0.06)
-        self.mw_plate = (mw * ext[..., None]).astype(f32)
-        # airglow: faint green 557.7 nm band ~10 deg up + red higher, with slow banded structure
+        yy = np.arange(H, dtype=f32)[:, None] * np.ones((1, W), f32)
+        self.eln = np.clip((self.hz - yy) / self.hz, 0, 1).astype(f32)          # 0 at the horizon, 1 at the top
+        cx, cy = self.mw_core
+        mw, _ = milky_way(W, H + M, (cx, cy + M), self.mw_ang, s=self.mw_s, seed=5, gain=5.0, vivid=True, n_stars=230000)
+        elc = np.concatenate([np.full((M, W), el.max(), f32), el], 0)
+        self.mw_canvas = (mw * (1 - 0.55 * np.exp(-elc / 0.05))[..., None]).astype(f32)
+        # airglow: green 557.7 nm band ~10 deg up, faint red above, slow banded structure
         n = cv2.resize(fbm2((128, 256), 31, 2.6), (W, H), interpolation=cv2.INTER_CUBIC)
-        band = np.exp(-((el - 0.17) / 0.10) ** 2) * (0.75 + 0.25 * n)
-        self.airglow = (band[..., None] * np.array([0.0008, 0.0022, 0.0011], f32) + np.exp(-el / 0.35)[..., None] * np.array([0.0035, 0.0018, 0.0016], f32) * 0.6).astype(f32)
-        self.night_bg = (np.exp(-el / 0.4)[..., None] * np.array([0.0010, 0.0016, 0.0032], f32) + np.array([0.0006, 0.0008, 0.0014], f32)).astype(f32)
+        band = np.exp(-((el - 0.15) / 0.09) ** 2) * (0.7 + 0.3 * n)
+        self.airglow = (band[..., None] * np.array([0.0030, 0.0110, 0.0060], f32) + np.exp(-el / 0.35)[..., None] * np.array([0.0040, 0.0012, 0.0022], f32)).astype(f32)
+        # deep blue night sky (readable, never black): brighter and slightly teal towards the horizon
+        self.night_bg = (np.exp(-el / 0.45)[..., None] * np.array([0.0040, 0.0085, 0.020], f32) + np.array([0.0022, 0.0042, 0.0130], f32)).astype(f32)
         # light-polluted dome: sodium orange at the horizon -> murky brown-grey overhead, a little uneven
         n2 = cv2.resize(fbm2((64, 128), 33, 3.0), (W, H), interpolation=cv2.INTER_CUBIC)
         hz = np.exp(-el / 0.16); mid = np.exp(-el / 0.55)
-        dome = hz[..., None] * np.array([0.30, 0.15, 0.055], f32) + mid[..., None] * np.array([0.042, 0.028, 0.020], f32) + np.array([0.011, 0.009, 0.009], f32)
+        dome = hz[..., None] * np.array([0.34, 0.16, 0.050], f32) + mid[..., None] * np.array([0.050, 0.030, 0.018], f32) + np.array([0.013, 0.010, 0.009], f32)
         dome *= (1 + 0.06 * n2)[..., None]
         self.dome = dome.astype(f32)
-        # residual glow from distant towns that kept power (a real blackout is never total)
         self.residual = (np.exp(-el / 0.06)[..., None] * np.array([0.020, 0.010, 0.004], f32)).astype(f32)
         self.sky_h_glow = np.array([0.30, 0.15, 0.06], f32)
-        self.sky_h_night = np.array([0.006, 0.008, 0.012], f32)
+        self.sky_h_night = np.array([0.006, 0.010, 0.022], f32)
+        # transformer flashes on the skyline (blue-green arcs), meteors during the reveal
+        sk = self.fg.skyline
+        def hx(fx): x = int(fx * W); return (float(x), float(min(sk[max(0, x - 30):x + 30].max(), self.hz) - 5))
+        self.flashes = [(FLASH_T[0], hx(0.30), 1.0), (FLASH_T[1], hx(0.86), 0.7), (FLASH_T[2], hx(0.52), 0.85)]
+        self.meteors = [(METEOR_T[0], (0.78 * W, 0.10 * H), (-0.30 * W, 0.16 * H), 0.55, 1.0),
+                        (METEOR_T[1], (0.22 * W, 0.06 * H), (0.22 * W, 0.12 * H), 0.45, 0.7),
+                        (METEOR_T[2], (0.62 * W, 0.18 * H), (-0.18 * W, 0.10 * H), 0.40, 0.55)]
 
     # ----------------------------------------------------------------------------------------------- levels
     def levels(self, t):
-        g = 1 - ramp(t, T_DRAIN0, T_DRAIN1)                 # skyglow
-        g = max(g, ramp(t, T_RET0 + 0.4, T_RET1))
-        stars = ramp(t, T_STARS - 0.6, T_STARS + 1.0) * (1 - ramp(t, T_RET0 + 0.3, T_RET1 - 0.3) * 0.7)
-        mw = ramp(t, T_MW0, T_MW1) * (1 - ramp(t, T_RET0 + 0.2, T_RET1 - 0.2))
-        night = 0.026 * ramp(t, T_DRAIN0, T_DRAIN1 + 1.5) + 0.010
-        return g, stars, mw, night
+        gs = 1 - ramp(t, T_DRAIN0, T_DRAIN1)                 # skyglow front (1 = whole dome lit)
+        gs = max(gs, ramp(t, T_RET0 + 0.2, T_RET1))
+        stars = ramp(t, T_STARS - 0.6, T_STARS + 1.0)
+        mw = ramp(t, T_MW0, T_MW1)
+        night = 0.030 * ramp(t, T_DRAIN0, T_DRAIN1 + 1.5) + 0.010
+        return gs, stars, mw, night
 
-    def sky(self, t, g, st, mw):
-        img = self.dome * g + self.residual * (1 - g) + self.night_bg * (1 - g)
+    def gmap(self, gs):
+        """the orange dome as a front: drains down into the horizon, and at the end climbs back and eats the sky"""
+        if gs >= 1: return np.ones_like(self.eln)
+        if gs <= 0: return np.zeros_like(self.eln)
+        return smooth(0.0, 1.0, (gs * 1.35 - self.eln) / 0.35)
+
+    def sky_rot(self, t):
+        """slow sky rotation (the sky wheels about a pole far off-frame); dst->src affine incl. the canvas margin"""
+        W, H = self.L.W, self.L.H
+        P = (-2.4 * W, 0.30 * H)
+        ang = 0.085 * (t - 18.0)
+        Mx = cv2.getRotationMatrix2D(P, ang, 1.0)
+        return Mx
+
+    def sky(self, t, gs, st, mw):
+        W, H = self.L.W, self.L.H
+        gm = self.gmap(gs)[..., None]
+        Mx = self.sky_rot(t)
+        img = self.dome * gm + (self.residual + self.night_bg) * (1 - gm)
+        stars = self.stars.render(self.cam, t, gain=1.0, twinkle=1.6, plate_gain=0.0, star_gain=1.0, **self.mw)
+        layer = cv2.warpAffine(stars, Mx, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REFLECT) * (0.9 * (0.3 + 0.7 * st))
         if mw > 0:
-            img += (self.mw_plate * 1.0 + self.airglow) * mw * (1 - 0.92 * g)
-        # bright stars, twinkling; under the dome only the brightest survive (they are drawn regardless, the dome hides them)
-        stars = self.stars.render(self.cam, t, gain=1.0, twinkle=1.0, plate_gain=0.0, star_gain=1.0, **self.mw)
-        sg = 0.35 + 0.65 * st
-        img += stars * 0.55 * sg * (0.05 + 0.95 * (1 - g) ** 2)
+            Mc = Mx.copy(); Mc[1, 2] += self.margin
+            layer += cv2.warpAffine(self.mw_canvas, Mc, (W, H), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REFLECT) * mw
+            img = img + self.airglow * mw * (1 - gm)
+        img = img + layer * (1 - 0.97 * gm)
+        # meteors
+        for (tm, p0, v, dur, br) in self.meteors:
+            u = (t - tm) / dur
+            if 0 <= u <= 1.25:
+                lay = np.zeros((H, W), f32)
+                hx, hy = p0[0] + v[0] * min(u, 1), p0[1] + v[1] * min(u, 1)
+                fade = math.sin(math.pi * min(u, 1)) ** 0.7 if u <= 1 else 0.0
+                tail = 0.32
+                for k in range(24):
+                    a0, a1 = k / 24, (k + 1) / 24
+                    x0, y0 = hx - v[0] * tail * a0, hy - v[1] * tail * a0
+                    x1, y1 = hx - v[0] * tail * a1, hy - v[1] * tail * a1
+                    cv2.line(lay, (int(x0 * 4), int(y0 * 4)), (int(x1 * 4), int(y1 * 4)), float((1 - a0) ** 2), 3, cv2.LINE_AA, 2)
+                lay = cv2.GaussianBlur(lay, (0, 0), 1.0) * 1.2 + cv2.GaussianBlur(lay, (0, 0), 5.0) * 0.6
+                img += lay[..., None] * np.array([0.85, 1.0, 0.9], f32) * fade * br * 1.6
         return img
+
+    def flash(self, t):
+        """transformer flashes: list of (x, y, intensity) now"""
+        out = []
+        for (tf, (x, y), k) in self.flashes:
+            d = t - tf
+            if -0.05 < d < 0.6:
+                v = sum(a * math.exp(-((d - o) / w) ** 2) for o, a, w in ((0.0, 1.0, 0.045), (0.10, 0.6, 0.03), (0.22, 0.85, 0.05), (0.34, 0.3, 0.03)))
+                out.append((x, y, v * k))
+        return out
 
     def frame(self, t):
         L = self.L; W, H = L.W, L.H
-        g, st, mw, night = self.levels(t)
-        sky = self.sky(t, g, st, mw)
+        gs, st, mw, night = self.levels(t)
+        g = gs
+        sky = self.sky(t, gs, st, mw)
         hcol = self.sky_h_glow * g + self.sky_h_night * (1 - g)
         city, onw, onl = self.city.render(t, g, night, hcol)
+        fl = self.flash(t)
+        if fl:
+            col = np.array([0.35, 1.0, 0.85], f32)
+            for (x, y, v) in fl:
+                splat(sky, x, y, W * 1.4, lambda d, dx, dy, v=v: ((np.exp(-d / 18) * 60 + np.exp(-d / 130) * 3.0 + np.exp(-d / 600) * 0.28) * v)[..., None] * col)
+            tot = sum(v for _, _, v in fl)
+            city = city + self.city.D * col * 0.9 * tot
         a = self.fg.a[..., None]
         img = sky * (1 - a) + city * a
         # earthquake jolt: the only camera motion in the film (tripod rattles), a few frames, decaying
@@ -267,7 +332,11 @@ class Scene:
             img = cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
         # exposure: the camera opens up as the city dies (night adaptation), back down when the lights return
         ex = 1.0 + 1.6 * ramp(t, T_DRAIN0 + 0.3, T_DRAIN1 + 1.0) * (1 - ramp(t, T_RET0 + 0.3, T_RET1))
-        img = bloom(img, 0.55 + 0.25 * g)
+        # brief whole-frame brown-out flicker while the grid fails
+        if T_HIT + 0.25 < t < T_OFF1 + 0.1:
+            k = 0.5 + 0.5 * noise1(t, 77, 9.0, 2)
+            ex *= 1.0 - 0.45 * (k > 0.72) * (noise1(t, 78, 23.0, 1) > 0)
+        img = bloom(img, 0.55 + 0.25 * g + 0.45 * mw * (1 - g))
         out = tonemap(img, 1.05 * ex)
         out = self.grade(out, g)
         out = finish(out, t, grain=0.012 + 0.006 * (1 - g))
@@ -278,6 +347,8 @@ class Scene:
         """display-referred grade: sodium-orange before, cool blue night after"""
         warm = np.array([1.04, 0.98, 0.88], f32); cool = np.array([0.93, 0.98, 1.07], f32)
         out = out * (warm * g + cool * (1 - g))
+        y = out.mean(2, keepdims=True)
+        out = y + (out - y) * (1 + 0.35 * (1 - g))                          # vivid night colours
         lift = np.array([0.006, 0.008, 0.016], f32) * (1 - g)
         return np.clip(out + lift * (1 - out), 0, 1)
 

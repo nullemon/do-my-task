@@ -66,7 +66,13 @@ def buzz_and_pops():
         pan = R.uniform(0.25, 0.75)
         out += at(np.stack([(arc + tail) * (1 - pan), (arc + tail) * pan], 1) * (1.6 if not big else 1.0), tl - 0.01)
         if big: out += A.thump(N, tl, 0.55)
-    # the hum dies with a power-down glide on the last wave
+    # transformer arcs: a fizzing zap + boom for every blue-green flash on the skyline
+    for k, tf in enumerate(S.FLASH_T):
+        n = int(0.7 * SR); tt = np.arange(n) / SR
+        zap = A.bp(R.standard_normal(n), 900, 7000) * (np.exp(-tt / 0.05) + 0.5 * np.exp(-((tt - 0.22) / 0.04) ** 2)) * 1.4
+        zap += np.sign(np.sin(2 * np.pi * 120 * tt)) * np.exp(-tt / 0.12) * 0.25
+        pan = (0.3, 0.85, 0.5)[k]
+        out += at(np.stack([zap * (1 - pan), zap * pan], 1) * 1.6, tf - 0.01) + A.thump(N, tf + 0.03, 0.45)
     return out
 
 
@@ -134,7 +140,8 @@ def main():
     bed = (power_hum(hum) + traffic * tr_e[:, None] + quake() * 0.9 + buzz_and_pops() + crickets() + wind() + pad() * 1.7
            + A.shimmer(N, S.T_MW0 + 0.2, S.T_MW1 + 3.0, seed=7, gain=0.08)
            + A.riser(N, S.T_STARS - 1.2, S.T_MW0 + 0.3, seed=9) * 0.12
-           + A.hit(N, S.T_MW0 + 0.25, gain=0.30, root=36.7))
+           + A.hit(N, S.T_MW0 + 0.25, gain=0.30, root=36.7)
+           + sum(A.riser(N, tm - 0.05, tm + 0.45, seed=40 + i) * 0.10 for i, tm in enumerate(S.METEOR_T)))
     bed = A.duck(bed, voice, depth=0.40)
     mix = voice * 1.0 + bed * 0.75
     mix *= np.clip((S.DUR - t) / 0.35, 0, 1)[:, None] * np.clip(t / 0.05, 0, 1)[:, None]

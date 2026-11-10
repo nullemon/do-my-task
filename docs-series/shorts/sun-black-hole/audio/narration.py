@@ -44,17 +44,18 @@ def caption_word(w):
     return w.upper()
 
 
-def subtitle(text):
-    """plain subtitle text (SRT): spoken words, numbers as digits"""
-    parts = []
+def pieces(text):
+    """subtitle strings aligned 1:1 with caption tokens (numbers kept as digits)"""
+    rep = {"8 MIN": "8 minutes", "AND 20 SEC": "and 20 seconds", "6 KM": "6 km"}
+    out = []
     for cap, ws in tokens(text):
-        if len(ws) == 1 and cap == ws[0]:
-            parts.append(cap)
+        if len(ws) == 1 and cap == ws[0]: out.append(cap)
         else:
-            tail = re.findall(r"[.,?!]+$", ws[-1])
-            c = cap.replace("8 MIN", "8 minutes").replace("AND 20 SEC", "and 20 seconds").replace("6 KM", "6 km")
-            parts.append(c + (tail[0] if tail else ""))
-    return " ".join(parts)
+            tail = re.findall(r"[.,?!]+$", ws[-1]); out.append(rep.get(cap, cap) + (tail[0] if tail else ""))
+    return out
+
+
+def subtitle(text): return " ".join(pieces(text))
 
 
 if __name__ == "__main__":

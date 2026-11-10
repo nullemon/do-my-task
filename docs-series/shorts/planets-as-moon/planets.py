@@ -221,6 +221,7 @@ def small_moon(img, cx, cy, r, col, I=1.0, ext=None):
     yy, xx = np.mgrid[y0:y1, x0:x1].astype(f32)
     dist = np.sqrt((xx + 0.5 - cx) ** 2 + (yy + 0.5 - cy) ** 2)
     glow = np.exp(-np.maximum(dist - r, 0) / (1.5 + r * 0.8)) * 0.6 + np.exp(-dist / (8 + r * 4)) * 0.10
+    glow = glow * smooth(pad - 1, pad * 0.55, dist)                            # fade to 0 inside the patch (no box edges)
     add = (disc * 3.0 + glow)[..., None] * np.array(col, f32) * I
     if ext is not None: add = add * ext[y0:y1, x0:x1]
     img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - disc[..., None]) + add

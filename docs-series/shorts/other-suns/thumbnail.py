@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 from lib.text import word_layer, composite, ORANGE
 
-T = float(sys.argv[1]) if len(sys.argv) > 1 else 32.6
+T = float(sys.argv[1]) if len(sys.argv) > 1 else 31.0
 WHITE = (250, 250, 250)
 OUT = os.path.join(HERE, "out"); os.makedirs(OUT, exist_ok=True)
 

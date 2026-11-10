@@ -43,18 +43,18 @@ def wt(key, cap, n=0):
 # geo: (latitude, camera azimuth). sun: (declination, hour angle start, hour angle end) -- time-lapse within the beat.
 # sky: zenith / horizon colours (linear), sun-glow colour, anti-sun belt, star gain, ring gain K, ring sky-glow, exposure.
 BEATS = {
-    "ny":    dict(geo=(41.0, 180.0), sun=(-8.5, -76.0, -68.0), K=26.0, glow=0.05, expo=1.0, tint=(1.18, 0.92, 0.68),
-                  zen=(0.015, 0.095, 0.46), hor=(1.35, 0.55, 0.17), sg=(2.6, 1.0, 0.25), belt=(0.30, 0.10, 0.30), stars=0.0,
+    "ny":    dict(geo=(41.0, 180.0), sun=(-8.5, -76.0, -68.0), K=16.0, glow=0.05, expo=1.0, tint=(1.40, 0.84, 0.46), gt=0.10,
+                  zen=(0.010, 0.085, 0.55), hor=(1.35, 0.55, 0.17), sg=(2.6, 1.0, 0.25), belt=(0.30, 0.10, 0.30), stars=0.0,
                   name="NEW YORK · 41° N", l2="RINGS 7,000–80,000 KM OUT", l3="WINTER · GOLDEN HOUR", tc=(255, 196, 120)),
     "night": dict(geo=(41.0, 180.0), sun=(20.0, 140.0, 168.0), K=5.5, glow=0.10, expo=1.25, tint=(0.92, 0.98, 1.08),
                   zen=(0.010, 0.030, 0.120), hor=(0.030, 0.060, 0.150), sg=(0.0, 0.0, 0.0), belt=(0, 0, 0), stars=1.0,
-                  name="NEW YORK · MIDNIGHT", l2="", l3="EARTH'S SHADOW ON THE RINGS", tc=(170, 210, 255)),
+                  name="NEW YORK · MIDNIGHT", l2="RINGLIGHT ≈ 1,000s × FULL MOON", l3="EARTH'S SHADOW ON THE RINGS", tc=(170, 210, 255)),
     "eq":    dict(geo=(0.05, 90.0), sun=(6.0, -9.0, 7.0), K=10.0, glow=0.20, expo=0.95, tint=(1.0, 1.0, 1.0),
                   zen=(0.020, 0.140, 0.78), hor=(0.50, 0.68, 1.00), sg=(1.0, 0.95, 0.85), belt=(0, 0, 0), stars=0.0,
                   name="EQUATOR · 0°", l2="RINGS SEEN EDGE-ON", l3="NOON", tc=(130, 230, 255)),
     "oslo":  dict(geo=(60.0, 180.0), sun=(21.0, 146.0, 153.0), K=7.0, glow=0.20, expo=1.25, tint=(1.12, 0.86, 0.86),
                   zen=(0.030, 0.035, 0.170), hor=(0.50, 0.20, 0.32), sg=(0.9, 0.35, 0.25), belt=(0.35, 0.12, 0.30), stars=0.35,
-                  name="OSLO · 60° N", l2="", l3="MIDSUMMER NIGHT", tc=(255, 150, 200)),
+                  name="OSLO · 60° N", l2="ARCH ONLY 17° HIGH", l3="MIDSUMMER NIGHT", tc=(255, 150, 200)),
 }
 BEATS["end"] = dict(BEATS["ny"], sun=(-8.5, -79.0, -76.0), name="", l2="", l3="")
 ORDER = ["ny", "night", "eq", "oslo", "end"]
@@ -99,12 +99,14 @@ class Scene:
         self.fg = fg = Foreground(FG_PATH, L, lamps=[], hz_frac=0.72)
         self.hz = hz = float(fg.horizon)
         self.f = 880.0 if vertical else 640.0
-        self.C = (540.0, 880.0) if vertical else (960.0, 380.0)                     # shockwave centre (arch apex area)
+        # cylindrical sky lens (px per radian): vertical +-72 deg wide, ~93 deg tall (zenith in frame); 16:9 +-85 deg wide, ~62 deg tall
+        self.lens = (540 / math.radians(72), 860.0) if vertical else (960 / math.radians(85), (hz) / math.radians(62))
+        self.C = (540.0, 760.0) if vertical else (960.0, 330.0)                     # shockwave centre (arch apex area)
         self.prof = RG.Profile()
         self.geos = {}
         for k in ("ny", "night", "eq", "oslo"):
             g = BEATS[k]["geo"]
-            if g not in self.geos: self.geos[g] = RG.Geo(self.prof, W, H, hz, self.f, g[1], g[0])
+            if g not in self.geos: self.geos[g] = RG.Geo(self.prof, W, H, hz, self.f, g[1], g[0], lens=self.lens)
         self.cam = SkyCam(W, H, hz, self.f)
         self.stars = StarSky()
         yyf, xxf = np.mgrid[0:H, 0:W].astype(f32); self.xx, self.yy = xxf, yyf
@@ -115,7 +117,7 @@ class Scene:
         self.rim = cv2.GaussianBlur(np.clip(a - sh, 0, 1), (0, 0), 3.0) * a
         self.rim_soft = cv2.GaussianBlur(np.clip(a - np.roll(a, 40, 0), 0, 1), (0, 0), 14.0) * a
         dy = np.maximum(yyf - hz + 14 * fg.s, 3.0)
-        self.gdist = (26.0 * 14 * fg.s / dy).astype(f32)                             # ~26 km at the horizon -> ~0.3 km in front
+        self.gdist = (26.0 * (14 * fg.s / dy) ** 0.45).astype(f32)                    # far ridges ~26 km -> a few km in front (softened)
         self.gx = ((xxf - W / 2) / W).astype(f32)
         ny_ = np.random.default_rng(4)
         self.bandn = cv2.resize(fbm2((64, 64), 77, 2.4), (W, H), interpolation=cv2.INTER_CUBIC).astype(f32)
@@ -152,9 +154,9 @@ class Scene:
         return sky
 
     # -------------------------------------------------------------------------------------------- rings
-    def ring_layer(self, geo, sv, K, t, vis_r, edge_r, gain=1.0, tint=(1, 1, 1)):
+    def ring_layer(self, geo, sv, K, t, vis_r, edge_r, gain=1.0, tint=(1, 1, 1), gt=0.0):
         """-> (rgb radiance at ring pixels, transmission T, glow image small) at the masked pixels of geo"""
-        I, sh, fringe = geo.shade(sv)
+        I, sh, fringe = geo.shade(sv, glowthick=gt)
         # spokes / orbital texture (Keplerian shear, time-lapse)
         om = 0.9 * (geo.r / 12000.0) ** -1.5
         lam = (geo.lam - om * t * 0.25) % (2 * np.pi)
@@ -182,10 +184,10 @@ class Scene:
         if sv[2] * O[2] >= 0 or abs(sv[2]) < 1e-3: return None
         s0 = -O[2] / sv[2]; Q = O + s0 * sv; rq = float(np.hypot(Q[0], Q[1]))
         sweep = 1.0 + 0.9 * ramp(t, T_STRIPE - 0.4, T_STRIPE + 0.8)
-        rr = rq - (self.gdist * (1.0 + 0.3 * self.gx) + self.bandn * 0.6) * 110.0 * sweep + 250 + (t - STARTS[key]) * 30.0
+        rr = rq - (self.gdist * (1.0 + 0.30 * self.gx + 0.06 * self.bandn) + self.bandn * 0.35) * 110.0 * sweep + 250 + (t - STARTS[key]) * 30.0
         sm = cv2.resize(rr, (self.L.W // 4, self.L.H // 4), interpolation=cv2.INTER_AREA)
         tau = self.prof.tau_soft(sm.ravel().astype(np.float64), 2.0).reshape(sm.shape)
-        Tr = np.exp(-tau / max(abs(float(sv[2])), 0.05)) ** 0.8
+        Tr = cv2.GaussianBlur((np.exp(-tau / max(abs(float(sv[2])), 0.05)) ** 0.8).astype(f32), (0, 0), 1.5)
         return cv2.resize(Tr.astype(f32), (self.L.W, self.L.H), interpolation=cv2.INTER_CUBIC)
 
     # -------------------------------------------------------------------------------------------- foreground
@@ -243,7 +245,7 @@ class Scene:
                 ue = ease(u) ** 0.9
                 vis = RG.R0 * (RG.R1 * 1.05 / RG.R0) ** ue; edge = vis
             else: vis, edge = None, None
-            Lr, T = self.ring_layer(geo, sv, B["K"], t, vis, edge, gain=pulse * surge, tint=B["tint"])
+            Lr, T = self.ring_layer(geo, sv, B["K"], t, vis, edge, gain=pulse * surge, tint=B["tint"], gt=B.get("gt", 0.0))
             flat = img.reshape(-1, 3)
             if stars_g > 0:
                 st = self.stars.render(self.cam, t, gain=1.0, plate_gain=0.45) * stars_g
@@ -270,7 +272,7 @@ class Scene:
             gh = ramp(t, wt("end", "RINGS") - 0.2, wt("end", "RINGS") + 0.5) * (1 - ramp(t, wt("end", "YEARS"), ENDS["end"] - 0.5))
             if gh > 0.003:
                 g0 = self.geos[(41.0, 180.0)]
-                Lr, T = self.ring_layer(g0, sun_of("ny", 0.0), BEATS["ny"]["K"], t, None, None, gain=0.35 * gh, tint=BEATS["ny"]["tint"])
+                Lr, T = self.ring_layer(g0, sun_of("ny", 0.0), BEATS["ny"]["K"], t, None, None, gain=0.35 * gh, tint=BEATS["ny"]["tint"], gt=BEATS["ny"]["gt"])
                 img.reshape(-1, 3)[g0.idx] += Lr * (0.75 + 0.25 * math.sin(t * 6.0))
         if key == "night":                                                       # meteors from ring debris
             img += self.meteors(t)

@@ -52,6 +52,7 @@ class Profile:
         tau = -np.log(1 - np.clip(a, 0, 0.985))
         tau = tau * np.where(dense, np.clip(1 + 0.32 * ring_n, 0.35, 2.0), 1.0)
         # synthetic faint rings (visual optical depths, boosted from the real faint-ring values so they read)
+        tau = tau * np.where((r > 19000) & (r < 21500), 0.35, 1.0)
         tau += 0.020 * ((r > 6700) & (r < 7000))                                            # D
         tau += 0.060 * np.exp(-((r - 33500) / 650) ** 2)                                    # G
         E = 0.030 * np.exp(-((r - 44000) / 13000) ** 2) * smooth(30000, 34000, r) * (1 - smooth(70000, 80000, r))
@@ -132,6 +133,20 @@ def stereo_dirs(W, H, hz, f, az, phi, xs, ys):
     return d.astype(f32)
 
 
+def cyl_dirs(W, H, hz, kx, ky, az, phi, xs, ys):
+    """Earth-frame unit view vectors for a cylindrical (azimuth, altitude) sky lens facing azimuth az:
+    x -> azimuth linearly (kx px/rad), y -> altitude linearly above the horizon row (ky px/rad).
+    The celestial equator then reads as a true arch rising from both lower corners."""
+    U, N, E = local_frame(phi)
+    a = math.radians(az)
+    fwd = math.cos(a) * N + math.sin(a) * E
+    right = math.cos(a + math.pi / 2) * N + math.sin(a + math.pi / 2) * E
+    azr = (xs - W / 2) / kx; alt = np.clip((hz - ys) / ky, -0.5, 1.5)
+    ca, sa = np.cos(alt), np.sin(alt)
+    d = (ca * np.cos(azr))[..., None] * fwd + (ca * np.sin(azr))[..., None] * right + sa[..., None] * U
+    return d.astype(f32)
+
+
 def airmass(alt_deg):
     a = np.maximum(alt_deg, 0.0)
     return 1.0 / (np.sin(np.radians(a)) + 0.50572 * (a + 6.07995) ** -1.6364)
@@ -142,18 +157,19 @@ TAU_ATM = np.array([0.075, 0.125, 0.25], f32)
 
 class Geo:
     """static per-(latitude, camera) geometry: full-res ring hits (masked), half-res sky directions"""
-    def __init__(self, prof, W, H, hz, f, az, phi):
+    def __init__(self, prof, W, H, hz, f, az, phi, lens=None):
+        dirs = (lambda xs, ys: cyl_dirs(W, H, hz, lens[0], lens[1], az, phi, xs, ys)) if lens else (lambda xs, ys: stereo_dirs(W, H, hz, f, az, phi, xs, ys))
         self.phi, self.az = phi, az
         self.O = RE * np.array([math.cos(math.radians(phi)), 0, math.sin(math.radians(phi))])
         self.U, self.N, self.E = local_frame(phi)
         # half-res sky directions
         hh, hw = H // 2, W // 2
         yy, xx = np.mgrid[0:hh, 0:hw].astype(f32) * 2 + 1.0
-        self.dh = stereo_dirs(W, H, hz, f, az, phi, xx, yy)
+        self.dh = dirs(xx, yy)
         self.alt_h = np.degrees(np.arcsin(np.clip(self.dh @ self.U.astype(f32), -1, 1))).astype(f32)
         # full-res ring hits
         yy, xx = np.mgrid[0:H, 0:W].astype(f32) + 0.5
-        d = stereo_dirs(W, H, hz, f, az, phi, xx, yy)
+        d = dirs(xx, yy)
         dz = d[..., 2]
         Oz = self.O[2]
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -174,7 +190,7 @@ class Geo:
         self.P = P.reshape(-1, 3)[m][:, :2].astype(f32)
         self.d = d.reshape(-1, 3)[m].astype(f32)
         self.mu = np.maximum(np.abs(self.d[:, 2]), 1e-4).astype(f32)
-        lev = np.log2(np.maximum(fp.ravel()[m] * 1.25 / DR, 1.0))
+        lev = np.log2(np.maximum(fp.ravel()[m] * 0.85 / DR, 1.0))
         self.tau, self.alb, self.dust = prof.sample(self.r, lev)
         self.lam = np.arctan2(self.P[:, 1], self.P[:, 0]).astype(f32)
         alt = np.degrees(np.arcsin(np.clip(self.d @ self.U.astype(f32), -1, 1)))
@@ -189,7 +205,7 @@ class Geo:
         self.glint_ph = rs.uniform(0, 6.283, k).astype(f32); self.glint_fr = rs.uniform(0.6, 2.6, k).astype(f32)
 
     # ------------------------------------------------------------------------------------------------
-    def shade(self, sv, earthshine=0.03, diffuse=0.30):
+    def shade(self, sv, earthshine=0.03, diffuse=0.30, glowthick=0.0):
         """ring radiance in units of I/F (per pixel, rgb) for sun vector sv; also Earth-shadow factor"""
         mu = self.mu; tau = self.tau
         mu0 = max(abs(float(sv[2])), 0.03)
@@ -209,6 +225,8 @@ class Geo:
             I = 0.25 * Pp * np.maximum(ex, 0)
         # multiple scattering through thick ice (both faces) + Earthshine
         I = I + diffuse * 0.25 * (1 - np.exp(-t1)) * np.exp(-0.35 * tau) * (0.45 if not same else 0.25) + earthshine * (1 - np.exp(-t1))
+        if glowthick > 0 and not same:                                      # translucent-ice glow of the dense rings
+            I = I + glowthick * (1 - np.exp(-t1)) * np.exp(-0.25 * tau) * (0.6 + 0.4 * Pp / (1 + Pp))
         # Earth's shadow cylinder
         P3 = self.P
         tc = P3[:, 0] * sv[0] + P3[:, 1] * sv[1]

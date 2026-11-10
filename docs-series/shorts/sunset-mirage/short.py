@@ -89,6 +89,11 @@ def green_amt(t):
     return ramp(t, T_GF - 0.30, T_GF + 0.06) * math.exp(-max(0.0, t - (T_GF + 0.18)) / 0.55)
 
 
+def green_wash(t):
+    """the wide green wash (halo, ground tint, ring) fades fast so the sliver stays the star"""
+    return ramp(t, T_GF - 0.30, T_GF + 0.06) * math.exp(-max(0.0, t - (T_GF + 0.10)) / 0.30)
+
+
 def white_level(t):
     return ramp(t, T_POP - 0.75, T_POP) ** 2.2 if t < T_POP else math.exp(-(t - T_POP) / 0.13)
 
@@ -97,7 +102,7 @@ CYAN, GOLD, GREEN, MAGENTA, ORANGE, WHITE = ((0.30, 0.85, 1.0), (1.0, 0.70, 0.22
                                              (1.0, 0.45, 0.10), (1.0, 0.95, 0.90))
 # flash + chromatic shockwave events: (time, colour, strength)
 EVENTS = [(T_TOUCH - 0.05, GOLD, 0.6), (T_REVEAL, CYAN, 1.2), (T_BENDS, MAGENTA, 0.8), (T_OVAL, ORANGE, 0.8),
-          (T_GF + 0.05, GREEN, 0.9), (T_MIN, GOLD, 0.9), (T_MYTHW, MAGENTA, 1.0), (T_POP, WHITE, 1.4)]
+          (T_GF + 0.30, GREEN, 0.9), (T_MIN, GOLD, 0.9), (T_MYTHW, MAGENTA, 1.0), (T_POP, WHITE, 1.4)]
 
 
 def fmt_readouts():
@@ -217,7 +222,8 @@ class Scene:
         dx = self.hx - cx; dy = self.hy - cy; d = np.sqrt(dx * dx + dy * dy) + 1e-3
         dd = np.maximum(d - self.R, 0)
         gl = (np.exp(-dd / 35) * 0.75 + np.exp(-dd / 200) * 0.28 + np.exp(-dd / 800) * 0.07) * (0.45 + 0.55 * sv) * pulse
-        gcol = np.array([1.0, 0.30, 0.05], f32) * (1 - gf) + np.array([0.12, 1.0, 0.30], f32) * gf
+        gw = green_wash(t)
+        gcol = np.array([1.0, 0.30, 0.05], f32) * (1 - gw) + np.array([0.12, 1.0, 0.30], f32) * gw
         sky = sky + gl[..., None] * gcol * (1 + 0.6 * gf)
         # rainbow beams (crepuscular after sunset)
         phi = np.arctan2(dy, dx)
@@ -283,10 +289,10 @@ class Scene:
             out[..., c] = inside * (1 - (0.45, 0.62, 0.80)[c] * (1 - mu)) * col0[c] * redden
         if s["gf"] > 0:                                        # the last sliver turns emerald
             g = s["gf"]; y = out.max(-1, keepdims=True)
-            out = out * (1 - g) + y * np.array([0.06, 1.0, 0.22], f32) * g * 2.2
+            out = out * (1 - g) + y * np.array([0.04, 1.0, 0.20], f32) * g * 1.1
         # top-limb green rim from the dispersion (G lifted more than R)
         out[..., 1] += np.clip(out[..., 1] - out[..., 0], 0, None) * 1.5
-        I = 4.2 * (0.6 + 0.4 * s["sv"]) * pulse * (1 + 1.2 * s["gf"])
+        I = 4.2 * (0.6 + 0.4 * s["sv"]) * pulse
         clip = smooth(self.yh + 0.5, self.yh - 1.0, yy)[..., None]
         img[y0:y1, x0:x1] = img[y0:y1, x0:x1] * (1 - 0.88 * cov[..., None] * clip) + out * I * clip
 
@@ -469,9 +475,9 @@ class Scene:
         dusk, gf = s["dusk"], s["gf"]
         fgc = self.fg_gold * (1 - dusk) + self.fg_dusk * dusk
         fgc = fgc * (0.88 + 0.12 * s["sv"] + 0.04 * (pulse - 1))
-        rimc = np.array([1.0, 0.55, 0.18], f32) * (0.25 + 0.95 * s["sv"]) * (1 - gf) + np.array([0.3, 1.0, 0.45], f32) * gf * 3.0
+        rimc = np.array([1.0, 0.55, 0.18], f32) * (0.25 + 0.95 * s["sv"]) * (1 - gf) + np.array([0.3, 1.0, 0.45], f32) * (gf + 2.0 * green_wash(t))
         fgc = fgc + self.rim[..., None] * rimc * (1 - 0.55 * dusk)
-        fgc = fgc + self.fg.flat * np.array([0.2, 0.9, 0.35], f32) * 0.18 * gf
+        fgc = fgc + self.fg.flat * np.array([0.2, 0.9, 0.35], f32) * 0.12 * green_wash(t)
         img = img * (1 - self.a) + fgc * self.a
         img, g = self.cutaway(img, t, s)
         # graphics
@@ -488,8 +494,9 @@ class Scene:
         if gf > 0.005:
             dx = self.hx - self.sx; dy = self.hy - (self.yh - 4)
             d = np.sqrt(dx * dx + dy * dy)
-            burst = np.exp(-d / 30) * 0.35 + np.exp(-d / 150) * 0.55 + np.exp(-d / 420) * 0.30 + np.exp(-d / 1100) * 0.10
-            streak = np.exp(-(dy / 4.0) ** 2) * np.exp(-np.abs(dx) / 900) * 2.4 + np.exp(-(dy / 16.0) ** 2) * np.exp(-np.abs(dx) / 500) * 0.5
+            gw = green_wash(t) / max(gf, 1e-3)
+            burst = np.exp(-d / 30) * 0.12 + np.exp(-d / 150) * 0.45 + (np.exp(-d / 420) * 0.30 + np.exp(-d / 1100) * 0.10) * gw
+            streak = np.exp(-(dy / 3.0) ** 2) * np.exp(-np.abs(dx) / 900) * 0.9 + np.exp(-(dy / 16.0) ** 2) * np.exp(-np.abs(dx) / 500) * 0.5 * gw
             ph = np.arctan2(dy, dx)
             for k in range(8):                                   # starburst spikes, slowly turning
                 a = k * np.pi / 4 + 0.15 + 0.4 * (t - T_GF)
@@ -506,8 +513,9 @@ class Scene:
                 Rr = 2300 * (max(u, 0) / 1.4) ** 0.6; wdt = 14 + 50 * u
                 dd = np.sqrt((self.hx - self.sx) ** 2 + (self.hy - self.yh) ** 2)
                 ring = np.zeros(dd.shape + (3,), f32)
+                dk = 0.25 if col[1] > 0.9 and col[0] < 0.2 else 0.5           # the green ring clears quickly
                 for ch, off in ((0, 12), (1, 0), (2, -12)):
-                    ring[..., ch] = np.exp(-((dd - Rr - off) / wdt) ** 2) * 1.5 * strength * math.exp(-max(u, 0) / 0.5) * (0.5 + 0.5 * col[ch])
+                    ring[..., ch] = np.exp(-((dd - Rr - off) / wdt) ** 2) * 1.5 * strength * math.exp(-max(u, 0) / dk) * (0.5 + 0.5 * col[ch])
                 img += self.up(ring)
         wl = white_level(t)
         if wl > 0.001: img = img + (26 * wl ** 1.5) * np.array([1.0, 0.94, 0.86], f32)

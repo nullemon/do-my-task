@@ -1,0 +1,80 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(lat800.woff2) format('woff2');font-weight:800;}
+html,body{margin:0;background:#000}canvas{display:block}
+</style></head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+'use strict';
+/* Negative-afterimage illusion. The viewer stares at a dot on a colour-inverted picture;
+   it then cuts to a pure black-and-white picture, which their eyes briefly see in full colour.
+   1080x1920, deterministic: render(t). */
+const W=1080,H=1920,FPS=60,DUR=13,T={start:1.0,flip:10.0,hint:12.0},DX=540,DY=1010;
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a));
+const back=x=>{const c=2;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2);};
+window.META={DUR,FPS,T};
+
+/* ---------- the picture (big flat areas of obvious colour work best) ---------- */
+function picture(c){
+  c.fillStyle='#35a7ff';c.fillRect(0,0,W,H);                                    // sky
+  c.fillStyle='#ffd400';c.beginPath();c.arc(820,560,130,0,7);c.fill();          // sun
+  c.fillStyle='#ffffff';[[250,640,90],[340,610,110],[440,650,85],[700,860,60],[770,845,75],[850,865,58]].forEach(([x,y,r])=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();});
+  c.fillStyle='#7d6bd6';c.beginPath();c.moveTo(-40,1260);c.lineTo(260,860);c.lineTo(520,1180);c.lineTo(760,930);c.lineTo(1130,1270);c.closePath();c.fill();   // mountains
+  c.fillStyle='#ffffff';c.beginPath();c.moveTo(260,860);c.lineTo(205,935);c.lineTo(255,925);c.lineTo(290,950);c.lineTo(325,940);c.closePath();c.fill();
+  c.beginPath();c.moveTo(760,930);c.lineTo(705,990);c.lineTo(750,985);c.lineTo(785,1005);c.lineTo(820,990);c.closePath();c.fill();
+  c.fillStyle='#19b84a';c.beginPath();c.moveTo(0,1260);c.quadraticCurveTo(300,1090,640,1230);c.quadraticCurveTo(900,1150,1080,1220);c.lineTo(1080,H);c.lineTo(0,H);c.closePath();c.fill();  // hill
+  c.fillStyle='#0c8f37';c.beginPath();c.moveTo(0,1500);c.quadraticCurveTo(420,1360,1080,1520);c.lineTo(1080,H);c.lineTo(0,H);c.closePath();c.fill();
+  c.fillStyle='#ff2d2d';c.fillRect(170,1250,300,230);                             // house
+  c.fillStyle='#8a3b12';c.beginPath();c.moveTo(130,1260);c.lineTo(320,1120);c.lineTo(510,1260);c.closePath();c.fill();
+  c.fillStyle='#ffd400';c.fillRect(285,1360,70,120);c.fillStyle='#35a7ff';c.fillRect(200,1300,60,60);c.fillRect(380,1300,60,60);
+  c.fillStyle='#8a3b12';c.fillRect(800,1270,44,190);                              // tree
+  c.fillStyle='#0c8f37';[[822,1200,105],[755,1260,75],[890,1260,75]].forEach(([x,y,r])=>{c.beginPath();c.arc(x,y,r,0,7);c.fill();});
+  [['#ff2d2d',120,1640],['#ffd400',300,1700],['#ff66c4',520,1640],['#ff2d2d',740,1710],['#ffd400',930,1640],['#ff66c4',200,1800],['#ffd400',640,1800],['#ff2d2d',880,1820]].forEach(([col,x,y])=>{
+    c.fillStyle=col;for(let i=0;i<5;i++){c.beginPath();c.arc(x+Math.cos(i*1.257)*20,y+Math.sin(i*1.257)*20,15,0,7);c.fill();}c.fillStyle='#ffffff';c.beginPath();c.arc(x,y,11,0,7);c.fill();});
+}
+const mk=()=>{const c=document.createElement('canvas');c.width=W;c.height=H;return c;};
+const SRC=mk(),INV=mk(),GRAY=mk();
+(()=>{const s=SRC.getContext('2d');picture(s);const d=s.getImageData(0,0,W,H),a=d.data;
+  const gi=GRAY.getContext('2d'),ii=INV.getContext('2d'),gd=gi.createImageData(W,H),id=ii.createImageData(W,H);
+  for(let i=0;i<a.length;i+=4){const r=a[i],gr=a[i+1],b=a[i+2],Y=.299*r+.587*gr+.114*b;
+    gd.data[i]=gd.data[i+1]=gd.data[i+2]=Y;gd.data[i+3]=255;
+    // opposite colour, same brightness: the afterimage supplies the hue, the grey picture supplies the detail
+    id.data[i]=clamp(Y-1.5*(r-Y),0,255);id.data[i+1]=clamp(Y-1.5*(gr-Y),0,255);id.data[i+2]=clamp(Y-1.5*(b-Y),0,255);id.data[i+3]=255;}
+  gi.putImageData(gd,0,0);ii.putImageData(id,0,0);})();
+
+function txt(s,x,y,size,fill='#fff',alpha=1,stroke=14){g.save();g.globalAlpha=alpha;g.font=`800 ${size}px B`;g.textAlign='center';g.textBaseline='middle';
+  g.lineJoin='round';g.lineWidth=stroke;g.strokeStyle='#000';g.strokeText(s,x,y);g.fillStyle=fill;g.fillText(s,x,y);g.restore();}
+function band(y,h,a){g.fillStyle=`rgba(0,0,0,${a})`;g.fillRect(0,y,W,h);}
+
+function render(t){
+  g.setTransform(1,0,0,1,0,0);
+  const flipped=t>=T.flip;
+  g.drawImage(flipped?GRAY:INV,0,0);
+  if(!flipped){
+    band(150,330,.72);
+    const p=.8+.2*back(seg(t,0,.3)),k=1+.03*Math.sin(t*6);
+    g.save();g.translate(540,260);g.scale(p*k,p*k);txt('STARE AT THE DOT',0,0,104,'#ffe600');g.restore();
+    txt("Don't blink. Don't look away.",540,390,52,'#fff');
+    // arrows pointing at the dot for the first second
+    const a=1-seg(t,1.2,1.8);if(a>0){const o=Math.sin(t*9)*14;[[-1,0],[1,0]].forEach(([sx])=>{g.save();g.globalAlpha=a;g.translate(DX+sx*(150+o),DY);g.scale(sx,1);
+      g.beginPath();g.moveTo(0,0);g.lineTo(70,-44);g.lineTo(70,-16);g.lineTo(150,-16);g.lineTo(150,16);g.lineTo(70,16);g.lineTo(70,44);g.closePath();g.fillStyle='#ffe600';g.fill();g.lineWidth=8;g.strokeStyle='#000';g.stroke();g.restore();});}
+  }else{
+    band(150,330,.72);
+    const p=back(seg(t,T.flip+.15,T.flip+.4));
+    g.save();g.translate(540,250);g.scale(p,p);txt('THIS PICTURE IS',0,0,76,'#fff');g.restore();
+    g.save();g.translate(540,360);g.scale(p,p);txt('BLACK & WHITE',0,0,112,'#ffe600');g.restore();
+    const q=seg(t,T.flip+.9,T.flip+1.2);if(q>0){band(1560,170,.72*q);txt('Your brain added the colour',540,1645,58,'#fff',q);}
+  }
+  // fixation dot with the countdown inside it (keeps the eyes locked on one point)
+  const left=Math.max(0,T.flip-t),n=Math.ceil(Math.min(left,T.flip-T.start)),pulse=1+.05*Math.sin(t*4);
+  g.save();g.translate(DX,DY);g.scale(pulse,pulse);
+  g.beginPath();g.arc(0,0,50,0,7);g.fillStyle='#fff';g.fill();g.beginPath();g.arc(0,0,40,0,7);g.fillStyle='#000';g.fill();
+  if(!flipped){g.beginPath();g.arc(0,0,45,-Math.PI/2,-Math.PI/2+6.283*clamp(left/(T.flip-T.start)));g.lineWidth=10;g.strokeStyle='#ff2d2d';g.stroke();
+    g.font='800 48px B';g.textAlign='center';g.textBaseline='middle';g.fillStyle='#fff';g.fillText(String(n),0,3);}
+  else{g.beginPath();g.arc(0,0,10,0,7);g.fillStyle='#fff';g.fill();}
+  g.restore();
+  if(t>=T.hint){const q=seg(t,T.hint,T.hint+.25);band(1740,110,.72*q);txt("Didn't work? Stare harder this time",540,1795,44,'#ffe600',q,10);}
+}
+window.render=render;
+</script></body></html>

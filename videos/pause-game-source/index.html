@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(lat800.woff2) format('woff2');font-weight:800;}
+html,body{margin:0;background:#000}canvas{display:block}
+</style></head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+'use strict';
+/* "Pause to see your 2027" game: outcome cards flash past too fast to read; the viewer pauses to land on one.
+   1080x1920 @60fps, 10s, loops. Deterministic: render(t). */
+const W=1080,H=1920,FPS=60,DUR=10,NF=DUR*FPS;
+const cv=document.getElementById('c'),g=cv.getContext('2d');
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const TIER={
+  common:{name:'COMMON',col:'#5b6b8c',dark:'#39445c',w:.60,len:[4,6],items:['You lose your charger 14 times','Your phone storage stays full','You reply to a text 3 weeks late','Your WiFi betrays you','You say "new year, new me" again','You become a morning person (for 2 days)','You find money in old jeans','You finally fix your sleep schedule','You start a diet on Monday. Again.','You forget why you walked into the room']},
+  rare:{name:'RARE',col:'#1e88ff',dark:'#0f55b0',w:.24,len:[4,5],items:['Your crush texts first','You go viral once','A free trip finds you','You get the job','You glow up','Your best year of friendships']},
+  epic:{name:'EPIC',col:'#a23bff',dark:'#6417b5',w:.10,len:[3,4],items:['You get rich','You meet your soulmate','You move to your dream city','You become the main character']},
+  cursed:{name:'CURSED',col:'#e02424',dark:'#8f1010',w:.06,len:[3,4],items:['You text your ex','You reply-all by mistake','Your screen time gets exposed']},
+  legendary:{name:'LEGENDARY',col:'#ffb300',dark:'#c27a00',w:0,len:[2,2],items:['EVERYTHING goes your way']}};
+const CARDS=(()=>{const r=rng(2027),out=[];let f=0,prev='';const LEG=[203,471];
+  while(f<NF){let tier,text;
+    if(LEG.some(x=>f>=x&&f<x+2)){tier='legendary';text=TIER.legendary.items[0];}
+    else{do{const k=r();tier=k<.60?'common':k<.84?'rare':k<.94?'epic':'cursed';const it=TIER[tier].items;text=it[Math.floor(r()*it.length)];}while(text===prev);}
+    prev=text;const [a,b]=TIER[tier].len;let len=a+Math.floor(r()*(b-a+1));
+    const nl=LEG.find(x=>x>f);if(nl!==undefined&&f+len>nl)len=nl-f;         // land exactly on the legendary frames
+    len=Math.min(len,NF-f);out.push({f,len,tier,text,rot:(r()-.5)*.07});f+=len;}
+  return out;})();
+window.META={DUR,FPS,cards:CARDS.map(c=>({t:+(c.f/FPS).toFixed(4),tier:c.tier}))};
+
+function txt(s,x,y,size,fill='#fff',alpha=1,stroke=0,sc='#000'){g.save();g.globalAlpha=alpha;g.font=`800 ${size}px B`;g.textAlign='center';g.textBaseline='middle';
+  if(stroke){g.lineJoin='round';g.lineWidth=stroke;g.strokeStyle=sc;g.strokeText(s,x,y);}g.fillStyle=fill;g.fillText(s,x,y);g.restore();}
+function wrap(s,size,maxW){g.font=`800 ${size}px B`;const words=s.split(' '),lines=[];let cur='';
+  words.forEach(w=>{const t=cur?cur+' '+w:w;if(g.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;});if(cur)lines.push(cur);return lines;}
+
+function render(t){
+  const f=Math.min(NF-1,Math.floor(t*FPS+1e-6));
+  const c=CARDS.find(c=>f>=c.f&&f<c.f+c.len),T=TIER[c.tier],age=f-c.f,leg=c.tier==='legendary';
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#0a0a12';g.fillRect(0,0,W,H);
+  const gl=g.createRadialGradient(540,980,100,540,980,1000);gl.addColorStop(0,T.col+'66');gl.addColorStop(1,'#0a0a1200');g.fillStyle=gl;g.fillRect(0,0,W,H);
+  // hook
+  const k=1+.05*Math.sin(t*10),sh=Math.sin(t*37)*5;
+  g.save();g.translate(540+sh,300);g.scale(k,k);
+  g.fillStyle='#ffe600';g.strokeStyle='#000';g.lineWidth=10;[[-330,-78],[-268,-78]].forEach(([x,y])=>{g.beginPath();g.roundRect(x,y,40,150,8);g.fill();});   // pause icon
+  txt('PAUSE',70,0,210,'#ffe600');g.restore();
+  txt('to see what 2027 has for you',540,455,58,'#fff');
+  // card
+  const pop=1+.06*Math.max(0,1-age/2);
+  g.save();g.translate(540,980);g.rotate(c.rot);g.scale(pop,pop);
+  g.beginPath();g.roundRect(-450,-330+16,900,660,50);g.fillStyle=T.dark;g.fill();
+  g.beginPath();g.roundRect(-450,-330,900,660,50);g.fillStyle=T.col;g.fill();g.lineWidth=10;g.strokeStyle=leg?'#fff':'rgba(255,255,255,.25)';g.stroke();
+  if(leg){for(let i=0;i<12;i++){const a=i/12*6.283+t*3;g.beginPath();g.moveTo(Math.cos(a)*520,Math.sin(a)*400);g.lineTo(Math.cos(a)*640,Math.sin(a)*500);g.lineWidth=14;g.lineCap='round';g.strokeStyle='#ffe600';g.stroke();}}
+  g.beginPath();g.roundRect(-190,-290,380,84,42);g.fillStyle='rgba(0,0,0,.35)';g.fill();txt(T.name,0,-246,52,'#fff');
+  const size=leg?104:86,lines=wrap(c.text,size,780),lh=size*1.12;
+  lines.forEach((l,i)=>txt(l,0,60+(i-(lines.length-1)/2)*lh,size,'#fff',1,leg?12:0,'#c27a00'));
+  g.restore();
+  // bottom
+  txt('Can you land the',540,1490,54,'#fff');txt('LEGENDARY?',540,1580,110,'#ffb300');
+  txt('Comment what you got',540,1690,46,'#fff',.75);
+}
+window.render=render;
+</script></body></html>

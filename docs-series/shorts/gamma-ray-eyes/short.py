@@ -111,6 +111,8 @@ class Scene:
                           fl=r.uniform(0.28, 0.42), hue=r.uniform(0.45, 0.85)) for k in range(nr)]
         self.grb = (0.84 * W, 0.17 * H) if vertical else (0.86 * W, 0.20 * H)
         self.rng_fixed = np.random.default_rng(3)
+        mt = fbm2((256, 256), 71, 2.3) * 0.7 + fbm2((256, 256), 72, 1.4) * 0.3
+        self.moon_tex = np.clip(mt * 0.5 + 0.5, 0, 1.3).astype(f32)
 
     def _aim(self, target_x):
         """camera azimuth that puts the Moon at target_x at t = 0"""
@@ -324,8 +326,8 @@ class Scene:
         R = (100 + 42 * ease(ramp(t, T_BLAZE - 0.1, T_BLAZE + 0.6))) * sc
         if mp:
             def halo(d, R=R, ml=ml):
-                return (np.exp(-np.maximum(d - R, 0) / (30 * sc)) * 1.6 + np.exp(-np.maximum(d - R, 0) / (140 * sc)) * 0.35
-                        + np.exp(-d / (500 * sc)) * 0.04) * ml * (d > R * 0.9)
+                return (np.exp(-np.maximum(d - R, 0) / (55 * sc)) * 1.5 + np.exp(-np.maximum(d - R, 0) / (210 * sc)) * 0.45
+                        + np.exp(-d / (500 * sc)) * 0.04) * ml * smooth(0.7, 1.0, d / R)
             self.hglow(hb, *mp, halo, (0.85, 0.55, 1.35), 1500 * sc)
             # shock ring at the blaze
             u = (t - T_BLAZE) / 1.3
@@ -367,16 +369,20 @@ class Scene:
                 d = np.sqrt((xx + x0 + 0.5 - sp[0]) ** 2 + (yy + y0 + 0.5 - sp[1]) ** 2)[ya - y0:yb - y0, xa - x0:xb - x0]
                 m = smooth(29 * sc, 25 * sc, d)[..., None]
                 img[ya:yb, xa:xb] = img[ya:yb, xa:xb] * (1 - m * 0.85) + m * np.array([0.05, 0.02, 0.09], f32) * (0.6 + ks)
-        if mp:   # orb body: violet interior, white-hot limb
+        if mp:   # orb body: a filled, fuzzy, mottled blazing Moon (like Fermi's gamma-ray Moon), gently pulsing
+            tex = self.moon_tex; th, tw = tex.shape
+            pulse = 1 + 0.07 * math.sin(t * 3.3) + 0.04 * math.sin(t * 7.1 + 1)
             def orb(d, dx, dy, R=R, ml=ml):
-                q = np.clip(d / R, 0, 1)
-                body = smooth(R + 1.5, R - 1.5, d)
-                n = 0.9 + 0.1 * np.sin(dx * 0.05 + t * 2) * np.sin(dy * 0.06 - t * 1.6)
-                inner = (0.75 + 2.2 * q ** 8) * n
-                colv = np.array([0.55, 0.20, 1.25], f32) * (1 - q[..., None] ** 6) + np.array([2.2, 1.6, 2.8], f32) * q[..., None] ** 6
-                rim = np.exp(-np.abs(d - R) / (4 * sc)) * 7.0
-                return (body * inner)[..., None] * colv * ml + (rim * ml)[..., None] * np.array([1.7, 1.5, 2.0], f32)
-            splat(img, mp[0], mp[1], R + 30 * sc, orb)
+                q = d / R
+                body = smooth(1.18, 0.80, q)                                    # soft, PSF-blurred edge
+                u = ((dx / R * 0.5 + 0.5 + 0.03 * t) * (tw - 1)).astype(np.int32) % tw
+                v = ((dy / R * 0.5 + 0.5 - 0.02 * t) * (th - 1)).astype(np.int32) % th
+                n = tex[v, u]
+                core = np.exp(-(q / 0.55) ** 2)
+                mid = np.array([0.95, 0.36, 1.9], f32); hot = np.array([2.3, 1.8, 2.9], f32)
+                val = body[..., None] * mid * (0.75 + 0.45 * n)[..., None] + core[..., None] * hot * (0.85 + 0.3 * n)[..., None]
+                return val * ml * pulse
+            splat(img, mp[0], mp[1], R * 1.25, orb)
             for r in self.rays:                                               # impact flashes on the limb
                 du = t - r["ta"]
                 if 0 <= du < 0.25:

@@ -1,0 +1,128 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(dev800.woff2) format('woff2');font-weight:800;unicode-range:U+0900-097F,U+200C-200D,U+25CC;}
+@font-face{font-family:B;src:url(lat800.woff2) format('woff2');font-weight:800;}
+html,body{margin:0;background:#000}canvas{display:block}
+</style></head><body><canvas id="c" width="1080" height="1920"></canvas>
+<script>
+'use strict';
+/* Neon "ring escape" physics short. 1080x1920, deterministic: render(t) draws any frame. */
+const W=1080,H=1920,CX=540,CY=1000,FPS=60,DUR=12,SUB=480;
+const RINGS=[170,270,370,470],OMEGA=[1.6,-1.2,.95,-.75],GAP=[.9,.75,.62,.52],HUE=[190,285,330,45];
+const BR=18,LW=14,G=1700;
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');
+const off=document.createElement('canvas');off.width=W;off.height=H;const octx=off.getContext('2d');
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x)),seg=(t,a,b)=>clamp((t-a)/(b-a));
+const wrap=a=>{a%=2*Math.PI;if(a>Math.PI)a-=2*Math.PI;if(a<-Math.PI)a+=2*Math.PI;return a;};
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---------------- simulation ---------------- */
+function simulate(seed){
+  const r=rng(seed),ph=[0,1,2,3].map(()=>r()*6.283),a0=r()*6.283;
+  let x=0,y=0,vx=Math.cos(a0)*900,vy=Math.sin(a0)*900,active=0,ok=true,last=-1;
+  const n=DUR*SUB,pos=new Float32Array(n*2),ev=[],dt=1/SUB;
+  for(let i=0;i<n;i++){
+    const t=i/SUB;vy+=G*dt;x+=vx*dt;y+=vy*dt;
+    if(active<4){
+      const R=RINGS[active],d=Math.hypot(x,y),inner=R-LW/2-BR;
+      if(d>R+LW/2+BR){ev.push({t,type:'break',k:active,x,y});active++;}
+      else if(d>=inner){
+        const diff=wrap(Math.atan2(y,x)-(ph[active]+OMEGA[active]*t)),inGap=Math.abs(diff)<GAP[active]/2-Math.asin((BR+5)/R);
+        const nx=x/d,ny=y/d,vn=vx*nx+vy*ny;
+        if(!inGap){
+          if(d>inner+7)ok=false;                       // gap edge swept into the ball: reject this seed
+          if(vn>0){vx-=2*vn*nx;vy-=2*vn*ny;
+            let sp=Math.hypot(vx,vy),ns=clamp(sp*1.045,900,2300);vx*=ns/sp;vy*=ns/sp;
+            if(-(vx*nx+vy*ny)<220){vx-=nx*220;vy-=ny*220;}
+            if(t-last<.035)ok=false;last=t;
+            ev.push({t,type:'bounce',k:active,x:nx*R,y:ny*R});}
+          x=nx*inner;y=ny*inner;
+        }
+      }
+    }else{
+      if(x<-CX+BR){x=-CX+BR;vx=Math.abs(vx)*.8;}if(x>CX-BR){x=CX-BR;vx=-Math.abs(vx)*.8;}
+      if(y<-CY+BR){y=-CY+BR;vy=Math.abs(vy)*.8;}if(y>H-CY-BR){y=H-CY-BR;vy=-Math.abs(vy)*.8;}
+    }
+    pos[i*2]=x;pos[i*2+1]=y;
+  }
+  return {pos,ev,ph,ok,seed};
+}
+const SEED=2957;   // chosen with search.js: rings break at ~1.6s, 4.9s, 8.2s, 10.4s
+const S=simulate(SEED);
+const BREAK=S.ev.filter(e=>e.type==='break'),BOUNCE=S.ev.filter(e=>e.type==='bounce');
+const TEND=BREAK[3].t;
+// shards for each broken ring
+const SHARDS=BREAK.map((b,k)=>{const r=rng(900+k),out=[],R=RINGS[k],g0=S.ph[k]+OMEGA[k]*b.t+GAP[k]/2,span=6.283-GAP[k],n=Math.round(R/5);
+  for(let i=0;i<n;i++){const a=g0+span*(i+.5)/n,sp=160+r()*520;
+    out.push({x:Math.cos(a)*R,y:Math.sin(a)*R,vx:Math.cos(a)*sp-Math.sin(a)*OMEGA[k]*R,vy:Math.sin(a)*sp+Math.cos(a)*OMEGA[k]*R,a,sp:(r()-.5)*14,len:span*R/n*.9,life:.7+r()*.6});}
+  return out;});
+const CONF=(()=>{const r=rng(77),o=[];for(let i=0;i<220;i++){const a=r()*6.283,sp=250+r()*1500;o.push({vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-300,h:HUE[i%4],s:5+r()*9,life:.8+r()*.7,rot:r()*6,vr:(r()-.5)*20});}return o;})();
+window.META={DUR,FPS,seed:S.seed,events:S.ev.map(e=>({t:+e.t.toFixed(4),type:e.type,k:e.k,x:+(e.x/CX).toFixed(3)}))};
+
+/* ---------------- drawing ---------------- */
+function txt(g,s,x,y,size,fill,alpha=1,glow=0,gc='#fff'){g.save();g.globalAlpha=alpha;g.font=`800 ${size}px B`;g.textAlign='center';g.textBaseline='middle';
+  if(glow){g.shadowColor=gc;g.shadowBlur=glow;}g.fillStyle=fill;g.fillText(s,x,y);g.restore();}
+function scene(g,t){
+  const active=BREAK.filter(b=>b.t<=t).length,hue=HUE[Math.min(active,3)];
+  const count=BOUNCE.filter(b=>b.t<=t).length,lastB=count?BOUNCE[count-1]:null,sinceB=lastB?t-lastB.t:9;
+  const i=Math.min(Math.floor(t*SUB),DUR*SUB-1),bx=S.pos[i*2],by=S.pos[i*2+1];
+  // camera kick on each ring break
+  let sx=0,sy=0;BREAK.forEach((b,k)=>{const d=t-b.t;if(d>=0&&d<.35){const a=(k===3?26:13)*Math.exp(-d*9);sx+=Math.sin(d*70)*a;sy+=Math.cos(d*61)*a;}});
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#06060c';g.fillRect(0,0,W,H);
+  const bgG=g.createRadialGradient(CX,CY,60,CX,CY,900);bgG.addColorStop(0,`hsla(${hue},80%,45%,.20)`);bgG.addColorStop(1,'hsla(0,0%,0%,0)');g.fillStyle=bgG;g.fillRect(0,0,W,H);
+  g.setTransform(1,0,0,1,CX+sx,CY+sy);
+  // bounce counter in the middle
+  if(t<TEND+.05){const p=1+.22*Math.exp(-sinceB*14);g.save();g.scale(p,p);txt(g,String(count),0,8,130,`hsl(${hue},90%,75%)`,.2+.25*Math.exp(-sinceB*10));g.restore();}
+  // rings
+  g.lineCap='round';
+  for(let k=0;k<4;k++){
+    const R=RINGS[k],col=`hsl(${HUE[k]},95%,60%)`;
+    if(k>=active){
+      const g0=S.ph[k]+OMEGA[k]*t,fl=(lastB&&lastB.k===k)?Math.exp(-sinceB*11):0,isAct=k===active;
+      g.save();g.globalAlpha=isAct?1:.5;g.shadowColor=col;g.shadowBlur=isAct?34+30*fl:14;
+      g.beginPath();g.arc(0,0,R,g0+GAP[k]/2,g0-GAP[k]/2+6.283);g.lineWidth=LW+8*fl;g.strokeStyle=fl>.02?`hsl(${HUE[k]},95%,${60+34*fl}%)`:col;g.stroke();g.restore();
+    }else{
+      const d=t-BREAK[k].t;g.save();g.shadowColor=col;g.shadowBlur=18;g.strokeStyle=col;g.lineWidth=LW*.8;
+      SHARDS[k].forEach(s=>{const a=1-d/s.life;if(a<=0)return;const x=s.x+s.vx*d,y=s.y+s.vy*d+.5*900*d*d,ang=s.a+Math.PI/2+s.sp*d,l=s.len/2*a;
+        g.globalAlpha=a;g.beginPath();g.moveTo(x-Math.cos(ang)*l,y-Math.sin(ang)*l);g.lineTo(x+Math.cos(ang)*l,y+Math.sin(ang)*l);g.stroke();});
+      g.restore();
+      if(d<.5){g.save();g.globalAlpha=(1-d/.5)*.8;g.beginPath();g.arc(0,0,R+d*500,0,7);g.lineWidth=10*(1-d/.5);g.strokeStyle=col;g.stroke();g.restore();}
+    }
+  }
+  // impact ripples + sparks
+  for(let j=count-1;j>=0&&j>count-6;j--){const b=BOUNCE[j],d=t-b.t;if(d>.4)break;const a=1-d/.4,h=HUE[b.k];
+    g.save();g.globalAlpha=a;g.beginPath();g.arc(b.x,b.y,10+d*190,0,7);g.lineWidth=6*a;g.strokeStyle=`hsl(${h},100%,80%)`;g.stroke();
+    const r=rng(j*13+5);for(let q=0;q<7;q++){const an=Math.atan2(-b.y,-b.x)+(r()-.5)*2.4,sp=160+r()*420;g.beginPath();g.arc(b.x+Math.cos(an)*sp*d,b.y+Math.sin(an)*sp*d,4.5*a,0,7);g.fillStyle='#fff';g.fill();}
+    g.restore();}
+  // trail
+  const TL=Math.round(SUB*.32);g.save();g.shadowColor=`hsl(${hue},100%,60%)`;g.shadowBlur=20;
+  for(let j=Math.max(1,i-TL);j<=i;j+=4){const p=(j-(i-TL))/TL;g.globalAlpha=p*p*.9;g.beginPath();g.moveTo(S.pos[(Math.max(0,j-4))*2],S.pos[(Math.max(0,j-4))*2+1]);g.lineTo(S.pos[j*2],S.pos[j*2+1]);
+    g.lineWidth=BR*2*(.15+.85*p);g.strokeStyle=`hsl(${hue+40*(1-p)},100%,${55+25*p}%)`;g.stroke();}
+  g.restore();
+  // ball
+  const pop=1+.35*Math.exp(-sinceB*16);
+  g.save();g.shadowColor=`hsl(${hue},100%,65%)`;g.shadowBlur=45;g.beginPath();g.arc(bx,by,BR*pop,0,7);g.fillStyle='#fff';g.fill();g.restore();
+  // finale
+  const fd=t-TEND;
+  if(fd>=0){const e=BREAK[3];g.save();
+    CONF.forEach(c=>{const a=1-fd/c.life;if(a<=0)return;const dr=Math.exp(-fd*1.6),x=e.x+c.vx*(1-dr)/1.6,y=e.y+c.vy*(1-dr)/1.6+.5*700*fd*fd;
+      g.globalAlpha=Math.min(1,a*1.6);g.save();g.translate(x,y);g.rotate(c.rot+c.vr*fd);g.fillStyle=`hsl(${c.h},100%,65%)`;g.fillRect(-c.s,-c.s*.45,c.s*2,c.s*.9);g.restore();});
+    g.restore();
+    const p=seg(fd,.05,.3),sc=p<1?1.25-.25*p+.5*Math.sin(p*Math.PI):1+.03*Math.sin(fd*9);
+    g.save();g.scale(sc,sc);txt(g,'आज़ाद!',0,0,190,'#fff',clamp(fd/.08),50,`hsl(${HUE[3]},100%,60%)`);g.restore();}
+  // screen-space text
+  g.setTransform(1,0,0,1,0,0);
+  const hook=1+.04*Math.sin(t*5);g.save();g.translate(CX,340);g.scale(hook,hook);txt(g,'क्या ये बाहर निकल पाएगी?',0,0,70,'#fff',1,18,`hsl(${hue},100%,60%)`);g.restore();
+  txt(g,'कितने बाउंस लगे? कमेंट करो',CX,1600,44,'#fff',.75);
+  // ring-progress dots
+  for(let k=0;k<4;k++){g.beginPath();g.arc(CX-75+k*50,430,11,0,7);g.fillStyle=k<active?`hsl(${HUE[k]},95%,60%)`:'rgba(255,255,255,.18)';g.fill();}
+  if(fd>=0&&fd<.3){g.fillStyle=`rgba(255,255,255,${.7*(1-fd/.3)})`;g.fillRect(0,0,W,H);}
+}
+function render(t){
+  scene(ctx,t);
+  const x=seg(t,DUR-.4,DUR-.02);                       // dissolve into frame 0 so the video loops seamlessly
+  if(x>0){scene(octx,0);ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=x*x*(3-2*x);ctx.drawImage(off,0,0);ctx.globalAlpha=1;}
+}
+window.render=render;
+</script></body></html>

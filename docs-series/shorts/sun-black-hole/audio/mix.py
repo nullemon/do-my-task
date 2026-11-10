@@ -28,7 +28,14 @@ def main():
     sh = A.shimmer(N, S.T_COLD - 0.3, S.DUR - 0.3, seed=5, gain=0.16) * A.env(N, [(0, 1), (S.DUR - 1.0, 1), (S.DUR, 0)])[:, None]
     # 6. final low hit on the last word
     hi = A.hit(N, S.T_LAST + 0.30, gain=0.55, root=41.2)
-    bed = day * 0.9 + tk + rs + th * 0.9 + cold * 0.8 + sw + sh + hi * 0.8
+    # 7. cut-aways: the Sun's roar in the telescope shots, an implosion whine into the flash, soft whooshes into space
+    r = np.random.default_rng(12)
+    roar = np.stack([A.lp(r.standard_normal(N), 260, 2) for _ in range(2)], 1) * 0.5
+    roar *= A.env(N, [(0, 0), (S.T_CUT_SUN, 0), (S.T_CUT_SUN + 0.05, 1), (S.T_CUT_PARK1 - 0.05, 1), (S.T_CUT_PARK1, 0),
+                      (S.T_CUT_COLLAPSE, 0), (S.T_CUT_COLLAPSE + 0.05, 1), (S.T_OUT - 0.1, 1.6), (S.T_OUT, 0), (S.DUR, 0)])[:, None]
+    imp = A.riser(N, S.T_COL0, S.T_OUT - 0.02, seed=13) * 1.1
+    wh = sum(A.riser(N, c - 0.45, c + 0.02, seed=20 + i) * 0.30 for i, c in enumerate((S.T_CUT_ORBIT, S.T_CUT_FREEZE, S.T_CUT_END)))
+    bed = day * 0.9 + tk + rs * 0.5 + th * 0.9 + cold * 0.8 + sw + sh + hi * 0.8 + roar * 0.6 + imp + wh
     bed = A.duck(bed, voice, depth=0.45)
     mix = voice * 1.0 + bed * 0.55
     fade = np.clip((S.DUR - t) / 0.4, 0, 1)[:, None]

@@ -12,6 +12,7 @@ from PIL import Image
 from lib.core import f32, Layout, kf, ramp, smooth, ease, noise1, splat, lum
 from lib.foreground import Foreground
 from lib.sky import SkyCam, StarSky, day_sky, sun_disc, lens_flare, LensSky
+from lib import space as SP
 from lib.text import Captions, hud_text, composite, font
 from lib.post import camera, bloom, tonemap, finish, Encoder
 from lib.audio import place
@@ -35,11 +36,29 @@ T_SKY = LN["sky"]["start"]
 T_ORB0, T_ORB1 = LN["orbit"]["start"] - 0.1, LN["bh"]["start"] + 0.2
 T_BH = wt("bh", "6 KM")
 T_SC0 = LN["scope"]["start"] - 0.55
-T_SC1 = LN["cold"]["start"] + 0.35
 T_COLD = wt("cold", "COLD")
 T_WEEK, T_YEAR = wt("cold", "−18°C"), wt("cold", "−73°C")
 T_END = LN["end"]["start"]
 T_LAST = LN["end"]["words"][-1]["t0"]
+T_SC1 = LN["cold"]["start"] - 0.02                   # inset closes as we cut to the freezing Earth
+# shot list: the park is the anchor; cut-aways to the Sun (telescope) and to space
+T_CUT_SUN = wt("hook", "BLACK") - 0.05
+T_CUT_PARK1 = LN["delay"]["start"] - 0.05
+T_CUT_COLLAPSE = LN["then"]["start"] - 0.05
+T_COL0 = wt("then", "SUN") + 0.15                   # collapse starts
+T_CUT_ORBIT = LN["orbit"]["start"] - 0.05
+T_CUT_PARK3 = LN["bh"]["start"] - 0.05
+T_CUT_FREEZE = LN["cold"]["start"] - 0.02
+T_CUT_PARK4 = wt("cold", "IN", 1) - 0.06
+T_CUT_END = LN["end"]["start"] - 0.05
+SHOTS = [("park", 0.0), ("sun", T_CUT_SUN), ("park", T_CUT_PARK1), ("collapse", T_CUT_COLLAPSE), ("park", T_OUT),
+         ("orbit", T_CUT_ORBIT), ("park", T_CUT_PARK3), ("freeze", T_CUT_FREEZE), ("park", T_CUT_PARK4), ("end", T_CUT_END)]
+def shot_at(t):
+    name, t0 = SHOTS[0]
+    for n, a in SHOTS:
+        if t >= a: name, t0 = n, a
+    nxt = [a for n, a in SHOTS if a > t0]
+    return name, t0, (nxt[0] if nxt else DUR)
 
 # temperature model (rough published estimates, see README): global mean +15 C -> below -18 C in a week -> ~-73 C in a year
 def temp_c(day):
@@ -95,14 +114,31 @@ class Scene:
         z += 0.06 * ramp(t, T_BH - 0.8, T_BH + 0.6) * (1 - ramp(t, T_SC1 - 0.2, T_SC1 + 1.0))
         z += 0.03 * ramp(t, T_END, DUR) * 0 - 0.025 * ramp(t, T_END, DUR)
         s["zoom"] = z
-        s["inset"] = ramp(t, T_SC0, T_SC0 + 0.55) * (1 - ramp(t, T_SC1 - 0.35, T_SC1))
-        s["orbit"] = ramp(t, T_ORB0, T_ORB0 + 0.5) * (1 - ramp(t, T_ORB1 - 0.4, T_ORB1))
-        s["marker"] = ramp(t, T_BH - 0.4, T_BH) * (1 - ramp(t, T_SC0, T_SC0 + 0.3))
+        s["inset"] = ramp(t, T_SC0, T_SC0 + 0.55) * (t < T_SC1)
+        s["orbit"] = 0.0
+        s["marker"] = ramp(t, T_CUT_PARK3 + 0.15, T_CUT_PARK3 + 0.5) * (1 - ramp(t, T_SC0, T_SC0 + 0.3))
         return s
 
     # ----------------------------------------------------------------------------------------- frame
     def frame(self, t):
-        L = self.L; W, H = L.W, L.H; s = self.st(t); fg = self.fg
+        name, t0, t1 = shot_at(t)
+        s = self.st(t); s["shot"] = name; s["t0"] = t0
+        punch = 1 + 0.045 * math.exp(-(t - t0) / 0.10) if t0 > 0 else 1.0          # quick punch-in on every cut
+        if name == "park":
+            img = self.park(t, s, punch)
+            bl, ex = (1.0 if s["sun"] > 0 else 0.6), (1.1 if s["sun"] > 0 else 1.0)
+        else:
+            img = getattr(self, "shot_" + name)(t, s, t0, t1)
+            img = camera(img, t, punch, amp=0.6, seed=3)
+            bl, ex = (0.45, 0.75) if name in ("sun", "collapse") else (0.8, 1.0)
+        img = bloom(img, bl)
+        out = tonemap(img, ex)
+        out = finish(out, t)
+        self.overlay(out, t, s)
+        return out
+
+    def park(self, t, s, punch):
+        L = self.L; W, H = L.W, L.H; fg = self.fg
         sx, sy = self.sun
         img = np.zeros((H, W, 3), f32)
         if s["sun"] > 0:
@@ -129,13 +165,102 @@ class Scene:
         expo = 1.0 if s["sun"] > 0 else max(s["night"], 0.0) * 1.0
         img = img * expo
         # camera move + handheld micro-motion (centre on the sun / black hole spot)
-        img = camera(img, t, s["zoom"], sx, sy, amp=1.0, shake=(9.0 * math.exp(-(t - T_OUT) / 0.35) if t >= T_OUT else 0.0))
+        img = camera(img, t, s["zoom"] * punch, sx, sy, amp=1.0, shake=(9.0 * math.exp(-(t - T_OUT) / 0.35) if t >= T_OUT else 0.0))
         if s["inset"] > 0: self.inset(img, t, s["inset"])
-        img = bloom(img, 1.0 if s["sun"] > 0 else 0.6)
-        out = tonemap(img, 1.1 if s["sun"] > 0 else 1.0)
-        out = finish(out, t)
-        self.overlay(out, t, s)
-        return out
+        return img
+
+    # ----------------------------------------------------------------------------------------- cut-aways
+    def shot_sun(self, t, s, t0, t1, collapse=False):
+        """solar-telescope close-up: textured photosphere, prominences, corona"""
+        W, H = self.L.W, self.L.H; v = self.L.vertical
+        img = np.zeros((H, W, 3), f32)
+        cx, cy = (W / 2, 0.43 * H) if v else (W / 2, H / 2)
+        R0 = (0.36 * W if v else 0.30 * H) * (1 + 0.05 * (t - t0) / max(t1 - t0, 1e-3))
+        img += SP.space_sky(self.stars, W, H, 1500, 1280, rot=10, scale=0.9, gain=0.25)
+        if not collapse:
+            SP.sun_disc(img, cx, cy, R0, t * 30, power=0.8, corona=0.45, col=(1.0, 0.50, 0.14), gran_amp=0.10)
+            return img
+        u = (t - T_COL0) / max(T_OUT - 0.10 - T_COL0, 1e-3)
+        if u <= 0:
+            SP.sun_disc(img, cx, cy, R0, t * 30, power=0.8, corona=0.45, col=(1.0, 0.50, 0.14), gran_amp=0.10); return img
+        if u < 1:                                   # implosion (time-compressed): radius -> 0, surface brightens
+            k = (1 - ease(u) ** 0.9) ** 1.6
+            R = max(R0 * k, 1.5)
+            pw = 0.8 * min((R0 / R) ** 0.6, 60.0)
+            SP.sun_disc(img, cx, cy, R, t * 30, power=pw, corona=0.45 * max(0.0, 1 - u * 1.4), col=(1.0, 0.50, 0.14), gran_amp=0.10)
+            # infalling glow streaks
+            splat(img, cx, cy, R0 * 1.4, lambda d, dx, dy: (np.exp(-d / (R0 * 0.25 + 4)) * 0.6 * ease(u))[..., None] * np.array([1.0, 0.7, 0.4], f32))
+            return img
+        # last instant: a point flash, then nothing
+        f = math.exp(-(t - (T_OUT - 0.10)) / 0.03)
+        splat(img, cx, cy, W, lambda d, dx, dy: ((np.exp(-d / 3.0) * 400 + np.exp(-d / 40.0) * 12 + np.exp(-d / 300.0) * 1.2) * f)[..., None] * np.array([1.0, 0.92, 0.85], f32))
+        return img
+
+    def shot_collapse(self, t, s, t0, t1):
+        return self.shot_sun(t, s, t0, t1, collapse=True)
+
+    def _space_bg(self, t, cx=2060, cy=1280, rot=-32):
+        W, H = self.L.W, self.L.H
+        return SP.space_sky(self.stars, W, H, cx + 6 * t, cy, rot=rot, scale=0.85, gain=1.0, plate_gain=0.9)
+
+    def _orbit_line(self, img, cx, cy, a, b, ang, alpha, front_only_behind=None):
+        W, H = self.L.W, self.L.H; S = 4
+        lay = np.zeros((H, W), np.uint8)
+        cv2.ellipse(lay, (int(cx * S), int(cy * S)), (int(a * S), int(b * S)), ang, 0, 360, 255, 2, cv2.LINE_AA, 2)
+        m = cv2.GaussianBlur(lay.astype(f32) / 255, (0, 0), 0.7)
+        yy = np.arange(H, dtype=f32)[:, None]; far = 0.35 + 0.65 * smooth(cy - b, cy + b, yy)          # far side of the orbit dimmer
+        m = m * far
+        img += (m * alpha * 0.30)[..., None] * np.array([0.55, 0.78, 1.0], f32) + cv2.GaussianBlur(m, (0, 0), 6)[..., None] * alpha * 0.18 * np.array([0.3, 0.5, 1.0], f32)
+
+    def _orbit_point(self, cx, cy, a, b, ang, ph):
+        ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+        ex, ey = a * math.cos(ph), b * math.sin(ph)
+        return cx + ex * ca - ey * sa, cy + ex * sa + ey * ca
+
+    def space_layout(self):
+        W, H = self.L.W, self.L.H
+        if self.L.vertical: return dict(bh=(540.0, 640.0), a=470.0, b=290.0, ang=-6.0, earthR=210.0, thE=80.0)
+        return dict(bh=(820.0, 380.0), a=640.0, b=230.0, ang=-4.0, earthR=170.0, thE=70.0)
+
+    def shot_orbit(self, t, s, t0, t1):
+        """Earth (no sunlight: city lights + faint fill) on its unchanged orbit around the black hole (enlarged, lensing the sky)"""
+        W, H = self.L.W, self.L.H; Ly = self.space_layout(); u = (t - t0) / (t1 - t0)
+        img = self._space_bg(t)
+        bx, by = Ly["bh"]
+        img = SP.lens_warp(img, bx, by, Ly["thE"], shadow=0.42)
+        self._orbit_line(img, bx, by, Ly["a"], Ly["b"], Ly["ang"], 1.0)
+        ph = 1.25 + 0.05 * u
+        ex, ey = self._orbit_point(bx, by, Ly["a"], Ly["b"], Ly["ang"], ph)
+        SP.earth(img, ex, ey, Ly["earthR"] * (1 + 0.04 * u), lon0=math.radians(-20 + 25 * (t - t0)), sun=0.0, amb=0.07, lights=1.0, rim=1.0, tip=18)
+        self._space_geom = dict(bh=(bx, by), earth=(ex, ey, Ly["earthR"]))
+        return img
+
+    def shot_freeze(self, t, s, t0, t1):
+        W, H = self.L.W, self.L.H; u = (t - t0) / (t1 - t0)
+        img = self._space_bg(t, 1500, 1280, -32)
+        cx, cy, R = (W / 2, 0.43 * H, 0.47 * W) if self.L.vertical else (W * 0.62, H * 0.52, 0.40 * H)
+        fr = 0.12 + 0.55 * ease(u)
+        SP.earth(img, cx, cy, R * (1 + 0.03 * u), lon0=math.radians(10 + 8 * (t - t0)), sun=0.0, amb=0.10, frost=fr, lights=1.0 - 0.25 * u,
+                 cloud_amt=1.0 - 0.4 * u, rim=1.0, tip=28)
+        return img
+
+    def shot_end(self, t, s, t0, t1):
+        """pull back from the frozen Earth: lights go out, the orbit and the black hole come into view"""
+        W, H = self.L.W, self.L.H; Ly = self.space_layout(); u = (t - t0) / (t1 - t0)
+        img = self._space_bg(t)
+        bx, by = Ly["bh"]
+        pull = ease(min(1.0, u / 0.75))
+        thE = Ly["thE"] * (1 - 0.45 * ease((u - 0.65) / 0.35))
+        img = SP.lens_warp(img, bx, by, thE * (0.3 + 0.7 * pull), shadow=0.42)
+        self._orbit_line(img, bx, by, Ly["a"], Ly["b"], Ly["ang"], ramp(u, 0.25, 0.6))
+        ex, ey = self._orbit_point(bx, by, Ly["a"], Ly["b"], Ly["ang"], 1.30 + 0.05 * u)
+        c0 = (W / 2, 0.43 * H, 0.47 * W) if self.L.vertical else (W * 0.62, H * 0.52, 0.40 * H)
+        cx = c0[0] + (ex - c0[0]) * pull; cy = c0[1] + (ey - c0[1]) * pull; R = c0[2] + (Ly["earthR"] * 0.8 - c0[2]) * pull
+        lights = 1.0 - ease((t - T_CUT_END - 0.6) / 3.2)
+        SP.earth(img, cx, cy, R, lon0=math.radians(30 + 8 * (t - t0)), sun=0.0, amb=0.10, frost=0.67 + 0.33 * ease(u), lights=0.75 * lights,
+                 cloud_amt=0.6 - 0.3 * u, rim=1.0, tip=28 - 10 * pull)
+        self._space_geom = dict(bh=(bx, by), earth=(cx, cy, R))
+        return img
 
     def orbit_diagram(self, img, t, a):
         W, H = self.L.W, self.L.H; cx, cy = self.sun
@@ -195,7 +320,7 @@ class Scene:
 
     # ----------------------------------------------------------------------------------------- 2D overlays (sRGB)
     def overlay(self, out, t, s):
-        L = self.L; W = L.W
+        L = self.L; W = L.W; H_ = L.H
         cap_x = W / 2
         if not L.vertical and s["inset"] > 0.01: cap_x = 700
         L.cap_y = (1010 + 105 * ease(s["inset"] * 1.5)) if L.vertical else 560
@@ -222,9 +347,28 @@ class Scene:
             hud_text(out, "TELESCOPE VIEW · 3′ FIELD · TIME-LAPSE", cx, cy - r - fs * 1.5, fs, "SemiBold", (230, 236, 245), al, 0.16)
             hud_text(out, "BLACK HOLE ENLARGED · EINSTEIN RING ≈ 1.4′", cx, cy + r + fs * 0.45, int(fs * 0.95), "SemiBold", (255, 196, 130), al, 0.10)
             hud_text(out, "NO DISK: NOTHING IS FALLING IN", cx, cy + r + fs * 1.75, int(fs * 0.85), "SemiBold", (215, 225, 240), al * 0.9, 0.12)
+        # shot labels (small, honest)
+        sh, t0 = s["shot"], s["t0"]; fs = int(L.hud_size * 0.40); top = L.safe_top + 40 if L.vertical else 70
+        def lab(txt, x, y, a, col=(225, 232, 245), size=fs, wt="SemiBold", tr=0.18):
+            if a > 0.01: hud_text(out, txt, x, y, size, wt, col, a, tr)
+        fin = ramp(t, t0 + 0.1, t0 + 0.4)
+        if sh == "sun": lab("THE SUN · SOLAR-TELESCOPE VIEW", W / 2, top, fin)
+        if sh == "collapse":
+            lab("WHAT REACHES US AT T + 8:20", W / 2, top, fin)
+            lab("TIME-COMPRESSED ILLUSTRATION", W / 2, top + fs * 1.5, fin * 0.85, (255, 196, 130), int(fs * 0.85))
+        if sh in ("orbit", "end") and hasattr(self, "_space_geom"):
+            g = self._space_geom; bx, by = g["bh"]
+            a_bh = fin if sh == "orbit" else ramp(t, t0 + 2.2, t0 + 2.8)
+            lab("BLACK HOLE (ENLARGED)", bx, by + self.space_layout()["thE"] * 0.9 + 24, a_bh, (255, 200, 140), int(fs * 0.9))
+            if sh == "orbit":
+                lab("SAME MASS · SAME ORBIT", W / 2, top, fin, (195, 220, 255), int(fs * 1.15))
+            lab("ILLUSTRATION · NOT TO SCALE · BRIGHTENED", W / 2, (L.safe_bot - 40) if L.vertical else H_ - 40, a_bh * 0.8, (190, 200, 220), int(fs * 0.75))
+        if sh == "freeze":
+            lab("EARTH WITH NO SUNLIGHT · BRIGHTENED", W / 2, top, fin, (205, 220, 240), int(fs * 0.9))
         # temperature counter
-        if t > T_COLD - 0.4:
-            a = ramp(t, T_COLD - 0.4, T_COLD + 0.1)
+        show_temp = (t > T_COLD - 0.4) and t < T_CUT_END + 2.6
+        if show_temp:
+            a = ramp(t, T_COLD - 0.4, T_COLD + 0.1) * (1 - ramp(t, T_CUT_END + 2.0, T_CUT_END + 2.6))
             d = day_of(t); tc = temp_c(d); tf = tc * 9 / 5 + 32
             sign = "−" if tc < -0.5 else "+"
             hud_text(out, f"{sign}{abs(round(tc)):d}°C", W / 2, L.hud_y, int(L.hud_size * 1.1), "Bold", (225, 240, 255), a, 0.02, display=True)

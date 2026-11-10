@@ -1,5 +1,5 @@
 """Sound for the Short: voice chain + sound design locked to the picture events in short.py, ducking, -14 LUFS, SRT.
-Run: /home/user/ttsenv/bin/python audio/mix.py  -> SCR/audio/mix.wav, ../out/sun-black-hole.srt"""
+Run: /home/user/ttsenv/bin/python audio/mix.py [locked]  -> SCR/audio/mix.wav | mix_locked.wav, ../out/sun-black-hole.srt"""
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path.join(HERE, ".."), os.path.join(HERE, "..", "..")]
 import numpy as np, soundfile as sf
@@ -11,7 +11,7 @@ OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR)
 
 
-def main():
+def main(locked=False):
     voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     t = np.arange(N) / SR
     # 1. warm daytime pad (cut at the blackout)
@@ -31,17 +31,21 @@ def main():
     # 7. cut-aways: the Sun's roar in the telescope shots, an implosion whine into the flash, soft whooshes into space
     r = np.random.default_rng(12)
     roar = np.stack([A.lp(r.standard_normal(N), 260, 2) for _ in range(2)], 1) * 0.5
-    roar *= A.env(N, [(0, 0), (S.T_CUT_SUN, 0), (S.T_CUT_SUN + 0.05, 1), (S.T_CUT_PARK1 - 0.05, 1), (S.T_CUT_PARK1, 0),
-                      (S.T_CUT_COLLAPSE, 0), (S.T_CUT_COLLAPSE + 0.05, 1), (S.T_OUT - 0.1, 1.6), (S.T_OUT, 0), (S.DUR, 0)])[:, None]
+    if locked:   # one locked shot: no cut-away roar, the rumble only builds while the Sun swells and implodes
+        roar *= A.env(N, [(0, 0), (S.T_CUT_COLLAPSE, 0), (S.T_CUT_COLLAPSE + 0.8, 0.6), (S.T_OUT - 0.1, 1.6), (S.T_OUT, 0), (S.DUR, 0)])[:, None]
+    else:
+        roar *= A.env(N, [(0, 0), (S.T_CUT_SUN, 0), (S.T_CUT_SUN + 0.05, 1), (S.T_CUT_PARK1 - 0.05, 1), (S.T_CUT_PARK1, 0),
+                          (S.T_CUT_COLLAPSE, 0), (S.T_CUT_COLLAPSE + 0.05, 1), (S.T_OUT - 0.1, 1.6), (S.T_OUT, 0), (S.DUR, 0)])[:, None]
     imp = A.riser(N, S.T_COL0, S.T_OUT - 0.02, seed=13) * 1.1
-    wh = sum(A.riser(N, c - 0.45, c + 0.02, seed=20 + i) * 0.30 for i, c in enumerate((S.T_CUT_ORBIT, S.T_CUT_FREEZE, S.T_CUT_END)))
+    wh = 0 if locked else sum(A.riser(N, c - 0.45, c + 0.02, seed=20 + i) * 0.30 for i, c in enumerate((S.T_CUT_ORBIT, S.T_CUT_FREEZE, S.T_CUT_END)))
+    if locked: sw = sw * 0                                   # no telescope inset in the locked version
     bed = day * 0.9 + tk + rs * 0.5 + th * 0.9 + cold * 0.8 + sw + sh + hi * 0.8 + roar * 0.6 + imp + wh
     bed = A.duck(bed, voice, depth=0.45)
     mix = voice * 1.0 + bed * 0.55
     fade = np.clip((S.DUR - t) / 0.4, 0, 1)[:, None]
     mix *= fade
     sf.write(os.path.join(OUT, "mix_raw.wav"), mix.astype(np.float32), SR, subtype="FLOAT")
-    A.loudnorm(os.path.join(OUT, "mix_raw.wav"), os.path.join(OUT, "mix.wav"), -14.0, -1.0)
+    A.loudnorm(os.path.join(OUT, "mix_raw.wav"), os.path.join(OUT, "mix_locked.wav" if locked else "mix.wav"), -14.0, -1.0)
     os.remove(os.path.join(OUT, "mix_raw.wav"))
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)
@@ -50,4 +54,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(locked=len(sys.argv) > 1 and sys.argv[1] == "locked")

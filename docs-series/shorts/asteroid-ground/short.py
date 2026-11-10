@@ -33,7 +33,7 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.05
-IMP_SRC_X = 665.0                                     # impact azimuth (behind the white building), SOURCE px
+IMP_SRC_X = 470.0                                     # impact azimuth (just behind the conifer), SOURCE px
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
@@ -136,9 +136,9 @@ class Scene:
         self.k = 1.0 if vertical else 0.62                                   # effect scale
         self.IMP = (IMP_SRC_X * fg.s, hz + 6)
         if vertical:
-            self.SUN = (255.0, 330.0); self.A0 = (985.0, 250.0)
+            self.SUN = (230.0, 330.0); self.A0 = (1010.0, 170.0)
         else:
-            self.SUN = (1010.0, 150.0); self.A0 = (1830.0, 70.0)
+            self.SUN = (1130.0, 120.0); self.A0 = (1860.0, 55.0)
         # half-res grid
         hw, hh = W // 2, H // 2
         yy, xx = np.mgrid[0:hh, 0:hw].astype(f32) * 2 + 1.0
@@ -190,6 +190,10 @@ class Scene:
         self.met = dict(ts=ts, life=mr.uniform(0.35, 1.1, n), x0=x0, y0=y0, vx=side * np.cos(ang) * spd, vy=np.sin(ang) * spd,
                         tl=mr.uniform(0.08, 0.22, n), I=mr.uniform(0.4, 1.0, n) ** 2 * 1.0, big=mr.uniform(0, 1, n) > 0.94,
                         hue=mr.uniform(0, 1, n))
+        sr = np.random.default_rng(23); n = 260
+        ang = sr.uniform(0, 2 * np.pi, n); spd = sr.uniform(20, 110, n)
+        self.sparks = dict(ts=np.sort(sr.uniform(T_ENTRY + 0.4, T_IMP, n)), life=sr.uniform(0.3, 1.1, n), vx=np.cos(ang) * spd,
+                           vy=np.sin(ang) * spd - 20, I=sr.uniform(0.3, 1.0, n) ** 2)
         # dust motes (blast)
         dr = np.random.default_rng(14); n = 500
         self.mote = dict(x=dr.uniform(0, W, n), y=dr.uniform(0.0, 1.0, n) * H, sp=dr.uniform(500, 1600, n), sz=dr.uniform(0.3, 1, n))
@@ -218,81 +222,101 @@ class Scene:
         return acc * rad[..., None] * 0.38
 
     def asteroid(self, t):
-        """new star -> plasma fireball with a long ionised trail (half-res additive layer) and its light level"""
-        if t < T_STAR or t > T_IMP + 3.5: return None, 0.0
+        """new star -> hero plasma fireball: blazing head with chromatic spikes, a long thick ionised trail (orange ->
+        violet with age) with turbulent smoke edges, shed sparks. Half-res: (additive rgb, smoke alpha, light level, head xy)"""
+        if t < T_STAR or t > T_IMP + 3.5: return None, None, 0.0, None
         A = np.array(self.A0, f32) / 2; B = np.array(self.IMP, f32) / 2 + np.array([0, 10], f32)
         D = B - A; Ln = float(np.hypot(*D)); dn = D / Ln
-        P = 1.5; s_e = 0.12
+        P = 1.35; s_e = 0.10
         def s_of(tt):
             if tt < T_ENTRY: return s_e * ((tt - T_STAR) / (T_ENTRY - T_STAR)) ** 1.5
             return s_e + (1 - s_e) * min(1.0, (tt - T_ENTRY) / (T_IMP - T_ENTRY)) ** P
         sh = s_of(min(t, T_IMP)); head = A + D * sh
-        lay = np.zeros(self.hx.shape + (3,), f32)
-        ent = ramp(t, T_ENTRY - 0.3, T_ENTRY + 1.2)                         # plasma ignition
-        # ---- ionised trail (age-based: hot core cools to orange, the train glows blue-violet and widens)
+        lay = np.zeros(self.hx.shape + (3,), f32); smk = np.zeros(self.hx.shape, f32)
+        ent = ramp(t, T_ENTRY - 0.3, T_ENTRY + 0.9)                          # plasma ignition
+        prog = min(max((t - T_ENTRY) / (T_IMP - T_ENTRY), 0.0), 1.0)          # closer -> bigger, brighter
+        k = self.k
         if t > T_ENTRY:
-            px = (self.hx * 0.5 - 0.5) - A[0]; py = (self.hy * 0.5 - 0.5) - A[1]
             px = (self.hx - 1) / 2 - A[0]; py = (self.hy - 1) / 2 - A[1]
             sp = (px * dn[0] + py * dn[1]) / Ln; pp = (-px * dn[1] + py * dn[0])
             u = np.clip((sp - s_e) / (1 - s_e), 0, 1) ** (1 / P)
             tp = T_ENTRY + u * (T_IMP - T_ENTRY); age = np.maximum(t - tp, 0)
-            valid = (sp > s_e - 0.02) & (sp < sh) & (age > 0)
-            w = (1.0 + 3.2 * age + 1.2 * ent) * self.k + 0.5
-            n = sample(self.N1, sp * Ln * 0.35 - t * 6, pp * 0.6) * 0.5 + sample(self.N2, sp * Ln * 0.9, pp * 1.5 + t * 3) * 0.3
-            tex = np.clip(1 + 0.55 * n, 0.2, 2.0)
-            core = np.exp(-(pp / (w * 0.45)) ** 2) * np.exp(-age / 0.5) * 6.0
-            glow = np.exp(-(pp / (w * 1.9)) ** 2) * (np.exp(-age / 1.0) * 2.6 + np.exp(-age / 3.5) * 0.6) * tex
-            halo = np.exp(-np.abs(pp) / (w * 4.5)) * np.exp(-age / 1.8) * 0.45
-            fade_in = np.clip((sp - s_e) * 25, 0, 1)
-            m = (valid * fade_in * ent * (1 - ramp(t, T_IMP + 1.0, T_IMP + 3.4))).astype(f32)
-            cool = np.clip(age / 1.2, 0, 1)[..., None]
-            ccore = np.array([1.0, 0.78, 0.40], f32) * (1 - cool) + np.array([1.0, 0.40, 0.08], f32) * cool
-            # chromatic train: red outer, blue-violet inner sheath
-            ion = np.stack([np.exp(-(pp / (w * 1.25)) ** 2), np.exp(-(pp / (w * 0.9)) ** 2) * 0.55, np.exp(-(pp / (w * 0.75)) ** 2) * 1.15], -1)
-            ion = np.stack([np.exp(-(pp / (w * 2.6)) ** 2), np.exp(-(pp / (w * 2.2)) ** 2) * 0.6, np.exp(-(pp / (w * 1.9)) ** 2) * 1.2], -1) - ion * 0.6
-            ionc = np.maximum(ion, 0) * (np.exp(-age / 2.5) * 0.35 * tex)[..., None] * np.array([0.15, 0.45, 1.0], f32)
-            lay += (core[..., None] * ccore + glow[..., None] * np.array([1.6, 0.42, 0.05], f32) + ionc + halo[..., None] * np.array([1.0, 0.5, 0.25], f32)) * m[..., None]
-        # ---- head
+            valid = (sp > s_e - 0.03) & (sp < sh) & (age > 0)
+            size = 1 + 2.2 * u                                                    # trail laid down closer is thicker
+            w = (1.4 + 5.0 * age) * size * k + 0.6
+            wob = sample(self.N2, sp * Ln * 0.08, sp * 0 + t * 3) * w * 0.25
+            pq = pp + wob
+            n = sample(self.N1, sp * Ln * 0.30 - t * 8, pq / (w + 1) * 12 + t * 4) * 0.55 + sample(self.N3, sp * Ln * 0.9, pq * 1.2 + t * 9) * 0.35
+            tex = np.clip(1 + 0.6 * n, 0.15, 2.2)
+            fade_in = np.clip((sp - s_e) * 20, 0, 1)
+            m = (valid * fade_in * ent * (1 - ramp(t, T_IMP + 0.3, T_IMP + 2.0))).astype(f32)
+            core = np.exp(-(pq / (w * 0.32)) ** 2) * np.exp(-age / 0.45) * 7.0
+            glow = np.exp(-(pq / (w * 1.0)) ** 2) * (np.exp(-age / 1.4) * 3.0 + np.exp(-age / 4.0) * 0.8) * tex
+            a_ = np.clip((age - 0.4) / 3.6, 0, 1)[..., None]                              # orange -> magenta -> violet with age
+            gcol = np.array([1.7, 0.50, 0.06], f32) * (1 - a_) ** 2 + np.array([1.2, 0.25, 0.55], f32) * 2 * a_ * (1 - a_) + np.array([0.45, 0.30, 1.25], f32) * a_ ** 2
+            sheath = np.exp(-((np.abs(pq) - w * 1.1) / (w * 0.45)) ** 2) * np.exp(-age / 2.8) * 0.7 * tex
+            ccore = np.array([1.0, 0.85, 0.55], f32)
+            halo = np.exp(-np.abs(pq) / (w * 4.0)) * np.exp(-age / 2.0) * 0.35
+            lay += (core[..., None] * ccore + glow[..., None] * gcol + sheath[..., None] * np.array([0.35, 0.40, 1.3], f32)
+                    + halo[..., None] * np.array([1.0, 0.45, 0.2], f32)) * m[..., None]
+            # turbulent smoke edges: dark, widening, drifting
+            sw_ = w * (1.8 + 0.6 * age)
+            sm = np.exp(-(pq / sw_) ** 2) * np.clip(age / 0.8, 0, 1) * np.clip(0.55 + 0.6 * n, 0, 1.2) * (1 - np.exp(-np.abs(pq) / (w * 0.8)) * 0.6)
+            smk = np.clip(sm * m * 0.75, 0, 0.85).astype(f32)
+            # shed sparks
+            sp_ = self.sparks; ag = t - sp_["ts"]
+            sel = np.nonzero((ag > 0) & (ag < sp_["life"]))[0]
+            for i in sel:
+                a = ag[i]; s0 = s_of(sp_["ts"][i]); h0 = A + D * s0
+                vx, vy = sp_["vx"][i] * k, sp_["vy"][i] * k
+                x = h0[0] + vx * a; y = h0[1] + vy * a + 40 * a * a * k
+                fr = a / sp_["life"][i]; I = sp_["I"][i] * (1 - fr) ** 1.5 * (1 + 2 * prog)
+                xb = x - vx * 0.05; yb = y - (vy + 80 * a * k) * 0.05
+                cv2.line(lay, (int(x * 4), int(y * 4)), (int(xb * 4), int(yb * 4)), (I * 3.0, I * 1.4, I * 0.35), 1, cv2.LINE_8, 2)
         if t <= T_IMP + 0.02:
             hx, hy = float(head[0]), float(head[1])
             star = ramp(t, T_STAR, T_STAR + 0.5)
             grow = ramp(t, T_STAR, T_ENTRY)
-            tw = 1 + 0.25 * math.sin(t * 23) * (1 - ent)
-            rc = (1.0 + 1.0 * grow + 3.2 * ent) * self.k
-            Ih = (6 + 24 * grow) * star * tw + 26 * ent
-            pul = 1 + sum(0.8 * math.exp(-((t - tp) / 0.2) ** 2) for tp in PULSES[:3])
-            Ih *= pul
+            tw = 1 + 0.25 * math.sin(t * 23) * (1 - ent) + 0.12 * math.sin(t * 41) * ent
+            rc = (1.0 + 1.0 * grow + (2.5 + 7.0 * prog ** 1.3) * ent) * k
+            Ih = (6 + 24 * grow) * star * tw + (25 + 45 * prog) * ent * tw
+            Ih *= 1 + sum(0.8 * math.exp(-((t - tp) / 0.2) ** 2) for tp in PULSES[:3])
             def fn(d, dx_, dy_):
                 along = -(dx_ * dn[0] + dy_ * dn[1]); perp = np.abs(-dx_ * dn[1] + dy_ * dn[0])
-                comet = np.exp(-perp / (rc * 0.9 + 1.5)) * np.exp(-np.maximum(along, 0) / (rc * 6 + 2)) * (along > -rc) * ent * 1.4
-                bow = np.exp(-((d - rc * 1.4) / (rc * 0.5 + 0.8)) ** 2) * (along < 0) * ent * 0.8
-                v = np.exp(-(d / rc) ** 2) * 1.0 + np.exp(-d / (rc * 2.5 + 2)) * 0.12 + np.exp(-d / (rc * 10 + 8)) * 0.010
-                return (v * Ih)[..., None] * (np.array([1.0, 0.92, 0.82], f32) * (1 - ent) + np.array([1.0, 0.70, 0.35], f32) * ent) + (comet * Ih * 0.12)[..., None] * np.array([1.0, 0.6, 0.25], f32) \
-                    + (bow * Ih * 0.10)[..., None] * np.array([0.6, 0.7, 1.0], f32)
-            splat(lay, hx, hy, min(420, rc * 60 + 40), fn)
-            # 4-point twinkling spikes while it is still a star
-            if ent < 1:
-                for kk in range(4):
-                    a = kk * math.pi / 2 + 0.4
-                    def sp_fn(d, dx_, dy_, a=a):
-                        al = dx_ * math.cos(a) + dy_ * math.sin(a); pp_ = np.abs(-dx_ * math.sin(a) + dy_ * math.cos(a))
-                        return (np.exp(-pp_ / 0.7) * np.exp(-np.abs(al) / (18 + 30 * grow)) * Ih * 0.08 * (1 - ent))[..., None] * np.array([0.9, 0.95, 1.0], f32)
-                    splat(lay, hx, hy, 160, sp_fn)
-        light = (0.03 * ramp(t, T_STAR, T_ENTRY) + 0.7 * ent * ramp(t, T_ENTRY, T_IMP) ** 1.5) * (t <= T_IMP)
-        return lay, light
+                comet = np.exp(-perp / (rc * 0.9 + 1.5)) * np.exp(-np.maximum(along, 0) / (rc * 5 + 2)) * (along > -rc) * ent * 1.4
+                bow = np.exp(-((d - rc * 1.35) / (rc * 0.35 + 0.8)) ** 2) * (along < rc * 0.3) * ent
+                v = np.exp(-(d / rc) ** 2) * 1.0 + np.exp(-d / (rc * 2.2 + 2)) * 0.12 + np.exp(-d / (rc * 8 + 8)) * 0.012
+                hc = np.array([1.0, 0.95, 0.82], f32) * (1 - ent) + np.array([1.0, 0.88, 0.55], f32) * ent
+                return (v * Ih)[..., None] * hc + (comet * Ih * 0.14)[..., None] * np.array([1.0, 0.55, 0.15], f32) \
+                    + (bow * Ih * 0.10)[..., None] * np.array([0.55, 0.65, 1.0], f32)
+            splat(lay, hx, hy, min(460, rc * 50 + 50), fn)
+            # chromatic diffraction spikes (6 blades; red longest) -- grow as it nears
+            spk = 0.5 * (1 - ent) + (0.6 + 1.4 * prog) * ent
+            for kk in range(6):
+                a = kk * math.pi / 3 + 0.35 + 0.02 * math.sin(t * 0.7)
+                L0 = (10 + 22 * grow + (22 + 70 * prog) * ent) * k
+                def sp_fn(d, dx_, dy_, a=a, L0=L0):
+                    al = np.abs(dx_ * math.cos(a) + dy_ * math.sin(a)); q = np.abs(-dx_ * math.sin(a) + dy_ * math.cos(a))
+                    base = np.exp(-q / (0.9 + 0.10 * rc))
+                    return np.stack([base * np.exp(-al / (L0 * Lk)) for Lk in (1.0, 0.82, 0.66)], -1) * (Ih * 0.05 * spk * (al > rc * 0.6))[..., None]
+                splat(lay, hx, hy, min(420, L0 * 3.5), sp_fn)
+        light = (0.03 * ramp(t, T_STAR, T_ENTRY) + 1.1 * ent * prog ** 1.6) * (t <= T_IMP)
+        return lay, smk, light, (float(head[0]) * 2, float(head[1]) * 2)
 
     def plume(self, t, sky_amb, flash):
-        """fireball dome + mushroom plume above the horizon (half-res): returns (bbox, rgb, alpha) or None"""
+        """fireball dome + mushroom plume above the horizon (half-res): multi-scale advected billows, dark sooty cores,
+        incandescent crevices and edges, lobes shaded by the sky above and the fire below, silhouette rim light.
+        Returns (bbox, rgb, alpha) or None"""
         tau = t - T_IMP
         if tau < 0: return None
         k = self.k
         bx, by = self.IMP[0] / 2, self.IMP[1] / 2
         Rd = k * 250 * (1 - math.exp(-tau / 0.7))
         t2 = max(tau - 0.5, 0)
-        Hc = k * 390 * (1 - math.exp(-t2 / 3.0)) + k * 6 * t2
-        Rc = k * (50 + 205 * (1 - math.exp(-t2 / 2.8)) + 3 * t2)
-        ws = k * (30 + 60 * (1 - math.exp(-tau / 2.5)))
-        span = max(Rd * 1.5, Rc * 1.4, ws * 3) + 60 * k
+        Hc = k * 400 * (1 - math.exp(-t2 / 3.2)) + k * 7 * t2
+        Rc = k * (50 + 210 * (1 - math.exp(-t2 / 3.0)) + 3.5 * t2)
+        ws = k * (30 + 62 * (1 - math.exp(-tau / 2.5)))
+        span = max(Rd * 1.5, Rc * 1.45, ws * 3) + 60 * k
         x0, x1 = int(max(0, bx - span)), int(min(self.hx.shape[1], bx + span))
         y0, y1 = int(max(0, by - Hc - Rc * 0.8 - 70 * k)), int(min(self.hx.shape[0], by + 4))
         if x1 <= x0 or y1 <= y0: return None
@@ -304,29 +328,48 @@ class Scene:
         sd_s = np.maximum(np.maximum(np.abs(X) - wy, Y - Hc), -Y)
         rcy = Rc * 0.56
         sd_c = (np.sqrt((X / Rc) ** 2 + ((Y - Hc) / rcy) ** 2) - 1) * rcy
-        # rolling torus lobes under the cap edge
         sd_t = np.sqrt((np.abs(X) - Rc * 0.78) ** 2 + ((Y - Hc + rcy * 0.35) * 1.3) ** 2) - Rc * 0.30
         sd = smin(sd_d, smin(sd_s, smin(sd_c, sd_t, 18 * k), 30 * k), 34 * k) if Hc > 4 else sd_d
         sz = max(Rc, Rd, 30.0)
-        sc1 = sz / 2.2 + 6; sc2 = sz / 5 + 3
-        n1 = sample(self.N1, X / sc1 * 9 + 0.3 * tau, (Y - 22 * tau * k) / sc1 * 9)
-        n2 = sample(self.N2, X / sc2 * 9 - 2 * tau, (Y - 40 * tau * k) / sc2 * 9)
-        n = 0.8 * n1 + 0.2 * n2
-        disp = sd + (0.09 * sz + 5) * n
-        edge = 3.0 + 0.012 * sz
+        # advected multi-scale billows: up the stem, outward and rolling over in the cap
+        incap = np.clip((Y - Hc * 0.55) / (rcy + 1), 0, 1)
+        def octv(tex, sc, up, out, ph):                                              # radial outflow (no seam) + rise
+            Xs = X + out * sc * 0.02 * np.sin(tau * 0.35 + ph + Y / (sc * 2.0))      # lateral churn
+            return sample(tex, Xs / sc * 9 + ph, (Y - up * tau * k * (1 - 0.6 * incap)) / sc * 9 + ph * 0.7)
+        o1 = octv(self.N1, sz / 1.1 + 6, 20, 7, 0.0); o2 = octv(self.N2, sz / 2.5 + 4, 34, 11, 40.0)
+        o3 = octv(self.N3, sz / 5.5 + 2.5, 52, 16, 90.0); o4 = octv(self.N2, sz / 12 + 1.5, 70, 20, 150.0)
+        bil = 0.50 * np.abs(o1) + 0.28 * np.abs(o2) + 0.15 * np.abs(o3) + 0.07 * np.abs(o4)     # ~0.8 mean, puffy
+        n = 0.58 * o1 + 0.26 * o2 + 0.11 * o3 + 0.05 * o4
+        amp = 0.10 * sz + 5
+        disp = sd + amp * 0.65 * n - amp * 0.9 * (bil - 0.8)
+        edge = 2.2 + 0.010 * sz
         dens = smooth(edge, -edge, disp)
         inner = np.clip(-disp / (0.30 * sz + 8), 0, 1)
-        heat = kf(tau, [(0, 1.75), (0.6, 1.5), (2.5, 1.12), (6, 0.88), (10, 0.66), (16, 0.42), (24, 0.22), (30, 0.12)])
-        low = np.exp(-np.maximum(Y, 0) / (0.6 * Hc + 0.9 * Rd + 20))              # hotter near the ground / base
-        capglow = np.exp(-((Y - Hc + rcy * 0.4) / (rcy * 0.8 + 4)) ** 2) * 0.35  # cap lit from beneath
-        T = heat * (0.30 + 0.85 * inner) * (0.55 + 0.45 * low + capglow) * (0.80 + 0.20 * n)
-        emis = fire_col(T)
-        # rim light: outer shell lit by the sky / flash, strongest on the upper-left side (sun / sky)
-        shell = dens * np.clip(1 - inner * 2.8, 0, 1)
-        rimc = np.array(sky_amb, f32) * 2.0 + flash * np.array([1.0, 0.95, 0.85], f32) * 0.25 + np.array([1.0, 0.55, 0.22], f32) * heat * 0.9
+        # lobe normals from a height field (body depth + billows)
+        hf = cv2.GaussianBlur(np.sqrt(np.clip(-disp / (0.22 * sz + 6), 0, 1)) * 1.2 + 0.9 * bil, (0, 0), 1.5)
+        gx = cv2.Sobel(hf, cv2.CV_32F, 1, 0, ksize=3) / 8 * (sz / 5 + 4); gy = cv2.Sobel(hf, cv2.CV_32F, 0, 1, ksize=3) / 8 * (sz / 5 + 4)
+        nz = 1.0 / np.sqrt(1 + gx * gx + gy * gy); nx = -gx * nz; ny = -gy * nz
+        Ls = np.array([-0.45, -0.70, 0.55], f32); Ls /= np.linalg.norm(Ls)                  # sky light, upper left (image y down)
+        Lf = np.array([0.0, 0.80, 0.60], f32); Lf /= np.linalg.norm(Lf)                     # fire light from below
+        ds = np.clip(nx * Ls[0] + ny * Ls[1] + nz * Ls[2], 0, 1); dfi = np.clip(nx * Lf[0] + ny * Lf[1] + nz * Lf[2], 0, 1)
+        occ = np.clip(0.30 + 1.6 * (bil - 0.6), 0.05, 1.3)                                  # crevices are occluded
+        heat = kf(tau, [(0, 1.7), (0.6, 1.35), (2.5, 1.12), (6, 0.95), (10, 0.75), (16, 0.50), (24, 0.28), (30, 0.15)])
+        low = np.exp(-np.maximum(Y, 0) / (0.55 * Hc + 0.9 * Rd + 20))
+        undercap = np.exp(-((Y - Hc + rcy * 0.5) / (rcy * 0.7 + 4)) ** 2) * np.clip(1 - np.abs(X) / (Rc + 1), 0, 1)
+        stemcore = np.exp(-(X / (ws * 0.8 + 2)) ** 2) * np.clip(Y / (Hc + 1), 0, 1) * smooth(Hc, Hc - rcy * 0.8 - 2, Y) * 0.5
+        crev = np.clip(1 - bil / 0.6, 0, 1) ** 1.2
+        # incandescence: hot crevices between billows, the base, the stem's core and the cap's underside; sooty lobes
+        T = heat * (0.02 + 1.10 * crev * (0.35 + 0.65 * inner ** 0.4) + (0.55 * low * inner + 0.40 * undercap + stemcore) * (0.35 + 0.65 * crev)) * (0.85 + 0.15 * n)
+        T = T * (1 - 0.45 * np.clip(bil - 0.85, 0, 1) * inner)                                # dark sooty cores of big billows
+        emis = fire_col(T * 0.82)
+        skyc = np.array(sky_amb, f32) * 0.9 + flash * np.array([1.0, 0.95, 0.85], f32) * 0.15
+        firec = np.array([1.0, 0.42, 0.10], f32) * heat * 1.3
+        soot = np.array([0.010, 0.007, 0.006], f32)
+        lit = (ds ** 1.5 * occ)[..., None] * skyc * 0.40 + (dfi * occ * (0.4 + 0.6 * low))[..., None] * firec * 0.55
+        shell = dens * np.clip(1 - inner * 3.2, 0, 1)
         dirn = np.clip(0.6 - 0.4 * X / (sz + 1) + 0.3 * np.clip(Y / (Hc + Rd + 1), 0, 1), 0.2, 1.3)
-        smoke = np.array([0.05, 0.035, 0.03], f32) * (np.array(sky_amb, f32) * 2 + 0.2)
-        col = emis + smoke * (1 - 0.5 * inner)[..., None] + (shell * dirn)[..., None] * rimc
+        rimc = skyc * 1.2 + np.array([1.0, 0.55, 0.22], f32) * heat * 0.8
+        col = soot + lit + emis + (shell * dirn)[..., None] * rimc
         alpha = (dens * (0.97 - 0.25 * ramp(tau, 18, 26))).astype(f32)
         return (x0, y0, x1, y1), col.astype(f32), alpha
 
@@ -363,6 +406,21 @@ class Scene:
         out = out * light + fg.flat * np.array(lightcol, f32) * 0.0
         out += (self.rim * 0.9 + self.rim_soft * 0.3)[..., None] * np.array(lightcol, f32) * rimI
         return out
+
+    def bolide_light(self, head, I):
+        """warm light from the bolide; the trees cast shadows on the lawn that swing and stretch as it descends"""
+        fg = self.fg; W, H = self.L.W, self.L.H
+        hx, hy = head
+        el = max(0.08, (self.hz - hy) / self.hz)                                  # its height in the sky (0..1)
+        sx = -1.1 * (hx - W * 0.4) / W / el ** 0.6                               # shadows point away from it
+        sy = 0.12 + 0.5 * (1 - el)                                                # and stretch towards us as it sinks
+        yb = self.hz + 40
+        M = np.float32([[1, -sx / (1 + 1e-6), sx * yb], [0, -sy, (1 + sy) * yb]])
+        # inverse mapping: shadow(x', y') = tree(x, y) with x' = x + sx*(yb - y), y' = yb + sy*(yb - y)
+        sh = cv2.warpAffine(self.tree, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        sh = cv2.GaussianBlur(sh, (0, 0), 6)
+        lit = np.clip(1 - 1.4 * sh, 0, 1) * fg.ground + (1 - fg.ground) * 0.55
+        return fg.flat * (lit * I * 0.9)[..., None] * np.array([1.0, 0.72, 0.42], f32)
 
     def smoke(self, t, amt, col, glow):
         if amt <= 0: return None, None
@@ -468,19 +526,19 @@ class Scene:
             sky = sky + (np.array([0.30, 0.045, 0.012], f32) * (0.75 + 0.35 * n[..., None]) * (0.5 + 0.5 * self.el[..., None] ** 0.5)) * redI * fl
         if winter > 0:
             n = sample(self.N1, self.hx * 0.18 + t * 22, self.hy * 0.30 + t * 4) * 0.7 + sample(self.N2, self.hx * 0.35 - t * 30, self.hy * 0.5) * 0.3
-            sky = sky * (1 + winter * (0.38 * n[..., None] - 0.05 * (1 - self.el[..., None])))
+            sky = sky * np.maximum(1 + winter * (0.38 * n[..., None] - 0.05 * (1 - self.el[..., None])), 0.62)
         # plume
         sky_amb = tuple(0.5 * a + 0.5 * b for a, b in zip(P["zen"], P["hor"]))
         flash = 30 * math.exp(-max(tau, 0) / 0.05) * ease((tau + 0.04) / 0.04) + 0.25 * math.exp(-max(tau, 0) / 0.8) + \
-            0.8 * math.exp(-((t - T_FLASHW) / 0.22) ** 2) if tau > -0.05 else 0.0
+            1.2 * math.exp(-((t - T_FLASHW) / 0.06) ** 2) if tau > -0.05 else 0.0
         img = self.up(sky)
         # sun disc (white -> dim red in the winter)
         sI = (P["sunI"] * 40 + winter * 5)
         splat(img, self.SUN[0], self.SUN[1], 60, lambda d, dx, dy: (smooth(9.5, 8.0, d) * sI + np.exp(-d / 14) * sI * 0.06)[..., None] * suncol)
-        ast, alight = self.asteroid(t)
+        ast, asmk, alight, ahead = self.asteroid(t)
         if ast is not None:
-            al_ = np.clip(lum(ast) * 0.9, 0, 0.9)                                    # the plasma partly hides the sky behind it
-            img = img * (1 - self.up(al_)[..., None]) + self.up(ast)
+            al_ = np.clip(lum(ast) * 0.9 + asmk, 0, 0.92)                          # plasma + smoke hide the sky behind
+            img = img * (1 - self.up(al_)[..., None]) + self.up(ast + asmk[..., None] * np.array([0.05, 0.035, 0.03], f32))
         pl = self.plume(t, sky_amb, flash)
         if pl is not None:
             (x0, y0, x1, y1), col, al = pl
@@ -498,13 +556,15 @@ class Scene:
             a_, rgb_ = dw; a_ = self.up(a_)[..., None]; img = img * (1 - a_) + self.up(rgb_) * a_
         # ---- foreground
         lightcol = (1.0, 0.95, 0.85)
-        light = 1.0 + 0.10 * (pulse - 1) + alight * 0.8
-        rimI = alight * 0.5
+        light = 1.0 + 0.10 * (pulse - 1) + alight * 0.25
+        rimI = alight * 0.6
         if tau > 0:
             fI = kf(tau, [(0, 2.2), (0.4, 1.2), (3, 0.6), (10, 0.35), (T_EJ0 - T_IMP, 0.2), (T_HITS - T_IMP, 0.0)])
             rimI += fI; lightcol = (1.0, 0.62, 0.28)
         if redI > 0: rimI += 0.45 * redI * (1 + 0.15 * noise1(t, 5, 8.0)); lightcol = (1.0, 0.42, 0.12)
         fgc = self.relight(P, light, lightcol, rimI)
+        if alight > 0.02 and ahead is not None:                                  # bolide light with moving tree shadows
+            fgc = fgc + self.bolide_light(ahead, alight)
         fa = fg.a
         # wind sway after the blast hits (foliage only)
         sway = ramp(t, T_HITS - 0.1, T_HITS + 0.3) * (1 - 0.6 * ramp(t, T_HITS + 1.5, T_SOOT + 2.0)) * (1 - ramp(t, T_WO0, T_BACK))
@@ -578,8 +638,9 @@ class Scene:
         return out
 
     def chroma_bloom(self, img, amt):
-        img = bloom(img, 0.85 * amt)
         H, W = img.shape[:2]
+        hi = np.maximum(img - 0.7, 0) + 0.10 * img                               # thresholded: glows without a milky veil
+        img = img + (bloom(hi, 0.85 * amt) - hi)
         sm = cv2.resize(img, (W // 8, H // 8), interpolation=cv2.INTER_AREA)
         sm = np.maximum(sm - 1.0, 0)
         acc = np.empty_like(sm)

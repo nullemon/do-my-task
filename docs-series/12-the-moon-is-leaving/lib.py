@@ -116,7 +116,7 @@ def _grid(cx, cy, R, margin):
     return x0, y0, x1, y1, u, v
 
 
-def draw_earth(img, cx, cy, R, M, sun, t=0.0, clouds=1.0, night_gain=1.0, exposure=1.0, atmo=1.0):
+def draw_earth(img, cx, cy, R, M, sun, t=0.0, clouds=1.0, night_gain=1.0, exposure=1.0, atmo=1.0, glint=1.0):
     """Composite the Earth into img (H,W,3 float). M: 3x3, body = M @ camera-space normal (camera x right, y up, z to viewer).
     sun: unit vector to the Sun in camera space. t drifts the clouds."""
     hs = max(1.6, R * 0.016)                                   # scattering scale height in px (exaggerated ~1.5x)
@@ -141,7 +141,7 @@ def draw_earth(img, cx, cy, R, M, sun, t=0.0, clouds=1.0, night_gain=1.0, exposu
     # ocean glint (view = +z)
     hv = sun + np.array([0, 0, 1], F32); hv /= np.linalg.norm(hv)
     ndh = np.clip(u * hv[0] + v * hv[1] + z * hv[2], 0, 1)
-    spec = wat * (ndh ** 90 * 0.9 + ndh ** 14 * 0.10) * term
+    spec = wat * (ndh ** 90 * 0.9 + ndh ** 14 * 0.10) * term * glint
     surf += spec[..., None] * np.array([1.0, 0.92, 0.78], F32)
     # clouds + their shadows (shadow = cloud map sampled a little toward the sun)
     dl = 0.0020 * t
@@ -222,7 +222,7 @@ def draw_moon(img, cx, cy, R, M, sun, exposure=1.0, relief=1.0, earthshine=0.0, 
     lit = np.clip(nl_true, 0, 1.6)
     # Lommel-Seeliger-like: little limb darkening, plus a gentle Lambert term for form
     mu = np.clip(z, 0.03, 1); mu0 = np.clip(ndl, 0, 1)
-    ls = 2 * lit / (np.clip(lit, 0, 1) + mu) * 0.72 + 0.38 * lit
+    ls = 2 * lit / (np.clip(lit, 0, 1) + np.clip(mu, 0.3, 1)) * 0.72 + 0.38 * lit
     soft = np.clip(ndl / 0.04, 0, 1)                         # terminator softness (penumbra)
     albc = (alb ** 1.45) * 1.55 * np.asarray(tint, F32)
     if detail > 0:

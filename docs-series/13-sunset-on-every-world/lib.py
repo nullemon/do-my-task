@@ -277,7 +277,7 @@ def bbcolor(T):
     return (c / c.max()).astype(f32)
 
 # ------------------------------------------------------------------------------------------------ analytic sea
-def sea(pl, skyfn, t, sunL, sun_el, sun_az, sun_r_deg, deep=C(0.004, 0.012, 0.02), amp=1.0, wind=1.0, chop=1.0, speed=1.0, refl_alpha=None):
+def sea(pl, skyfn, t, sunL, sun_el, sun_az, sun_r_deg, deep=C(0.004, 0.012, 0.02), amp=1.0, wind=1.0, chop=1.0, speed=1.0, refl_alpha=None, sparkle=1.0):
     """flat sea / lake seen from height pl.camh: three bands of travelling waves, Fresnel reflection of the sky function, sun glitter
     with the correct energy (unresolved waves widen the glitter path), reflections of the rocks. Returns RGB for the whole frame."""
     el = np.minimum(pl.EL, -0.012).astype(np.float64); az = pl.AZ.astype(np.float64); ta = np.tan(np.radians(-el)); y = pl.camh / ta; x = y * np.tan(np.radians(az))
@@ -311,7 +311,8 @@ def sea(pl, skyfn, t, sunL, sun_el, sun_az, sun_r_deg, deep=C(0.004, 0.012, 0.02
     p = np.exp(-((zx - sx) ** 2 + (zy - sy) ** 2) / (2 * s2)) / (2 * math.pi * s2)
     glit = p * (math.pi * rs * rs) / (4 * np.maximum(-v[..., 2], 0.004) * hz ** 4)
     Fh = 0.02 + 0.98 * (1 - np.clip((hvec * S).sum(-1), 0, 1)) ** 5
-    glit = np.minimum(glit * Fh, 0.02) / np.maximum(F, 1e-3)
+    spk = tsample(tile(390, 0.35), pl.xx / 700.0 + 0.371 * t * 3, pl.yy / 260.0 + 0.613 * t * 3)          # unresolved facets: sparkle
+    glit = np.minimum(glit * Fh * np.exp(1.5 * spk - 0.9) * sparkle + glit * Fh * (1 - sparkle), 0.03) / np.maximum(F, 1e-3)
     out = deep[None, None, :] * (1 - F[..., None]) + refl * F[..., None] + (glit * F * (1 - ra))[..., None] * np.asarray(sunL, f32)
     return out
 

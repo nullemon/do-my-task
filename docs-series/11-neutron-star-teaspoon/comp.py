@@ -293,7 +293,7 @@ def shot_city(t, lt):
     a1 = win(t, 61.2, 74.4, 0.9, 0.6)
     for name, la, lo, land in PLACES:
         gx, gy = ground_km(la, lo); px, py, pd = cam.proj(np.array([[gx, gy, 0.0]])); px, py = float(px[0]), float(py[0])
-        if not (60 < px < W - 60 and hv(120, 260) < py < hv(H - 110, 1500)): continue
+        if not (60 < px < W - 60 and hv(120, 260) < py < hv(H - 110, 1180)): continue
         if (px - sx) ** 2 + (py - sy) ** 2 < (rp + 30) ** 2: continue
         s_ = hv(18, 22)
         T.put((px, py - s_ * 0.6), name, s_, a1 * (0.95 if land else 0.75), col=TXT if land else COOL, anchor="c", wt="R")

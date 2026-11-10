@@ -105,14 +105,14 @@ def w_mars():
     return height, colour
 
 def w_mercury():
-    P.update(camh=2.2, y1=330, yfar=5000, far=(5000, 14000, 500), sun_ang=1.7, sun_el=2.6, bump=(1.0, 0.06))
+    P.update(camh=9.0, y1=1200, yfar=5000, n_mid=400, far=(5000, 14000, 500), sun_ang=1.7, sun_el=3.2, bump=(1.0, 0.06), rough_tex=(5.0, 0.5))
     st = {}
     def height(X, Y):
         Z = 2.0 * N(21, X, Y, 1500, 2.4) + 0.25 * N(22, X, Y, 60, 2.2) + 0.03 * N(23, X, Y, 5, 2.0) + 0.007 * N(24, X, Y, 0.6, 1.9)
         Z = Z.astype(f32)
-        craters(X, Y, Z, 26, 60, 4500, 1.2, 5.5, 5, depth=0.17)
-        st["mid"] = craters(X, Y, Z, 260, 12, 5000, 0.18, 1.2, 6)
-        craters(X, Y, Z, 1500, 9, 900, 0.03, 0.2, 7, depth=0.22)
+        craters(X, Y, Z, 22, 150, 4500, 1.5, 6.0, 5, depth=0.15)
+        st["mid"] = craters(X, Y, Z, 300, 45, 5000, 0.2, 1.5, 6, depth=0.18)
+        craters(X, Y, Z, 1800, 45, 1500, 0.03, 0.2, 7, depth=0.2)
         # a lobate scarp / crater wall on the horizon
         Z += sm(5200, 8500, Y) * (260 * np.clip(1 - np.abs(N(25, X, Y, 12000, 2.0)) * 0.8, 0, 2) ** 1.4 + 55 * (1 - np.abs(N(26, X, Y, 1500, 1.9))) + 10 * N(27, X, Y, 300, 1.8)) * sm(14500, 11000, Y)
         return Z
@@ -124,8 +124,8 @@ def w_mercury():
             q = np.hypot(X - x, Y - y) / R
             ray = np.maximum(ray, np.exp(-((q - 1.1) / 1.6) ** 2) * (0.5 + 0.5 * np.sin(np.arctan2(Y - y, X - x) * 9 + x) ** 2) * (age > 0.8))
         return mixc(c, br, np.clip(ray, 0, 1) * 0.6) * (0.9 + 0.1 * N(30, X, Y, 0.5, 1.6))[..., None]
-    ROCKS.extend([(1800, 10, 300, 0.03, 0.5, "angular", 0.3, (0.10, 0.095, 0.09), (0.30, 0.28, 0.26), None),
-                  (16, 16, 110, 0.5, 1.3, "angular", 0.3, (0.10, 0.095, 0.09), (0.27, 0.25, 0.235), None)])
+    ROCKS.extend([(2600, 46, 900, 0.10, 1.6, "angular", 0.3, (0.10, 0.095, 0.09), (0.30, 0.28, 0.26), None),
+                  (22, 55, 300, 1.5, 4.0, "angular", 0.3, (0.10, 0.095, 0.09), (0.27, 0.25, 0.235), None)])
     return height, colour
 
 def w_venus():

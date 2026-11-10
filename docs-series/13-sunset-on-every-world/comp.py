@@ -110,7 +110,7 @@ def sky_mars(se, sa, k=1.0):
         g = g * (1 - 0.75 * np.exp(-e / 0.8))[..., None]
         return (base * (0.4 + 0.6 * k) + g * k)
     return f
-def sh_mars(tl, u, ov, se0=2.6, se1=0.15, intro=False):
+def sh_mars(tl, u, ov, se0=2.6, se1=0.15):
     pl = plate("mars"); se = se0 + (se1 - se0) * u; sa = 0.0
     dimk = float(np.clip((se + 0.9) / 2.2, 0.0, 1.0)) ** 0.8                    # dust dims the Sun well before it reaches the horizon
     fn = sky_mars(se, sa, 0.35 + 0.65 * dimk)
@@ -164,7 +164,7 @@ def sh_earth(tl, u, ov, se0=2.3, se1=-0.25):
     sun_disc(sky, x, y, r, sunc, limb=0.45, squash=sq, tint_bottom=C(0.92, 0.72, 0.6))
     cover = float(np.clip((se + 0.2665) / 0.533, 0, 1)); vis = cover * (1 - 0.0)
     rock_a = pl.alpha[..., 0] * (1 - smooth(0.72, 0.97, pl.flag))
-    water = sea(pl, fn, tl, sunc * 900 * cover, se, sa, 0.2665, deep=C(0.006, 0.014, 0.022) * (0.5 + 0.5 * red), amp=1.0, refl_alpha=rock_a)
+    water = sea(pl, fn, tl, sunc * 110 * cover, se, sa, 0.2665, deep=C(0.006, 0.014, 0.022) * (0.5 + 0.5 * red), amp=1.25, refl_alpha=rock_a)
     L = ground(pl, sunc * 0.6 * vis, C(1.0, 0.5, 0.2) * 1.3 * (0.4 + 0.6 * red), C(0.20, 0.20, 0.34) * 0.5)
     L = L * 0.7 + pl.alb * (np.clip(pl.nrm[..., 2:3], 0, 1) ** 3) * C(1.0, 0.5, 0.25) * 0.5          # wet rock: a little sky sheen on up-facing faces
     hz = horizon_sky(pl, fn, 0.3)
@@ -182,10 +182,10 @@ def sh_mercury(tl, u, ov):
     pl = plate("mercury"); sa = 0.0; sl = skyline(pl, 0.0); R = 3.25 * 0.2665
     se = sl + kf(u, [(0, 2.6), (0.40, 1.15), (0.60, -R - 0.12), (0.68, -R - 0.14), (0.80, -R + 0.55), (0.86, -R + 0.55), (1.0, -R - 0.6)])
     x, y = pl.xy(se, sa); r = R * pl.ppd; vis = float(np.clip((se - sl + R) / (2 * R), 0, 1))
-    sky = stars(5) * (0.25 + 0.75 * (1 - vis)) + corona(pl, se, sa, 0.55)
+    sky = stars(5) * (0.15 + 0.85 * (1 - vis)) + corona(pl, se, sa, 0.10 + 0.45 * (1 - vis))
     sun_disc(sky, x, y, r, C(1.0, 0.97, 0.9) * 22, limb=0.62)
-    L = ground(pl, C(1.0, 0.97, 0.92) * 5.5 * vis, C(1.0, 0.95, 0.85) * 0.10 * vis + 0.006, C(0.9, 0.9, 1.0) * (0.012 + 0.02 * vis))
-    return compose(pl, sky, L), 1.3
+    L = ground(pl, C(1.0, 0.97, 0.92) * 5.5 * vis, C(1.0, 0.95, 0.85) * 0.5 * vis + 0.01, C(0.9, 0.9, 1.0) * (0.015 + 0.10 * vis))
+    return compose(pl, sky, L), -1.3
 
 # ------------------------------------------------------------------------------------------------ VENUS
 def sh_venus(tl, u, ov):
@@ -329,13 +329,182 @@ def sh_kepler(tl, u, ov):
 
 WFN = dict(earth=sh_earth, mars=sh_mars, mercury=sh_mercury, venus=sh_venus, jupiter=sh_jupiter, saturn=sh_saturn, uranus=sh_uranus, titan=sh_titan, pluto=sh_pluto, kepler=sh_kepler)
 def finish(img, expo, ov, scr=()):
-    y = tonemap(anamorphic(bloom(img), thr=3.0, amt=0.03), expo)
+    if expo < 0: y = tonemap(bloom(img, 0.55), -expo)                 # airless worlds: tighter glare, no lens streak
+    else: y = tonemap(anamorphic(bloom(img), thr=3.0, amt=0.03), expo)
     for (x0, y0, x1, y1, a) in scr: y = scrim(y, x0, y0, x1, y1, a)
     return ov.apply(y)
+def zoom(img, z, cx=None, cy=None):
+    if abs(z - 1) < 1e-4: return img
+    cx = W / 2 if cx is None else cx; cy = HY * H if cy is None else cy
+    M = np.array([[z, 0, cx * (1 - z)], [0, z, cy * (1 - z)]], f32)
+    return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
+# captions: (start, end, text, sub)
+def _c(k0, d0, k1, d1, txt, sub=None): return (S_[k0] + d0, (E_[k1] if d1 is not None else S_[k1]) + (d1 or 0), txt, sub)
+CAPS = dict(
+    earth=[_c("earth1", 1.5, "earth1", 0.9, "THE SUN: HALF A DEGREE WIDE", "IT TAKES ABOUT TWO MINUTES TO SLIP BELOW THE HORIZON"),
+           _c("earth2", 2.5, "earth2", 0.6, "RAYLEIGH SCATTERING", "AIR SCATTERS BLUE LIGHT AWAY.  RED IS WHAT REMAINS")],
+    mars=[_c("mars1", 5.5, "mars1", 0.8, "AIR PRESSURE: LESS THAN 1% OF EARTH'S", "BUT FULL OF FINE RUST-COLOURED DUST"),
+          _c("mars2", 1.0, "mars2", 0.8, "BUTTERSCOTCH SKY, BLUE SUNSET", "THE DUST SCATTERS BLUE LIGHT FORWARD, AROUND THE SUN")],
+    mercury=[_c("merc1", 1.0, "merc1", 0.6, "ALMOST NO AIR.  NO COLOUR.  A BLACK SKY", "THE SUN: UP TO 3.3 TIMES WIDER THAN FROM EARTH"),
+             _c("merc2", 7.0, "merc2", 1.2, "NEAR PERIHELION THE SUN CAN SET TWICE", "SEEN ONLY FROM SOME LONGITUDES.  HEAVILY SPEEDED UP")],
+    venus=[_c("venus1", 5.0, "venus1", 0.6, "THE SUN'S DISC IS NEVER SEEN FROM THE SURFACE", "DAYLIGHT IS A DIM ORANGE OVERCAST"),
+           _c("venus2", 3.0, "venus2", 1.0, "SUNRISE TO SUNRISE: 117 EARTH DAYS", "VENUS SPINS BACKWARDS.  THE SUN WOULD RISE IN THE WEST")],
+    jupiter=[_c("jup", 6.5, "jup", -7.5, "27 TIMES FAINTER THAN ON EARTH", "THE SUN IS ONE FIFTH AS WIDE"),
+             _c("jup", 17.0, "jup", 1.6, "THE DISC SETS IN ABOUT 10 SECONDS", "SHOWN IN REAL TIME")],
+    saturn=[_c("sat", 5.0, "sat", 1.6, "THE RINGS, SEEN FROM THE CLOUD TOPS", "WATER ICE, FROM DUST GRAINS TO BOULDERS")],
+    uranus=[_c("ura", 4.5, "ura", -8.5, "NEAR A POLE: 42 YEARS OF DAYLIGHT, THEN 42 OF NIGHT", "THE SUN CIRCLES THE SKY ONCE EVERY 17 HOURS"),
+            _c("ura", 16.0, "ura", 1.6, "THE DISC SETS WITHIN DAYS", "THE TWILIGHT CAN LINGER FOR YEARS")],
+    titan=[_c("titan1", 7.5, "titan1", 0.8, "DAYLIGHT ABOUT 1,000 TIMES DIMMER THAN ON EARTH", "HUYGENS LANDED HERE IN 2005"),
+           _c("titan2", 0.8, "titan2", 0.8, "THE HAZE PASSES RED LIGHT AND BLOCKS BLUE", "THE SUN NEVER SHOWS A CLEAN EDGE")],
+    pluto=[_c("pluto1", 4.5, "pluto1", 0.8, "THE SUN IS A POINT OF LIGHT", "YET ABOUT 250 TIMES BRIGHTER THAN OUR FULL MOON"),
+           _c("pluto2", 5.5, "pluto2", 1.0, "BLUE HAZE, LAYER UPON LAYER", "SEEN BY NEW HORIZONS IN 2015")],
+    kepler=[_c("kep", 3.5, "kep", 0.8, "TWO SUNS: AN ORANGE DWARF AND A RED DWARF", "KEPLER-16 b IS A GAS GIANT.  THIS MOON IS IMAGINED")],
+)
+SPEED = dict(jupiter="REAL TIME")
+def world_shot(w, t, shot=None, se=None):
+    """one frame of a world's shot: picture, slow push-in, HUD, captions. Returns sRGB float."""
+    a, b = TL.SH[shot or w]; tl = t - a; u = float(np.clip(tl / (b - a), 0, 1)); ov = Overlay()
+    img, ex = WFN[w](tl, u, ov) if se is None else WFN[w](tl + 40, u, ov, *se)
+    img = zoom(img, 1.0 + 0.045 * u)
+    scr = []
+    if shot is None:
+        scr += hud(ov, w, fade(t, a + 0.5, b - 0.2, 1.0, 0.7), SPEED.get(w, "TIME-LAPSE"))
+        for (c0, c1, txt, sub) in CAPS.get(w, []): scr += caption(ov, txt, fade(t, c0, c1, 0.7, 0.7), sub)
+    return img, ex, ov, scr
+
+# ---- cached stills of every world (for the opening montage and the recap grid)
+_st = {}
+def still(w, u=0.45):
+    if w not in _st:
+        fnm = f"{SCR}/cache/still_{w}_{hv('h', 'v')}.png"; os.makedirs(f"{SCR}/cache", exist_ok=True)
+        if not os.path.exists(fnm):
+            a, b = TL.SH[w]; img, ex = WFN[w]((b - a) * u, u, Overlay()); y = finish(img, ex, Overlay())
+            cv2.imwrite(fnm, (np.clip(y, 0, 1) * 65535).astype(np.uint16)[..., ::-1])
+        _st[w] = cv2.imread(fnm, cv2.IMREAD_UNCHANGED)[..., ::-1].astype(f32) / 65535
+    return _st[w]
+MONT = ["saturn", "mercury", "titan", "pluto", "jupiter"]
+def sh_mars0(t):
+    a, b = TL.SH["mars0"]; ov = Overlay(); u = (t - a) / (b - a)
+    img, ex = sh_mars(t, u, ov, 1.9, 1.35); img = zoom(img, 1.0 + 0.05 * u); y = finish(img, ex, ov)
+    ov = Overlay(); k = fade(t, 0.25, b - 0.1, 0.5, 0.6)
+    if not VERT:
+        ov.text(W / 2, 150, "MARS SUNSETS ARE BLUE", size=84, wt="Light", a=k, track=0.2, anchor="m", display=True)
+        ov.text(W / 2, 268, "PHOTOGRAPHED BY NASA'S ROVERS.  THIS VIEW IS A RECONSTRUCTION", size=20, a=0.9 * fade(t, 1.6, b - 0.1, 0.6, 0.6), track=0.3, anchor="m")
+        y = scrim(y, 200, 110, W - 200, 320, 0.25 * k)
+    else:
+        ov.text(W / 2, H * 0.15, "MARS SUNSETS", size=92, wt="Light", a=k, track=0.14, anchor="m", display=True); ov.text(W / 2, H * 0.15 + 120, "ARE BLUE", size=92, wt="Light", a=k, track=0.14, anchor="m", display=True)
+        k2 = 0.9 * fade(t, 1.6, b - 0.1, 0.6, 0.6); ov.text(W / 2, H * 0.15 + 270, "PHOTOGRAPHED BY NASA'S ROVERS", size=24, a=k2, track=0.24, anchor="m"); ov.text(W / 2, H * 0.15 + 308, "THIS VIEW IS A RECONSTRUCTION", size=24, a=k2, track=0.24, anchor="m")
+        y = scrim(y, 0, H * 0.12, W, H * 0.15 + 360, 0.25 * k)
+    return ov.apply(y)
+def sh_intro(t):
+    a, b = TL.SH["intro"]; n = len(MONT); d = (b - a) / n; i = min(int((t - a) / d), n - 1); tl = (t - a) - i * d
+    def pic(j, tt): return zoom(still(MONT[j]), 1.02 + 0.035 * tt / d)
+    y = pic(i, tl)
+    if tl < 0.5 and i > 0: k = ease(tl / 0.5); y = pic(i - 1, tl + d) * (1 - k) + y * k
+    ov = Overlay(); k = fade(t, a + 0.6, b - 0.1, 0.8, 0.6)
+    if not VERT:
+        ov.text(W / 2, H / 2 - 150, "SUNSET ON EVERY WORLD", size=66, wt="ExtraLight", a=k, track=0.34, anchor="m", display=True)
+        ov.text(W / 2, H / 2 - 50, "ONE MOMENT.  ONE LENS.  ELEVEN HORIZONS", size=20, a=0.9 * k, track=0.36, anchor="m")
+        ov.text(96, H - 80, INFO[MONT[i]][0], size=20, a=0.9 * fade(tl, 0.3, d, 0.4, 0.4), track=0.4)
+        y = scrim(y, 300, H / 2 - 200, W - 300, H / 2 + 10, 0.3 * k)
+    else:
+        ov.text(W / 2, H * 0.30, "SUNSET ON", size=80, wt="ExtraLight", a=k, track=0.26, anchor="m", display=True); ov.text(W / 2, H * 0.30 + 108, "EVERY WORLD", size=80, wt="ExtraLight", a=k, track=0.26, anchor="m", display=True)
+        ov.text(W / 2, H * 0.30 + 250, "ONE MOMENT.  ONE LENS.  ELEVEN HORIZONS", size=22, a=0.9 * k, track=0.26, anchor="m")
+        ov.text(W / 2, H * 0.76, INFO[MONT[i]][0], size=26, a=0.9 * fade(tl, 0.3, d, 0.4, 0.4), track=0.4, anchor="m")
+        y = scrim(y, 0, H * 0.27, W, H * 0.30 + 310, 0.3 * k)
+    return ov.apply(y)
+GRID = ["mars", "mercury", "venus", "jupiter", "saturn", "uranus", "titan", "pluto", "kepler"]
+_grid = {}
+def sh_recap(t):
+    a, b = TL.SH["recap"]; u = (t - a) / (b - a)
+    if "g" not in _grid:
+        g = np.zeros((H, W, 3), f32); gap = hv(14, 12); mx, my0, my1 = hv(150, 40), hv(120, int(H * 0.14)), hv(150, int(H * 0.24))
+        tw = (W - 2 * mx - 2 * gap) // 3; th = (H - my0 - my1 - 2 * gap) // 3; pos = []
+        for i, w in enumerate(GRID):
+            st = still(w); sc = max(tw / W, th / H); im = cv2.resize(st, (int(W * sc + 1), int(H * sc + 1)), interpolation=cv2.INTER_AREA)
+            oy = int(np.clip(HY * im.shape[0] - th * 0.62, 0, im.shape[0] - th)); ox = (im.shape[1] - tw) // 2
+            x0 = mx + (i % 3) * (tw + gap); y0 = my0 + (i // 3) * (th + gap); g[y0:y0 + th, x0:x0 + tw] = im[oy:oy + th, ox:ox + tw]; pos.append((x0, y0, tw, th))
+        _grid["g"] = g; _grid["pos"] = pos
+    y = _grid["g"].copy(); pos = _grid["pos"]
+    for i, (x0, y0, tw, th) in enumerate(pos):
+        k = ease((t - a - 0.25 - 0.22 * i) / 0.7); y[y0:y0 + th, x0:x0 + tw] *= k
+    ov = Overlay()
+    for i, (x0, y0, tw, th) in enumerate(pos):
+        k = ease((t - a - 0.5 - 0.22 * i) / 0.7); ov.text(x0 + 14, y0 + th - hv(34, 40), INFO[GRID[i]][0], size=hv(16, 19), a=0.95 * k, track=0.3)
+    k = fade(t, a + 0.4, b, 0.8, 0.5); k2 = fade(t, S_["end1"] + 3.5, b, 0.8, 0.5)
+    if not VERT:
+        ov.text(W / 2, 46, "EVERY VIEW HERE IS A RECONSTRUCTION BUILT FROM MEASUREMENTS", size=22, a=k, track=0.3, anchor="m")
+        ov.text(W / 2, H - 112, "NO HUMAN HAS EVER STOOD UNDER ANY OF THESE SKIES", size=26, a=k2, track=0.3, anchor="m")
+        ov.text(W / 2, H - 66, "FROM THE SURFACE, ROBOTS HAVE PHOTOGRAPHED THE SUNSET ON MARS.  SPACECRAFT HAVE WATCHED IT ON TITAN, SATURN AND PLUTO FROM ABOVE", size=14, a=0.85 * k2, track=0.22, anchor="m")
+    else:
+        ov.text(W / 2, H * 0.14 - 78, "EVERY VIEW HERE IS A RECONSTRUCTION", size=26, a=k, track=0.22, anchor="m"); ov.text(W / 2, H * 0.14 - 40, "BUILT FROM MEASUREMENTS", size=26, a=k, track=0.22, anchor="m")
+        ov.text(W / 2, H * 0.76 + 14, "NO HUMAN HAS EVER STOOD", size=32, a=k2, track=0.22, anchor="m"); ov.text(W / 2, H * 0.76 + 60, "UNDER ANY OF THESE SKIES", size=32, a=k2, track=0.22, anchor="m")
+    return ov.apply(zoom(y, 1.0 + 0.02 * u, W / 2, H / 2))
+def sh_earth2(t):
+    a, b = TL.SH["earth2"]; img, ex, ov, scr = world_shot("earth", t, "earth2", (0.75, -0.85)); y = finish(img, ex, ov)
+    ov = Overlay(); k = fade(t, S_["end2"] + 2.6, E_["end2"] + 1.2, 0.8, 0.8); k2 = ease((t - (E_["end2"] + 1.6)) / 1.2)
+    if not VERT:
+        ov.text(W / 2, H - 170, "THE ONLY SUNSET ANYONE HAS WATCHED FROM THE GROUND", size=27, a=k, track=0.28, anchor="m")
+        ov.text(W / 2, 200, "SUNSET ON EVERY WORLD", size=60, wt="ExtraLight", a=k2, track=0.36, anchor="m", display=True)
+        ov.text(W / 2, 290, "EARTH", size=22, a=0.9 * k2, track=0.6, anchor="m")
+        y = scrim(y, 200, H - 200, W - 200, H - 110, 0.3 * k)
+    else:
+        ov.text(W / 2, H * 0.72, "THE ONLY SUNSET ANYONE HAS", size=31, a=k, track=0.2, anchor="m"); ov.text(W / 2, H * 0.72 + 46, "WATCHED FROM THE GROUND", size=31, a=k, track=0.2, anchor="m")
+        ov.text(W / 2, H * 0.20, "SUNSET ON", size=76, wt="ExtraLight", a=k2, track=0.26, anchor="m", display=True); ov.text(W / 2, H * 0.20 + 104, "EVERY WORLD", size=76, wt="ExtraLight", a=k2, track=0.26, anchor="m", display=True)
+        ov.text(W / 2, H * 0.20 + 240, "EARTH", size=28, a=0.9 * k2, track=0.6, anchor="m")
+        y = scrim(y, 0, H * 0.70, W, H * 0.72 + 100, 0.3 * k)
+    y = ov.apply(y)
+    return y * (1 - ease((t - (b - 2.2)) / 1.9))
+def shot_srgb(name, t):
+    if name == "mars0": return sh_mars0(t)
+    if name == "intro": return sh_intro(t)
+    if name == "recap": return sh_recap(t)
+    if name == "earth2": return sh_earth2(t)
+    img, ex, ov, scr = world_shot(name, t); return finish(img, ex, ov, scr)
+XF = 0.9
+def frame(t):
+    i = max(k for k, sh in enumerate(TL.SHOTS) if sh[1] <= t + 1e-6); name, t0, t1 = TL.SHOTS[i]
+    y = shot_srgb(name, t)
+    if i > 0 and t < t0 + XF:
+        k = ease((t - t0) / XF); y = shot_srgb(TL.SHOTS[i - 1][0], t) * (1 - k) + y * k
+    if t < 0.4: y = y * (t / 0.4)
+    return (np.clip(y, 0, 1) * 255 + 0.5).astype(np.uint8)
+
 def test_world(w, u):
-    ov = Overlay(); a, b = TL.SH[w]; img, ex = WFN[w]((b - a) * u, u, ov); scr = hud(ov, w, 1.0); scr += caption(ov, "A COLD BLUE GLOW IN A BUTTERSCOTCH SKY", 1.0, "FINE DUST SCATTERS BLUE LIGHT FORWARD, TOWARDS YOU")
-    return (np.clip(finish(img, ex, ov, scr), 0, 1) * 255 + 0.5).astype(np.uint8)
+    a, b = TL.SH[w]; return frame(a + (b - a) * u)
 if __name__ == "__main__":
     if sys.argv[1] == "world":
         for u in sys.argv[3:]:
             cv2.imwrite(f"{SCR}/chk/{hv('w', 'wv')}_{sys.argv[2]}_{u}.jpg", test_world(sys.argv[2], float(u))[..., ::-1], [cv2.IMWRITE_JPEG_QUALITY, 92]); print("wrote", u)
+    elif sys.argv[1] == "still":
+        for a_ in sys.argv[2:]:
+            t = float(a_); cv2.imwrite(f"{SCR}/chk/{hv('f', 'v')}_{t:07.2f}.jpg", frame(t)[..., ::-1], [cv2.IMWRITE_JPEG_QUALITY, 93]); print("wrote", t, flush=True)
+    elif sys.argv[1] == "stills":
+        for w in GRID + ["earth"]: still(w); print("still", w, flush=True)
+    else:
+        a, b = float(sys.argv[1]), float(sys.argv[2]); f0, f1 = int(round(a * FPS)), int(round(b * FPS))
+        sd = f"{SCR}/{hv('seg', 'seg_v')}"; os.makedirs(sd, exist_ok=True); out = f"{sd}/seg_{f0:05d}.mp4"
+        if os.path.exists(out): print("exists", out); sys.exit(0)
+        p = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+                              "-c:v", "libx264", "-preset", "fast", "-crf", "14", "-pix_fmt", "yuv420p", "-threads", "2", out + ".part.mp4"], stdin=subprocess.PIPE)
+        import time; T0 = time.time()
+        # Slow shots are rendered every 2nd or 3rd frame and the frames between are linear blends; the sea, the opening,
+        # every cross-fade and Uranus (where the Sun travels sideways) are rendered at a higher rate.
+        def step(t):
+            i = max(k for k, sh in enumerate(TL.SHOTS) if sh[1] <= t + 1e-6); name, t0, t1 = TL.SHOTS[i]
+            if t < t0 + XF + 0.1 or t > t1 - 0.15 or t < 1.0: return 1
+            if name in ("uranus",): return 1
+            if name in ("earth", "earth2", "titan", "mars0", "recap"): return 2
+            return 3
+        f = f0; cur = frame(f / FPS); nrender = 1
+        while f < f1:
+            st = step(f / FPS)
+            if st > 1 and (f + st >= f1 or any(step((f + j) / FPS) < st for j in range(1, st + 1))): st = 1
+            p.stdin.write(cur.tobytes())
+            if f + 1 >= f1: break
+            nxt = frame((f + st) / FPS); nrender += 1
+            for j in range(1, st): p.stdin.write(cv2.addWeighted(cur, 1 - j / st, nxt, j / st, 0).tobytes())
+            f += st; cur = nxt
+            if nrender % 24 == 0: print(f"{f} ({f - f0}/{f1 - f0}) rendered {nrender} {time.time() - T0:.0f}s", flush=True)
+        p.stdin.close(); p.wait(); os.rename(out + ".part.mp4", out); print("done", out, f"{time.time() - T0:.0f}s")

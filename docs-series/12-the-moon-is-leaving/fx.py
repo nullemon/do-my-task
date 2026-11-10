@@ -52,17 +52,17 @@ def sun_sprite(n=1500, kind="sun"):
             for (sx, sy, sr) in ((-0.32, 0.18, 0.030), (-0.26, 0.21, 0.016), (0.41, -0.22, 0.024), (0.47, -0.19, 0.012), (0.08, 0.36, 0.014), (-0.55, -0.30, 0.012)):
                 d = np.hypot(u - sx, v - sy) / sr; ang = np.arctan2(v - sy, u - sx)
                 fib = 0.75 + 0.25 * np.sin(ang * 26 + 3 * d)
-                pen = np.clip((1.9 + 0.25 * np.sin(ang * 5 + sx * 40) - d) / 0.25, 0, 1); umb = np.clip((0.95 + 0.15 * np.sin(ang * 3) - d) / 0.2, 0, 1)
+                pen = np.clip((1.9 + 0.12 * np.sin(ang * 3 + sx * 40) + 0.06 * np.sin(ang * 7) - d) / 0.35, 0, 1); umb = np.clip((0.95 + 0.10 * np.sin(ang * 2 + 1) - d) / 0.3, 0, 1)
                 I *= (1 - pen * (1 - 0.62 * fib)) * (1 - umb * 0.72)
             fac = np.clip(cv2.GaussianBlur(wn, (0, 0), 2.5) / 0.15 - 1.2, 0, 1) * np.clip(cv2.GaussianBlur(rng.standard_normal((n, n)).astype(F32), (0, 0), 40) * 40, 0, 1)
             I += 0.10 * fac * (1 - mu) ** 0.5
             col = np.stack([I * 1.0, I ** 1.18 * 0.74, I ** 1.9 * 0.30], -1) * 1.18
         else:
             g = cv2.GaussianBlur(wn, (0, 0), 26); g /= g.std(); g2 = cv2.GaussianBlur(wn, (0, 0), 7); g2 /= g2.std(); g3 = cv2.GaussianBlur(wn, (0, 0), 2.2); g3 /= g3.std()
-            cell = np.clip(0.5 + 0.38 * g + 0.16 * g2 + 0.05 * g3, 0, 1.3)
+            cell = np.clip(0.5 + 0.30 * g + 0.20 * g2 + 0.10 * g3, 0, 1.3)
             ld = 1 - 0.75 * (1 - mu) - 0.15 * (1 - mu) ** 2
             I = ld * (0.45 + 0.75 * cell)
-            col = np.stack([I * 1.05, I ** 1.7 * 0.42, I ** 2.6 * 0.10], -1) * 1.15
+            col = np.stack([I * 1.0, I ** 1.8 * 0.36, I ** 2.8 * 0.08], -1) * 0.95
         a = np.clip((1 - np.sqrt(rr)) * R + 0.5, 0, 1)
         return (col * a[..., None]).astype(F32), a.astype(F32), R
     return cached(("sunspr", n, kind), make)
@@ -121,6 +121,7 @@ def limb_profile(th):
     if _LIMB is None:
         p = pnoise(1440, 2, 6, 20, 0.62, 77)[0]; q = pnoise(1440, 2, 4, 90, 0.6, 78)[0]
         _LIMB = (0.0052 * p + 0.0022 * q).astype(F32)
+        k = np.arange(1440); _LIMB = np.clip(_LIMB, -0.0055, 0.01) - 0.0125 * np.exp(-((k - 832) / 5.0) ** 2).astype(F32)      # one deep valley: the last bead (the diamond)
     i = ((th / (2 * np.pi)) % 1.0) * 1440
     i0 = np.floor(i).astype(int) % 1440; f = (i - np.floor(i)).astype(F32)
     return _LIMB[i0] * (1 - f) + _LIMB[(i0 + 1) % 1440] * f
@@ -144,7 +145,7 @@ def eclipse(cx, cy, Rs, ratio, off, sky_day=(0.16, 0.25, 0.42), sky_dark=(0.012,
     img = np.empty((H, W, 3), F32); img[:] = sky
     if stars is not None: img += stars * dark
     if corona:
-        cg = cor_gain * (1 - ss(0.0003, 0.012, F))
+        cg = cor_gain * (1 - ss(0.00004, 0.004, F))
         if cg > 0.002:
             cor = corona_img(Rs, cx, cy)
             img += cor * cg
@@ -162,11 +163,12 @@ def eclipse(cx, cy, Rs, ratio, off, sky_day=(0.16, 0.25, 0.42), sky_dark=(0.012,
             sp = cv2.GaussianBlur(small, (0, 0), sigmaX=70, sigmaY=0.8) + cv2.GaussianBlur(small, (0, 0), sigmaX=0.8, sigmaY=70)
             Mr = cv2.getRotationMatrix2D((cx / 2, cy / 2), 45, 1.0); sp2 = cv2.warpAffine(sp, Mr, (W // 2, H // 2))
             # only sources near the limb gap throw long spikes; weight by how point-like the source is
-            pk = min(1.0, 0.004 / max(F, 1e-6)) ** 0.5
+            pk = min(1.0, 0.004 / max(F, 1e-6)) ** 1.5
             gl += (sp * 26 + sp2 * 9) * spikes * pk
-        gl = cv2.resize(gl, (W, H), interpolation=cv2.INTER_LINEAR) * glare
+        expo = float(np.clip((0.004 / (F + 0.000002)) ** 0.95, 0.05, 400.0)) * (1 + 2.5 * (1 - ss(0.0005, 0.01, F)))
+        gl = cv2.resize(gl, (W, H), interpolation=cv2.INTER_LINEAR) * glare * expo * (1 - 0.6 * moon)
         img += gl[..., None] * np.array([1.0, 0.96, 0.88], F32)
-        img += (P * 30)[..., None]
+        img += (P * 30 * min(max(expo, 0.2), 8.0))[..., None]
     return img, F
 
 

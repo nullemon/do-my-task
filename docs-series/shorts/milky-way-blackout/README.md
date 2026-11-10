@@ -1,6 +1,6 @@
 # In 1994, People Called 911 About a Strange Cloud. It Was the Milky Way. (YouTube Short)
 
-1080×1920, 30 fps, about 37.2 s, plus a 16:9 recomposition. **Locked camera:** a single tripod frame of the user's city
+1080×1920, 30 fps, 37.23 s, plus a 16:9 recomposition. The style follows the lead's VFX direction (big, saturated, moving sky; see `../lib/README.md`). **Locked camera:** a single tripod frame of the user's city
 plate (`C_city.png`, upscaled 941×1672 → 1080×1920) for the whole Short. There are no cutaways and no punch-ins. The
 only camera motion is about 1.4 s of tripod rattle during the earthquake itself. Everything else happens in the sky and
 in the city lights.
@@ -15,13 +15,13 @@ in the city lights.
 ## Beats
 | t (s) | picture / sound |
 |---|---|
-| 0–9 | City at night under an orange-grey sodium sky dome, with only the brightest stars showing. Mains hum, traffic, passing cars. Label: 17 JAN 1994 · 4:31 AM / NORTHRIDGE EARTHQUAKE · M6.7. |
-| ≈9.5 | "hit": the tripod jolts for ~1.4 s. Low rumble, sub thump, rattling glass. Brown-out flicker and 120 Hz crackling buzz. |
-| 10.2–11.9 | About 1,240 detected windows switch off individually in 4 block waves (far right → near left), each with a last-gasp flash. The 5 street lamps buzz, flicker and die with a transformer pop, and their warm light leaves the trees and road. The hum powers down. Then silence. |
-| 12–14 | The skyglow drains over 2.2 s. The exposure adapts, the grade turns cool blue, and crickets and wind come in. |
-| 13–17 | Stars appear, then the Milky Way rises: warm core low between the towers, a dust rift, star clouds, faint airglow. A low hit, shimmer, and a pad that swells (D → Bm → G → A → D). The city becomes silhouettes with a faint starlit rim, a residual distant glow on the horizon, and a few surviving battery and car lights. |
-| 17–32 | Small text: AS RECOUNTED BY GRIFFITH OBSERVATORY. Then the Falchi et al. fact block. |
-| 33–37 | "Right above you": the lamps and windows come back in waves, the hum powers up, the dome returns and the Milky Way drowns. The last frame matches the first, so the video loops. |
+| 0–9.5 | City at night under an orange sodium sky dome, with only the brightest stars showing. Mains hum, traffic, passing cars. Label: 17 JAN 1994 · 4:31 AM / NORTHRIDGE EARTHQUAKE · M6.7. |
+| ≈9.5 | "hit": the tripod jolts for ~1.4 s. Rumble, sub thump, rattling glass. Brown-out flicker of the lights and of the whole frame. 120 Hz crackling buzz. |
+| 10.2–11.9 | Three blue-green transformer flashes on the skyline, each with an arc zap and a boom. About 1,240 detected windows spark and switch off one by one in 4 block waves. The 5 street lamps buzz, flicker and die with a pop, and their warm light leaves the trees and road. The hum powers down to silence. |
+| 12–14 | The orange dome drains down into the horizon. The grade turns deep blue (it stays readable and never goes black). Crickets and wind come in. |
+| 13.5–17 | Stars, then a huge, vivid Milky Way: gold/pink core between the towers, teal/violet arms, a dust rift, a green airglow band and strong bloom. A meteor, a low hit, shimmer, and a swelling pad (D → Bm → G → A → D). The sky turns slowly the whole time and the stars twinkle. Two more meteors follow later. |
+| 17–33 | AS RECOUNTED BY GRIFFITH OBSERVATORY, then the Falchi et al. fact block. |
+| 33.6–37.2 | "Right above you": the windows and lamps come back in waves and the hum powers up. The orange glow climbs from the horizon and eats the Milky Way. The last frame matches the first, so the video loops. |
 
 ## Sources and how the facts are phrased
 - **Northridge earthquake:** 17 Jan 1994, 4:30:55 a.m. PST, Mw 6.7. It caused widespread power outages across Los
@@ -38,9 +38,9 @@ in the city lights.
   the world's population lives under light-polluted skies. That is a different statistic, and it is not used here.
 
 ## Liberties and caveats
-- **The sky is a procedural illustration.** The bright stars and colours come from `lib/sky.StarSky`. The Milky Way
+- **The sky is stylised on purpose** (lead/user direction: saturated colours, no disclaimer text on screen). The bright stars and colours come from `lib/sky.StarSky`. The Milky Way
   band is this folder's `mw.py`, built in frame coordinates because the lib plate filled the whole frame at this
-  framing. In reality, at 4:31 a.m. on 17 January from LA, the galactic core sits below the horizon (the Sun is in
+  framing; `vivid=True` adds the stylised palette. In reality, at 4:31 a.m. on 17 January from LA, the galactic core sits below the horizon (the Sun is in
   Sagittarius). What people saw was the fainter winter/spring Milky Way, lying low. The Moon had set (waxing crescent),
   so a moonless sky is right.
 - **The plate is not Los Angeles.** It is the user's European-looking city photo, used as a stand-in.
@@ -52,7 +52,7 @@ in the city lights.
 `audio/narration.py` (text), `audio/gen_voice.py` (Kokoro with word timings; it wraps `lib.voice` and fixes
 alignment for function words that Kokoro fuses, such as "in the" → "ɪnðə"), `audio/mix.py` (sound design, −14 LUFS,
 SRT), `short.py` (picture: `City` light decomposition and `Scene`), `mw.py` (Milky Way), `encode.sh` (mux),
-`thumbnail.py`. Shared code: `../lib/` (read-only). Scratch:
+`thumbnail.py`. `encode.sh` muxes without `-shortest`, because with a subtitle stream that flag cut the file at the last cue (36.0 s instead of 37.2 s). `sun-black-hole/encode.sh` has the same pattern. Shared code: `../lib/` (read-only). Scratch:
 `.../scratchpad/series/S2-milky-way-blackout/`. Outputs: `out/` (git-ignored).
 
 Pipeline: `audio/gen_voice.py` → `audio/mix.py` → `short.py vert` → `encode.sh vert` → `thumbnail.py vert` →

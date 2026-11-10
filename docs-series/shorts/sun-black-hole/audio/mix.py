@@ -11,7 +11,7 @@ OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR)
 
 
-def main(locked=False):
+def main(locked=False, vfx=False):
     voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     t = np.arange(N) / SR
     # 1. warm daytime pad (cut at the blackout)
@@ -40,12 +40,26 @@ def main(locked=False):
     wh = 0 if locked else sum(A.riser(N, c - 0.45, c + 0.02, seed=20 + i) * 0.30 for i, c in enumerate((S.T_CUT_ORBIT, S.T_CUT_FREEZE, S.T_CUT_END)))
     if locked: sw = sw * 0                                   # no telescope inset in the locked version
     bed = day * 0.9 + tk + rs * 0.5 + th * 0.9 + cold * 0.8 + sw + sh + hi * 0.8 + roar * 0.6 + imp + wh
+    if vfx:
+        import short_vfx as V
+        # shimmering major-chord pad under the beams, building riser into the implosion, thump, the hole forming,
+        # a pulsing sub hum while it hangs in the sky, icy shimmer for the frost, final white-out swell + hit
+        tt = np.arange(N) / SR
+        pad = sum(np.sin(2 * np.pi * f * tt + i) * a for i, (f, a) in enumerate(((220.0, 0.5), (277.2, 0.35), (329.6, 0.35), (440.0, 0.25), (554.4, 0.12))))
+        pad = (pad * (1 + 0.3 * np.sin(2 * np.pi * 0.25 * tt)))[:, None] * np.ones((1, 2)) * 0.05
+        pad *= A.env(N, [(0, 0), (0.8, 1), (V.T_COL, 1), (S.T_OUT - 0.05, 0.6), (S.T_OUT, 0), (S.DUR, 0)])[:, None]
+        rz = A.riser(N, V.T_COL, S.T_OUT - 0.02, seed=31) * 1.4
+        form = A.riser(N, V.T_BH0 - 0.3, V.T_BH1, seed=32) * 0.5 + A.hit(N, V.T_BH1 - 0.1, gain=0.35, root=36.7)
+        hum = (np.sin(2 * np.pi * 41.2 * tt) + 0.4 * np.sin(2 * np.pi * 82.4 * tt)) * (0.6 + 0.4 * np.sin(2 * np.pi * tt / 1.7))
+        hum = hum[:, None] * np.ones((1, 2)) * 0.10 * A.env(N, [(0, 0), (V.T_BH0, 0), (V.T_BH1, 1), (S.DUR - 1.5, 1), (S.DUR, 0)])[:, None]
+        wo = A.riser(N, V.T_WHITE - 0.6, S.DUR - 0.2, seed=33) * 0.9
+        bed = pad + rz + th * 1.1 + form + hum + cold * 0.6 + sh * 1.2 + wo + hi * 0.7 + tk * 0.8
     bed = A.duck(bed, voice, depth=0.45)
     mix = voice * 1.0 + bed * 0.55
     fade = np.clip((S.DUR - t) / 0.4, 0, 1)[:, None]
     mix *= fade
     sf.write(os.path.join(OUT, "mix_raw.wav"), mix.astype(np.float32), SR, subtype="FLOAT")
-    A.loudnorm(os.path.join(OUT, "mix_raw.wav"), os.path.join(OUT, "mix_locked.wav" if locked else "mix.wav"), -14.0, -1.0)
+    A.loudnorm(os.path.join(OUT, "mix_raw.wav"), os.path.join(OUT, "mix_vfx.wav" if vfx else ("mix_locked.wav" if locked else "mix.wav")), -14.0, -1.0)
     os.remove(os.path.join(OUT, "mix_raw.wav"))
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)
@@ -54,4 +68,4 @@ def main(locked=False):
 
 
 if __name__ == "__main__":
-    main(locked=len(sys.argv) > 1 and sys.argv[1] == "locked")
+    main(locked=len(sys.argv) > 1 and sys.argv[1] == "locked", vfx=len(sys.argv) > 1 and sys.argv[1] == "vfx")

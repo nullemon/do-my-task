@@ -12,7 +12,7 @@ Usage: /home/user/ttsenv/bin/python short_vfx.py vert|wide [t1,t2,...]
 import os, sys, math, time
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [os.path.join(HERE, ".."), HERE, os.path.join(HERE, "audio")]
 import short as A
-from short import SCR, DUR, FPS, LN, WORDS, wt, T_NOW, T_OUT, temp_c, day_of
+from short import SCR, DUR, FPS, LN, WORDS, wt, T_NOW, T_OUT, temp_c
 import numpy as np, cv2
 from PIL import Image
 from lib.core import f32, ease, ramp, smooth, noise1, splat, fbm2, lum
@@ -28,6 +28,15 @@ T_COLD = A.wt("cold", "COLD") - 0.3
 T_WEEK, T_YEAR = A.wt("cold", "−18°C"), A.wt("cold", "−73°C")
 T_LAST = A.T_LAST
 T_WHITE = T_LAST + 0.15                         # final flare -> white-out
+def day_of(t):
+    keys = [(T_COLD, 0.0), (T_WEEK, 7.0), (A.wt("cold", "IN", 1), 7.0), (T_YEAR, 365.0)]
+    if t <= keys[0][0]: return 0.0
+    if t >= keys[-1][0]: return 365.0
+    for (a, va), (b, vb) in zip(keys, keys[1:]):
+        if a <= t <= b:
+            u = ease((t - a) / (b - a)); return math.expm1(math.log1p(va) + (math.log1p(vb) - math.log1p(va)) * u)
+
+
 FLARES = [A.wt("orbit", "UNCHANGED"), A.wt("bh", "6 KM"), A.wt("scope", "BENDING"), A.wt("end", "FROZEN")]
 
 
@@ -45,8 +54,8 @@ class VFX(A.Scene):
     def __init__(self, vertical=True):
         super().__init__(vertical)
         L = self.L; W, H = L.W, L.H
-        self.C = (560.0, 560.0) if vertical else (1240.0, 300.0)     # Sun / black hole centre
-        self.Rs = 104.0 if vertical else 92.0                          # shadow radius (px) at full size
+        self.C = (548.0, 585.0) if vertical else (1230.0, 330.0)     # Sun / black hole centre
+        self.Rs = 150.0 if vertical else 118.0                          # shadow radius (px) at full size
         hw, hh = W // 2, H // 2
         yy, xx = np.mgrid[0:hh, 0:hw].astype(f32) * 2 + 1.0
         self.dx = xx - self.C[0]; self.dy = yy - self.C[1]
@@ -58,7 +67,7 @@ class VFX(A.Scene):
         self.beams.sort(key=lambda b: b["a"])
         # night foreground: readable deep-blue grade of the photo (flattened shadows)
         f = self.fg.flat; y = lum(f)[..., None]
-        self.fg_night = ((f * 0.35 + y * 0.65) * np.array([0.16, 0.20, 0.42], f32)).astype(f32)
+        self.fg_night = ((f * 0.35 + y * 0.65) * np.array([0.19, 0.22, 0.48], f32)).astype(f32)
         dt = fbm2((256, 1024), 31, 2.6) * 0.45 + fbm2((256, 1024), 32, 1.8) * 0.20
         self.disk_tex = np.clip(cv2.GaussianBlur(dt, (0, 0), sigmaX=1.0, sigmaY=3.0) * 1.6 + 0.8, 0.15, 2.2).astype(f32)
         self.mist = np.clip(fbm2((512, 1024), 41, 2.6) * 0.5 + 0.45, 0, 1).astype(f32)
@@ -121,14 +130,14 @@ class VFX(A.Scene):
             v = core[..., None] * hot * 30 * I + (np.exp(-np.maximum(d - rr, 0) / (rr * 0.6 + 6)) * 3.0 * I)[..., None] * np.array([1.0, 0.75, 0.45], f32)
             v += (np.exp(-d / (rr * 3 + 40)) * 0.8 * I)[..., None] * np.array([1.0, 0.8, 0.6], f32)
             return v
-        splat(img, cx, cy, 520, fn)
+        splat(img, cx, cy, 1400, fn)
 
     # -------------------------------------------------------------------------------------------- night + hole
     def sky_night(self, t, S):
         L = self.L; W, H = L.W, L.H; hz = self.hz
         y = np.arange(H, dtype=f32)[:, None]
         el = np.clip((hz - y) / hz, 0, 1)
-        zen = np.array([0.006, 0.007, 0.045], f32); hor = np.array([0.020, 0.030, 0.13], f32)
+        zen = np.array([0.012, 0.010, 0.070], f32); hor = np.array([0.030, 0.042, 0.18], f32)
         k = np.exp(-el / 0.30)[..., None]
         base = (zen * (1 - k) + hor * k) * np.ones((1, W, 1), f32)
         stars = self.stars.render(self.cam, t, cx=2020, cy=1180, rot=-8, gain=1.5, twinkle=1.0, plate_gain=0.45, air=0.6)
@@ -139,7 +148,7 @@ class VFX(A.Scene):
     def lens_swirl(self, sky, t, S):
         """strong point-lens warp + slow differential swirl of the starfield around the hole"""
         cx, cy = self.C; Rs = self.Rs * S; thE = 1.55 * Rs
-        Rp = int(min(7 * Rs + 60, 900))
+        Rp = int(min(6 * Rs + 60, 1000))
         H, W = sky.shape[:2]
         x0, x1, y0, y1 = max(0, int(cx - Rp)), min(W, int(cx + Rp)), max(0, int(cy - Rp)), min(H, int(cy + Rp))
         yy, xx = self.yy[y0:y1, x0:x1], self.xx[y0:y1, x0:x1]
@@ -161,7 +170,7 @@ class VFX(A.Scene):
         """black core, photon ring, lensed disk (front band + upper/lower arches), infalling spiral gas, halo"""
         if S <= 0.02: return
         cx, cy = self.C; Rs = self.Rs * S
-        Rb = int(min(6.5 * Rs + 40, 1000))
+        Rb = int(min(5.5 * Rs + 40, 1100))
         H, W = img.shape[:2]
         x0, x1, y0, y1 = max(0, int(cx - Rb)), min(W, int(cx + Rb)), max(0, int(cy - Rb)), min(H, int(cy + Rb))
         dx = self.xx[y0:y1, x0:x1] + 0.5 - cx; dy = self.yy[y0:y1, x0:x1] + 0.5 - cy
@@ -177,45 +186,58 @@ class VFX(A.Scene):
         arms2 = (0.5 + 0.5 * np.cos(3 * (sp + 1.4 * np.log(rr / Rs)) - 1.3 * t + 1.0)) ** 4
         gas = (arms * 0.8 + arms2 * 0.5) * np.exp(-(rr / (3.6 * Rs)) ** 1.6) * smooth(1.05 * Rs, 1.9 * Rs, rr)
         gcol = np.array([0.55, 0.25, 1.0], f32) * (1 - np.exp(-rr / (2.5 * Rs)))[..., None] + np.array([1.0, 0.45, 0.85], f32) * np.exp(-rr / (2.5 * Rs))[..., None]
-        reg += gas[..., None] * gcol * 0.55 * pulse
-        reg += (np.exp(-np.maximum(r - Rs, 0) / (0.7 * Rs)) * 0.45 + np.exp(-r / (3.0 * Rs)) * 0.04)[..., None] * np.array([0.75, 0.6, 1.0], f32) * pulse
+        ef = smooth(Rb, Rb * 0.7, r)                                                  # fade to zero at the patch edge
+        reg += (gas * ef)[..., None] * gcol * 0.55 * pulse
+        reg += ((np.exp(-np.maximum(r - Rs, 0) / (0.7 * Rs)) * 0.45 + np.exp(-r / (3.0 * Rs)) * 0.04) * ef)[..., None] * np.array([0.75, 0.6, 1.0], f32) * pulse
         # disk texture lookup (Keplerian shear)
         def disk_val(rho, psi):
             om = 1.6 * (np.maximum(rho, 0.3 * Rs) / (1.3 * Rs)) ** -1.5
             u = ((psi - om * t) / (2 * np.pi) % 1.0) * 1024
-            v = np.clip((rho / Rs - 1.2) / 2.4, 0, 1) * 255
+            v = np.clip((rho / Rs - 1.15) / 2.0, 0, 1) * 255
             tex = cv2.remap(self.disk_tex, u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-            prof = smooth(1.22 * Rs, 1.36 * Rs, rho) * np.exp(-(rho - 1.3 * Rs) / (0.85 * Rs)) * smooth(3.7 * Rs, 3.1 * Rs, rho)
+            prof = smooth(1.15 * Rs, 1.28 * Rs, rho) * np.exp(-(rho - 1.25 * Rs) / (0.75 * Rs)) * smooth(3.1 * Rs, 2.5 * Rs, rho)
             return prof * tex
         def disk_col(rho, xside):
             w = np.clip((rho / Rs - 1.25) / 2.2, 0, 1)[..., None]
-            c = np.array([1.0, 0.90, 0.72], f32) * (1 - w) + np.array([1.0, 0.48, 0.16], f32) * w * 0.9 + np.array([0.9, 0.30, 1.0], f32) * w * 0.25
-            dop = (1 - 0.55 * np.clip(xside, -1, 1)) ** 2.2                          # approaching (left) side brighter
+            w = np.clip((rho / Rs - 1.2) / 1.6, 0, 1)[..., None]
+            c = np.array([1.0, 0.82, 0.55], f32) * (1 - w) + np.array([1.0, 0.50, 0.12], f32) * w
+            dop = (1 - 0.6 * np.clip(xside, -1, 1)) ** 2.0                           # Doppler beaming: approaching (left) side brighter
+            c = c * (1 - 0.25 * np.clip(-xside, 0, 1))[..., None] + np.array([0.85, 0.9, 1.0], f32) * 0.25 * np.clip(-xside, 0, 1)[..., None]
             return c * dop[..., None]
-        ci = 0.17
-        rho_f = np.sqrt(xr ** 2 + (yr / ci) ** 2); psi_f = np.arctan2(yr / ci, xr)
-        dv = disk_val(rho_f, psi_f)
-        front = dv * (yr > 0)                                                        # near half: crosses in front of the core
-        back = dv * (yr <= 0) * (r > Rs * 1.02)
-        # lensed image of the far half: arch over the top (thick) and under the bottom (thin)
-        up_w = 0.95 * Rs * np.abs(np.sin(th)) ** 0.55 + 0.05 * Rs
-        lo_w = 0.32 * Rs * np.abs(np.sin(th)) ** 0.8 + 0.03 * Rs
-        g_up = (yr < 0) * smooth(Rs * 1.0, Rs * 1.06, r) * smooth(Rs * 1.06 + up_w, Rs * 1.03 + up_w * 0.5, r)
-        g_lo = (yr > 0) * smooth(Rs * 1.0, Rs * 1.04, r) * smooth(Rs * 1.04 + lo_w, Rs * 1.02 + lo_w * 0.4, r)
-        rho_a = 1.3 * Rs + (r - Rs) / np.maximum(up_w, 1) * 2.0 * Rs
-        arch_up = disk_val(rho_a, th * 1.0 + 3.0) * g_up * 1.25
-        rho_l = 1.3 * Rs + (r - Rs) / np.maximum(lo_w, 1) * 1.6 * Rs
-        arch_lo = disk_val(rho_l, -th + 1.0) * g_lo * 0.7
+        # FRONT BAND: the near side of the (almost edge-on) disk, crossing in front of the core; thick, streaky
+        ax = np.abs(xr)
+        h = 0.20 * Rs * (1 - 0.40 * np.clip(ax / (2.8 * Rs), 0, 1))
+        yc = 0.05 * Rs * (1 - np.clip(ax / (2.8 * Rs), 0, 1) ** 2)
+        prof_b = np.where(ax < 1.3 * Rs, 1.0, np.exp(-(ax - 1.3 * Rs) / (0.9 * Rs))) * smooth(3.0 * Rs, 2.4 * Rs, ax)
+        vb = (yr - yc) / h
+        ub = ((xr / Rs) * 140 - t * 55 + 4096) % 1024
+        tb = cv2.remap(self.disk_tex, ub.astype(f32), np.clip(vb * 30 + 128, 0, 255).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        front = prof_b * np.exp(-vb ** 2 * 1.4) * np.clip(0.45 + 0.55 * tb, 0.15, 1.8)
+        rho_f = 1.25 * Rs + np.maximum(ax - 1.0 * Rs, 0) * 0.9
+        # ARCHES: lensed image of the far side, a thick glowing halo over the top and a thinner one under the bottom
+        sn = np.abs(np.sin(th))
+        up_w = 0.60 * Rs * (0.35 + 0.65 * sn ** 0.7)
+        lo_w = 0.30 * Rs * (0.50 + 0.50 * sn ** 0.9)
+        din = r - Rs * 1.02
+        g_up = (yr < yc) * smooth(-0.01 * Rs, 0.03 * Rs, din) * np.exp(-np.maximum(din, 0) / (0.45 * up_w)) * smooth(up_w * 1.7, up_w * 0.9, din)
+        g_lo = (yr >= yc) * smooth(-0.01 * Rs, 0.02 * Rs, din) * np.exp(-np.maximum(din, 0) / (0.45 * lo_w)) * smooth(lo_w * 1.7, lo_w * 0.9, din)
+        ua = ((th / np.pi) * 300 + t * 40 + 2048) % 1024
+        ta = cv2.remap(self.disk_tex, ua.astype(f32), np.clip(din / np.maximum(up_w, 1) * 90 + 60, 0, 255).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        arch_up = g_up * np.clip(0.5 + 0.5 * ta, 0.2, 1.7) * 1.05
+        arch_lo = g_lo * np.clip(0.6 + 0.4 * ta, 0.3, 1.5) * 1.0
+        rho_a = 1.25 * Rs + np.maximum(din, 0) / np.maximum(up_w, 1) * 1.2 * Rs
+        rho_l = 1.25 * Rs + np.maximum(din, 0) / np.maximum(lo_w, 1) * 1.0 * Rs
+        back = 0.0
         # shadow: kill everything behind the core
         shadow = smooth(Rs * 0.995, Rs * 1.012, r)
         reg *= shadow[..., None]
-        xs = xr / np.maximum(r, 1)
-        reg += (back[..., None] * disk_col(rho_f, xs) + arch_up[..., None] * disk_col(rho_a, xs) + arch_lo[..., None] * disk_col(rho_l, xs)) * 5.0 * pulse
+        xs = np.clip(xr / (2.2 * Rs), -1, 1)
+        reg += (arch_up[..., None] * disk_col(rho_a, xs) + arch_lo[..., None] * disk_col(rho_l, xs)) * 3.6 * pulse
         ring = np.exp(-((r - Rs * 1.025) / (0.010 * Rs + 0.8)) ** 2) * 9.0 + np.exp(-np.maximum(r - Rs, 0) / (0.06 * Rs)) * (r > Rs) * 1.6
         reg += ring[..., None] * np.array([0.92, 0.85, 1.0], f32) * pulse
-        reg += front[..., None] * disk_col(rho_f, xs) * 5.0 * pulse
+        reg += front[..., None] * disk_col(rho_f, xs) * 4.2 * pulse
         img[y0:y1, x0:x1] = reg
-        fr = front * 5.0 * pulse
+        fr = front * 4.2 * pulse
         self._core = ((y0, y1, x0, x1), (1 - smooth(Rs * 0.90, Rs * 0.99, r)) * np.clip(1 - fr, 0, 1))
 
     # -------------------------------------------------------------------------------------------- cold
@@ -299,7 +321,8 @@ class VFX(A.Scene):
         img = bloom(img, 0.8 if t < T_IMPL else 1.4)
         if t >= T_OUT and getattr(self, "_core", None) is not None:
             (y0, y1, x0, x1), cm = self._core
-            img[y0:y1, x0:x1] *= (1 - 0.97 * cm)[..., None]
+            wv = ease((t - T_WHITE) / (DUR - 0.25 - T_WHITE)) if t > T_WHITE else 0.0
+            img[y0:y1, x0:x1] *= (1 - 0.97 * cm * (1 - wv) ** 2)[..., None]
         out = tonemap(img, 1.0)
         out = self.chroma(out)
         out = finish(out, t, grain=0.008, vignette=0.18)
@@ -330,7 +353,7 @@ class VFX(A.Scene):
             a = ramp(t, T_COLD - 0.2, T_COLD + 0.2) * (1 - ramp(t, T_WHITE, T_WHITE + 0.3))
             d = day_of(t); tc = temp_c(d)
             sign = "−" if tc < -0.5 else "+"
-            hud_text(out, f"EARTH · DAY {int(d)}", W / 2, ry - big * 0.95, int(L.hud_size * 0.42), "Bold", (220, 235, 255), a, 0.22)
+            hud_text(out, f"EARTH · DAY {int(round(d))}", W / 2, ry - big * 0.95, int(L.hud_size * 0.42), "Bold", (220, 235, 255), a, 0.22)
             hud_text(out, f"{sign}{abs(round(tc)):d}°C", W / 2, ry, int(big * 1.25), "Black", (200, 232, 255), a, 0.02, display=True)
         fy = 1240 if L.vertical else 760
         fs = int(L.hud_size * 0.62)
@@ -362,7 +385,28 @@ def run(vertical, stills=None):
     enc.close(); print("done", time.time() - t0)
 
 
+def patch(vertical, ranges):
+    """re-render only frames inside `ranges` [(t0, t1)], copying the others from the existing render"""
+    import subprocess
+    sc = VFX(vertical); tag = "vfx_vert" if vertical else "vfx_wide"
+    W, H = sc.L.W, sc.L.H; src = os.path.join(SCR, f"video_{tag}.mp4"); old = src.replace(".mp4", "_prev.mp4")
+    os.replace(src, old)
+    dec = subprocess.Popen(["ffmpeg", "-v", "error", "-i", old, "-f", "rawvideo", "-pix_fmt", "rgb24", "-"], stdout=subprocess.PIPE)
+    enc = Encoder(src, W, H, FPS, crf=16)
+    n = int(round(DUR * FPS))
+    for i in range(n):
+        buf = dec.stdout.read(W * H * 3)
+        t = i / FPS
+        if any(a <= t <= b for a, b in ranges) or len(buf) < W * H * 3:
+            enc.write(sc.frame(t))
+        else:
+            enc.p.stdin.write(buf)
+    enc.close(); dec.wait(); os.remove(old); print("patched")
+
+
 if __name__ == "__main__":
+    if sys.argv[1] == "patch":
+        patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"
     st = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else None
     run(vert, st)

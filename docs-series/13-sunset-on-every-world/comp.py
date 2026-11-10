@@ -331,7 +331,7 @@ def sh_kepler(tl, u, ov):
         return base * 0.8 + g
     sky = sky_half(pl, fn) + stars(13, mw=False) * 0.12 * up(smooth(3.0, 8.0, half(pl.EL)))[..., None]
     xA, yA = pl.xy(seA, saA); rA = 0.92 * 0.2665 * pl.ppd; xB, yB = pl.xy(seB, saB); rB = 0.32 * 0.2665 * pl.ppd
-    sun_disc(sky, xB, yB, rB, colB * 1.9, limb=0.5); sun_disc(sky, xA, yA, rA, colA * 2.4, limb=0.5)
+    sun_disc(sky, xB, yB, rB, colB * 4.2 + C(0.5, 0.2, 0.1), limb=0.4); sun_disc(sky, xA, yA, rA, colA * 3.0 + C(1.2, 0.9, 0.6), limb=0.4)
     vA = sunvis(pl, xA, yA, rA); vB = sunvis(pl, xB, yB, rB)
     L = ground(pl, colA * 5.5 * vA, colB * 2.0 * vB, C(0.42, 0.30, 0.40) * 0.30)
     L = hazed(L, pl, horizon_sky(pl, fn, 0.4), 30000.0)

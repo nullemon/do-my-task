@@ -10,7 +10,7 @@ from lib.text import word_layer, composite, hud_text, ORANGE
 vert = sys.argv[1] != "wide"
 sc = S.Scene(vert)
 sc.overlay = lambda out, t: None
-sc.mw_plate *= 1.35                                       # a touch more blaze for the thumbnail
+sc.mw_canvas *= 1.25                                      # a touch more blaze for the thumbnail
 t = S.LN["twist"]["start"] + 1.0
 img = sc.frame(t)
 W, H = sc.L.W, sc.L.H

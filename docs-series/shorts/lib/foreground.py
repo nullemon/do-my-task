@@ -172,7 +172,7 @@ class Foreground:
                     near = np.exp(-(((xx - lx) / (rx * 0.35)) ** 2 + ((yy - ly) / (h * 0.5)) ** 2)) * (yy < gy)
                     out[y0:y1, x0:x1] += alb[y0:y1, x0:x1] * col * ((pool * 0.6 + near * 0.05) * fl * self.a[y0:y1, x0:x1])[..., None]
             r = 3.2 * self.s
-            splat(out, lx, ly + r * 0.6, r * 60, lambda d, dx, dy: (
+            splat(out, lx, ly + r * 0.6, r * 170, lambda d, dx, dy: (
                 (np.clip(r - d + 0.5, 0, 1) * 40.0 + np.exp(-d / (r * 1.6)) * 4.0 + np.exp(-d / (r * 8)) * 0.35 + np.exp(-d / (r * 25)) * 0.05) * fl
             )[..., None] * col)
         return out

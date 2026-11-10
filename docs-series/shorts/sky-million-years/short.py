@@ -177,13 +177,13 @@ class Scene:
         self.v = vertical
         self.fg = Foreground(FG_PATH, L, lamps=LAMPS_SRC, hz_frac=0.84)
         self.hz = self.fg.horizon
-        f = 1100.0
+        f = 1320.0 if vertical else 1100.0                                   # 9:16: a longer lens (bigger Dipper on phones)
         self.lens = Lens(W, H, 180.0, 50.0, f, self.hz + 10)
         self.sc = 1.0 if vertical else 0.9
         if vertical:
             L.cap_y = 1330
             self.counter_xy = (W / 2, 315)
-            V = [(690, 1085, 12.3 * 15, 56.0, 12.0), (720, 830, 5.6 * 15, 0.0, 0.0), (620, 1020, 221.0, -1.1, -50.0)]
+            V = [(660, 1150, 12.3 * 15, 56.0, 6.0), (720, 830, 5.6 * 15, 0.0, 0.0), (560, 1120, 221.0, -1.1, -50.0)]
         else:
             L.cap_y = 880; L.cap_size = 100
             self.counter_xy = (520, 175)
@@ -609,7 +609,7 @@ class Scene:
         # foreground: night, lamps on, lit by GJ 710 / the flash
         fgc = self.fg.lamps_light(self.fg_night, 1.0, t)
         if self.gj_light > 0.01:
-            fgc = fgc + self.fg.flat * np.array([1.0, 0.72, 0.45], f32) * 0.035 * self.gj_light
+            fgc = fgc + self.fg.flat * np.array([0.80, 0.84, 1.0], f32) * 0.0045 * min(self.gj_light, 6.0)   # faint silver tint only
         if flash > 0.01: fgc = fgc + self.fg.flat * 0.25 * flash
         if rewind > 0.01: fgc = fgc + self.fg.flat * palette((t * 1.5) % 1.0) * 0.05 * rewind
         img = sky * (1 - self.a) + fgc * self.a

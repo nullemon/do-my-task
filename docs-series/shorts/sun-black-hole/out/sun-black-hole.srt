@@ -7,12 +7,12 @@ If the Sun became a black hole
 right now, you wouldn't notice.
 
 3
-00:00:03,974 --> 00:00:07,154
-For 8 minutes and 20 seconds, its last light keeps
+00:00:03,974 --> 00:00:05,954
+For 8 minutes and 20 seconds,
 
 4
-00:00:07,174 --> 00:00:07,909
-arriving.
+00:00:05,974 --> 00:00:07,909
+its last light keeps arriving.
 
 5
 00:00:07,986 --> 00:00:09,336
@@ -47,42 +47,54 @@ and stars come out at noon.
 Earth's orbit?
 
 13
-00:00:18,831 --> 00:00:21,477
-Unchanged. Same mass, same gravity.
+00:00:18,831 --> 00:00:20,466
+Unchanged. Same mass,
 
 14
+00:00:20,486 --> 00:00:21,477
+same gravity.
+
+15
 00:00:21,577 --> 00:00:24,211
 The black hole is only 6 km wide.
 
-15
-00:00:24,260 --> 00:00:26,840
-Through a telescope, you'd see starlight bending
-
 16
-00:00:26,860 --> 00:00:27,551
-around it.
+00:00:24,260 --> 00:00:25,440
+Through a telescope,
 
 17
+00:00:25,460 --> 00:00:27,551
+you'd see starlight bending around it.
+
+18
 00:00:27,662 --> 00:00:28,742
 Then the cold.
 
-18
-00:00:28,762 --> 00:00:30,802
-In a week, below −18°C.
-
 19
-00:00:30,822 --> 00:00:32,656
-In a year, −73°C.
+00:00:28,762 --> 00:00:29,302
+In a week,
 
 20
+00:00:29,322 --> 00:00:30,802
+below −18°C.
+
+21
+00:00:30,822 --> 00:00:31,377
+In a year,
+
+22
+00:00:31,397 --> 00:00:32,656
+−73°C.
+
+23
 00:00:32,842 --> 00:00:35,017
 And Earth keeps orbiting perfectly.
 
-21
-00:00:35,067 --> 00:00:37,272
-A frozen world, circling a hole you
+24
+00:00:35,067 --> 00:00:36,347
+A frozen world,
 
-22
-00:00:37,292 --> 00:00:38,374
-can't even see.
+25
+00:00:36,367 --> 00:00:38,374
+circling a hole you can't even see.
 

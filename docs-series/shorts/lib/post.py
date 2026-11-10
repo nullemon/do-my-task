@@ -12,14 +12,16 @@ def handheld(t, amp=1.0, seed=0):
     return dx, dy, rot
 
 
-def camera(img, t, zoom=1.0, cx=None, cy=None, amp=1.0, seed=0):
+def camera(img, t, zoom=1.0, cx=None, cy=None, amp=1.0, seed=0, shake=0.0):
     """apply zoom (about cx, cy) + handheld motion. A base over-scan of 2 % hides the borders."""
     H, W = img.shape[:2]
     cx = W / 2 if cx is None else cx; cy = H / 2 if cy is None else cy
     dx, dy, rot = handheld(t, amp, seed)
     z = zoom * (1.02 + 0.004 * amp)
     M = cv2.getRotationMatrix2D((cx, cy), rot, z)
-    M[0, 2] += dx + (W / 2 - cx) * 0; M[1, 2] += dy
+    if shake > 0:                                             # impact shake (px), fast
+        dx += shake * noise1(t, seed + 7, 14.0, 2); dy += shake * noise1(t, seed + 8, 16.0, 2)
+    M[0, 2] += dx; M[1, 2] += dy
     return cv2.warpAffine(img, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
 

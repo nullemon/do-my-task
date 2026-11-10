@@ -11,7 +11,7 @@ import numpy as np, cv2
 from PIL import Image
 from lib.core import f32, Layout, kf, ramp, smooth, ease, noise1, splat, lum
 from lib.foreground import Foreground
-from lib.sky import SkyCam, StarSky, day_sky, sun_disc, lens_flare, LensField
+from lib.sky import SkyCam, StarSky, day_sky, sun_disc, lens_flare, LensSky
 from lib.text import Captions, hud_text, composite, font
 from lib.post import camera, bloom, tonemap, finish, Encoder
 from lib.audio import place
@@ -34,7 +34,7 @@ T_OUT = wt("out", "OUT") - 0.02                      # last sunlight arrives (T 
 T_SKY = LN["sky"]["start"]
 T_ORB0, T_ORB1 = LN["orbit"]["start"] - 0.1, LN["bh"]["start"] + 0.2
 T_BH = wt("bh", "6 KM")
-T_SC0 = LN["scope"]["start"] - 0.25
+T_SC0 = LN["scope"]["start"] - 0.55
 T_SC1 = LN["cold"]["start"] + 0.35
 T_COLD = wt("cold", "COLD")
 T_WEEK, T_YEAR = wt("cold", "−18°C"), wt("cold", "−73°C")
@@ -65,15 +65,17 @@ class Scene:
         self.cam = SkyCam(W, H, self.hz, self.f)
         self.stars = StarSky()
         if vertical:
-            self.sun = (650.0, 395.0); self.inset_c = (W / 2, 590.0); self.inset_r = 300
+            self.sun = (650.0, 395.0); self.inset_c = (W / 2, 612.0); self.inset_r = 340
         else:
-            self.sun = (1330.0, 215.0); self.inset_c = (1450.0, 420.0); self.inset_r = 290
+            self.sun = (1330.0, 215.0); self.inset_c = (1440.0, 430.0); self.inset_r = 300
         self.sun_r = self.f * 0.00465
         self.caps = Captions(self.L, WORDS, emphasis={"OUT", "BLACK", "NOON", "UNCHANGED", "6 KM", "−18°C", "−73°C", "SEE", "8 MIN", "AND 20 SEC", "TWILIGHT"})
         thetaE = 41.0
         self.thetaE = thetaE
-        self.lens = LensField(half=230.0, res=0.15, n=260, seed=7, hero=[(-22.0, 0.0, 30.0, 9000.0), (95.0, -60.0, 10.0, 4200.0), (-40.0, 70.0, 8.0, 6000.0)],
-                              galaxies=[(34.0, 2.6, 3.2, 0.6, 30.0, 0.16)])
+        # background behind the lens: a galaxy almost exactly behind it (-> Einstein ring), stars along the drift path
+        self.lens = LensSky(half=150.0, res=0.1, n=110, seed=7, star_sig=0.45,
+                            stars=[(-14.0, 7.0, 9.0, 9000.0), (10.0, -9.0, 7.0, 4500.0), (24.0, 16.0, 6.0, 6500.0), (-30.0, -18.0, 5.0, 3800.0)],
+                            galaxies=[(0.0, 1.0, 2.6, 0.75, 20.0, 1.2, (1.0, 0.86, 0.66)), (0.0, 1.0, 9.0, 0.6, 20.0, 0.10, (0.9, 0.85, 0.8))])
         self.night_day = self.fg.night(1.0)
         self.day_fg = self.fg.day(1.0)
 
@@ -82,7 +84,7 @@ class Scene:
         s = {}
         s["sun"] = 1.0 if t < T_OUT else 0.0
         # camera exposure adaptation after the blackout: black, then the starlit scene fades up (eyes / auto-exposure)
-        s["night"] = 0.0 if t < T_OUT else ease((t - T_OUT - 0.30) / 1.9) * (0.75 + 0.25 * ease((t - T_OUT - 2.2) / 2.5))
+        s["night"] = 0.0 if t < T_OUT else ease((t - T_OUT - 0.12) / 1.0) * (0.8 + 0.2 * ease((t - T_OUT - 1.2) / 2.5))
         s["lamps"] = 0.0
         for i, d in enumerate((2.0, 2.45)):
             u = t - T_OUT - d
@@ -127,7 +129,7 @@ class Scene:
         expo = 1.0 if s["sun"] > 0 else max(s["night"], 0.0) * 1.0
         img = img * expo
         # camera move + handheld micro-motion (centre on the sun / black hole spot)
-        img = camera(img, t, s["zoom"], sx, sy, amp=1.0)
+        img = camera(img, t, s["zoom"], sx, sy, amp=1.0, shake=(9.0 * math.exp(-(t - T_OUT) / 0.35) if t >= T_OUT else 0.0))
         if s["inset"] > 0: self.inset(img, t, s["inset"])
         img = bloom(img, 1.0 if s["sun"] > 0 else 0.6)
         out = tonemap(img, 1.1 if s["sun"] > 0 else 1.0)
@@ -160,18 +162,18 @@ class Scene:
         splat(img, cx, cy, 50, fn)
 
     def inset(self, img, t, a):
-        """telescope view: point-lens lensing of background stars; grows out of the black hole's position"""
+        """telescope view: point-lens lensing (exact map) of a slowly drifting background; grows out of the black hole's spot"""
         R = self.inset_r; size = 2 * R
         u = (t - T_SC0) / (T_SC1 - T_SC0)
-        off = (-60 + 120 * u, 2.0)                                    # relative drift (time-lapse)
-        v = self.lens.view(size, 240.0, self.thetaE, off, seeing=0.9, ss=2) * 4.0
+        off = (-22 + 44 * u, 0.0)                                     # lens drifts across the background (time-lapse)
+        v = self.lens.view(size, 180.0, self.thetaE, off, shadow=0.45, ss=2, seeing=0.7) * 7.0
         yy, xx = np.mgrid[0:size, 0:size].astype(f32)
         d = np.sqrt((xx + 0.5 - R) ** 2 + (yy + 0.5 - R) ** 2) / R
         mask = smooth(1.0, 0.985, d)
         v = v * (1 - 0.35 * d[..., None] ** 4)                         # eyepiece vignette
         # reticle: thin cross with a gap, ticks; scale bar for the Einstein ring diameter
-        ret = (((np.abs(xx - R) < 0.8) | (np.abs(yy - R) < 0.8)) & (d > 0.35) & (d < 0.97)).astype(f32) * 0.05
-        ringE = np.clip(1 - np.abs(d * 120 - self.thetaE) / 0.35, 0, 1) * (np.sin(np.arctan2(yy - R, xx - R) * 36) > 0.2) * 0.06
+        ret = (((np.abs(xx - R) < 0.8) | (np.abs(yy - R) < 0.8)) & (d > 0.62) & (d < 0.97)).astype(f32) * 0.05
+        ringE = 0.0
         v += (ret + ringE)[..., None] * np.array([1.0, 0.6, 0.3], f32)
         rim = np.clip(1 - np.abs(d - 1.0) / 0.006, 0, 1)
         g = ease(a)
@@ -196,6 +198,7 @@ class Scene:
         L = self.L; W = L.W
         cap_x = W / 2
         if not L.vertical and s["inset"] > 0.01: cap_x = 700
+        L.cap_y = (1010 + 105 * ease(s["inset"] * 1.5)) if L.vertical else 560
         # clock: T + m:ss from the collapse to the last light
         if T_NOW - 0.1 < t < T_OUT + 1.6:
             u = min(max((t - T_NOW) / (T_OUT - T_NOW), 0.0), 1.0)
@@ -216,8 +219,9 @@ class Scene:
             cx, cy, r, a = self._inset_geom
             al = ramp(a, 0.6, 1.0)
             fs = int(L.hud_size * 0.36)
-            hud_text(out, "TELESCOPE VIEW · 4′ FIELD · TIME-LAPSE", cx, cy - r - fs * 1.7, fs, "SemiBold", (230, 236, 245), al, 0.16)
-            hud_text(out, "EINSTEIN RING ≈ 1.4′ · NO DISK: NOTHING FALLS IN", cx, cy + r + fs * 0.5, int(fs * 0.92), "SemiBold", (255, 196, 130), al, 0.10)
+            hud_text(out, "TELESCOPE VIEW · 3′ FIELD · TIME-LAPSE", cx, cy - r - fs * 1.5, fs, "SemiBold", (230, 236, 245), al, 0.16)
+            hud_text(out, "BLACK HOLE ENLARGED · EINSTEIN RING ≈ 1.4′", cx, cy + r + fs * 0.45, int(fs * 0.95), "SemiBold", (255, 196, 130), al, 0.10)
+            hud_text(out, "NO DISK: NOTHING IS FALLING IN", cx, cy + r + fs * 1.75, int(fs * 0.85), "SemiBold", (215, 225, 240), al * 0.9, 0.12)
         # temperature counter
         if t > T_COLD - 0.4:
             a = ramp(t, T_COLD - 0.4, T_COLD + 0.1)

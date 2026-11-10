@@ -255,3 +255,56 @@ class LensField:
         st = cv2.GaussianBlur(acc, (0, 0), sig) * (2 * math.pi * sig * sig) ** 0.5 * 0.35
         st += cv2.GaussianBlur(acc, (0, 0), sig * 4) * 0.02
         return img + st * star_gain + self.sky_bg
+
+
+class LensSky:
+    """Telescope-view renderer for a point-mass lens, built for legibility in a Short.
+    Everything (stars and galaxies) is an extended source in a source-plane texture and is drawn by inverse ray-shooting
+    with the exact point-lens map beta = theta - thetaE^2 theta/|theta|^2 (surface brightness conserved), so stars near
+    the lens are split into image pairs and stretched into tangential arcs, and an extended source behind the lens forms
+    a continuous Einstein ring at theta = thetaE. Stars are drawn as ~seeing-sized discs (sigma `star_sig` arcsec) rather
+    than true points, and the shadow is drawn at `shadow` x thetaE (the real one is ~1e-4 thetaE): label both as enlarged.
+    """
+    def __init__(self, half=150.0, res=0.1, n=420, seed=7, star_sig=0.75, stars=(), galaxies=(), n_gal=14):
+        self.half, self.res = half, res
+        N = int(2 * half / res); self.N = N
+        r = np.random.default_rng(seed)
+        tex = np.zeros((N, N, 3), f32)
+        xs = list(r.uniform(-half, half, n)); ys = list(r.uniform(-half, half, n))
+        fl = list(np.minimum(0.25 * r.uniform(0, 1, n) ** (-1 / 1.2), 12)); temps = list(np.clip(r.lognormal(np.log(5200), 0.35, n), 3000, 15000))
+        for x, y, f, T in stars: xs.append(x); ys.append(y); fl.append(f); temps.append(T)
+        sg = star_sig / res
+        for x, y, f, T in zip(xs, ys, fl, temps):
+            c = (0.45 + 0.55 * bbcolor(T)) * f
+            splat(tex, (x + half) / res, (y + half) / res, sg * 4, lambda d, dx, dy, c=c: np.exp(-d * d / (2 * sg * sg))[..., None] * c)
+        gals = list(galaxies) + [(r.uniform(-half, half), r.uniform(-half, half), r.uniform(1.5, 4), r.uniform(0.3, 0.9),
+                                  r.uniform(0, 180), r.uniform(0.04, 0.10), (0.85, 0.88, 1.0)) for _ in range(n_gal)]
+        for gx, gy, rad, q, pa, br, col in gals:                   # (x, y, radius", axis ratio, PA deg, brightness, rgb)
+            R = rad / res; ca, sa = math.cos(math.radians(pa)), math.sin(math.radians(pa)); col = np.array(col, f32)
+            def fn(d, dx, dy, R=R, q=q, ca=ca, sa=sa, br=br, col=col):
+                u = (dx * ca + dy * sa); v = (-dx * sa + dy * ca) / q
+                rr = np.sqrt(u * u + v * v) / R
+                return (br * (np.exp(-rr * rr * 2.5) + 0.25 * np.exp(-rr * 1.2)))[..., None] * col
+            splat(tex, (gx + half) / res, (gy + half) / res, R * 5, fn)
+        self.tex = tex
+
+    def view(self, size, field, thetaE, lens_off, shadow=0.3, ss=2, seeing=0.5, bg=(0.0013, 0.0016, 0.0024)):
+        n = size * ss
+        g = (np.arange(n, dtype=f32) + 0.5) / n * field - field / 2
+        tx, ty = np.meshgrid(g, g)
+        r2 = tx * tx + ty * ty + 1e-6
+        k = 1 - thetaE ** 2 / r2
+        bx = tx * k + lens_off[0]; by = ty * k + lens_off[1]
+        mx = ((bx + self.half) / self.res - 0.5).astype(f32); my = ((by + self.half) / self.res - 0.5).astype(f32)
+        img = cv2.remap(self.tex, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        rr = np.sqrt(r2) / thetaE
+        # inner (minus-parity) images are demagnified: weight by the local magnification |mu| = 1/|1 - rr^-4| (capped at 1),
+        # which is what a point star's image brightness follows; the ring itself (rr ~ 1) keeps full surface brightness
+        mu_in = np.clip(1.0 / np.maximum(rr ** -4 - 1, 1e-6), 0, 1) ** 0.8
+        img *= np.where(rr < 1, mu_in, 1.0)[..., None]
+        img += np.array(bg, f32)                                          # unresolved background light: unchanged by lensing
+        img *= smooth(shadow - 0.008, shadow + 0.008, rr)[..., None]       # ...except where the (enlarged) shadow blocks it
+        img = cv2.resize(img, (size, size), interpolation=cv2.INTER_AREA)
+        px = field / size
+        if seeing > 0: img = cv2.GaussianBlur(img, (0, 0), seeing / px)
+        return img

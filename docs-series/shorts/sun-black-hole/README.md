@@ -12,18 +12,22 @@ and one big orange word at a time at mid-height, synced to the voice. There is a
 > eighteen. In a year, minus seventy-three. And Earth keeps orbiting perfectly. A frozen world, circling a hole you
 > can't even see.
 
-## Versions
-- **B — locked camera (preferred)**: `out/sun-black-hole-short-locked.mp4` (9:16) and `out/sun-black-hole-16x9-locked.mp4`,
-  built by `short_locked.py` with the `mix.py locked` audio. One tripod frame for the whole Short. The Sun swells, flickers,
-  implodes to a point and flashes. Instant night, and stars fade in over ~1 s. The black hole hangs where the Sun was
-  (drawn about 450× larger than real). The real night sky is lensed around it with the exact point-lens map, and as the
-  stars drift past they split into image pairs; on "bending" a bright one lines up into a full Einstein ring. Facts sit
-  in the lower safe band. Then the frost, the countdown and the temperature counter.
-- **A — multi-shot**: `out/sun-black-hole-short.mp4`, built by `short.py`. The park is the anchor, with cut-aways to a
-  solar-telescope Sun (granulation, sunspot map, prominences), the implosion, the dark Earth on its unchanged orbit around
-  the lensing black hole, a telescope inset, and Earth icing over.
-- User rule: no disclaimer captions ("illustration", "enlarged", "time-lapse", "not to scale", "brightened"). Only
-  factual text appears on screen.
+## Delivered version: stylized VFX, one locked shot (`short_vfx.py`, audio `mix.py vfx`)
+After two realistic versions were rejected as too dark and too subtle, the user asked for a reference-style spectacle.
+- **0–7.9 s:** six giant chromatic beams (smooth spectral gradients) fan out from the Sun, rotating and flaring over a
+  deep-blue sky. A big "T + m:ss" countdown runs.
+- **7.9–9.85 s:** the beams twist into an inward spiral and turn hot orange/red/violet. The Sun swells and wobbles, then
+  implodes. White flash, a chromatic shockwave ring and a sub-bass hit on "OUT".
+- **9.85 s on:** a deep indigo night; the park stays readable and the lamps come on. The black hole grows in to ~45% of
+  the frame width: black core, white-violet photon ring, a gold disk band with Doppler beaming, the lensed far side
+  arching over and under the core, a violet infalling spiral, and the starfield lensed and swirling around it. It pulses
+  and flares on key words.
+- **~28 s on:** a feathered blue-white frost wave with sparkles, ground mist, and a big temperature readout.
+- **Last ~1.3 s:** the hole flares to a full white-out (loopable).
+- Readouts only, with no disclaimer text (user rule): SAME MASS · SAME ORBIT, EVENT HORIZON ≈ 6 KM,
+  EINSTEIN RING ≈ 1.4′, the countdown and the temperature counter.
+- `short.py` (multi-shot) and `short_locked.py` (realistic locked shot) are kept as code only. Their renders were
+  scrapped.
 
 ## Science notes and sources
 - **Event horizon.** The Schwarzschild radius is r_s = 2GM☉/c² = 2.95 km (GM☉ = 1.327×10²⁰ m³ s⁻², standard), so the
@@ -54,6 +58,9 @@ and one big orange word at a time at mid-height, synced to the voice. There is a
 - **It cannot happen.** The Sun has far too little mass to collapse into a black hole. It will end as a white dwarf.
 
 ## Liberties (deliberately not captioned, per the user)
+The VFX version is stylized: the beams, the spiral collapse, the shockwave, the visible accretion disk (a real Sun-mass
+hole would have nothing falling in) and the huge apparent size are artistic. The narration's facts stay accurate.
+
 The sky, stars and Milky Way are procedural, not a real star chart. Time is compressed: the clock, the lamps switching
 on after dark, a year of frost in about 10 s, and the lensing time-lapse. The camera "adapts" to night in about 2 s,
 where real eyes take minutes. The night foreground is a grade of the daylight photo, so faint traces of the daylight

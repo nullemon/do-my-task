@@ -17,7 +17,7 @@ STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Sh
 | S8 | When you see the Sun touch the horizon, it's already gone (refraction) | B_valley | queued |
 | S9 | What if Betelgeuse exploded tonight? | A2_park | queued |
 | S10 | Your sky in 1 million years (real proper motions, HYG catalogue) | B_valley, night | queued |
-| S11 | Planets at the Moon's distance | B_valley | queued |
+| S11 | Planets at the Moon's distance | B_valley | in progress |
 | S12 | Everything that happens in space while you watch this Short (30 s counters) | A_park | queued |
 | S13 | The dinosaur asteroid, seen from the ground | C_city | queued |
 

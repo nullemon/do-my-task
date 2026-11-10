@@ -114,20 +114,20 @@ def cap(disp, t, t0, t1, main, sub=None, y=None, size=30, shade=True, col=WHITE,
         ml = wrap_lines(main, sz, 940, 0.24); sl = wrap_lines(sub, ssz, 930, 0.28) if sub else []
         hgt = len(ml) * sz * 1.5 + len(sl) * ssz * 1.6
         y = min(y, 1520 - hgt + sz * 0.5)
-        if shade: shade_rect(disp, 0, y - 80, W, y + hgt + 50, 0.5 * op, soft=70)
+        if shade: shade_rect(disp, 0, y - 80, W, y + hgt + 50, 0.66 * op, soft=70)
         yy = text_wrapped(disp, main, W / 2, y, sz, op, 940, col=col, tracking=0.24)
         if sub: text_wrapped(disp, sub, W / 2, yy + 6, ssz, op * 0.9, 930, col=subcol or DIM, tracking=0.28, lh=1.6)
         return
     y = H * 0.868 if y is None else y
-    if shade: shade_rect(disp, W / 2 - 720, y - 70, W / 2 + 720, y + (95 if sub else 60), 0.42 * op, soft=70)
+    if shade: shade_rect(disp, W / 2 - 760, y - 80, W / 2 + 760, y + (105 if sub else 70), 0.6 * op, soft=80)
     draw_text(disp, main, W / 2, y, size, op, col=col, font=FONT_L, tracking=0.26)
     if sub: draw_text(disp, sub, W / 2, y + size * 1.4, int(size * 0.56), op * 0.85, tracking=0.32, col=subcol or DIM)
 
 
 def note(disp, s, op=1.0, x=64, y=H - 44, anchor="l", vy=258):
     if V:
-        text_wrapped(disp, s, W / 2, vy, 15, op * 0.62, 900, col=DIM, tracking=0.28, lh=1.6); return
-    draw_text(disp, s, x, y, 13, op * 0.62, tracking=0.30, col=DIM, anchor=anchor)
+        text_wrapped(disp, s, W / 2, vy, 17, op * 0.78, 920, col=DIM, tracking=0.24, lh=1.6); return
+    draw_text(disp, s, x, y, 15, op * 0.78, tracking=0.26, col=DIM, anchor=anchor)
 
 
 # =============================================================================================== shots
@@ -704,7 +704,7 @@ class Signal(Shot):
             text_wrapped(disp, "EARTH IS LOST IN ITS GLARE, A THIRD OF A DEGREE AWAY AT MOST", sx + 100, sy - 72, 17, o2 * 0.8, max(300, W - sx - 140), col=DIM, tracking=0.26, anchor="l")
         else:
             draw_text(disp, "THE SUN", sx + 98, sy + 64, 16, o2, tracking=0.36, anchor="l")
-            draw_text(disp, "EARTH IS LOST IN ITS GLARE, A THIRD OF A DEGREE AWAY AT MOST", sx + 100, sy + 90, 12, o2 * 0.8, tracking=0.3, anchor="l", col=DIM)
+            text_wrapped(disp, "EARTH IS LOST IN ITS GLARE, A THIRD OF A DEGREE AWAY AT MOST", sx + 100, sy + 92, 15, o2 * 0.8, 520, col=DIM, tracking=0.26, anchor="l")
         cap(disp, t, 153.6, self.t1 - 0.3, "TRANSMITTER POWER  ≈ 23 WATTS", "ABOUT THE SAME AS A REFRIGERATOR LIGHT BULB", size=36)
         note(disp, "OUR OWN MODEL  ·  LIGHTING THEATRICAL: REAL SUNLIGHT HERE IS ABOUT 30,000 TIMES WEAKER THAN AT EARTH", fade(t, 151, self.t1))
         return disp
@@ -727,11 +727,11 @@ class DSN(Shot):
         u = (t - self.t0) / (self.t1 - self.t0); s0 = W / self.p.w
         lin = self.sk.crop(-140 + 240 * u, 60 - 90 * u) + self.hglow
         if V:
-            sc = 1.04 * (1.0 + 0.06 * u); rgb, al = self.p.place(sc, W / 2, H + 6, DSN_AX, 1.0); over(lin, rgb, al, 1.2)
+            sc = 1.04 * (1.0 + 0.06 * u); rgb, al = self.p.place(sc, W / 2, H + 6, DSN_AX, 1.0); over(lin, rgb, al, 1.0)
         else:
             sc = s0 * (1.0 + 0.09 * u)
-            rgb, al = self.p.place(sc, W / 2 - 30 * u, H / 2 + 44 * u, 0.5, 0.5); over(lin, rgb, al, 1.2)
-        disp = finish(lin, 1.2, bl=0.55)
+            rgb, al = self.p.place(sc, W / 2 - 30 * u, H / 2 + 44 * u, 0.5, 0.5); over(lin, rgb, al, 1.0)
+        disp = finish(lin, 1.2, bl=0.5, thresh=0.3)
         cap(disp, t, 163.8, 169.8, "RECEIVED POWER: FAR BELOW 10⁻¹⁸ WATT", "LESS THAN A BILLIONTH OF A BILLIONTH OF A WATT", size=32)
         cap(disp, t, 170.2, 177.0, "DEEP SPACE NETWORK  ·  70-METRE DISHES", "GOLDSTONE, CALIFORNIA   ·   MADRID, SPAIN   ·   CANBERRA, AUSTRALIA", size=32)
         op = fade(t, 177.3, self.t1 - 0.3)
@@ -985,8 +985,9 @@ class Scale(Shot):
             for k in range(0, nseg, 2):
                 line(disp, ex + (gx - ex) * k / nseg, ey + (gy - ey) * k / nseg, ex + (gx - ex) * (k + 1) / nseg, ey + (gy - ey) * (k + 1) / nseg, o3 * 0.55)
             draw_text(disp, "≈ 1.6 LIGHT-YEARS", (ex + gx) / 2, (ey + gy) / 2 + 30, 12, o3 * 0.85, tracking=0.3, col=DIM)
-            draw_text(disp, "GLIESE 445", gx + 20, gy - 8, 16, o3, tracking=0.36, anchor="l")
-            draw_text(disp, "A DIM RED DWARF, ITSELF DRIFTING TOWARDS US", gx + 20, gy + 18, 11, o3 * 0.8, tracking=0.28, anchor="l", col=DIM)
+            lx = min(gx, W - 330)
+            draw_text(disp, "GLIESE 445", lx, gy + 38, 17, o3, tracking=0.36)
+            draw_text(disp, "A DIM RED DWARF, ITSELF DRIFTING TOWARDS US", lx, gy + 66, 15, o3 * 0.8, tracking=0.24, col=DIM)
         note(disp, "SCHEMATIC  ·  DIRECTIONS FLATTENED ONTO THE SCREEN  ·  DISTANCES ALONG EACH LINE TO SCALE", fade(t, 227, self.t1))
         return disp
 
@@ -1001,7 +1002,7 @@ class End(Shot):
 
     def frame(self, t):
         if not hasattr(self, "p"): self.setup()
-        u = (t - self.t0) / (284.0 - self.t0); u = min(u, 1.0)
+        u = (t - self.t0) / (284.0 - self.t0); u = min(max(u, 0.0), 1.0)
         s0 = W / self.p.w
         sc = P(s0 * 1.05, 0.72) * (P(0.085, 0.10) / 1.05) ** (u ** 0.85)
         cx = P(960 + 260 * u ** 0.8, 540 + 110 * u ** 0.8); cy = P(500 - 110 * u ** 0.8, 800 - 220 * u ** 0.8)

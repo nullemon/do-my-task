@@ -221,6 +221,7 @@ def text_alpha(s, size, tracking=0.30, font=FONT_L):
 def draw_text(disp, s, cx, cy, size, op=1.0, col=(0.93, 0.92, 0.88), tracking=0.30, font=FONT_L, anchor="c"):
     if op <= 0.003:
         return
+    if not VERT and size < 15: size = 15            # small-print floor for the 16:9 frame
     a = text_alpha(s, size, tracking, font)
     h, w = a.shape
     x0 = int(round(cx - w / 2)) if anchor == "c" else (int(round(cx)) if anchor == "l" else int(round(cx - w)))

@@ -55,12 +55,12 @@ def shot_hook(t, lt):
         L.add_to(img, np.array(YEL) / 255, gain=0.75 * al, glow=0.6)
         add_glint(img, mx, my, 1.3 * al, (1.0, 0.86, 0.6), sig=1.6, streak=6)
     u = t / 22.4
-    put_sprite(img, ast_at(t * 24), lerp(500, 560, u), lerp(1010, 960, u), lerp(0.62, 0.57, u), angle=-8 + t * 0.25, gain=1.0, alpha=1 - ss(17.4, 19.4, t))
+    put_sprite(img, ast_at(t * 24), lerp(500, 560, u), lerp(990, 950, u), lerp(0.60, 0.50, u), angle=-8 + t * 0.25, gain=1.0, alpha=1 - ss(17.4, 19.4, t))
     y = cput(T, TOP, "FRIDAY · 13 APRIL 2029", 34, win(t, 0.2, 17.2, 0.6))
     foot(T, y + 6, "ASTEROID 99942 APOPHIS · ARTIST'S MODEL · FOREGROUND NOT TO SCALE WITH THE EARTH", win(t, 1.5, 17.0))
     a1 = win(t, 1.3, 9.6, 0.8, 0.7)
     cput(T, 1262, "32,000 KM", 138, a1, col=YEL, wt="XL", track=6)
-    cput(T, 1436, "ABOVE THE SURFACE · INSIDE THE RING OF GEOSTATIONARY SATELLITES", 28, win(t, 2.4, 9.6))
+    cput(T, 1436, "ABOVE THE SURFACE · INSIDE THE RING OF GEOSTATIONARY SATELLITES", 28, win(t, 1.9, 9.6, 0.7))
     a2 = win(t, 10.3, 17.2, 0.9, 0.7)
     cput(T, 1272, "IT WILL MISS.", 112, a2, wt="T", track=8)
     cput(T, 1436, "IMPACT RULED OUT FOR AT LEAST 100 YEARS", 28, win(t, 11.6, 17.2))
@@ -192,7 +192,7 @@ def _ast_bg(key, d, mw=1.6, gain=0.85):
 def shot_name(t, lt):
     img = _ast_bg("name", [0.6, -0.55, -0.4]).copy()
     u = lt / 6.0
-    put_sprite(img, ast_at(160 + lt * 24), lerp(560, 540, u), lerp(760, 780, u), lerp(0.88, 0.94, u), angle=56, gain=1.05)
+    put_sprite(img, ast_at(160 + lt * 24), lerp(560, 540, u), lerp(770, 780, u), lerp(0.86, 0.90, u), angle=4, gain=1.05)
     T = Text()
     y = cput(T, 1330, "99942 APOPHIS", 88, win(t, 59.2, 64.4, 0.9, 0.6), wt="T", track=12)
     cput(T, y + 6, "NAMED IN 2005 FOR THE EGYPTIAN SERPENT OF CHAOS", 26, win(t, 60.2, 64.4, 0.9, 0.6), col=AMB)
@@ -215,7 +215,7 @@ def shot_size(t, lt):
         ytop = base_y - 330 / mpp; bx = tcx - 190
         T.line((bx, ytop), (bx, base_y), at_ * 0.8); T.line((bx - 12, ytop), (bx + 12, ytop), at_ * 0.8); T.line((bx - 12, base_y), (bx + 12, base_y), at_ * 0.8)
         T.put((bx - 20, (ytop + base_y) / 2 - 14), "330 M", 28, at_, anchor="r")
-        cput(T, 830, "APOPHIS · ≈ 340 M MEAN DIAMETER", 25, at_, col=AMB)
+        cput(T, 880, "APOPHIS · ≈ 340 M MEAN DIAMETER", 25, at_, col=AMB)
         cput(T, base_y + 22, "EIFFEL TOWER", 25, at_)
         x0 = CX - 50 / mpp; ys = base_y + 92
         T.line((x0, ys), (x0 + 100 / mpp, ys), at_ * 0.9); T.line((x0, ys - 6), (x0, ys + 6), at_ * 0.9); T.line((x0 + 100 / mpp, ys - 6), (x0 + 100 / mpp, ys + 6), at_ * 0.9)
@@ -402,7 +402,7 @@ def shot_orbit(t, lt):
 
 
 def shot_tides(t, lt):
-    EX, EY, ER = 520, 640, 335
+    EX, EY, ER = 520, 730, 330
     def bg():
         im = render_sky(look_at((0, 0, 0), norm([-0.7, 0.3, 0.64])), FL(54), gain=0.8).copy()
         draw_earth(im, EX, EY, ER, art_M(-28, 20, roll=14), SUN_AST, night_gain=1.4)
@@ -411,11 +411,11 @@ def shot_tides(t, lt):
     Mx = np.float32([[1, 0, lt * 1.4 - 9], [0, 1, lt * 0.8 - 5]])
     img = cv2.warpAffine(base, Mx, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     u = lt / 12.4
-    put_sprite(img, ast_at(200 + lt * 24), lerp(640, 560, u), lerp(1130, 1100, u), lerp(0.54, 0.60, u), angle=-12 + lt * 0.5, gain=1.05)
+    put_sprite(img, ast_at(200 + lt * 24), lerp(640, 570, u), lerp(1130, 1110, u), lerp(0.44, 0.48, u), angle=-12 + lt * 0.5, gain=1.05)
     T = Text()
     yh = cput(T, TOP, "CLOSEST APPROACH · EARTH SPANS ABOUT 19° OF ITS SKY", 30, win(t, 211.0, 222.8))
     foot(T, yh + 6, "EARTH AT ITS TRUE APPARENT SIZE FROM 38,000 KM · ASTEROID ENLARGED", win(t, 210.8, 222.6))
-    y = cput(T, 1400, "THE TUMBLE MAY SPEED UP OR SLOW DOWN", 25, win(t, 212.6, 222.8))
+    y = cput(T, 1412, "THE TUMBLE MAY SPEED UP OR SLOW DOWN", 25, win(t, 212.6, 222.8))
     y = cput(T, y + 6, "SMALL LANDSLIDES ARE POSSIBLE · NOT CERTAIN", 25, win(t, 214.8, 222.8))
     cput(T, y + 6, "IT PASSES TOO FAR OUT TO BE PULLED APART", 25, win(t, 217.0, 222.8))
     return T.add_to(bloom(img))
@@ -428,26 +428,26 @@ def shot_miss(t, lt):
         return im
     img = cached("vmiss_bg", bg).copy()
     k2 = ss(236.9, 237.9, t)
-    if k2 < 1: put_sprite(img, ast_at(lt * 24), lerp(520, 500, lt / 15.0), lerp(1030, 1010, lt / 15.0), lerp(0.54, 0.57, lt / 15.0), angle=10 - lt * 0.2, gain=1.05, alpha=1 - k2)
+    if k2 < 1: put_sprite(img, ast_at(lt * 24), lerp(520, 500, lt / 15.0), lerp(960, 950, lt / 15.0), lerp(0.48, 0.50, lt / 15.0), angle=10 - lt * 0.2, gain=1.05, alpha=1 - k2)
     if k2 > 0:
-        l2 = t - 237.0; put_sprite(img, ast_at(110 + l2 * 24), lerp(500, 540, l2 / 17.8), lerp(1000, 1030, l2 / 17.8), lerp(0.60, 0.56, l2 / 17.8), angle=-14 + l2 * 0.2, gain=1.05, alpha=k2)
+        l2 = t - 237.0; put_sprite(img, ast_at(110 + l2 * 24), lerp(500, 540, l2 / 17.8), lerp(950, 960, l2 / 17.8), lerp(0.50, 0.48, l2 / 17.8), angle=-14 + l2 * 0.2, gain=1.05, alpha=k2)
     T = Text()
     foot(T, TOP, "SPACECRAFT MODELS SIMPLIFIED · NOT TO SCALE WITH THE ASTEROID · PLANS AS OF LATE 2026", win(t, 223.0, 254.6))
     a1 = win(t, 223.0, 237.6, 1.2, 1.0); a2 = win(t, 237.2, 254.8, 1.2, 0.8)
     if a1 > 0:
-        cx_, cy_ = lerp(600, 560, (t - 223) / 14.6), lerp(580, 560, (t - 223) / 14.6)
+        cx_, cy_ = lerp(600, 560, (t - 223) / 14.6), lerp(520, 500, (t - 223) / 14.6)
         put_sprite(img, cached("apex", lambda: C._craft("apex")), cx_, cy_, 0.56, angle=-6 + (t - 223) * 0.3, gain=1.05, alpha=a1)
         y = cput(T, 1318, "OSIRIS-APEX", 70, a1, wt="T", track=10)
         y = cput(T, y + 2, "NASA · FORMERLY OSIRIS-REX", 23, win(t, 224.4, 237.4), col=AMB)
         y = cput(T, y + 4, "ALREADY EN ROUTE · RENDEZVOUS AFTER THE FLYBY", 23, win(t, 229.0, 237.4))
         cput(T, y + 4, "FUNDING IS REVIEWED YEAR BY YEAR", 23, win(t, 233.2, 237.4), col=DIM)
     if a2 > 0:
-        cx_, cy_ = lerp(580, 540, (t - 237.2) / 17.6), lerp(540, 570, (t - 237.2) / 17.6)
+        cx_, cy_ = lerp(580, 540, (t - 237.2) / 17.6), lerp(480, 505, (t - 237.2) / 17.6)
         put_sprite(img, cached("ramses", lambda: C._craft("ramses")), cx_, cy_, 0.70, angle=8 - (t - 237.2) * 0.25, gain=1.05, alpha=a2)
         ac = win(t, 246.5, 254.8)
-        for k, (ox, oy) in enumerate(((-200, 170), (-120, 225))):
-            add_glint(img, cx_ + ox - (t - 246) * 3 * (k + 1), cy_ + oy + (t - 246) * 2, 0.9 * ac, (1.0, 0.95, 0.85), sig=1.4, streak=3)
-        tag(T, cx_ - 120 - (t - 246) * 6, cy_ + 225 + (t - 246) * 2, "TWO CUBESATS", ac, col=DIM, size=18, dx=30, dy=36)
+        for k, (ox, oy) in enumerate(((250, 150), (330, 200))):
+            add_glint(img, cx_ + ox + (t - 246) * 3 * (k + 1), cy_ + oy + (t - 246) * 2, 0.9 * ac, (1.0, 0.95, 0.85), sig=1.4, streak=3)
+        tag(T, cx_ + 250 + (t - 246) * 3, cy_ + 150 + (t - 246) * 2, "TWO CUBESATS", ac, col=DIM, size=18, dx=-30, dy=-40, anchor="r")
         y = cput(T, 1318, "RAMSES", 70, a2, wt="T", track=10)
         y = cput(T, y + 2, "ESA WITH JAPAN · APPROVED NOV 2025", 23, win(t, 238.4, 254.6), col=AMB)
         y = cput(T, y + 4, "LAUNCH SPRING 2028 · ARRIVAL ≈ FEB 2029", 23, win(t, 243.0, 254.6))
@@ -515,7 +515,7 @@ def shot_rock(t, lt):
     img = cached("vrock_bg", bg).copy()
     ring_art(img, 330, 500, 100, M, t, gain=0.8, line=0.2)
     u = lt / 5.5
-    put_sprite(img, ast_at(330 + lt * 24), lerp(540, 600, u), lerp(1010, 960, u), lerp(0.62, 0.55, u), angle=-20 + lt * 0.4, gain=1.05)
+    put_sprite(img, ast_at(330 + lt * 24), lerp(560, 610, u), lerp(1000, 970, u), lerp(0.55, 0.50, u), angle=-20 + lt * 0.4, gain=1.05)
     T = Text()
     cput(T, 1380, "A ROCK, ON A PATH WE WORKED OUT", 36, win(t, 299.0, 303.8, 0.8, 0.6))
     return T.add_to(bloom(img))

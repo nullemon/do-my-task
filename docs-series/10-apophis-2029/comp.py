@@ -132,20 +132,20 @@ def shot_hook(t, lt):
         add_glint(img, mx, my, 1.3 * al, (1.0, 0.86, 0.6), sig=1.6, streak=6)
     # foreground asteroid
     k = ss(0, 22.4, t)
-    ax = lerp(470, 640, t / 22.4); ay = lerp(640, 560, t / 22.4); sc = lerp(0.74, 0.66, t / 22.4)
+    ax = lerp(470, 600, t / 22.4); ay = lerp(640, 570, t / 22.4); sc = lerp(0.74, 0.62, t / 22.4)
     dim = 1 - 0.55 * ss(17.2, 19.0, t)
     put_sprite(img, ast_at(t * 24), ax, ay, sc, angle=-8 + t * 0.25, gain=1.0, alpha=1 - ss(17.4, 19.4, t))
     # type
     T.put((120, 96), "FRIDAY · 13 APRIL 2029", 27, win(t, 0.2, 17.2, 0.6), col=TXT)
     a1 = win(t, 1.3, 9.6, 0.8, 0.7)
     T.put((1080, 742), "32,000 KM", 118, a1, col=YEL, wt="XL", track=6)
-    T.put((1086, 880), "ABOVE THE SURFACE  ·  INSIDE THE RING", 23, win(t, 2.4, 9.6))
-    T.put((1086, 918), "OF GEOSTATIONARY SATELLITES", 23, win(t, 2.7, 9.6))
-    T.put((60, 1030), "ASTEROID 99942 APOPHIS  ·  ARTIST'S MODEL  ·  FOREGROUND NOT TO SCALE WITH THE EARTH", 15, win(t, 1.5, 17.0) * 0.7, col=DIM)
+    T.put((1086, 880), "ABOVE THE SURFACE  ·  INSIDE THE RING", 24, win(t, 1.9, 9.6, 0.7))
+    T.put((1086, 918), "OF GEOSTATIONARY SATELLITES", 24, win(t, 1.9, 9.6, 0.7))
+    T.put((W - 60, 1030), "ASTEROID 99942 APOPHIS  ·  ARTIST'S MODEL  ·  FOREGROUND NOT TO SCALE WITH THE EARTH", 15, win(t, 1.5, 17.0) * 0.7, col=DIM, anchor="r")
     a2 = win(t, 10.3, 17.2, 0.9, 0.7)
     T.put((1080, 760), "IT WILL MISS.", 92, a2, col=TXT, wt="T", track=8)
     T.put((1086, 880), "IMPACT RULED OUT FOR AT LEAST 100 YEARS", 23, win(t, 11.6, 17.2))
-    tag(T, mx, my, "APOPHIS · CLOSEST APPROACH", win(t, 2.6, 16.8), col=YEL, size=17, dx=-40, dy=46, anchor="r")
+    tag(T, mx, my, "CLOSEST APPROACH", win(t, 2.6, 16.8), col=YEL, size=19, dx=34, dy=-44)
     a3 = win(t, 18.0, 22.4, 1.1, 0.6)
     T.put((W / 2, 660), "FRIDAY THE 13TH, 2029", 86, a3, wt="T", track=22, anchor="c")
     T.put((W / 2, 786), "AN ASTEROID WILL PASS CLOSER THAN OUR SATELLITES", 25, win(t, 18.9, 22.4, 1.0, 0.6), anchor="c", col=AMB)
@@ -293,10 +293,11 @@ def _ast_bg(key, d, fov=30, mw=1.6, gain=0.85):
 def shot_name(t, lt):
     img = _ast_bg("name", [0.6, -0.55, -0.4]).copy()
     u = lt / 6.0
-    put_sprite(img, ast_at(160 + lt * 24), lerp(1010, 960, u), lerp(500, 520, u), lerp(0.98, 1.05, u), angle=4, gain=1.05)
+    put_sprite(img, ast_at(160 + lt * 24), lerp(1330, 1290, u), lerp(530, 540, u), lerp(0.80, 0.85, u), angle=4, gain=1.05)
     T = Text()
-    T.put((120, 820), "99942 APOPHIS", 76, win(t, 59.2, 64.4, 0.9, 0.6), wt="T", track=18)
-    T.put((124, 930), "NAMED IN 2005 FOR THE EGYPTIAN SERPENT OF CHAOS", 23, win(t, 60.2, 64.4, 0.9, 0.6), col=AMB)
+    T.put((120, 800), "99942 APOPHIS", 72, win(t, 59.2, 64.4, 0.9, 0.6), wt="XL", track=14)
+    T.put((124, 906), "NAMED IN 2005 FOR THE EGYPTIAN", 24, win(t, 60.2, 64.4, 0.9, 0.6), col=AMB)
+    T.put((124, 946), "SERPENT OF CHAOS", 24, win(t, 60.2, 64.4, 0.9, 0.6), col=AMB)
     return T.add_to(bloom(img))
 
 
@@ -308,8 +309,8 @@ def _tower():
 def shot_size(t, lt):
     img = _ast_bg("size", [-0.3, 0.2, -0.93], mw=1.2).copy()
     z = ss(109.8, 113.2, t)                               # pull back for the tower
-    sc = lerp(1.02, 0.60, z); mpp = 0.4 / sc
-    ax = lerp(1080, 1130, z) - lt * 2.0 * (1 - z); ay = lerp(520, 500, z)
+    sc = lerp(0.90, 0.60, z); mpp = 0.4 / sc
+    ax = lerp(1220, 1130, z) - lt * 2.0 * (1 - z); ay = lerp(530, 500, z)
     ang = 0.0
     put_sprite(img, ast_at(lt * 24), ax, ay, sc, angle=ang, gain=1.05)
     T = Text()
@@ -333,7 +334,8 @@ def shot_size(t, lt):
     T.put((126, 330), "STONY  ·  ELONGATED", 24, win(t, 100.6, b))
     T.put((126, 372), "POSSIBLY TWO LOBES IN CONTACT", 24, win(t, 102.6, b))
     T.put((126, 414), "TUMBLING  ·  ≈ 30.6 HOURS PER TURN", 24, win(t, 105.4, b))
-    T.put((60, 1030), "ARTIST'S MODEL GUIDED BY RADAR  ·  THE REAL SURFACE HAS NEVER BEEN SEEN UP CLOSE", 15, win(t, 95.0, 116.6) * 0.7, col=DIM)
+    T.put((60, 1004), "ARTIST'S MODEL GUIDED BY RADAR", 15, win(t, 95.0, 116.6) * 0.7, col=DIM)
+    T.put((60, 1030), "THE REAL SURFACE HAS NEVER BEEN SEEN UP CLOSE", 15, win(t, 95.0, 116.6) * 0.7, col=DIM)
     return T.add_to(bloom(img))
 
 
@@ -564,10 +566,10 @@ def shot_tides(t, lt):
     Mx = np.float32([[1, 0, lt * 2.2 - 14], [0, 1, lt * 0.6]])
     img = cv2.warpAffine(base, Mx, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
     u = lt / 12.4
-    put_sprite(img, ast_at(200 + lt * 24), lerp(1500, 1340, u), lerp(470, 520, u), lerp(0.60, 0.68, u), angle=-12 + lt * 0.5, gain=1.05)
+    put_sprite(img, ast_at(200 + lt * 24), lerp(1520, 1400, u), lerp(500, 520, u), lerp(0.56, 0.62, u), angle=-12 + lt * 0.5, gain=1.05)
     T = Text()
-    T.put((120, 96), "CLOSEST APPROACH  ·  EARTH SPANS ABOUT 19° OF ITS SKY", 27, win(t, 211.0, 222.8))
-    caption(T, ["THE TUMBLE MAY SPEED UP OR SLOW DOWN", "SMALL LANDSLIDES ARE POSSIBLE  ·  NOT CERTAIN", "IT PASSES TOO FAR OUT TO BE PULLED APART"], t, 212.6, 222.8, x=1010, y=830, size=23, stagger=2.2)
+    T.put((120, 96), "CLOSEST APPROACH  ·  EARTH SPANS ≈ 19° OF ITS SKY", 27, win(t, 211.0, 222.8))
+    caption(T, ["THE TUMBLE MAY SPEED UP OR SLOW DOWN", "SMALL LANDSLIDES ARE POSSIBLE  ·  NOT CERTAIN", "IT PASSES TOO FAR OUT TO BE PULLED APART"], t, 212.6, 222.8, x=1010, y=944, size=23, stagger=2.2, gap=1.5)
     T.put((60, 1030), "EARTH AT ITS TRUE APPARENT SIZE FROM 38,000 KM  ·  ASTEROID ENLARGED", 15, win(t, 210.8, 222.6) * 0.7, col=DIM)
     return T.add_to(bloom(img))
 
@@ -625,7 +627,7 @@ def shot_hypo(t, lt):
     a = win(t, 255.2, 278.2, 0.8, 0.8)
     T.put((W / 2, 70), "HYPOTHETICAL  ·  THIS WILL NOT HAPPEN", 30, a, col=RED, anchor="c", track=7, wt="R")
     T.line((W / 2 - 330, 122), (W / 2 + 330, 122), a * 0.6, col=RED)
-    x0, y0 = 200, 250
+    x0, y0 = 200, 196
     a1 = win(t, 261.0, 278.2)
     T.put((x0, y0), "ENERGY OF AN IMPACT BY AN ASTEROID THIS SIZE (ESTIMATE)", 21, a1, col=DIM)
     T.put((x0 - 4, y0 + 34), "≈ 1,000 MEGATONS", 84, a1, wt="T", track=5, col=YEL)
@@ -671,7 +673,7 @@ def shot_rock(t, lt):
     img = cached("rock_bg", bg).copy()
     ring_art(img, 420, 300, 105, art_M(-60, 30, roll=18), t, gain=0.8, line=0.2)
     u = lt / 5.5
-    put_sprite(img, ast_at(330 + lt * 24), lerp(1090, 1180, u), lerp(600, 560, u), lerp(0.92, 0.80, u), angle=-20 + lt * 0.4, gain=1.05)
+    put_sprite(img, ast_at(330 + lt * 24), lerp(1200, 1280, u), lerp(580, 550, u), lerp(0.76, 0.66, u), angle=-20 + lt * 0.4, gain=1.05)
     T = Text()
     T.put((120, 930), "A ROCK, ON A PATH WE WORKED OUT", 30, win(t, 299.0, 303.8, 0.8, 0.6))
     return T.add_to(bloom(img))

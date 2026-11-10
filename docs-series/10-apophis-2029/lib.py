@@ -384,8 +384,8 @@ class Text:
     def add_to(self, img):
         if not self.used: return img
         a = np.asarray(self.im, F32) / 255; al = a[..., 3]
-        sh = cv2.GaussianBlur(al, (0, 0), 7) * 0.55 + cv2.GaussianBlur(al, (0, 0), 22) * 0.35
-        img *= (1 - np.clip(sh, 0, 0.6))[..., None]
+        sh = cv2.GaussianBlur(al, (0, 0), 6) * 0.9 + cv2.GaussianBlur(al, (0, 0), 20) * 0.6
+        img *= (1 - np.clip(sh, 0, 0.78))[..., None]
         return img * (1 - al[..., None]) + a[..., :3] * al[..., None]
 
 

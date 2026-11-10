@@ -8,7 +8,7 @@ SEGS=($(seq 0 12 276) 287)
 SD=seg; J=joined.mp4; [[ "${VERT:-0}" == 1 ]] && { SD=seg_v; J=joined_v.mp4; }   # VERT=1 bash render_all.sh -> 1080x1920 recomposition
 worker() {
   for ((i=$1; i<${#SEGS[@]}-1; i+=2)); do
-    python3 comp.py ${SEGS[$i]} ${SEGS[$((i+1))]} > $SCR/logs/${SD}_${SEGS[$i]}.log 2>&1 || echo "FAILED seg ${SEGS[$i]}"
+    nice -n 5 python3 comp.py ${SEGS[$i]} ${SEGS[$((i+1))]} > $SCR/logs/${SD}_${SEGS[$i]}.log 2>&1 || echo "FAILED seg ${SEGS[$i]}"
   done
 }
 worker 0 & P0=$!

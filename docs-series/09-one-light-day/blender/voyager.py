@@ -308,7 +308,7 @@ def build_voyager():
         for k in range(49):
             a0 = 2 * math.pi * k / 48
             p = Vector((math.cos(a0) * rr, math.sin(a0) * rr, dish_z(rr) - (0.02 if rr < DISH_R else 0.0)))
-            if prev is not None: mb.cyl(M_WHITEB if rr < DISH_R else M_ALU, prev, p, 0.014 if rr < DISH_R else 0.016, 6)
+            if prev is not None: mb.cyl(M_WHITEB if rr < DISH_R else M_ALU, prev, p, 0.014 if rr < DISH_R else 0.030, 8)
             prev = p
     # ---------------- feed, subreflector, struts, low-gain antenna
     sub_z = DISH_Z + 1.06
@@ -451,22 +451,42 @@ def build_voyager():
 
 
 def dish_material():
-    """white painted reflector: gore seams, ring seams, fastener dots and faint stains baked with numpy"""
-    path = os.path.join(TEX, "dish.png"); N = 2048
+    """white painted reflector, not a clean disc: 24 gores x 5 rings of panels with dark seams, panel-to-panel tone and
+    tilt variation, rows of fasteners along every seam, radial streaks, stains and uneven roughness (numpy-baked)"""
+    path = os.path.join(TEX, "dish2.png"); N = 4096
     if not os.path.exists(path):
         yy, xx = np.mgrid[0:N, 0:N].astype(np.float32); x = (xx / N - 0.5) / 0.49; y = (yy / N - 0.5) / 0.49
         r = np.hypot(x, y); th = np.arctan2(y, x)
-        seam = np.zeros((N, N), np.float32)
-        g = np.abs(((th / (2 * math.pi) * 24 + 0.5) % 1.0) - 0.5) * (2 * math.pi / 24) * np.maximum(r, 0.05)
-        seam = np.maximum(seam, np.clip(1 - g / 0.0035, 0, 1))
-        for rr in (0.17, 0.42, 0.61, 0.82, 0.985):
-            seam = np.maximum(seam, np.clip(1 - np.abs(r - rr) / 0.0035, 0, 1))
-        dots = np.clip(1 - np.hypot(((th / (2 * math.pi) * 24 + 0.5) % 1.0 - 0.5) * (2 * math.pi / 24) * r, ((r * 28) % 1.0 - 0.5) / 28) / 0.004, 0, 1)
-        rg = np.random.default_rng(3); f = np.fft.fftfreq(N) * N; kx, ky = np.meshgrid(f, f); k = np.hypot(kx, ky)
-        nz = np.real(np.fft.ifft2(np.fft.fft2(rg.standard_normal((N, N))) * np.where(k < 2, 0, (k + 1e-6) ** -1.5))); nz = (nz - nz.min()) / (nz.max() - nz.min())
-        panel = (np.floor(th / (2 * math.pi) * 24 + 0.5) * 7 + np.searchsorted([0.17, 0.42, 0.61, 0.82], r) * 13) % 5 / 5.0
-        alb = 1.0 - 0.45 * seam - 0.25 * dots - 0.22 * np.clip(nz - 0.45, 0, 1) - 0.05 * panel
-        img = np.stack([alb, np.clip(seam + dots * 0.6, 0, 1), nz, np.ones_like(alb)], -1)
+        rings = [0.17, 0.36, 0.55, 0.72, 0.87, 0.985]
+        gu = (th / (2 * math.pi) * 24 + 0.5) % 1.0 - 0.5                     # position across a gore (-0.5..0.5)
+        garc = np.abs(gu) * (2 * math.pi / 24) * np.maximum(r, 0.05)          # distance to the gore seam (dish radii)
+        seam = np.clip(1 - garc / 0.0028, 0, 1)
+        dring = np.min(np.stack([np.abs(r - rr) for rr in rings]), 0)
+        seam = np.maximum(seam, np.clip(1 - dring / 0.0028, 0, 1))
+        # fasteners: rows either side of the gore seams and along the rings
+        along_r = (r * 60) % 1.0 - 0.5
+        dots = np.clip(1 - np.hypot((garc - 0.011) , along_r / 60) / 0.0032, 0, 1)
+        along_t = (th / (2 * math.pi) * 24 * 9) % 1.0 - 0.5
+        dots = np.maximum(dots, np.clip(1 - np.hypot(dring - 0.011, along_t * (2 * math.pi / 216) * np.maximum(r, 0.05)) / 0.0032, 0, 1))
+        ridx = np.searchsorted(np.array(rings), r); gidx = np.floor(th / (2 * math.pi) * 24 + 0.5)
+        pid = gidx * 7.0 + ridx * 13.0
+        tone = (np.sin(pid * 12.9898) * 43758.5453) % 1.0                       # per-panel random tone
+        tilt = (np.sin(pid * 78.233) * 12543.123) % 1.0                         # per-panel random tilt direction
+        rg = np.random.default_rng(3)
+        def fbm(beta, kmin, seed):
+            f = np.fft.fftfreq(N) * N; kx, ky = np.meshgrid(np.fft.rfftfreq(N) * N, f); k = np.hypot(kx, ky)
+            z = np.fft.irfft2(np.fft.rfft2(np.random.default_rng(seed).standard_normal((N, N)).astype(np.float32)) * np.where(k < kmin, 0, (k + 1e-6) ** -beta), s=(N, N))
+            return ((z - z.min()) / (z.max() - z.min())).astype(np.float32)
+        nz = fbm(1.5, 2, 3); nz2 = fbm(1.1, 12, 4)
+        # radial streaks (run-off / handling marks) and a darker, dirtier band towards the rim and around the feed
+        streak = np.interp((th / (2 * math.pi) + 0.5) * 720, np.arange(721), rg.random(721)).astype(np.float32)
+        streak = np.clip(streak - 0.55, 0, 1) * np.clip((r - 0.2) / 0.5, 0, 1)
+        grime = 0.25 * np.clip((r - 0.86) / 0.13, 0, 1) + 0.3 * np.exp(-((r - 0.19) / 0.06) ** 2)
+        alb = 1.0 - 0.72 * seam - 0.5 * dots - 0.30 * np.clip(nz - 0.42, 0, 1) - 0.16 * tone - 0.22 * streak - grime * (0.5 + nz2) - 0.10 * (nz2 - 0.5)
+        # height: seams and fasteners recessed, each panel a slightly different plane (breaks up the key light)
+        hgt = 0.5 + 0.5 * (tilt - 0.5) * np.clip(gu * 2, -1, 1) * 0.6 + 0.10 * (tone - 0.5) - 0.5 * seam - 0.3 * dots
+        rough = np.clip(0.25 + 0.5 * nz + 0.25 * tone - 0.2 * streak + 0.3 * grime, 0, 1)
+        img = np.stack([np.clip(alb, 0, 1), np.clip(hgt, 0, 1), rough, np.ones_like(alb)], -1)
         im = bpy.data.images.new("dish", N, N, alpha=False); im.pixels.foreach_set(np.ascontiguousarray(img, np.float32).ravel())
         im.filepath_raw = path; im.file_format = "PNG"; im.save(); bpy.data.images.remove(im)
     m = bpy.data.materials.new("dish"); m.use_nodes = True
@@ -474,11 +494,12 @@ def dish_material():
     img = t.nodes.new("ShaderNodeTexImage"); img.image = bpy.data.images.load(path); img.image.colorspace_settings.name = "Non-Color"
     sp = t.nodes.new("ShaderNodeSeparateColor"); L(img.outputs["Color"], sp.inputs[0])
     mx = t.nodes.new("ShaderNodeMix"); mx.data_type = "RGBA"
-    mx.inputs["A"].default_value = (0.06, 0.06, 0.06, 1); mx.inputs["B"].default_value = (0.70, 0.70, 0.68, 1)
+    mx.inputs["A"].default_value = (0.035, 0.035, 0.035, 1); mx.inputs["B"].default_value = (0.60, 0.60, 0.575, 1)
     L(sp.outputs[0], mx.inputs["Factor"]); L(mx.outputs["Result"], b.inputs["Base Color"])
-    mr = t.nodes.new("ShaderNodeMapRange"); mr.inputs[3].default_value = 0.42; mr.inputs[4].default_value = 0.7
+    mr = t.nodes.new("ShaderNodeMapRange"); mr.inputs[3].default_value = 0.22; mr.inputs[4].default_value = 0.85
     L(sp.outputs[2], mr.inputs[0]); L(mr.outputs[0], b.inputs["Roughness"])
-    bp = t.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.5; bp.inputs["Distance"].default_value = 0.004; bp.invert = True
+    b.inputs["Coat Weight"].default_value = 0.15
+    bp = t.nodes.new("ShaderNodeBump"); bp.inputs["Strength"].default_value = 0.9; bp.inputs["Distance"].default_value = 0.012
     L(sp.outputs[1], bp.inputs["Height"]); L(bp.outputs["Normal"], b.inputs["Normal"])
     return m
 
@@ -708,4 +729,4 @@ elif SHOT.startswith("plate_"):
     big = SHOT in ("plate_heroA", "plate_heroB", "plate_end", "plate_thumb")
     res = (3200, 1800) if big else ((1600, 900) if SHOT == "plate_fly" else (2560, 1440))
     sc.cycles.adaptive_threshold = 0.012
-    render(SHOT, [0], res, 200 if big else 110, os.path.join(SCR, "plates", SHOT))
+    render(SHOT, [0], res, 200 if big else 110, os.path.join(SCR, os.environ.get("PLATES", "plates"), SHOT))

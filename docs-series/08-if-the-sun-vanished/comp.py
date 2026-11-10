@@ -733,11 +733,11 @@ if __name__ == "__main__":
         import time; T0 = time.time()
         # Slow shots are rendered every 2nd or 3rd frame and the frames between are linear blends (motion there is well under
         # a pixel per frame); anything with fast motion, particles or a hard event is rendered at the full rate.
-        EVENTS = [TV, T_DARK, T_MOON, 92.3, 93.7, 97.15, 100.65] + [sh[0] for sh in SHOTS]
+        EVENTS = [TV, T_DARK, T_MOON, 92.3, 93.7, 97.15, 100.65, 175.0, 179.0, 190.0, 195.5, 228.0] + [sh[0] for sh in SHOTS]
         def step(t):
             if any(-0.2 < t - e < 0.6 for e in EVENTS): return 1
             if t < 3.6 or 55.3 <= t < 59.0 or t > 280.5: return 1
-            if 128.0 <= t < 138.0 or 200.5 <= t < 241.5: return 2 if VERT else 1      # falling flakes
+            if 128.0 <= t < 138.0 or 200.5 <= t < 241.5: return 2                     # falling flakes
             i = max(k for k, sh in enumerate(SHOTS) if sh[0] <= t + 1e-6); t0, fn, xf = SHOTS[i]
             if t < t0 + xf + 0.1: return 1
             slow = fn in (sh_earth1, sh_diag_a, sh_diag_b, sh_moon, sh_jupiter, sh_saturn, sh_globe_cold, sh_drift, sh_sun2)

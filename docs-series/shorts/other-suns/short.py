@@ -207,10 +207,13 @@ class Scene:
         self.flow = fbm2((256, 512), 71, 2.2)
         # foreground prep
         a = fg.a
+        yyf0 = np.mgrid[0:H, 0:W][0].astype(f32)
         sh = np.zeros_like(a); sh[10:] = a[:-10]
         self.rim = cv2.GaussianBlur(np.clip(a - sh, 0, 1), (0, 0), 3.0) * a
         self.rim_soft = cv2.GaussianBlur(np.clip(a - np.roll(a, 40, 0), 0, 1), (0, 0), 14.0) * a
         self.mist = np.clip(fbm2((512, 512), 41, 2.6) * 0.5 + 0.45, 0, 1).astype(f32)
+        nl = cv2.resize(fbm2((128, 128), 21, 2.6), (W, H), interpolation=cv2.INTER_CUBIC)
+        self.frost_field = (0.62 * (1 - yyf0 / H) + 0.05 * nl).astype(f32)      # smooth creeping front, no alpha-edge holes
         self.shim = fbm2((256, 256), 81, 2.0)
         yyf, xxf = np.mgrid[0:H, 0:W].astype(f32); self.xx, self.yy = xxf, yyf
         er = np.random.default_rng(9); n = 420
@@ -371,6 +374,27 @@ class Scene:
         fgc = fb if fa is None else fa * (1 - w) + fb * w
         return fgc * light
 
+    def frost_clean(self, img, amount, t):
+        """clean bright blue-white crystalline frost: a creeping front from the near lawn, colour independent of the
+        (dark, shadowed) plate underneath so there are no dark specks; sparkling glints"""
+        fg = self.fg
+        thr = amount * 1.35 - 0.25
+        m = smooth(-0.08, 0.08, thr - self.frost_field) * np.maximum(fg.frost_cover, fg.ground)
+        m = cv2.GaussianBlur(m, (0, 0), 1.5) * (0.7 + 0.3 * smooth(0.0, 1.0, amount))
+        tex = np.clip(fg.crystal, 0.9, 1.25) * np.clip(fg.hf, 0.85, 1.35) ** 0.8
+        fcol = (0.10 * tex)[..., None] * np.array([0.74, 0.88, 1.25], f32)
+        out = img * (1 - m[..., None]) + np.maximum(img, fcol) * m[..., None]
+        g = fg.glint_xy; mg = m[g[:, 1], g[:, 0]]
+        tw = np.clip(np.sin(t * fg.glint_fr * 6.283 + fg.glint_ph), 0, 1) ** 10
+        val = mg * tw * fg.glint_sz * 1.4
+        sel = val > 1e-4
+        if sel.any():
+            H, W = img.shape[:2]
+            lay = np.zeros((H, W), f32); np.add.at(lay, (g[sel, 1], g[sel, 0]), val[sel])
+            lay = cv2.GaussianBlur(lay, (0, 0), 0.8) * 4 + cv2.GaussianBlur(lay, (0, 0), 2.5) * 2
+            out = out + lay[..., None] * np.array([0.85, 0.92, 1.0], f32)
+        return out.astype(f32)
+
     def haze(self, t, a, col, rise=60.0):
         W, H = self.L.W, self.L.H; hz = self.hz
         sx, sy = self.xx[::2, ::2], self.yy[::2, ::2]
@@ -438,7 +462,7 @@ class Scene:
         if cur == "prox" or (A["key"] == "prox" and w < 1):
             kp = (1.0 if cur == "prox" else 1 - w)
             fr = ramp(t, T_FREEZE, T_FREEZE + 1.6) if cur == "prox" else 1.0
-            if fr > 0: fgc = fg.frost(fgc, fr * kp, t, 0.7)
+            if fr > 0: fgc = self.frost_clean(fgc, fr * kp, t)
             fgc = fg.lamps_light(fgc, kp * ramp(t, T_SW["prox"] + 0.8, T_SW["prox"] + 1.4) * 2.2, t)
         if cur == "bet": fgc = fgc * (1 + 0.6 * inside)
         a = fg.a[..., None]

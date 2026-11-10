@@ -17,7 +17,7 @@ from PIL import Image
 from lib.core import f32, srgb_to_lin, fbm2, smooth
 
 TEX = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/shorts-common/dl/sss"
-SUN = np.array([-0.50, 0.16, -0.85]); SUN = SUN / np.linalg.norm(SUN)       # towards the Sun (camera frame)
+SUN = np.array([-0.22, 0.10, -0.97]); SUN = SUN / np.linalg.norm(SUN)       # towards the Sun (camera frame)
 D_MOON = 384400.0
 
 # texture px -> ring radius (km): calibrated on the C-ring inner edge (px 434 = 74,658 km) and A-ring outer edge
@@ -150,7 +150,8 @@ class Body:
                 f = 2 * m0 / (m0 + np.maximum(mu, 0.02)) * smooth(-0.02, 0.06, mu0)
             else:                                                           # Minnaert limb darkening, soft terminator
                 m0 = np.clip(mu0 + 0.04, 0, 1) / 1.04
-                f = (m0 ** self.k) * np.maximum(mu, 0.05) ** (self.k - 1) * smooth(-0.06, 0.10, mu0)
+                f = (m0 ** self.k) * np.maximum(mu, 0.05) ** (self.k - 1) * smooth(-0.12, 0.20, mu0)
+                f = f + 0.035 * (1 - smooth(-0.1, 0.15, mu0)) * mu ** 0.5          # faint night side (sky / ring-shine)
             col = alb * f[..., None]
             # atmospheric limb haze (lit side) for the giants
             if self.haze.any():
@@ -180,8 +181,9 @@ class Body:
                 lit_face = (np.sign(s[1]) == np.sign(-d[1]))
                 lam = abs(s[1]) ** 0.35 * (1.0 if lit_face else 0.25)
                 # unlit face / thin parts: some forward-scattered light (1 - a) a
-                ring_rad = rc * (lam * (1 - shad * 0.95))[..., None] * (1.0 if lit_face else 1.0)
+                ring_rad = rc * (lam * (1 - shad * 0.96))[..., None] * (1.0 if lit_face else 1.0)
                 ring_rad = ring_rad * self.surf * 1.35
+                ra = np.clip(ra * (1 + 0.35 * shad), 0, 0.985)                     # shadowed ring reads dark, not see-through grey
                 rad = rad * (1 - ra)[..., None] + ring_rad * ra[..., None]
                 cov = cov * (1 - ra) + ra
         # thin lit rim outside the limb (atmosphere) on the sunward side

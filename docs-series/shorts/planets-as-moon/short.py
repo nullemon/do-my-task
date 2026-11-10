@@ -48,12 +48,12 @@ def ang_deg(R): return 2 * math.degrees(math.asin(R / D_KM))
 # valley light (tint, gain), star visibility, exposure, readout colour.
 BODIES = [
     dict(key="moon", name="OUR MOON", R=1737.4, l2="1× MOON'S SIZE", l3="0.52° WIDE", tc=(235, 240, 255),
-         zen=(0.0, 0.0, 0.0), hor=(0.0, 0.0, 0.0), glow=(0.55, 0.62, 0.80), gl=1.6,
-         beams=[(0.55, 0.65, 1.0), (0.80, 0.55, 1.0), (0.45, 0.95, 1.0)], bI=0.28, corona=1.0,
+         zen=(0.0, 0.0, 0.0), hor=(0.0, 0.0, 0.0), glow=(0.55, 0.62, 0.80), gl=0.9,
+         beams=[(0.55, 0.65, 1.0), (0.80, 0.55, 1.0), (0.45, 0.95, 1.0)], bI=0.09, corona=1.0,
          tint=(0.75, 0.85, 1.10), gain=0.05, stars=1.0, expo=1.0),
     dict(key="mars", name="MARS", R=3389.5, l2="2× MOON'S SIZE", l3="1.0° WIDE", tc=(255, 130, 80),
-         zen=(0.010, 0.0, 0.0), hor=(0.06, 0.012, 0.0), glow=(1.0, 0.38, 0.16), gl=1.6,
-         beams=[(1.0, 0.30, 0.08), (1.0, 0.55, 0.15), (0.9, 0.15, 0.25)], bI=0.45, corona=1.0,
+         zen=(0.010, 0.0, 0.0), hor=(0.06, 0.012, 0.0), glow=(1.0, 0.38, 0.16), gl=1.0,
+         beams=[(1.0, 0.30, 0.08), (1.0, 0.55, 0.15), (0.9, 0.15, 0.25)], bI=0.14, corona=1.0,
          tint=(1.0, 0.55, 0.35), gain=0.06, stars=1.0, expo=1.0),
     dict(key="nep", name="NEPTUNE", R=24764.0, l2="14× MOON'S SIZE", l3="7.4° WIDE", tc=(110, 160, 255),
          zen=(0.0, 0.006, 0.05), hor=(0.0, 0.02, 0.08), glow=(0.25, 0.45, 1.0), gl=0.9,
@@ -161,8 +161,8 @@ class Scene:
         # bodies
         bp = BK
         self.body = {
-            "moon": Body("moon", "8k_moon.jpg", bp["moon"]["Rp"], pole_vec(-12, 4), model="rock", surf=2.6, detail=0.0, spin=0.0),
-            "mars": Body("mars", "8k_mars.jpg", bp["mars"]["Rp"], pole_vec(-15, 18), model="rock", surf=2.4, lon0=math.radians(-70),
+            "moon": Body("moon", "8k_moon.jpg", bp["moon"]["Rp"], pole_vec(-12, 4), model="rock", surf=5.0, detail=0.0, spin=0.0),
+            "mars": Body("mars", "8k_mars.jpg", bp["mars"]["Rp"], pole_vec(-15, 18), model="rock", surf=1.4, lon0=math.radians(-70),
                          rim=(0.4, 0.15, 0.06), detail=0.02, spin=0.05),
             "nep": Body("nep", "2k_neptune.jpg", bp["nep"]["Rp"], pole_vec(18, 22), surf=1.45, lon0=math.radians(10), spin=0.06,
                         haze=(0.03, 0.07, 0.22), rim=(0.10, 0.22, 0.75), detail=0.06, sat=1.15, seed=3),

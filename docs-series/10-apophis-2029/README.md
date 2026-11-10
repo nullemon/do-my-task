@@ -21,7 +21,7 @@ show: the Apophis model in the foreground, the Earth and its satellite ring behi
 | `lib.py` | renderers: Earth sphere (Blue Marble day map, night lights, cloud layer with shadows, relief shading from an elevation map, ocean glint, limb scattering), Moon (albedo + bump relief), real star field (d3-celestial catalogue to mag 8 + a faint synthetic population), Milky Way model, anti-aliased 3D lines, glints, type, bloom |
 | `comp.py` | every shot as a function of film time; writes silent x264 CRF 14 segments |
 | `ground.py` | the naked-eye scene: procedural night landscape (layered ridges, conifers, valley town, mist) under the real sky for 13 April 2029, ≈21:46 UTC, 40° N |
-| `blender/asteroid.py` | Blender 5.1 (bpy, Cycles CPU): the Apophis model and its 540-frame tumble (orthographic, 0.4 m per pixel, RGBA), and the Eiffel Tower at the same scale and lighting |
+| `blender/asteroid.py` | Blender 5.1 (bpy, Cycles CPU): the Apophis model and its 540-frame tumble (orthographic, 0.4 m per pixel, RGBA; frames 0–124 on a 1600×1000 canvas, the rest on 1600×1300 because the upright body did not fit), and the Eiffel Tower at the same scale and lighting |
 | `blender/craft.py` | simplified OSIRIS-APEX and Ramses stills |
 | `ast_interp.py` | fills the asteroid frames that were not path-traced (see limitations) by optical-flow interpolation |
 | `audio/narration.py`, `audio/gen_voice.py` | narration text, Kokoro TTS (am_michael, speed 0.94) |
@@ -109,10 +109,20 @@ Rebuild: `python blender/asteroid.py ast 0 540` (+ `tower`), `python blender/cra
   Dec ≈ +9.2°) and are good to about a degree.
 - **Earth spans ≈19°** from 38,000 km: 2·asin(6371 / 38,000).
 
+## Deliverables (`out/`, measured)
+| file | size | notes |
+|---|---|---|
+| `apophis-2029-1080p-hq.mp4` | 341 MB | 1920×1080, 24 fps, 5:18.0, x264 CRF 18 (9 Mb/s cap), AAC 256k, soft subtitles |
+| `apophis-2029-4k.mp4` | 385 MB | 3840×2160 lanczos **upscale** of the 1080p render, CRF 20 (16 Mb/s cap) |
+| `apophis-2029-vertical.mp4` | 314 MB | 1080×1920 recomposition, same audio and subtitles |
+| `apophis-2029.srt`, `thumb.jpg` (1280×720), `thumb-vertical.jpg` (1080×1920) | | |
+
+Audio: integrated −14.0 LUFS, loudness range 2 LU, true peak about −1.3 dBFS (ebur128 on the muxed files).
+
 ## Honest limitations
 - The asteroid is an artist's model. Nobody has seen Apophis's surface; boulders, craters and colour are modelled on
   Itokawa-like rubble piles, and the two-lobed outline is only "possible" in the radar data.
-- Only every fourth frame of the asteroid's tumble after frame 122 (every second from 90 to 122) was path-traced; the
+- Only every fourth frame of the asteroid's tumble after frame 124 (every second from 90 to 124) was path-traced; the
   frames between were interpolated by optical flow (measured structural error ≈1/255 against real renders). The machine
   was shared by three films and a full render would have taken several more hours.
 - The Earth is an analytic sphere shaded in numpy from 4K NASA maps, not a volumetric render: clouds are a single

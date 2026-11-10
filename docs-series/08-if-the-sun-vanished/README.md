@@ -80,5 +80,30 @@ as reported by the search tool. Standard constants are from memory and are marke
 - Stars and Milky Way are procedural (not a real sky): star magnitudes follow N(>flux) ∝ flux⁻¹, colours are black-body.
 - The lake, the ice and the vent field are original Blender scenes built from numpy height fields.
 
+## 9:16 version
+`VERT=1` switches `lib.py`/`comp.py` to a 1080×1920 frame and a second layout (`hv(horizontal, vertical)` values in
+`comp.py`): every hero object is re-centred in the vertical column, the diagrams use a flatter tilt and a smaller scale
+so the orbits fit the width, labels flip to the inside near the edges, the clock and all captions are re-laid (larger,
+wrapped, stacked) between 12 % from the top and 20 % from the bottom, and the space shots are rendered natively at
+1080×1920. The lake, ice and vent shots reuse the 2304×1296 Blender plates as full-height 729-px-wide slices (a
+different slice for day, with the Sun in frame, and for night, through the gap in the range), which is a 1.48× upscale
+of the terrain; sky, stars, planets, mist, flakes and type are generated at full vertical resolution.
+`VERT=1 bash render_all.sh` → `bash encode_one.sh vertical`; `VERT=1 python3 thumbnail.py` → `out/thumb-vertical.jpg`.
+
+## Render notes
+- Slow shots are rendered every 2nd–4th frame and the frames between are linear blends (`comp.py`, main loop); cuts,
+  the two blackouts and the slow-motion front are rendered at the full 24 fps. Fast time-lapse clock digits therefore
+  cross-fade rather than snap.
+- Blender plates: 64 spp + OIDN (lake), 96 spp (ice, vents), Cycles CPU, about 45 minutes in total on the shared machine.
+
 ## Honest limitations
-See the hand-off report (kept in sync with what was actually rendered).
+- The lake is one locked-off CG plate relit in the compositor; it is a height-field landscape, not a photograph, and
+  the "day" sky (gradient + procedural cirrus) is the least photographic part. No vegetation geometry: the dying of
+  plants is a colour change on the slopes.
+- Night scenes, the dark Earth and the frozen Earth are brightened so they can be seen at all (labelled on screen);
+  the spread of ice over the globe is schematic, not a climate-model output.
+- Stars and Milky Way are procedural, not the real sky; the positions of the planets over the lake are illustrative.
+- The planet maps are 1k–2k textures with procedural fine detail added; Saturn's ring colours come from a small strip.
+- The vent field and the underside of the ice are illustrative models lit by an imaginary lamp; no vent animals are shown.
+- The first frames after each blackout are close to black by design (the exposure "opens up" over ~2 s).
+- 4K is a Lanczos upscale of the 1080p master; the vertical lake/ice/vent terrain is a 1.48× upscale of the plates.

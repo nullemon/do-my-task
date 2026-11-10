@@ -14,7 +14,7 @@ The grand tour, the Pale Blue Dot, the Golden Record, a 23-watt signal, and why 
 the captions say "about to" / "reaches", never "has reached". If it is published after the 18th, change the title
 verb to "Just Reached"; nothing in the film itself needs to change.)
 
-A 4:48 narrated documentary, 1920×1080 at 24 fps, plus a re-laid-out 1080×1920 vertical version. Same series look:
+A 4:48 narrated documentary (558 words of narration, 21 lines), 1920×1080 at 24 fps, plus a 1080×1920 vertical version with its own layout for every shot. Same series look:
 thin, widely spaced Inter Light captions, slow camera, grain and vignette at the final encode.
 
 ## Files
@@ -28,12 +28,12 @@ thin, widely spaced Inter Light captions, slow camera, grain and vignette at the
 | `planets.py` | analytic planet renderer (oblate ellipsoids, limb darkening, atmosphere limb, Saturn's rings with gaps, transparency, ring shadow on the globe and globe shadow on the rings). Jupiter, Saturn, Io, Neptune and the Moon use procedural textures; Earth uses NASA Blue Marble / night lights / clouds from the `three-globe` npm package |
 | `lib.py`, `comp.py` | numpy/PIL compositor. Every frame is built in linear light (sky, plates placed with sub-pixel LANCZOS, planets, flares, particles), bloomed, tone-mapped and captioned. `VERT=1` switches every shot to its own 9:16 layout |
 | `thumb.py` | 16:9 and 9:16 thumbnails |
-| `render_plates.sh`, `render_segs.sh`, `encode_one.sh` | plate queue, segment queue (12 s segments, resume-safe), final encodes |
+| `render_plates.sh`, `render_segs.sh`, `join.sh`, `encode_one.sh` | plate queue, segment queue (12 s segments, resume-safe), concat, final encodes. `waitrun.sh`, `finalq.sh`, `lastq.sh`, `endq.sh`, `queueC.sh`, `render_dsn.sh` are the one-off chaining scripts used during this render |
 | `audio/` | narration, Kokoro TTS (`am_michael`, speed 0.94, the series voice), mix (voice chain, numpy music bed in D minor, sub swells, telemetry pips under the signal section, ducking, two-pass loudnorm), SRT |
 | `one-light-day.srt` | subtitles from the placed voice timings (also muxed as a soft track) |
 
 Rebuild: `bash render_plates.sh` → `python blender/dsn.py final` → `audio/gen_voice.py`, `audio/mix.py` →
-`bash render_segs.sh 0 12 … 276` (and again with `VERT=1`) → concat → `bash encode_one.sh hq|4k|vertical` → `python3 thumb.py`.
+`bash render_segs.sh 0 12 … 276` (and again with `VERT=1`) → `bash join.sh` / `bash join.sh v` → `bash encode_one.sh hq|4k|vertical` → `python3 thumb.py` (and `VERT=1 python3 thumb.py`).
 
 ## Facts and sources (checked with web search on 10 November 2026)
 - **One light-day:** light travels 25,902,068,371 km in 24 hours (299,792.458 km/s × 86,400 s). NASA/JPL project
@@ -104,3 +104,30 @@ Rebuild: `bash render_plates.sh` → `python blender/dsn.py final` → `audio/ge
 - **4K** is a lanczos upscale of the 1080p render. The **vertical** version is re-composed per shot from the same
   plates (crops and pans of the 16:9 plates plus a separate caption layout); in close-ups the booms run off the
   sides of the frame.
+
+## Deliverables (`out/`, not in git)
+| file | what |
+|---|---|
+| `one-light-day-1080p-hq.mp4` | 1920×1080, x264 CRF 17 capped at 9.5 Mb/s, AAC 256k, soft subtitle track |
+| `one-light-day-4k.mp4` | 3840×2160 lanczos upscale of the 1080p render (labelled in metadata), CRF 20 capped at 19 Mb/s |
+| `one-light-day-vertical.mp4` | 1080×1920, every shot re-composed and every caption re-laid for 9:16 (text kept out of the top 12 % and bottom 20 %), same audio and subtitles |
+| `one-light-day.srt` | subtitles |
+| `thumb.jpg`, `thumb-vertical.jpg` | 1280×720 and 1080×1920 covers: our Voyager model, a pale-blue Earth dot, "1 LIGHT-DAY FROM EARTH · 49 years to get here" |
+
+## Vertical version: how each shot was re-composed
+Plates were reused; no shot needed a second camera, but every layout is separate (`P(h, v)` picks the value in `comp.py`).
+Hero, record, RTG and end shots re-centre and enlarge the 16:9 plates so the dish and bus sit in the central column
+(the long booms run off the sides). The record-cover and RTG close-ups become slow pans across the plate. The
+light-time strip and the scale diagram are rebuilt as vertical axes (Earth at the bottom; the Sun at the bottom and
+Alpha Centauri at the top). Jupiter, Saturn, the heliosphere, the Family Portrait and the DSN dish are re-framed and
+re-scaled. Captions are larger, wrapped and stacked.
+
+## Render / encode notes
+- Blender plates (Cycles CPU, 110–220 spp, OIDN): eleven Voyager plates plus the DSN antenna, 8–49 minutes each on a
+  4-core machine shared with two other films (load 14–20), about 4 h of wall clock in two queues. The dish plates
+  (hero A, end, thumbnail, fly-by sprite) were rendered twice: the second pass added gore panels, fasteners, tone
+  variation, a rim lip and uneven roughness to the reflector after review.
+- Compositor: 6,912 frames per format in 24 segments, about 0.8–1.0 s per frame per worker.
+- Audio: −14.1 LUFS integrated, −1.3 dBFS peak, measured with ebur128 on the final `-1080p-hq.mp4` and `-vertical.mp4` (the WAV mix itself is −14.0 LUFS, −1.5 dBTP).
+- Sizes: `-1080p-hq.mp4` 352.6 MB, `-vertical.mp4` 352.4 MB (both 288.0 s, 6,912 frames); `-4k.mp4` is capped at 19 Mb/s to stay under 740 MB.
+- Checked before delivery: 21 frames of each format on contact sheets and 8 frames of the final 16:9 file at full size. Fixed along the way: two labels that ran off the right edge (the Sun note in the 23-watt shot, the Gliese 445 note), small print raised to 15 px in 16:9, and the dish re-rendered.

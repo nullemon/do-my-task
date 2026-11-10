@@ -14,7 +14,7 @@ from mathutils import Vector
 argv = sys.argv[sys.argv.index("--") + 1:]
 WORLD, PASS, SPP = argv[0], argv[1], int(argv[2])
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/13-sunset-on-every-world"
-OUT = os.path.join(SCR, "plates"); os.makedirs(OUT, exist_ok=True)
+OUT = os.environ.get("PLATES", os.path.join(SCR, "plates")); os.makedirs(OUT, exist_ok=True)
 RES = int(os.environ.get("RES", 2160))
 FOV = 24.0
 HORIZ = 0.60                       # horizon at this fraction of the plate height from the top
@@ -26,7 +26,7 @@ def fbm2(n, seed, beta=2.0, lo=0.0):
     r = np.random.default_rng(seed)
     fy = np.fft.fftfreq(n)[:, None] * n; fx = np.fft.rfftfreq(n)[None, :] * n
     f = np.sqrt(fx * fx + fy * fy); f[0, 0] = 1
-    amp = f ** (-beta / 2.0); amp[0, 0] = 0
+    amp = f ** (-beta); amp[0, 0] = 0          # beta = amplitude exponent: 2 is smooth, 1.6 rough
     if lo: amp[f < lo] = 0
     z = np.fft.irfft2(amp * np.exp(1j * r.uniform(0, 2 * np.pi, amp.shape)), s=(n, n))
     return ((z - z.mean()) / z.std()).astype(f32)
@@ -72,7 +72,7 @@ def craters(X, Y, Z, n, ymin, ymax, amin, amax, seed, half=13.5, depth=0.2, rim=
 
 # ------------------------------------------------------------------------------------------------ world recipes
 # each returns: height(X, Y) -> Z, colour(X, Y, Z) ; plus parameters
-P = dict(camh=1.8, y1=350.0, yfar=9000.0, n_near=1000, n_mid=600, far=None, sun_el=3.0, sun_ang=0.53, glow_el=7.0, glow_ang=50.0,
+P = dict(camh=1.8, y1=350.0, yfar=9000.0, n_near=1000, n_mid=600, far=None, sun_el=4.0, sun_ang=0.53, glow_el=10.0, glow_ang=60.0,
          cloud=False, bump=(0.9, 0.05), rough_tex=(9.0, 0.8), second_sun=None)
 ROCKS = []        # (count, ymin, ymax, smin, smax, kind, sink, colour_lo, colour_hi, dust)
 HOOK = {}
@@ -84,7 +84,7 @@ def w_mars():
         # wind ripples: warped sawtooth, crests across the view; fade where they would alias
         ph = (Y + 0.55 * N(5, X, Y, 30, 2.4) * 3 + 0.25 * X) / 2.3
         saw = (ph - np.floor(ph)); rip = np.where(saw < 0.72, saw / 0.72, (1 - saw) / 0.28) ** 1.3
-        Z += 0.085 * rip * sm(160, 30, Y) * sm(-0.6, 0.6, N(6, X, Y, 60, 2.2) + 0.4)
+        Z += 0.13 * rip * sm(220, 40, Y) * (0.35 + 0.65 * sm(-0.6, 0.6, N(6, X, Y, 60, 2.2) + 0.4))
         ph2 = (Y * 0.94 + 0.3 * X + N(5, X, Y, 4, 2.2) * 0.25) / 0.16
         Z += 0.006 * np.sin(2 * np.pi * ph2) * sm(40, 12, Y)
         # low mesas and buttes in the middle distance, the crater rim on the horizon
@@ -99,7 +99,8 @@ def w_mars():
         c = mixc(dark, soil, t); c = mixc(c, pale, sm(0.3, 1.6, N(15, X, Y, 300, 2.2)))
         strata = 0.88 + 0.12 * np.sin(Z * 0.9 + 2 * N(16, X, Y, 900, 2.0)); c *= np.where(Z > 6, strata, 1)[..., None]
         return c * (0.9 + 0.1 * N(17, X, Y, 0.6, 1.6))[..., None]
-    ROCKS.extend([(2600, 9, 420, 0.03, 0.55, "angular", 0.25, (0.085, 0.05, 0.04), (0.24, 0.13, 0.085), (0.5, 0.25, 0.115)),
+    ROCKS.extend([(1500, 9, 420, 0.03, 0.55, "angular", 0.25, (0.085, 0.05, 0.04), (0.24, 0.13, 0.085), (0.5, 0.25, 0.115)),
+                  (3000, 9, 70, 0.012, 0.07, "angular", 0.3, (0.085, 0.05, 0.04), (0.26, 0.14, 0.09), (0.5, 0.25, 0.115)),
                   (26, 14, 120, 0.5, 1.5, "angular", 0.3, (0.085, 0.05, 0.04), (0.22, 0.12, 0.08), (0.5, 0.25, 0.115))])
     return height, colour
 
@@ -228,19 +229,21 @@ def w_kepler():
 def w_earth():
     # the sea itself is shaded analytically in the compositor (waves, Fresnel, glitter); Blender provides the wet rock reef and sea stacks
     P.update(camh=3.0, y1=300, yfar=900, n_mid=200, sun_ang=0.53, sun_el=3.0, bump=(1.0, 0.05), rough_tex=(8.0, 0.8))
-    def lump(X, Y, x, y, rx, ry): return np.exp(-(((X - x) / rx) ** 2 + ((Y - y) / ry) ** 2))
+    def lump(X, Y, x, y, rx, ry): return np.exp(-(((X - x) / rx) ** 2 + ((Y - y) / ry) ** 2) ** 1.5)
     def height(X, Y):
-        reef = lump(X, Y, -3.0, 17, 3.2, 5) * 1.9 + lump(X, Y, 4.6, 21, 3.0, 6) * 1.5 + lump(X, Y, -7.5, 34, 5, 9) * 1.6 + lump(X, Y, 10, 44, 5, 12) * 1.3 + lump(X, Y, 1.0, 15.5, 2.0, 2.5) * 0.8
-        reef += lump(X, Y, -16, 80, 8, 16) * 1.4 + lump(X, Y, 20, 105, 9, 22) * 1.2
-        Z = -1.1 + reef * (1.0 + 0.45 * N(121, X, Y, 9, 2.0)) + 0.28 * (1 - np.abs(N(122, X, Y, 3.0, 1.9))) * np.clip(reef, 0, 1) + 0.05 * N(123, X, Y, 0.5, 1.8) * np.clip(reef, 0, 1)
-        return Z
+        # wave-cut rock platform at the lower corners: flat-topped, stepped along bedding planes, with tide pools
+        reef = lump(X, Y, -5.2, 19, 3.6, 7) + lump(X, Y, 6.4, 24, 3.4, 9) + lump(X, Y, -11, 42, 5, 14) * 0.9 + lump(X, Y, 14, 58, 6, 18) * 0.8
+        reef = np.clip(reef + 0.18 * N(121, X, Y, 6, 1.9) * (reef > 0.02), 0, 1.2)
+        step = np.floor(reef * 3.2 + 0.4 * N(122, X, Y, 7, 2.0)) / 3.2
+        top = 0.75 * sm(0.0, 0.25, reef) * (0.35 + 0.65 * np.clip(step, 0, 1)) + 0.05 * N(123, X, Y, 1.2, 1.8) + 0.012 * N(124, X, Y, 0.2, 1.7)
+        return -1.2 + sm(0.02, 0.2, reef) * 1.25 + top * sm(0.05, 0.3, reef)
     def colour(X, Y, Z):
         a = np.array([0.05, 0.045, 0.04]); b = np.array([0.14, 0.12, 0.10]); weed = np.array([0.05, 0.07, 0.03])
         c = mixc(a, b, sm(-1, 1, N(124, X, Y, 1.5, 1.9) + 0.5 * N(125, X, Y, 12, 2.0)))
         return mixc(c, weed, sm(0.45, 0.05, Z) * 0.7 * sm(-0.5, 0.5, N(126, X, Y, 4, 2.0)))
-    ROCKS.extend([(7, 150, 620, 9, 24, "stack", 0.15, (0.04, 0.035, 0.03), (0.13, 0.11, 0.09), None),
-                  (60, 10, 80, 0.15, 0.6, "boulder", 0.4, (0.04, 0.035, 0.03), (0.14, 0.12, 0.10), None)])
-    HOOK["sea"] = 0.0; HOOK["rock_ok"] = lambda x, y: (y > 120 and abs(x / y) > 0.045) or y < 60
+    ROCKS.extend([(6, 260, 900, 9, 20, "stack", 0.0, (0.04, 0.035, 0.03), (0.13, 0.11, 0.09), None),
+                  (90, 12, 70, 0.12, 0.55, "boulder", 0.4, (0.04, 0.035, 0.03), (0.14, 0.12, 0.10), None)])
+    HOOK["sea"] = 0.0; HOOK["rock_ok"] = lambda x, y: (y > 120 and abs(x / y) > 0.05) or (y < 80 and abs(x / y) > 0.14)
     return height, colour
 
 def clouds(kind):
@@ -413,7 +416,7 @@ def rock_mat(name, lo, hi, dust, flag=0.5):
         t.links.new(mx0.outputs[0], ramp.inputs[0]); sock = ramp.outputs[0]
         if dust is not None:                      # dust settles on up-facing surfaces
             g = t.nodes.new("ShaderNodeNewGeometry"); sx = t.nodes.new("ShaderNodeSeparateXYZ"); t.links.new(g.outputs["Normal"], sx.inputs[0])
-            mr = t.nodes.new("ShaderNodeMapRange"); mr.inputs[1].default_value = 0.35; mr.inputs[2].default_value = 0.95; mr.inputs[3].default_value = 0.0; mr.inputs[4].default_value = 0.8
+            mr = t.nodes.new("ShaderNodeMapRange"); mr.inputs[1].default_value = 0.35; mr.inputs[2].default_value = 0.95; mr.inputs[3].default_value = 0.0; mr.inputs[4].default_value = 0.55
             t.links.new(sx.outputs["Z"], mr.inputs[0])
             mx = t.nodes.new("ShaderNodeMixRGB"); mx.inputs[2].default_value = (*dust, 1); t.links.new(mr.outputs[0], mx.inputs[0]); t.links.new(sock, mx.inputs[1]); sock = mx.outputs[0]
         emit(t, out, sock)
@@ -422,6 +425,41 @@ def rock_mat(name, lo, hi, dust, flag=0.5):
     return m
 
 # ------------------------------------------------------------------------------------------------ rocks
+def stack_mesh(name, seed):
+    """sea stack: a jointed column with bedding ledges, a wave notch at the foot and a broken top (unit radius, height ~2-3)"""
+    r = np.random.default_rng(seed); nt, nh, ncap = 260, 300, 26
+    th = np.linspace(0, 2 * np.pi, nt, endpoint=False); hh = np.linspace(0, 1, nh)
+    k = r.integers(6, 9); phi = np.sort(r.uniform(0, 2 * np.pi, k)); dd = r.uniform(0.62, 1.0, k)
+    prof = np.min(dd[None, :] / np.maximum(np.cos(th[:, None] - phi[None, :]), 0.08), axis=1); prof = np.minimum(prof, 1.25)
+    def n1(x, f, sd):
+        rr = np.random.default_rng(sd); o = np.zeros_like(x)
+        for j in range(6): o += np.sin(x * f * (j + 1) * rr.uniform(0.7, 1.3) + rr.uniform(0, 6.28)) / (j + 1)
+        return o
+    Hh = r.uniform(2.2, 3.4); lean = r.uniform(-0.12, 0.12)
+    T, Hg = np.meshgrid(th, hh)
+    bed = Hg * r.uniform(15, 22) + 0.5 * np.sin(T * 2 + seed) + 0.25 * n1(T, 1.0, seed + 1)[None, :] if False else Hg * r.uniform(15, 22) + 0.5 * np.sin(T * 2 + seed)
+    ledge = (bed - np.floor(bed)); ledge = np.where(ledge < 0.82, 0.0, -1.0) + 0.35 * (np.floor(bed) % 3 == 0)
+    joints = n1(T, 5.0, seed + 2) * 0.035 + (np.abs(np.sin(T * r.integers(5, 9) + n1(Hg, 3.0, seed + 3))) < 0.08) * -0.05
+    taper = 1 - 0.30 * Hg ** 1.6 + 0.10 * np.sin(Hg * 5 + seed)
+    notch = 1 - 0.16 * np.exp(-((Hg - 0.05) / 0.035) ** 2) + 0.25 * np.exp(-Hg / 0.02)
+    rad = prof[None, :] * taper * notch * (1 + 0.045 * ledge + joints + 0.02 * n1(T * 3 + Hg * 40, 1.0, seed + 4))
+    ztop = Hh * (1 + 0.10 * n1(th, 1.0, seed + 5) + 0.05 * (np.abs(n1(th, 3.0, seed + 6)) > 0.6))
+    Zs = Hg * ztop[None, :]
+    Xs = rad * np.cos(T) + lean * Zs; Ys = rad * np.sin(T)
+    rings = [np.stack([Xs, Ys, Zs], -1)]
+    cap = []
+    for j in range(1, ncap + 1):
+        q = 1 - j / ncap
+        cap.append(np.stack([Xs[-1] * q + lean * ztop.mean() * (1 - q) * 0, Ys[-1] * q, Zs[-1] + (1 - q) ** 2 * 0.05 * Hh * (1 + 0.5 * n1(th * 2 + j, 1.0, seed + 7))], -1))
+    V = np.concatenate([rings[0], np.stack(cap, 0)], 0); nv = V.shape[0]
+    idx = np.arange(nv * nt, dtype=np.int32).reshape(nv, nt); nx = np.roll(idx, -1, axis=1)
+    faces = np.stack([idx[:-1].ravel(), nx[:-1].ravel(), nx[1:].ravel(), idx[1:].ravel()], 1)
+    me = bpy.data.meshes.new(name); me.vertices.add(nv * nt); me.vertices.foreach_set("co", V.reshape(-1, 3).astype(np.float32).ravel())
+    me.loops.add(faces.size); me.loops.foreach_set("vertex_index", faces.ravel()); me.polygons.add(len(faces))
+    me.polygons.foreach_set("loop_start", np.arange(0, faces.size, 4, dtype=np.int32)); me.polygons.foreach_set("loop_total", np.full(len(faces), 4, np.int32)); me.update()
+    me.polygons.foreach_set("use_smooth", np.full(len(faces), True, bool))
+    return me
+
 def base_rock(name, seed, kind):
     r = np.random.default_rng(seed)
     bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=5 if kind in ("stack", "spire") else 4, radius=1.0)
@@ -456,7 +494,7 @@ def base_rock(name, seed, kind):
 
 rock_ok = HOOK.get("rock_ok", lambda x, y: True)
 for gi, (cnt, ymin, ymax, smin, smax, kind, sink, lo, hi, dust) in enumerate(ROCKS):
-    bases = [base_rock(f"r{gi}_{k}", 100 * gi + k + 7, kind) for k in range(7)]
+    bases = [stack_mesh(f"r{gi}_{k}", 100 * gi + k + 7) if kind == "stack" else base_rock(f"r{gi}_{k}", 100 * gi + k + 7, kind) for k in range(7)]
     mat = rock_mat(f"rock{gi}", lo, hi, dust)
     for b in bases: b.materials.append(mat)
     M = cnt * 12
@@ -467,8 +505,8 @@ for gi, (cnt, ymin, ymax, smin, smax, kind, sink, lo, hi, dust) in enumerate(ROC
     placed = 0
     for x, y, s, z in zip(xs, ys, ss, zs):
         if placed >= cnt: break
-        if s / y < 0.0008 or not rock_ok(x, y): continue
-        if kind == "stack": z = -0.5
+        if s / y < 0.0006 or not rock_ok(x, y): continue
+        if kind == "stack": z = -0.3
         tall = kind in ("stack", "spire")
         o = bpy.data.objects.new(f"rk{gi}_{placed}", bases[placed % 7]); o.location = (x, y, z - sink * s * 0.5)
         o.scale = (s, s, s); o.rotation_euler = (rng.uniform(-0.05, 0.05) if tall else rng.uniform(-0.25, 0.25), 0 if tall else rng.uniform(-0.25, 0.25), rng.uniform(0, 6.28))
@@ -491,9 +529,9 @@ def sun_lamp(name, colr, strength, el, az, ang):
     so = link(bpy.data.objects.new(name, ld)); e, a = math.radians(el), math.radians(az)
     so.rotation_euler = Vector((math.sin(a) * math.cos(e), math.cos(a) * math.cos(e), math.sin(e))).to_track_quat("Z", "Y").to_euler()
 if PASS == "beauty":
-    sun_lamp("sun", (1, 0, 0), 0.9, P["sun_el"], 0.0, P["sun_ang"])
-    if P["second_sun"]: s2 = P["second_sun"]; sun_lamp("sun2", (0, 1, 0), 0.9, s2["el"], s2["az"], s2["ang"])
-    else: sun_lamp("glow", (0, 1, 0), 0.9, P["glow_el"], 0.0, P["glow_ang"])
+    sun_lamp("sun", (1, 0, 0), 4.0, P["sun_el"], 0.0, P["sun_ang"])
+    if P["second_sun"]: s2 = P["second_sun"]; sun_lamp("sun2", (0, 1, 0), 4.0, s2["el"], s2["az"], s2["ang"])
+    else: sun_lamp("glow", (0, 1, 0), 2.0, P["glow_el"], 0.0, P["glow_ang"])
 cd = bpy.data.cameras.new("cam"); cd.sensor_fit = "HORIZONTAL"; cd.sensor_width = 36; cd.lens = 18 / math.tan(math.radians(FOV / 2))
 cd.shift_y = HORIZ - 0.5; cd.clip_start = CAMH * 0.5; cd.clip_end = DMAX * 3
 co = link(bpy.data.objects.new("cam", cd)); co.location = (0, 0, z0 + CAMH if not P["cloud"] and "sea" not in HOOK else CAMH); co.rotation_euler = (math.radians(90), 0, 0)
@@ -501,3 +539,5 @@ sc.camera = co
 sc.render.filepath = os.path.join(OUT, f"{WORLD}_{PASS}.png")
 bpy.ops.render.render(write_still=True)
 print("done", sc.render.filepath, flush=True)
+import json
+json.dump(dict(camh=CAMH, dmax=DMAX, res=RES, sun_el=P["sun_el"], second_sun=P["second_sun"]), open(os.path.join(OUT, f"{WORLD}_meta.json"), "w"))

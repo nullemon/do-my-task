@@ -10,7 +10,7 @@ World frame in the physical shots = equatorial (z = Earth's north pole, x = RA 0
 import os, sys, json, math, functools
 SP = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad"
 SCR = SP + "/series/12-the-moon-is-leaving"
-sys.path.insert(0, SP + "/series/10-apophis-2029/pylib"); sys.path.insert(0, SCR + "/pylib")
+sys.path.insert(0, SCR + "/pylib")
 import numpy as np, cv2
 from PIL import Image, ImageDraw, ImageFont
 cv2.setNumThreads(1)

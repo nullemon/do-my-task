@@ -1,0 +1,187 @@
+1
+00:00:00,500 --> 00:00:07,172
+On Mars, the sunset is blue. This is not an
+artist's guess. Rovers have photographed it.
+
+2
+00:00:07,750 --> 00:00:11,439
+The same Sun sets on every
+world in the solar system.
+
+3
+00:00:11,439 --> 00:00:17,508
+But no two sunsets look alike. Here they
+are, one by one, through the same lens.
+
+4
+00:00:20,500 --> 00:00:22,272
+Start with the one we know.
+
+5
+00:00:22,272 --> 00:00:29,137
+From Earth, the Sun is half a degree wide, and
+takes about two minutes to slip below the horizon.
+
+6
+00:00:29,750 --> 00:00:33,389
+Air molecules scatter blue
+light far more than red.
+
+7
+00:00:33,389 --> 00:00:45,878
+At noon, that scattered blue fills the sky. At sunset, the light crosses so much air
+that most of the blue is scattered away before it reaches you. What is left is red.
+
+8
+00:00:48,500 --> 00:00:48,858
+Mars.
+
+9
+00:00:48,858 --> 00:01:04,696
+Half as far again from the Sun, so the disc is about two thirds the size. The air is thin, less than a
+hundredth of Earth's, but it is full of fine, rust-coloured dust. By day, that dust turns the sky butterscotch.
+
+10
+00:01:05,500 --> 00:01:15,180
+At sunset, the grains are just the right size to scatter blue light
+forward, in a tight cone around the Sun. So the colours are reversed:
+
+11
+00:01:15,180 --> 00:01:18,082
+a tawny sky, and a cold blue glow.
+
+12
+00:01:20,750 --> 00:01:22,636
+Mercury has almost no air.
+
+13
+00:01:22,636 --> 00:01:34,595
+So there is no colour at all. The sky is black, even at noon, and the Sun, up
+to three times wider than ours, drops behind the rock with nothing to soften it.
+
+14
+00:01:35,250 --> 00:01:36,611
+It takes its time.
+
+15
+00:01:36,611 --> 00:01:54,499
+One day here lasts a hundred and seventy-six Earth days. And near its closest approach to the Sun, Mercury's orbital
+motion briefly outruns its spin. From some places, the Sun sets, stops, rises again, and then sets a second time.
+
+16
+00:01:57,250 --> 00:01:59,581
+Venus has the opposite problem.
+
+17
+00:01:59,581 --> 00:02:15,420
+Too much air. From the surface, under a permanent deck of sulphuric acid cloud, you never see the Sun's
+disc at all. Daylight is a dim orange overcast, and sunset is just that overcast, slowly going dark.
+
+18
+00:02:16,000 --> 00:02:16,843
+Very slowly.
+
+19
+00:02:16,843 --> 00:02:30,544
+Venus spins backwards, and one turn takes longer than its year. From one sunrise to the next
+is a hundred and seventeen Earth days. And if you could see the Sun, it would rise in the west.
+
+20
+00:02:33,250 --> 00:02:36,541
+The giant planets have
+no ground to stand on.
+
+21
+00:02:36,541 --> 00:02:54,375
+So float at the cloud tops of Jupiter. Out here, the Sun is a fifth as wide as it is from Earth, and twenty-seven times
+fainter. But Jupiter spins once in under ten hours. So that tiny disc drops through the horizon in about ten seconds.
+
+22
+00:02:57,000 --> 00:03:07,170
+At Saturn, the Sun is a tenth the width. But it is not the Sun you would be
+looking at. The rings rise out of the haze and arch across the whole sky:
+
+23
+00:03:07,170 --> 00:03:11,014
+countless pieces of ice,
+catching the last light.
+
+24
+00:03:13,750 --> 00:03:18,292
+Uranus lies on its side, and one
+orbit takes eighty-four years.
+
+25
+00:03:18,292 --> 00:03:35,952
+Near a pole, the Sun circles the sky without setting for about forty-two of them, spiralling lower with every turn. When
+it finally touches the horizon, the tiny disc is gone within a couple of days. But the twilight can linger for years.
+
+26
+00:03:38,750 --> 00:03:45,806
+Titan, Saturn's largest moon, has air thicker
+than Earth's, and an orange haze of organic smog.
+
+27
+00:03:45,806 --> 00:03:56,853
+In two thousand and five, the Huygens probe landed here, among pebbles
+of water ice, in light about a thousand times dimmer than an Earth day.
+
+28
+00:03:57,500 --> 00:04:01,351
+The haze lets red light
+through, and blocks the blue.
+
+29
+00:04:01,351 --> 00:04:14,202
+So over a sea of liquid methane, the Sun never shows a clean edge. It sinks into a
+dull amber glow. And the dusk drags on, because one day on Titan lasts sixteen of ours.
+
+30
+00:04:17,000 --> 00:04:23,442
+And Pluto. Forty times farther out than Earth.
+The Sun is no longer a disc. It is a star:
+
+31
+00:04:23,442 --> 00:04:30,311
+a single point, yet still about two hundred
+and fifty times brighter than our full Moon.
+
+32
+00:04:31,000 --> 00:04:36,045
+Noon on Pluto is about as bright as
+Earth a few minutes after sunset.
+
+33
+00:04:36,045 --> 00:04:45,026
+NASA calls that moment Pluto time. And when New Horizons
+looked back, it saw layer upon layer of haze, glowing blue.
+
+34
+00:04:47,750 --> 00:05:00,200
+Beyond our own Sun, it gets stranger. Kepler-16b circles two stars. It is a gas giant.
+But from a moon of it, if it has one, you would watch two suns go down together:
+
+35
+00:05:00,200 --> 00:05:02,937
+one orange, one small and red.
+
+36
+00:05:05,750 --> 00:05:10,270
+Every one of these views is a
+reconstruction, built from measurements.
+
+37
+00:05:10,270 --> 00:05:16,129
+Robots have photographed a few of them. No
+person has ever stood under any of them.
+
+38
+00:05:17,250 --> 00:05:22,017
+There is only one sunset that human
+eyes have watched from the ground.
+
+39
+00:05:22,017 --> 00:05:26,807
+This one. It happens every evening.
+It is worth looking up for.
+

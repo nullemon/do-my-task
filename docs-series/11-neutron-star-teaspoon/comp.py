@@ -242,7 +242,7 @@ def shot_sn(t, lt):
     if tau > 0: img += np.array([1.0, 0.97, 0.92], F32) * 0.9 * math.exp(-tau / 0.45)
     T = Text()
     cap(T, t, 42.0, 50.4, hv(["CORE COLLAPSE", "LESS THAN ONE SECOND"], ["CORE COLLAPSE", "LESS THAN ONE SECOND"]), hv(880, 1300))
-    cap(T, t, 46.0, 50.4, ["THOUSANDS OF KM  →  ≈ 25 KM"], hv(980, 1436), size=hv(24, 30), col=COOL)
+    cap(T, t, 46.0, 50.4, ["THOUSANDS OF KM  →  ≈ 25 KM"], hv(966, 1420), size=hv(24, 30), col=COOL)
     T.put(hv((120, 900), (W / 2, 1330)), "SUPERNOVA", hv(60, 68), win(t, 53.4, 57.4, 0.8, 0.6), anchor=hv("l", "c"), wt="XL", track=hv(14, 10))
     note(T, t, 42.0, 57.4, "ILLUSTRATION · TIME COMPRESSED")
     return T.add_to(img)

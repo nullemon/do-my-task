@@ -53,7 +53,7 @@ MODE_COL = {"vis": (255, 246, 225), "ir": (255, 96, 170), "radio": (110, 232, 25
 LABEL = {"vis": ("VISIBLE LIGHT", "HUMAN EYES"), "ir": ("INFRARED EYES", "PLANCK · 350 µm DUST GLOW"),
          "radio": ("RADIO EYES", "408 MHz ALL-SKY SURVEY"), "micro": ("MICROWAVE EYES", "PLANCK · COSMIC MICROWAVE BACKGROUND"),
          "gamma": ("GAMMA-RAY EYES", "FERMI LAT ALL-SKY")}
-EXPO = {"vis": 1.0, "ir": 1.0, "radio": 1.05, "micro": 1.0, "gamma": 1.1}
+EXPO = {"vis": 1.0, "ir": 1.0, "radio": 1.05, "micro": 1.0, "gamma": 0.95}
 SAT = {"vis": 1.12, "ir": 1.25, "radio": 1.3, "micro": 1.25, "gamma": 1.3}
 
 # famous radio sources (galactic l, b, relative brightness) for the "radio galaxies and quasars" sparkle
@@ -85,9 +85,9 @@ class Scene:
         self.L = L = Layout(vertical); W, H = L.W, L.H
         self.fg = Foreground(FG_PATH, L, hz_frac=0.80)
         self.hz = self.fg.horizon
-        self.f = 750.0 if vertical else 470.0
+        self.f = 480.0 if vertical else 420.0
         self.eph = dict(np.load(os.path.join(SCR, "ephem.npz")))
-        self.az0 = self._aim(700.0 if vertical else 1180.0)
+        self.az0 = self._aim(630.0 if vertical else 1150.0)
         self.geo = SkyGeo(W, H, self.hz, self.f, self.az0, self.eph)
         self.cam = SkyCam(W, H, self.hz, self.f)
         self.maps = Maps()
@@ -182,7 +182,7 @@ class Scene:
             img = self.fg_ir + self.rim[..., None] * self.rim_col["ir"] * 0.10
             img = img + self.house[..., None] * np.array([1.6, 0.55, 0.12], f32) * 0.55 * warm * (0.9 + 0.1 * math.sin(t * 3.1))
             return img
-        img = self.fg_tint[mode] + self.rim[..., None] * self.rim_col[mode] * 0.22
+        img = self.fg_tint[mode] * 0.75 + self.rim[..., None] * self.rim_col[mode] * 0.08
         img = img + self.depth[..., None] * self.rim_col[mode] * 0.035
         return img
 
@@ -221,8 +221,8 @@ class Scene:
             w = b["w"] * (1 + 0.25 * math.sin(t * 0.9 * b["sp"] + b["ph"]))
             g = np.exp(-(dp / w) ** 2 * 1.6) * b["I"] * (0.75 + 0.25 * math.sin(t * 1.3 * b["sp"] + b["ph"]))
             hb += rainbow((b["hue"] + dp / w * 0.30) % 1.0) * g[..., None]
-        img += self.up(hb * rad[..., None] * 0.20)
-        self.moon_shape(img, mp, sp, 20 * self.sc, (0.42, 0.44, 0.50), earth=0.05)
+        img += self.up(hb * rad[..., None] * 0.34)
+        self.moon_shape(img, mp, sp, 26 * self.sc, (0.62, 0.64, 0.70), earth=0.07)
         sun_disc(img, sx, sy, 10 * self.sc, 1.0)
         lens_flare(img, sx, sy, 0.7)
         return img
@@ -244,7 +244,7 @@ class Scene:
         if sp:
             def fn(d, dx, dy): return (smooth(16 * self.sc + 1, 16 * self.sc - 1, d) * 40 + np.exp(-d / (14 * self.sc)) * 6)[..., None] * np.array([1.0, 0.85, 0.6], f32)
             splat(img, sp[0], sp[1], 200 * self.sc, fn)
-        self.moon_shape(img, mp, sp, 20 * self.sc, (1.8, 0.75, 0.30), earth=0.15)
+        self.moon_shape(img, mp, sp, 26 * self.sc, (1.8, 0.75, 0.30), earth=0.15)
         return img
 
     def sources_layer(self, M, t, col, names=True, n_blz=120, gain=1.0):
@@ -298,14 +298,14 @@ class Scene:
 
     def moon_level(self, t):
         hit = sum(math.exp(-((t - r["ta"]) / 0.06) ** 2) * 0.10 for r in self.rays)
-        base = 0.55 + 0.25 * ramp(t, T_CR0, T_BLAZE) + 0.45 * ramp(t, T_BLAZE - 0.05, T_BLAZE + 0.5)
+        base = 0.65 + 0.25 * ramp(t, T_CR0, T_BLAZE) + 0.45 * ramp(t, T_BLAZE - 0.05, T_BLAZE + 0.5)
         flash = 2.2 * math.exp(-max(t - T_BLAZE, 0) / 0.35) * (t > T_BLAZE - 0.03)
         return base * (1 + 0.05 * math.sin(t * 5.0)) + hit + flash
 
     def sky_gamma(self, t, M, mx, my, sp, mp):
         sc = self.sc
         v = self.geo.sample(self.maps.gamma, mx, my)
-        hb = apply_lut(PAL["gamma"], np.clip(v, 0, 1)) * 0.95
+        hb = apply_lut(PAL["gamma"], np.clip(v, 0, 1) ** 1.25) * 0.62
         hb += np.exp(-self.eln / 0.35)[..., None] * np.array([0.05, 0.01, 0.10], f32)
         # photon sparkle: individual gamma-ray "hits", more where the sky is brighter
         rng = np.random.default_rng(int(t * FPS) + 11)
@@ -321,11 +321,11 @@ class Scene:
             self.hglow(hb, *sp, lambda d: smooth(30 * sc, 26 * sc, d) * (np.exp(-np.abs(d - 28 * sc) / (5 * sc)) * ks), (0.8, 0.5, 1.2), 80 * sc)
         # the Moon: a huge blazing orb (cosmic rays hitting the surface; no phases in gamma rays)
         ml = self.moon_level(t)
-        R = (68 + 32 * ease(ramp(t, T_BLAZE - 0.1, T_BLAZE + 0.6))) * sc
+        R = (100 + 42 * ease(ramp(t, T_BLAZE - 0.1, T_BLAZE + 0.6))) * sc
         if mp:
             def halo(d, R=R, ml=ml):
-                return (np.exp(-np.maximum(d - R, 0) / (35 * sc)) * 1.5 + np.exp(-np.maximum(d - R, 0) / (160 * sc)) * 0.55
-                        + np.exp(-d / (500 * sc)) * 0.12) * ml * (d > R * 0.9)
+                return (np.exp(-np.maximum(d - R, 0) / (30 * sc)) * 1.6 + np.exp(-np.maximum(d - R, 0) / (140 * sc)) * 0.35
+                        + np.exp(-d / (500 * sc)) * 0.04) * ml * (d > R * 0.9)
             self.hglow(hb, *mp, halo, (0.85, 0.55, 1.35), 1500 * sc)
             # shock ring at the blaze
             u = (t - T_BLAZE) / 1.3
@@ -372,10 +372,10 @@ class Scene:
                 q = np.clip(d / R, 0, 1)
                 body = smooth(R + 1.5, R - 1.5, d)
                 n = 0.9 + 0.1 * np.sin(dx * 0.05 + t * 2) * np.sin(dy * 0.06 - t * 1.6)
-                inner = (0.9 + 1.6 * q ** 6) * n
-                colv = np.array([1.05, 0.55, 1.9], f32) * (1 - q[..., None] ** 5) + np.array([2.4, 2.1, 2.8], f32) * q[..., None] ** 5
-                rim = np.exp(-np.abs(d - R) / (5 * sc)) * 5.0
-                return (body * inner)[..., None] * colv * ml * 1.6 + (rim * ml)[..., None] * np.array([1.6, 1.4, 1.9], f32)
+                inner = (0.75 + 2.2 * q ** 8) * n
+                colv = np.array([0.55, 0.20, 1.25], f32) * (1 - q[..., None] ** 6) + np.array([2.2, 1.6, 2.8], f32) * q[..., None] ** 6
+                rim = np.exp(-np.abs(d - R) / (4 * sc)) * 7.0
+                return (body * inner)[..., None] * colv * ml + (rim * ml)[..., None] * np.array([1.7, 1.5, 2.0], f32)
             splat(img, mp[0], mp[1], R + 30 * sc, orb)
             for r in self.rays:                                               # impact flashes on the limb
                 du = t - r["ta"]
@@ -407,8 +407,8 @@ class Scene:
             img = img + self.up(gl)
         if mode == "gamma" and mp:                                             # the Moon's violet light on the park
             ml = self.moon_level(t)
-            img = img + a * self.rim[..., None] * np.array([0.5, 0.25, 0.8], f32) * 0.25 * ml
-        img = bloom(img, {"vis": 0.6, "ir": 0.9, "radio": 1.0, "micro": 0.8, "gamma": 1.25}[mode])
+            img = img + a * self.rim[..., None] * np.array([0.5, 0.25, 0.8], f32) * 0.10 * ml
+        img = bloom(img, {"vis": 0.6, "ir": 0.9, "radio": 1.0, "micro": 0.8, "gamma": 0.75}[mode])
         out = tonemap(img, EXPO[mode])
         y = out.mean(2, keepdims=True)
         out = np.clip(y + (out - y) * SAT[mode], 0, 1)
@@ -466,7 +466,7 @@ class Scene:
     # ------------------------------------------------------------------------------------------ text
     def overlay(self, out, t):
         L = self.L; W = L.W
-        top = (L.safe_top + 95) if L.vertical else 110
+        top = (L.safe_top + 62) if L.vertical else 100
         cur, prev, p = mode_at(t)
         starts = {m: ts for m, ts in SEQ}
         t_in = 0.0 if (cur == "vis" and t < 1) else max(ts for m, ts in SEQ if ts <= t)

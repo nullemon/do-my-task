@@ -13,11 +13,11 @@ import astropy.units as u
 from astropy.time import Time
 from astropy.coordinates import EarthLocation, AltAz, SkyCoord, get_body, Galactic
 
-# chosen moment (scan with `search` + previews): Cape Town latitude, 16 Jan 2026, 08:00 local (06:00 UTC), looking
-# east-north-east. The waning crescent Moon (29 deg from the Sun) is ~53 deg up, right beside the Galactic Centre, so
-# the inner Milky Way runs diagonally through the frame; the Sun is ~24 deg up above the houses.
+# chosen moment (scan with `search` + previews): Cape Town latitude, 15 Jan 2026, 07:30 local (05:30 UTC), looking
+# east. The waning crescent Moon (40 deg from the Sun) is ~57 deg up, 10 deg above the Galactic Centre (a day later it
+# sits right on it), so the inner Milky Way runs diagonally through the frame; the Sun is ~18 deg up over the houses.
 SITE = dict(lat=-33.9, lon=18.4)
-T0 = "2026-01-16T06:00:00"          # UTC
+T0 = "2026-01-15T05:30:00"          # UTC
 SPEED = 30.0                       # sky clock runs 30x real time (slow visible rotation over the Short)
 
 

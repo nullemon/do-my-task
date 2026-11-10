@@ -1,11 +1,11 @@
 """YouTube thumbnail (1280x720) for 08: half-lit Earth, the Sun-facing side already going black, '8 MIN 20 SEC'.
 The dark front is drawn as it would arrive: a plane perpendicular to the Sun's direction, reaching the sub-solar point first.
-Run: python3 thumbnail.py  ->  out/thumb.jpg"""
+Run: python3 thumbnail.py  ->  out/thumb.jpg ;  VERT=1 python3 thumbnail.py  ->  out/thumb-vertical.jpg (1080x1920)"""
 import os
 from lib import *
 from PIL import ImageFilter
 img = sky_view(1500, 1250, 0.85, 14) * 0.7
-L = norm([-0.74, 0.20, 0.64]); cx, cy, R, lon0 = 1440, 548, 468, math.radians(8)
+L = norm([-0.74, 0.20, 0.64]); cx, cy, R, lon0 = (540, 1330, 470, math.radians(8)) if VERT else (1440, 548, 468, math.radians(8))
 lit = img.copy(); drk = img.copy()
 g = earth(lit, cx, cy, R, lon0, L, cloud_t=0.02)
 earth(drk, cx, cy, R, lon0, L, sun=0.0, amb=0.07, lights=1.0, lights_day=0.5, cloud_t=0.02)
@@ -20,7 +20,7 @@ halo_keep = 1 - smooth(front - 0.2, front + 0.1, ndl)[..., None] * (~inside)
 aa = np.clip((1 - np.sqrt(u * u + v * v)) * R + 0.5, 0, 1)[..., None]
 img = (lit * halo_keep + img * (1 - halo_keep)) * (1 - aa) + planet * aa + edge * aa
 y = tonemap(anamorphic(bloom(img)), 1.08)
-base = Image.fromarray((np.clip(y, 0, 1) * 255).astype(np.uint8)).resize((2560, 1440), Image.LANCZOS)
+base = Image.fromarray((np.clip(y, 0, 1) * 255).astype(np.uint8)).resize((W * 2, H * 2) if VERT else (2560, 1440), Image.LANCZOS)
 def F(sz, w="Black"): return ImageFont.truetype(f"/usr/share/fonts/opentype/inter/InterDisplay-{w}.otf", sz)
 def layer_text(im, items):
     sh = Image.new("L", im.size, 0); ds = ImageDraw.Draw(sh)
@@ -31,6 +31,11 @@ def layer_text(im, items):
     for (xy, s, f, col) in items: d.text(xy, s, font=f, fill=col, stroke_width=5, stroke_fill=(8, 8, 16))
     return im
 Y = (255, 206, 0)
-im = layer_text(base, [((100, 230), "8 MIN", F(400), Y), ((100, 640), "20 SEC", F(400), Y), ((112, 1100), "then everything changes", F(112, "SemiBold"), (255, 255, 255))])
+if not VERT: im = layer_text(base, [((100, 230), "8 MIN", F(400), Y), ((100, 640), "20 SEC", F(400), Y), ((112, 1100), "then everything changes", F(112, "SemiBold"), (255, 255, 255))])
 os.makedirs("out", exist_ok=True)
-im.resize((1280, 720), Image.LANCZOS).save("out/thumb.jpg", quality=93); print("ok")
+if VERT:
+    im = layer_text(base, [((150, 560), "8 MIN", F(490), Y), ((150, 1070), "20 SEC", F(490), Y), ((166, 1690), "then everything", F(150, "SemiBold"), (255, 255, 255)), ((166, 1870), "changes", F(150, "SemiBold"), (255, 255, 255))])
+    im.resize((1080, 1920), Image.LANCZOS).save("out/thumb-vertical.jpg", quality=93)
+else:
+    im.resize((1280, 720), Image.LANCZOS).save("out/thumb.jpg", quality=93)
+print("ok")

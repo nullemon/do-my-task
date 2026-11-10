@@ -12,7 +12,8 @@ sys.path.insert(0, os.path.join(SCR, "pylib"))
 import numpy as np, cv2
 from PIL import Image, ImageDraw, ImageFont
 cv2.setNumThreads(2)
-W, H = 1920, 1080
+VERT = os.environ.get("VERT") == "1"          # 9:16 recomposition (1080x1920)
+W, H = (1080, 1920) if VERT else (1920, 1080)
 G = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/dl_globe/package/example"
 TP = os.path.join(SCR, "dl/px/threex.planets/images")
 CACHE = os.path.join(SCR, "cache"); os.makedirs(CACHE, exist_ok=True)
@@ -470,18 +471,19 @@ def text_w(s, f, track=0.0):
 
 class _Overlay:
     """text / thin-line overlay drawn with PIL at 2x and composited (sRGB space) with per-item alpha"""
-    def __init__(s):
-        s.im = Image.new("RGBA", (W * 2, H * 2), (0, 0, 0, 0)); s.d = ImageDraw.Draw(s.im); s.used = False
+    def __init__(s, h=None, yoff=0):
+        s.h = H if h is None else h; s.yoff = yoff
+        s.im = Image.new("RGBA", (W * 2, s.h * 2), (0, 0, 0, 0)); s.d = ImageDraw.Draw(s.im); s.used = False
     def text(s, x, y, txt, size=30, wt="Light", col=(235, 240, 248), a=1.0, track=0.22, anchor="l", display=False, shadow=True):
         if a <= 0.003 or not txt: return 0
         s.used = True
         f = font(int(size * 2), wt, display); tw = text_w(txt, f, track)
-        x0 = x * 2 - (tw / 2 if anchor == "m" else tw if anchor == "r" else 0); y0 = y * 2
+        x0 = x * 2 - (tw / 2 if anchor == "m" else tw if anchor == "r" else 0); y0 = (y - s.yoff) * 2
         if shadow:
             sh = Image.new("RGBA", s.im.size, (0, 0, 0, 0)); ds = ImageDraw.Draw(sh); xx = x0
             for ch in txt:
                 ds.text((xx, y0), ch, font=f, fill=(0, 0, 0, int(215 * a))); xx += f.getlength(ch) + track * f.size
-            bb = (max(0, int(x0 - 40)), max(0, int(y0 - 40)), min(W * 2, int(x0 + tw + 40)), min(H * 2, int(y0 + f.size * 1.4 + 40)))
+            bb = (max(0, int(x0 - 40)), max(0, int(y0 - 40)), min(W * 2, int(x0 + tw + 40)), min(s.h * 2, int(y0 + f.size * 1.4 + 40)))
             if bb[2] > bb[0] and bb[3] > bb[1]:
                 from PIL import ImageFilter
                 reg = sh.crop(bb).filter(ImageFilter.GaussianBlur(9)); s.im.alpha_composite(reg, (bb[0], bb[1]))
@@ -521,26 +523,36 @@ class _Overlay:
 class Overlay:
     """records draw calls; identical consecutive frames reuse the rendered layer (text is static most of the time)"""
     _key = None; _lay = None
-    def __init__(s): s.ops = []
-    def text(s, x, y, txt, size=30, wt="Light", col=(235, 240, 248), a=1.0, track=0.22, anchor="l", display=False, shadow=True):
+    def __init__(s): s.ops = []; s.dyn = []          # dyn: fast-changing text (the clock), drawn in its own small strip
+    def text(s, x, y, txt, size=30, wt="Light", col=(235, 240, 248), a=1.0, track=0.22, anchor="l", display=False, shadow=True, dyn=False):
         if a <= 0.003 or not txt: return 0
-        s.ops.append(("text", round(x, 1), round(y, 1), txt, size, wt, tuple(col), round(a, 3), track, anchor, display, shadow)); return 0
+        (s.dyn if dyn else s.ops).append(("text", round(x, 1), round(y, 1), txt, size, wt, tuple(col), round(a, 3), track, anchor, display, shadow)); return 0
     def line(s, pts, col=(235, 240, 248), a=1.0, width=1.5, dash=None):
         if a > 0.003: s.ops.append(("line", tuple((round(p[0], 1), round(p[1], 1)) for p in pts), tuple(col), round(a, 3), width, dash))
     def circle(s, x, y, r, col=(235, 240, 248), a=1.0, width=1.5, fill=None):
         if a > 0.003: s.ops.append(("circle", round(x, 1), round(y, 1), r, tuple(col), round(a, 3), width, fill))
+    _dkey = None; _dlay = None
     def apply(s, srgb):
-        if not s.ops: return srgb
-        key = tuple(s.ops)
-        if key != Overlay._key:
-            o = _Overlay()
-            for op in s.ops:
-                if op[0] == "text": o.text(*op[1:])
-                elif op[0] == "line": o.line(list(op[1]), *op[2:])
-                else: o.circle(*op[1:])
-            Overlay._lay = np.asarray(o.im.resize((W, H), Image.LANCZOS), f32) / 255; Overlay._key = key
-        o = Overlay._lay; a = o[..., 3:4]
-        return srgb * (1 - a) + o[..., :3] * a
+        if s.ops:
+            key = tuple(s.ops)
+            if key != Overlay._key:
+                o = _Overlay()
+                for op in s.ops:
+                    if op[0] == "text": o.text(*op[1:])
+                    elif op[0] == "line": o.line(list(op[1]), *op[2:])
+                    else: o.circle(*op[1:])
+                Overlay._lay = np.asarray(o.im.resize((W, H), Image.LANCZOS), f32) / 255; Overlay._key = key
+            o = Overlay._lay; a = o[..., 3:4]
+            srgb = srgb * (1 - a) + o[..., :3] * a
+        if s.dyn:
+            y0 = max(0, int(min(op[2] for op in s.dyn)) - 30); hh = min(H - y0, 150); key = tuple(s.dyn)
+            if key != Overlay._dkey:
+                o = _Overlay(h=hh, yoff=y0)
+                for op in s.dyn: o.text(*op[1:])
+                Overlay._dlay = np.asarray(o.im.resize((W, hh), Image.LANCZOS), f32) / 255; Overlay._dkey = key
+            o = Overlay._dlay; a = o[..., 3:4]
+            srgb[y0:y0 + hh] = srgb[y0:y0 + hh] * (1 - a) + o[..., :3] * a
+        return srgb
 
 def clock_str(sec):
     sec = int(sec); return f"{sec // 3600:02d}:{sec // 60 % 60:02d}:{sec % 60:02d}"

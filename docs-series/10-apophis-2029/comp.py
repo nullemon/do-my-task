@@ -615,7 +615,7 @@ def shot_miss(t, lt):
 def shot_hypo(t, lt):
     def bg():
         im = render_sky(look_at((0, 0, 0), norm([0.5, 0.5, 0.7])), (W / 2) / math.tan(math.radians(26)), gain=0.7).copy()
-        draw_earth(im, 1010, 1640, 1150, art_M(14, 34, roll=8), norm([-0.55, 0.62, 0.56]), night_gain=1.0)
+        draw_earth(im, 1010, 1640, 1150, art_M(16, -8, roll=6), norm([-0.55, 0.62, 0.56]), night_gain=1.0)
         return im
     base = cached("hypo_bg", bg)
     Mx = np.float32([[1, 0, -lt * 1.6 + 18], [0, 1, lt * 0.5 - 4]])

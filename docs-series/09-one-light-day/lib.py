@@ -3,12 +3,13 @@ import os, json, math, subprocess
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-W, H, FPS = 1920, 1080, 24
+VERT = os.environ.get("VERT", "") == "1"
+W, H, FPS = (1080, 1920, 24) if VERT else (1920, 1080, 24)
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/09-one-light-day"
 PL = os.path.join(SCR, "plates")
 TEX = os.path.join(SCR, "tex")
-SEG = os.path.join(SCR, "seg")
+SEG = os.path.join(SCR, "seg_v" if VERT else "seg")
 FONT_L = "/usr/share/fonts/opentype/inter/Inter-Light.otf"
 FONT_XL = "/usr/share/fonts/opentype/inter/Inter-ExtraLight.otf"
 import sys

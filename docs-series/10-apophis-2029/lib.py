@@ -14,7 +14,13 @@ sys.path.insert(0, SCR + "/pylib")
 import numpy as np, cv2
 from PIL import Image, ImageDraw, ImageFont
 cv2.setNumThreads(1)
-W, H, FPS = 1920, 1080, 24
+VERT = bool(os.environ.get("APO_VERT"))                 # 9:16 recomposition (comp_v.py)
+W, H, FPS = (1080, 1920, 24) if VERT else (1920, 1080, 24)
+
+
+def FL(fov_deg):
+    """focal length in px for a field of view defined across a 1920-px-wide frame (so 16:9 and 9:16 share one scale)"""
+    return 960.0 / math.tan(math.radians(fov_deg) / 2)
 G = SP + "/dl_globe/package/example"
 DL = SCR + "/dl"
 TEX = SCR + "/tex"
@@ -47,10 +53,10 @@ def look_at(eye, target, up=(0, 0, 1)):
 
 
 class Cam:
-    def __init__(self, eye, target, fov_deg, up=(0, 0, 1), roll=0.0):
+    def __init__(self, eye, target, fov_deg, up=(0, 0, 1), roll=0.0, zoom=1.0):
         self.eye = np.asarray(eye, float); self.R = look_at(eye, target, up)
         if roll: self.R = rot_axis((0, 0, 1), roll) @ self.R
-        self.f = (W / 2) / math.tan(math.radians(fov_deg) / 2); self.ox = 0.0; self.oy = 0.0
+        self.f = FL(fov_deg) * zoom; self.ox = 0.0; self.oy = 0.0
 
     def proj(self, P):
         """world points (N,3) -> x, y (px), depth (>0 in front)"""

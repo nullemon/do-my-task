@@ -26,12 +26,25 @@ show: the Apophis model in the foreground, the Earth and its satellite ring behi
 | `ast_interp.py` | fills the asteroid frames that were not path-traced (see limitations) by optical-flow interpolation |
 | `audio/narration.py`, `audio/gen_voice.py` | narration text, Kokoro TTS (am_michael, speed 0.94) |
 | `audio/mix.py`, `audio/placement.json` | voice chain, numpy music bed (D-minor drone and pads, sub swells, soft pings, choir shimmer at the end), ducking, two-pass loudnorm −14 LUFS, SRT |
-| `render_all.sh`, `encode_one.sh`, `thumb.py` | segment renders + join, the two deliverables, the thumbnail |
+| `comp_v.py`, `ground_v.py`, `render_v.sh` | the 9:16 version (1080×1920): every shot re-framed and all type re-laid for a vertical frame (see below) |
+| `render_all.sh`, `encode_one.sh`, `thumb.py`, `thumb_v.py` | segment renders + join, the deliverables, the two thumbnails |
 | `apophis-2029.srt` | subtitles from the placed voice timings (also muxed as a soft track) |
 
 Rebuild: `python blender/asteroid.py ast 0 540` (+ `tower`), `python blender/craft.py apex|ramses`, `python3 ast_interp.py`
 → `ttsenv/python audio/gen_voice.py && ttsenv/python audio/mix.py` → `bash render_all.sh noast; bash render_all.sh ast; bash render_all.sh join`
 → `bash encode_one.sh hq|4k`, `python3 thumb.py`. (`lib.py` needs `opencv-python-headless`; it was pip-installed into the scratch `pylib/`.)
+
+## The vertical (9:16) version
+`out/apophis-2029-vertical.mp4` is a recomposition, not a crop: `comp_v.py` re-runs the same renderers at 1080×1920
+(`APO_VERT=1`) with the same timeline, voice and subtitles.
+- Hero objects sit in the central column: the Earth above and the asteroid below in the hook / tides / rock / missions
+  shots; the asteroid turned upright for its name card; the tower stacked under the asteroid for the size comparison.
+- Cameras are re-aimed rather than cropped: the true-scale ring shots roll the camera about 80° so the geostationary ring
+  stands upright (the Earth's axis is then roughly horizontal on screen); the "possible positions" band runs up the frame;
+  the orbit diagram is turned 90°; the Moon shot stacks Earth-and-ring over the Moon; the night landscape gets a taller sky
+  (the real star field simply extends upward).
+- All captions, counters and labels are re-laid: centred, about 25 % larger, stacked and balanced-wrapped, and kept inside
+  the area between 12 % from the top and 20 % from the bottom (the scale notes move to just under each header).
 
 ## What is to scale, and what is not
 | shot | to scale | not to scale / illustrative |

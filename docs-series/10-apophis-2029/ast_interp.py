@@ -7,7 +7,11 @@ from lib import *
 D = SCR + "/spr/ast"
 
 
-def load(i): return cv2.imread(f"{D}/f_{i:04d}.png", cv2.IMREAD_UNCHANGED).astype(F32) / 255      # BGRA straight alpha
+def load(i):
+    a = cv2.imread(f"{D}/f_{i:04d}.png", cv2.IMREAD_UNCHANGED).astype(F32) / 255      # BGRA straight alpha
+    if a.shape[0] < 1300:                                     # early frames are 1000 px tall: pad to the common canvas
+        p = (1300 - a.shape[0]) // 2; a = np.pad(a, ((p, 1300 - a.shape[0] - p), (0, 0), (0, 0)))
+    return a
 
 
 def mid(a, b, u=0.5):

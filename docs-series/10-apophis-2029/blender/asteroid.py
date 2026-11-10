@@ -12,7 +12,7 @@ from mathutils import Matrix, Vector, Euler
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/10-apophis-2029"
 args = sys.argv[1:]
 MODE = args[0] if args else "test"
-RES = (1600, 1000); MPP = 0.4            # metres per pixel
+RES = (1600, 1300); MPP = 0.4            # metres per pixel (frames 0-124 were rendered 1000 px tall, where the body fits)
 rng = np.random.default_rng(42)
 
 

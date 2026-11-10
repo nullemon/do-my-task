@@ -6,10 +6,11 @@ Shots (all locked to the voice, timeline.py):
   -> DIAGRAM (straight line) -> MOON -> night LAKE + planets -> JUPITER, SATURN -> stars -> LAKE (cold, frost) -> EARTH freezing
   -> under the ICE -> VENTS -> LAKE (air snowing out) -> frozen EARTH adrift -> SUNRISE from orbit -> SUN -> LAKE by day.
 """
-import sys, os, json, math, subprocess
+import sys, os, json, math, subprocess, re
 from lib import *
 import timeline as TL
 S, E, FPS, DUR = TL.START, TL.END, TL.FPS, TL.DUR
+def hv(h, v): return v if VERT else h          # horizontal / vertical layout value
 YEL = (255, 208, 64); WHT = (236, 240, 248); DIM = (170, 180, 196)
 TV = 2.35                      # film time at which the Sun vanishes (T = 0)
 T_DARK = 53.9                  # film time at which T + 00:08:20 is reached in the 'dark' shot
@@ -22,25 +23,46 @@ def fade(t, a, b, fi=0.6, fo=0.6):
 
 def clock(ov, value, a=1.0, label="TIME SINCE THE SUN VANISHED", col=WHT):
     if a <= 0: return
-    ov.text(96, 70, label, size=13, wt="Regular", col=DIM, a=a * 0.9, track=0.32)
-    f = font(84, "Light"); adv = f.getlength("0") + 0.06 * f.size; x = 96 * 2
+    if VERT and len(label) > 40: label = "TIME SINCE THE SUN VANISHED  ·  ESTIMATES VARY"
+    ov.text(hv(96, 64), hv(70, 250), label, size=hv(13, 15), wt="Regular", col=DIM, a=a * 0.9, track=0.32)
+    csz = hv(42, 54); f = font(csz * 2, "Light"); adv = f.getlength("0") + 0.06 * f.size; x = hv(96, 64) * 2
     for ch in value:                                  # tabular figures: fixed advance for digits
         wch = f.getlength(ch); cell = adv if ch.isdigit() else (wch + 0.10 * f.size if ch != " " else 0.32 * f.size)
         if ch != " ":
-            ov.text((x + (cell - wch) / 2) / 2, 92, ch, size=42, wt="Light", col=col, a=a, track=0)
+            ov.text((x + (cell - wch) / 2) / 2, hv(92, 280), ch, size=csz, wt="Light", col=col, a=a, track=0, dyn=True)
         x += cell
 
 def hms(sec): return "T + " + clock_str(sec)
 
+def wrap_caps(txt, n):
+    out, cur = [], ""
+    for w in txt.split(" "):
+        if cur and len(cur) + 1 + len(w) > n: out.append(cur.strip()); cur = w
+        else: cur = (cur + " " + w) if cur else w
+    if cur.strip(): out.append(cur.strip())
+    return out
+
 def caption(ov, t, a, b, main, sub=None, y=928, x=96, size=27, col=WHT, anchor="l", sub_col=DIM):
     al = fade(t, a, b)
     if al <= 0: return
-    ov.text(x, y, main, size=size, wt="Light", col=col, a=al, track=0.24, anchor=anchor)
-    if sub: ov.text(x, y + size * 1.75, sub, size=15, wt="Regular", col=sub_col, a=al * 0.92, track=0.26, anchor=anchor)
+    if not VERT:
+        ov.text(x, y, main, size=size, wt="Light", col=col, a=al, track=0.24, anchor=anchor)
+        if sub: ov.text(x, y + size * 1.75, sub, size=15, wt="Regular", col=sub_col, a=al * 0.92, track=0.26, anchor=anchor)
+        return
+    # vertical: stacked, larger, wrapped; bottom-anchored above the lowest 20 % (or top-anchored for the 'upper' captions)
+    big = size >= 24; ms = 34 if big else 20; ss = 18
+    ml = wrap_caps(re.sub(r"\s+", " ", main), 26 if big else 44); sl = wrap_caps(re.sub(r"\s+", " ", sub), 44) if sub else []
+    hgt = len(ml) * ms * 1.5 + (14 + len(sl) * ss * 1.6 if sl else 0)
+    yy = 378 if y < 500 else 1492 - hgt
+    for ln in ml: ov.text(64, yy, ln, size=ms, wt="Light", col=col, a=al, track=0.2); yy += ms * 1.5
+    yy += 14
+    for ln in sl: ov.text(64, yy, ln, size=ss, wt="Regular", col=sub_col, a=al * 0.92, track=0.22); yy += ss * 1.6
 
-def note(ov, t, a, b, txt, x=W - 96, y=1010):
+def note(ov, t, a, b, txt, x=None, y=None):
     al = fade(t, a, b)
-    if al > 0: ov.text(x, y, txt, size=12, wt="Regular", col=DIM, a=al * 0.8, track=0.28, anchor="r")
+    if al <= 0: return
+    if VERT: ov.text(64, 1506, txt, size=13, wt="Regular", col=DIM, a=al * 0.8, track=0.22)
+    else: ov.text(W - 96, 1010, txt, size=12, wt="Regular", col=DIM, a=al * 0.8, track=0.28, anchor="r")
 
 
 # ------------------------------------------------------------------------------------------------ LAND (lake + mountains plate)
@@ -82,6 +104,11 @@ def clampc(s, pcx, pcy):
     s = min(s, PW / W, PH / H); hx, hy = W / 2 * s, H / 2 * s
     return s, min(max(pcx, hx), PW - hx), min(max(pcy, hy), PH - hy)
 
+VS = (PH / 1920) / 1.2            # vertical: the 1080x1920 window is a full-height slice of the plate
+def vcam(s, pcx, pcy, vcx):
+    if VERT: return clampc(s * VS, vcx + (pcx - PW / 2) * 0.5, pcy)
+    return clampc(s, pcx, pcy)
+
 def warp(img, s, pcx, pcy, interp=cv2.INTER_LINEAR):
     M = np.array([[s, 0, pcx - s * W / 2], [0, s, pcy - s * H / 2]], np.float64)
     return cv2.warpAffine(img, M, (W, H), flags=interp | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_REPLICATE)
@@ -112,11 +139,11 @@ def splat(img, fx, fy, rad, fn):
     img[y0:y1, x0:x1] += fn(np.sqrt((xx + 0.5 - fx) ** 2 + (yy + 0.5 - fy) ** 2))
 
 def land(t, s=1.2, pcx=PW / 2, pcy=PH / 2, sun=1.0, night=0.0, moon=0.0, frost=0.0, mist=0.0, sky_rot=0.0, sky_c=(2250, 1180), sky_gain=1.0,
-         planets=(), flakes=0.0, flake_n=4000, dead=0.0, sun_glare=1.0, air=1.0, sky_scale=0.95, haze_night=0.0, glitter=1.0):
+         planets=(), flakes=0.0, flake_n=4000, dead=0.0, sun_glare=1.0, air=1.0, sky_scale=0.95, haze_night=0.0, glitter=1.0, vcx=None):
     """sun: sunlight 0..1 (sky scattering, direct light). night: exposure of the star-lit scene (0..1).
     air: 1 = atmosphere present (blue sky by day, extinction near the horizon), 0 = airless. frost: 0..1 snow/ice cover.
     Smooth fields (sky colour, extinction, mist) are evaluated on a half-resolution grid and upsampled."""
-    L = land_plates(); s, pcx, pcy = clampc(s, pcx, pcy)
+    L = land_plates(); s0 = s; s, pcx, pcy = vcam(s, pcx, pcy, vcx if vcx is not None else (365 if sun > 0 else 1152))
     yy, xx = np.mgrid[0:H:2, 0:W:2].astype(f32); yy += 0.5; xx += 0.5          # half-res grid, in full-frame pixel units
     yr = np.arange(H, dtype=f32)[:, None]; xr = np.arange(W, dtype=f32)[None, :]
     xp = pcx + (xx + 0.5 - W / 2) * s; yp = pcy + (yy + 0.5 - H / 2) * s
@@ -128,7 +155,7 @@ def land(t, s=1.2, pcx=PW / 2, pcy=PH / 2, sun=1.0, night=0.0, moon=0.0, frost=0
     ssx, ssy = plate_xy(SUN_AZ, SUN_EL); sfx = (ssx - pcx) / s + W / 2; sfy = (ssy - pcy) / s + H / 2; rs = 0.0046 * PF / s
     # ---------------- sky
     if night > 0:
-        st = sky_view(sky_c[0], sky_c[1], sky_scale * s / 1.2, sky_rot)
+        st = sky_view(sky_c[0], sky_c[1], sky_scale * min(s0, 1.2) / 1.2, sky_rot)
         ext = up(1 - air * 0.75 * np.exp(-elc / 0.07))
         sky = st * (ext * (night * sky_gain * 3.4))[..., None]
     else: sky = np.zeros((H, W, 3), f32)
@@ -222,7 +249,8 @@ def scrim():
     """gentle darkening behind the clock (top-left) and the caption (bottom-left) for bright daylight plates"""
     if not _scr:
         yy, xx = np.mgrid[0:H, 0:W].astype(f32)
-        a = np.exp(-(((xx - 150) / 620) ** 2 + ((yy - 60) / 190) ** 2)) * 0.30 + np.exp(-(((xx - 300) / 900) ** 2 + ((yy - 990) / 170) ** 2)) * 0.50
+        if VERT: a = np.exp(-(((xx - 200) / 620) ** 2 + ((yy - 290) / 170) ** 2)) * 0.52 + np.exp(-(((xx - 300) / 900) ** 2 + ((yy - 1440) / 190) ** 2)) * 0.55
+        else: a = np.exp(-(((xx - 150) / 620) ** 2 + ((yy - 60) / 190) ** 2)) * 0.30 + np.exp(-(((xx - 300) / 900) ** 2 + ((yy - 990) / 170) ** 2)) * 0.50
         _scr.append((1 - a)[..., None])
     return _scr[0]
 
@@ -232,13 +260,14 @@ def sh_sun(t, ov):
     img = sky_view(1500, 700, 0.8, 8) * 0.9
     k = 1.0 if t < TV else 0.0
     R = 300 + 16 * t
-    if k: sun_disc(img, 1010, 548, R, t * 6 + 40, power=1.0)
+    SX, SY = hv((1010, 548), (540, 930))
+    if k: sun_disc(img, SX, SY, R, t * 6 + 40, power=1.0)
     else:
         a = math.exp(-(t - TV) / 0.09)                                   # afterimage: a few frames
         if a > 0.01:
-            yy, xx = np.mgrid[0:H, 0:W].astype(f32); d = np.hypot(xx - 1010, yy - 548)
+            yy, xx = np.mgrid[0:H, 0:W].astype(f32); d = np.hypot(xx - SX, yy - SY)
             img += (np.exp(-(d / (R * 1.02)) ** 8) * 0.035 * a)[..., None] * np.array([0.6, 0.75, 1.0], f32)
-    clock(ov, hms(max(0, t - TV)), a=fade(t, TV + 0.05, 99, 0.3))
+    clock(ov, hms(max(0, t - TV)), a=fade(t, TV + 0.05, 1e9, 0.3))
     return img, 1.0
 
 EARTH_L = norm([-0.80, 0.26, 0.42])
@@ -248,18 +277,19 @@ def sh_earth1(t, ov):
     img = sky_view(1300 + 6 * u, 1300, 0.85, 14) * 0.75
     R = 392 + 3.2 * u
     dim = 1 - 0.45 * ramp(t, 13.8, 15.0)
-    earth(img, 1330 + 2.2 * u, 556, R, math.radians(12 + 1.1 * u), EARTH_L, cloud_t=0.004 * u, expo=1.0)
+    earth(img, hv(1330 + 2.2 * u, 540), hv(556, 1090), R, math.radians(12 + 1.1 * u), EARTH_L, cloud_t=0.004 * u, expo=1.0)
     img *= dim
     clock(ov, hms(t - TV))
     a = fade(t, 3.9, 13.4, 0.5, 0.8)
     if a > 0:
-        x0 = 96; ov.text(x0, 392, "8 MIN 20 SEC", size=118, wt="ExtraLight", col=YEL, a=a, track=0.06, display=True)
-        ov.text(x0 + 4, 548, "THEN EVERYTHING CHANGES", size=27, wt="Light", col=WHT, a=a * fade(t, 5.6, 99, 0.7), track=0.26)
-        ov.text(x0 + 4, 606, "SUNLIGHT ALREADY ON ITS WAY KEEPS ARRIVING", size=15, wt="Regular", col=DIM, a=a * fade(t, 8.0, 99, 0.7), track=0.26)
+        x0 = hv(96, 64); y0 = hv(392, 352)
+        ov.text(x0, y0, "8 MIN 20 SEC", size=hv(118, 126), wt="ExtraLight", col=YEL, a=a, track=0.06, display=True)
+        ov.text(x0 + 4, y0 + hv(156, 170), "THEN EVERYTHING CHANGES", size=hv(27, 34), wt="Light", col=WHT, a=a * fade(t, 5.6, 1e9, 0.7), track=hv(0.26, 0.2))
+        ov.text(x0 + 4, y0 + hv(214, 236), "SUNLIGHT ALREADY ON ITS WAY KEEPS ARRIVING", size=hv(15, 18), wt="Regular", col=DIM, a=a * fade(t, 8.0, 1e9, 0.7), track=hv(0.26, 0.2))
     a = fade(t, 14.3, 18.0, 0.9, 0.01)
     if a > 0:
-        ov.text(96, 430, "IF THE SUN VANISHED", size=58, wt="ExtraLight", col=WHT, a=a, track=0.16, display=True)
-        ov.text(98, 524, "RIGHT NOW", size=58, wt="ExtraLight", col=YEL, a=a * fade(t, 15.1, 99, 0.8), track=0.16, display=True)
+        ov.text(hv(96, 64), hv(430, 372), "IF THE SUN VANISHED", size=hv(58, 62), wt="ExtraLight", col=WHT, a=a, track=0.16, display=True)
+        ov.text(hv(98, 66), hv(524, 472), "RIGHT NOW", size=hv(58, 62), wt="ExtraLight", col=YEL, a=a * fade(t, 15.1, 1e9, 0.8), track=0.16, display=True)
     return img, 1.0
 
 def sh_land_day(t, ov):
@@ -272,7 +302,7 @@ def sh_land_day(t, ov):
     return img, 1.12
 
 # ---- solar-system diagram
-AU = 470.0; TILT = math.radians(63); DCX, DCY = 960, 600
+AU = hv(470.0, 318.0); TILT = math.radians(hv(63, 38)); DCX, DCY = hv(960, 500), hv(600, 920)
 ORB = dict(mercury=(0.387, 2.3, 47.4, (0.75, 0.72, 0.68)), venus=(0.723, 3.9, 35.0, (1.0, 0.92, 0.75)), earth=(1.0, 5.45, 29.78, (0.45, 0.65, 1.0)), mars=(1.524, 0.75, 24.1, (1.0, 0.55, 0.35)))
 def dproj(x, y, zoom=1.0, cx=DCX, cy=DCY):
     return cx + x * AU * zoom, cy - y * AU * zoom * math.cos(TILT)
@@ -314,13 +344,14 @@ def sh_diag_a(t, ov):
             img += (np.clip(rp - d + 0.5, 0, 1) * sh * 1.6)[..., None] * np.array(col, f32)
         lab = {"mercury": "MERCURY  ·  3 MIN 13 S", "venus": "VENUS  ·  6 MIN 1 S", "earth": "EARTH  ·  8 MIN 20 S", "mars": "MARS  ·  12 MIN 40 S"}[name]
         al = fade(t, 32.0, 48.5, 0.8, 0.01) * (1.0 if islit else 0.55)
-        ov.text(sx + 22, sy - 26, lab, size=14, wt="Regular", col=WHT if islit else DIM, a=al, track=0.24)
+        if VERT and sx > 560: ov.text(sx - 22, sy - 34, lab, size=16, wt="Regular", col=WHT if islit else DIM, a=al, track=0.2, anchor="r")
+        else: ov.text(sx + 22, sy - hv(26, 34), lab, size=hv(14, 16), wt="Regular", col=WHT if islit else DIM, a=al, track=hv(0.24, 0.2))
     # where the Sun was
     sx, sy = dproj(0, 0, zoom, cx, cy)
     ov.circle(sx, sy, 9, col=DIM, a=0.7, width=1); ov.line([(sx - 4, sy), (sx + 4, sy)], col=DIM, a=0.7, width=1); ov.line([(sx, sy - 4), (sx, sy + 4)], col=DIM, a=0.7, width=1)
-    ov.text(sx, sy + 22, "WHERE THE SUN WAS", size=12, wt="Regular", col=DIM, a=fade(t, 31.5, 48.5, 0.8, 0.01), track=0.28, anchor="m")
+    ov.text(sx, sy + 22, "WHERE THE SUN WAS", size=hv(12, 14), wt="Regular", col=DIM, a=fade(t, 31.5, 48.5, 0.8, 0.01), track=0.28, anchor="m")
     ex, ey = dproj(rf * math.cos(2.2), rf * math.sin(2.2), zoom, cx, cy)
-    ov.text(ex - 14, ey - 34, "LAST LIGHT", size=14, wt="Regular", col=YEL, a=fade(t, 33.0, 39.5, 0.8, 0.6) * (rf > 0.12), track=0.26, anchor="r")
+    ov.text(ex - 14, ey - 38, "LAST LIGHT", size=hv(14, 17), wt="Regular", col=YEL, a=fade(t, 33.0, 39.5, 0.8, 0.6) * (rf > 0.12), track=0.26, anchor="r")
     clock(ov, hms(Tc))
     caption(ov, t, 38.8, 47.6, "GRAVITY TRAVELS AT THE SPEED OF LIGHT TOO", "SO EARTH KEEPS ORBITING AN EMPTY POINT UNTIL THE SAME FRONT ARRIVES")
     note(ov, t, 32.5, 47.8, "DISTANCES TO SCALE  ·  PLANET SIZES ENLARGED")
@@ -345,7 +376,7 @@ def sh_land_dark(t, ov):
 def sh_front(t, ov):
     """55.3 - 59: slow-motion replay from space: the edge of the last light crossing the day side (really ~0.02 s)."""
     u = t - 55.3
-    L = norm([-0.74, 0.20, 0.64]); cx, cy, R, lon0 = 1250 - 3 * u, 548, 430 + 3 * u, math.radians(8)
+    L = norm([-0.74, 0.20, 0.64]); cx, cy, R, lon0 = hv(1250 - 3 * u, 540), hv(548, 880), hv(430, 400) + 3 * u, math.radians(8)
     img = sky_view(1500, 1250, 0.85, 14) * 0.7
     front = 1.03 - 1.25 * ramp(t, 55.7, 58.3)
     lit = img.copy(); drk = img.copy()
@@ -366,7 +397,7 @@ def sh_front(t, ov):
 def sh_diag_b(t, ov):
     """59 - 72: with the pull gone, every planet leaves along the tangent to its old orbit (time-lapse: days)."""
     days = kf(t, [(59.0, 0.0), (61.5, 0.4), (71.0, 46.0), (72.0, 48.0)])
-    zoom = 1.0; cx, cy = DCX - 150, DCY + 60
+    zoom = 1.0; cx, cy = DCX - hv(150, 30), DCY + 60
     img = sky_view(2300, 1250, 0.9, 30) * 0.5
     yy, xx = np.mgrid[0:H, 0:W].astype(f32)
     for name, (a, ang, v, col) in ORB.items():
@@ -381,13 +412,18 @@ def sh_diag_b(t, ov):
         if name == "earth":
             earth(img, s1[0], s1[1], 17, 1.0, norm([0, 0, 1]), sun=0.0, amb=0.9, lights=1.0, lights_day=1.0)
             al = fade(t, 60.5, 72.5, 0.8, 0.01)
-            ov.text(s1[0] + 28, s1[1] - 34, "EARTH + MOON", size=16, wt="Regular", col=WHT, a=al, track=0.24)
-            ov.text(s1[0] + 28, s1[1] - 8, "≈ 30 KM/S  ·  ≈ 107,000 KM/H", size=16, wt="Regular", col=YEL, a=al * fade(t, 64.5, 99, 0.8), track=0.2)
-            ov.text(s0[0] - 16, s0[1] + 16, "FORMER ORBIT", size=12, wt="Regular", col=DIM, a=al * 0.9, track=0.28, anchor="r")
+            if VERT:
+                ov.text(s1[0] - 26, s1[1] + 26, "EARTH + MOON", size=18, wt="Regular", col=WHT, a=al, track=0.2, anchor="r")
+                ov.text(s1[0] - 26, s1[1] + 56, "≈ 30 KM/S  ·  ≈ 107,000 KM/H", size=18, wt="Regular", col=YEL, a=al * fade(t, 64.5, 1e9, 0.8), track=0.16, anchor="r")
+            else:
+                ov.text(s1[0] + 28, s1[1] - 34, "EARTH + MOON", size=16, wt="Regular", col=WHT, a=al, track=0.24)
+                ov.text(s1[0] + 28, s1[1] - 8, "≈ 30 KM/S  ·  ≈ 107,000 KM/H", size=16, wt="Regular", col=YEL, a=al * fade(t, 64.5, 1e9, 0.8), track=0.2)
+            if VERT: ov.text(cx, cy - AU * zoom * math.cos(TILT) - 30, "FORMER ORBIT", size=14, wt="Regular", col=DIM, a=al * 0.9, track=0.28, anchor="m")
+            else: ov.text(s0[0] - 16, s0[1] + 16, "FORMER ORBIT", size=12, wt="Regular", col=DIM, a=al * 0.9, track=0.28, anchor="r")
         else:
             d = np.hypot(xx - s1[0], yy - s1[1]); rp = {"mercury": 4.5, "venus": 7, "mars": 5.5}[name]
             img += (np.clip(rp - d + 0.5, 0, 1) * 0.30)[..., None] * np.array(col, f32)
-            ov.text(s1[0] + 16, s1[1] - 22, name.upper(), size=12, wt="Regular", col=DIM, a=fade(t, 60.5, 72.5, 0.8, 0.01) * 0.85, track=0.26)
+            ov.text(s1[0] + 16, s1[1] - 24, name.upper(), size=hv(12, 14), wt="Regular", col=DIM, a=fade(t, 60.5, 72.5, 0.8, 0.01) * 0.85, track=0.26)
     sx, sy = dproj(0, 0, zoom, cx, cy)
     ov.circle(sx, sy, 9, col=DIM, a=0.6, width=1); ov.line([(sx - 4, sy), (sx + 4, sy)], col=DIM, a=0.6, width=1); ov.line([(sx, sy - 4), (sx, sy + 4)], col=DIM, a=0.6, width=1)
     if days < 1: clock(ov, hms(500 + days * 86400))
@@ -403,7 +439,7 @@ def sh_moon(t, ov):
     Tc = 502.6 + (t - T_MOON)
     on = 1 - ramp(t, T_MOON, T_MOON + 0.35)
     img = sky_view(1650 + 3 * u, 1500, 0.8, -12) * (0.55 + 0.6 * (1 - on))
-    moon(img, 1180 - 5 * u, 545, 372 + 3.0 * u, norm([-0.62, 0.22, 0.75]), sun=on, lon0=math.radians(-4 + 0.15 * u), amb=0.0035 * (1 - on) + 0.0006)
+    moon(img, hv(1180 - 5 * u, 540), hv(545, 880), 372 + 3.0 * u, norm([-0.62, 0.22, 0.75]), sun=on, lon0=math.radians(-4 + 0.15 * u), amb=0.0035 * (1 - on) + 0.0006)
     clock(ov, hms(Tc))
     caption(ov, t, 73.2, 80.2, "MOONLIGHT IS REFLECTED SUNLIGHT", "A FULL MOON GOES DARK ≈ 2.6 S AFTER THE SKY  ·  OTHER PHASES SOONER", y=880)
     return img, 1.0
@@ -411,6 +447,8 @@ def sh_moon(t, ov):
 PLAN = [  # az, el (deg), flux, colour, name, film time it goes out, label
     (-8.0, 11.5, 9.0, (1.0, 0.97, 0.88), "VENUS", 92.3), (5.0, 15.0, 1.6, (1.0, 0.62, 0.38), "MARS", 93.7),
     (16.5, 18.6, 4.2, (1.0, 0.93, 0.80), "JUPITER", 999), (24.5, 20.6, 0.9, (1.0, 0.9, 0.68), "SATURN", 999)]
+if VERT: PLAN = [(-8.5, 11.2, 9.0, (1.0, 0.97, 0.88), "VENUS", 92.3), (-2.5, 14.0, 1.6, (1.0, 0.62, 0.38), "MARS", 93.7),
+                 (4.5, 17.0, 4.2, (1.0, 0.93, 0.80), "JUPITER", 999), (9.5, 19.4, 0.9, (1.0, 0.9, 0.68), "SATURN", 999)]
 def sh_planets(t, ov):
     """80.5 - 94.3: night side; the planets still shine by sunlight that left before the Sun did."""
     u = (t - 80.5) / 13.8
@@ -423,7 +461,8 @@ def sh_planets(t, ov):
     for (az, el, fx, col, nm, tout) in PLAN:
         px, py = plate_xy(math.radians(az), math.radians(el)); fx_, fy_ = (px - pcx) / s + W / 2, (py - pcy) / s + H / 2; pts.append((fx_, fy_))
         on = 1 - ramp(t, tout, tout + 0.5)
-        ov.text(fx_ + 16, fy_ - 30, nm, size=13, wt="Regular", col=WHT if on > 0.5 else DIM, a=a0 * (0.35 + 0.65 * on), track=0.28)
+        if VERT and fx_ > 760: ov.text(fx_ - 16, fy_ - 36, nm, size=16, wt="Regular", col=WHT if on > 0.5 else DIM, a=a0 * (0.35 + 0.65 * on), track=0.24, anchor="r")
+        else: ov.text(fx_ + 16, fy_ - hv(30, 36), nm, size=hv(13, 16), wt="Regular", col=WHT if on > 0.5 else DIM, a=a0 * (0.35 + 0.65 * on), track=0.28)
         if on < 0.5: ov.circle(fx_, fy_, 7, col=DIM, a=a0 * 0.6, width=1)
     ext = [(pts[0][0] - 3 * (pts[1][0] - pts[0][0]), pts[0][1] - 3 * (pts[1][1] - pts[0][1]))] + pts + [(pts[-1][0] + 2 * (pts[-1][0] - pts[-2][0]), pts[-1][1] + 2 * (pts[-1][1] - pts[-2][1]))]
     clock(ov, hms(Tc))
@@ -437,7 +476,7 @@ def sh_jupiter(t, ov):
     Tc = kf(t, [(94.3, 4380.0), (tout, 5100.0), (97.9, 5106.0)])
     on = 1 - ramp(t, tout, tout + 0.3)
     img = sky_view(900 + 4 * u, 600, 0.8, 40) * 0.6
-    gas_giant(img, "jupiter", 1150 - 6 * u, 540, 330 + 5 * u, norm([-0.45, 0.12, 0.88]), sun=on, lon0=1.2 + 0.05 * u, oblate=0.935, amb=0.0012)
+    gas_giant(img, "jupiter", hv(1150 - 6 * u, 540), hv(540, 880), 330 + 5 * u, norm([-0.45, 0.12, 0.88]), sun=on, lon0=1.2 + 0.05 * u, oblate=0.935, amb=0.0012)
     clock(ov, hms(Tc))
     caption(ov, t, 94.5, 97.9, "JUPITER:  MORE THAN AN HOUR", "≈ 70–87 MIN AFTER OUR SKY GOES DARK", y=880)
     return img, 1.0
@@ -448,7 +487,7 @@ def sh_saturn(t, ov):
     Tc = kf(t, [(97.9, 9000.0), (tout, 9600.0), (101.6, 9606.0)])
     on = 1 - ramp(t, tout, tout + 0.4)
     img = sky_view(2900 - 4 * u, 800, 0.8, -30) * 0.6
-    gas_giant(img, "saturn", 1100 + 5 * u, 540, 200 + 3 * u, norm([-0.5, 0.28, 0.82]), sun=on, lon0=0.4, oblate=0.902, tip=21, tilt=-9, ring=True, amb=0.0012)
+    gas_giant(img, "saturn", hv(1100 + 5 * u, 540), hv(540, 880), hv(200, 185) + 3 * u, norm([-0.5, 0.28, 0.82]), sun=on, lon0=0.4, oblate=0.902, tip=21, tilt=-9, ring=True, amb=0.0012)
     clock(ov, hms(Tc))
     caption(ov, t, 98.1, 101.6, "SATURN:  MORE THAN TWO HOURS", "≈ 2 H 25 MIN – 2 H 40 MIN AFTER DARK", y=880)
     return img, 1.0
@@ -485,18 +524,18 @@ def sh_globe_cold(t, ov):
     fr = kf(t, [(138.0, 0.10), (147.0, 0.22), (156.5, 0.62), (167.5, 0.80)])
     li = kf(t, [(138.0, 1.0), (157.0, 0.85), (164.5, 0.07), (167.5, 0.05)])
     img = sky_view(2500 - 3 * u, 1050, 0.85, -35) * 0.8
-    earth(img, 1260 - 2.0 * u, 548, 400 + 1.6 * u, math.radians(-95 + 0.8 * u), norm([-0.6, 0.3, 0.6]), sun=0.0, amb=0.075, frost=fr, lights=li, lights_day=1.0,
+    earth(img, hv(1260 - 2.0 * u, 540), hv(548, 1078), hv(400, 288) + 1.6 * u, math.radians(-95 + 0.8 * u), norm([-0.6, 0.3, 0.6]), sun=0.0, amb=0.075, frost=fr, lights=li, lights_day=1.0,
           cloud_amt=max(0.0, 1 - u / 22.0), cloud_t=0.004 * u, veg=0.0)
     clock(ov, daystr(days) if days < 360 else "YEAR 1" if days < 400 else f"YEAR {days / 365.25:.0f}")
     a = fade(t, 141.3, 156.6, 0.7, 0.8)
     if a > 0:
-        ov.text(96, 372, "≈ 1 WEEK", size=17, wt="Regular", col=DIM, a=a, track=0.3)
-        ov.text(96, 400, "BELOW 0 °C", size=54, wt="ExtraLight", col=WHT, a=a, track=0.08, display=True)
-        ov.text(98, 474, "MOST QUOTED FIGURE:  ≈ −18 °C", size=15, wt="Regular", col=DIM, a=a * fade(t, 145.0, 99, 0.7), track=0.26)
-        a2 = a * fade(t, 149.6, 99, 0.7)
-        ov.text(96, 560, "≈ 1 YEAR", size=17, wt="Regular", col=DIM, a=a2, track=0.3)
-        ov.text(96, 588, "≈ −70 °C", size=54, wt="ExtraLight", col=YEL, a=a2, track=0.08, display=True)
-        ov.text(98, 662, "COLDER THAN A SOUTH POLE WINTER  (≈ −60 °C)", size=15, wt="Regular", col=DIM, a=a2 * fade(t, 152.6, 99, 0.7), track=0.26)
+        ov.text(hv(96, 64), hv(372, 476), "≈ 1 WEEK", size=17, wt="Regular", col=DIM, a=a, track=0.3)
+        ov.text(hv(96, 64), hv(400, 504), "BELOW 0 °C", size=54, wt="ExtraLight", col=WHT, a=a, track=0.08, display=True)
+        ov.text(hv(98, 66), hv(474, 578), "MOST QUOTED FIGURE:  ≈ −18 °C", size=15, wt="Regular", col=DIM, a=a * fade(t, 145.0, 1e9, 0.7), track=0.26)
+        a2 = a * fade(t, 149.6, 1e9, 0.7)
+        ov.text(hv(96, 64), hv(560, 664), "≈ 1 YEAR", size=17, wt="Regular", col=DIM, a=a2, track=0.3)
+        ov.text(hv(96, 64), hv(588, 692), "≈ −70 °C", size=54, wt="ExtraLight", col=YEL, a=a2, track=0.08, display=True)
+        ov.text(hv(98, 66), hv(662, 766), "COLDER THAN A SOUTH POLE WINTER  (≈ −60 °C)", size=15, wt="Regular", col=DIM, a=a2 * fade(t, 152.6, 1e9, 0.7), track=0.26)
     caption(ov, t, 139.0, 156.6, "GLOBAL AVERAGE SURFACE TEMPERATURE", "ROUGH ESTIMATES  ·  SOURCES DISAGREE", y=250, size=17)
     caption(ov, t, 158.0, 166.6, "A FEW REFUGES:  NUCLEAR AND GEOTHERMAL HEAT", "ENERGY THAT NEVER CAME FROM THE SUN")
     note(ov, t, 139.0, 166.8, "DARK EARTH BRIGHTENED FOR VISIBILITY  ·  ICE COVER SCHEMATIC")
@@ -526,10 +565,10 @@ def water(rgb, depth, t, lamp=1.0, snow=0.25, k=(0.060, 0.022, 0.014)):
 def sh_ice(t, ov):
     """167.5 - 182.2: under the ice lid."""
     O = ocean_plates(); u = (t - 167.5) / 14.7
-    s, pcx, pcy = clampc(1.165 - 0.14 * ease(u) - 0.02 * u, PW / 2 + 30 - 60 * u, PH / 2 - 60 + 90 * ease(u))
+    s, pcx, pcy = vcam(1.165 - 0.14 * ease(u) - 0.02 * u, PW / 2 + 30 - 60 * u, PH / 2 - 60 + 90 * ease(u), 900)
     rgb = warp(O["ice"], s, pcx, pcy); d = warp(O["ice_d"], s, pcx, pcy)
     yy, xx = np.mgrid[0:H, 0:W].astype(f32)
-    sweep = 0.55 + 0.6 * np.exp(-(((xx - (700 + 500 * math.sin(t * 0.21))) / 900) ** 2 + ((yy - 430) / 620) ** 2))
+    sweep = 0.55 + 0.6 * np.exp(-(((xx - (hv(700, 480) + hv(500, 260) * math.sin(t * 0.21))) / 900) ** 2 + ((yy - hv(430, 760)) / hv(620, 1000)) ** 2))
     img = water(rgb * sweep[..., None] * 1.5, d, t, snow=0.22)
     clock(ov, "YEAR 10" if t < 175 else "YEAR 100" if t < 179 else "YEAR 1,000")
     caption(ov, t, 169.2, 175.0, "THE OCEAN FREEZES FROM THE TOP DOWN", "ICE FLOATS  ·  AND INSULATES THE WATER BELOW")
@@ -540,7 +579,7 @@ def sh_ice(t, ov):
 def sh_vent(t, ov):
     """182.2 - 200.5: hydrothermal vents; chemosynthetic microbes."""
     O = ocean_plates(); u = (t - 182.2) / 18.3
-    s, pcx, pcy = clampc(1.165 - 0.13 * ease(u) - 0.02 * u, PW / 2 - 50 + 70 * u, PH / 2 + 50 - 70 * ease(u))
+    s, pcx, pcy = vcam(1.165 - 0.13 * ease(u) - 0.02 * u, PW / 2 - 50 + 70 * u, PH / 2 + 50 - 70 * ease(u), 1010)
     yy, xx = np.mgrid[0:H:2, 0:W:2].astype(f32)
     xp = pcx + (xx - W / 2) * s; yp = pcy + (yy - H / 2) * s
     # plumes: turbulent, widening columns rising from each chimney mouth (density field in plate space)
@@ -565,7 +604,7 @@ def sh_vent(t, ov):
     M = np.array([[s, 0, pcx - s * W / 2], [0, s, pcy - s * H / 2]])
     mx = (xp + wn * shim * 5.0).astype(f32); my = (yp + wn * shim * 3.0).astype(f32)
     rgb = cv2.remap(O["vent"], mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE); d = cv2.remap(O["vent_d"], mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-    sweep = 0.6 + 0.55 * np.exp(-(((xx - (880 + 380 * math.sin(t * 0.17 + 1))) / 800) ** 2 + ((yy - 520) / 600) ** 2))
+    sweep = 0.6 + 0.55 * np.exp(-(((xx - (hv(880, 520) + hv(380, 220) * math.sin(t * 0.17 + 1))) / 800) ** 2 + ((yy - hv(520, 900)) / hv(600, 1000)) ** 2))
     base = rgb * sweep[..., None] * 1.35
     lit_smoke = np.array([0.16, 0.16, 0.165], f32) * (0.5 + 0.8 * (1 - np.clip(dens, 0, 1)))[..., None] * sweep[..., None]
     a = np.clip(dens * 1.25, 0, 0.93)[..., None]
@@ -587,7 +626,7 @@ def sh_air(t, ov):
     elif t < 227.6: v = (t - 212.0) / 15.6; s, pcx, pcy = 0.98 - 0.05 * v, PW / 2 - 260 + 50 * v, PH / 2 - 70 - 10 * v
     else: v = (t - 227.6) / 13.9; s, pcx, pcy = 1.165 - 0.05 * v, PW / 2 - 30 + 30 * v, PH / 2 - 20
     img, yh = land(t, s=s, pcx=pcx, pcy=pcy, sun=0, night=1.35, frost=1.0, mist=0.45 * air, sky_rot=-100 - 0.2 * (t - 200.5), sky_c=(2050, 1150),
-                   flakes=fl, flake_n=6000, air=air, haze_night=0.006 * air, sky_gain=1.0 + 0.4 * (1 - air))
+                   flakes=fl, flake_n=6000, air=air, vcx=hv(None, 1100 if 212.0 <= t < 227.6 else 1152), haze_night=0.006 * air, sky_gain=1.0 + 0.4 * (1 - air))
     img *= scrim()
     clock(ov, "DECADES ON" if t < 228.0 else "MILLIONS OF YEARS ON", label="TIME SINCE THE SUN VANISHED  ·  ESTIMATES VARY WIDELY")
     caption(ov, t, 204.0, 211.4, "THE AIR ITSELF BEGINS TO CONDENSE", "WHEN:  ESTIMATES RUN FROM DECADES TO FAR LONGER")
@@ -602,7 +641,7 @@ def sh_drift(t, ov):
     u = (t - 241.5) / 11.0
     img = sky_view(2050 + 30 * u, 1060 + 10 * u, 0.95, -24 + 2 * u) * (1.1 + 0.3 * u)
     R = 300 * (1 - 0.86 * ease(u)) + 10
-    earth(img, 960 + 120 * ease(u), 540 - 20 * ease(u), R, math.radians(40 + 12 * u), norm([-0.5, 0.35, 0.7]), sun=0.0, amb=0.16, frost=1.0, lights=0.0, cloud_amt=0.0, atmo=0.0)
+    earth(img, hv(960 + 120 * ease(u), 540 + 50 * ease(u)), hv(540, 980) - 20 * ease(u), R, math.radians(40 + 12 * u), norm([-0.5, 0.35, 0.7]), sun=0.0, amb=0.16, frost=1.0, lights=0.0, cloud_amt=0.0, atmo=0.0)
     img *= 1 - ramp(t, 250.2, 252.4)
     clock(ov, "MILLIONS OF YEARS ON", a=1 - ramp(t, 249.5, 251.0), label="TIME SINCE THE SUN VANISHED  ·  ESTIMATES VARY WIDELY")
     caption(ov, t, 243.6, 250.0, "A ROGUE PLANET", "STARLESS WORLDS LIKE THIS ARE THOUGHT TO BE COMMON IN THE GALAXY")
@@ -612,7 +651,7 @@ def sh_sunrise(t, ov):
     """252.6 - 262.5: it cannot happen - the Sun rises over the limb, seen from orbit."""
     u = (t - 252.6) / 9.9
     img = sky_view(1500, 800, 0.8, 0) * 0.5 * (1 - 0.8 * ramp(t, 254.0, 257.0))
-    cx, cy, R = 1010, 1610, 1150
+    cx, cy, R = hv((1010, 1610, 1150), (560, 2190, 1150))
     rise = ease((t - 253.2) / 8.5)
     ang = math.radians(101 - 5 * rise)                               # position angle of the Sun around the limb
     rad = R * (0.985 + 0.105 * rise)
@@ -631,11 +670,11 @@ def sh_sun2(t, ov):
     """262.5 - 270.8: the Sun, about half-way through its life."""
     u = t - 262.5
     img = sky_view(1500, 700, 0.8, 8) * 0.8
-    sun_disc(img, 1240 - 6 * u, 540, 350 + 5 * u, t * 6, power=1.0)
+    sun_disc(img, hv(1240 - 6 * u, 540), hv(540, 1130), hv(350, 320) + 5 * u, t * 6, power=1.0)
     a = fade(t, 263.6, 270.6, 0.8, 0.6)
-    ov.text(96, 388, "≈ 4.6 BILLION YEARS OLD", size=17, wt="Regular", col=DIM, a=a, track=0.3)
-    ov.text(96, 420, "≈ 5 BILLION", size=84, wt="ExtraLight", col=YEL, a=a * fade(t, 265.6, 99, 0.7), track=0.06, display=True)
-    ov.text(100, 532, "YEARS OF STEADY LIGHT STILL AHEAD", size=24, wt="Light", col=WHT, a=a * fade(t, 266.6, 99, 0.7), track=0.26)
+    ov.text(hv(96, 64), hv(388, 372), "≈ 4.6 BILLION YEARS OLD", size=hv(17, 19), wt="Regular", col=DIM, a=a, track=0.3)
+    ov.text(hv(96, 64), hv(420, 408), "≈ 5 BILLION", size=hv(84, 104), wt="ExtraLight", col=YEL, a=a * fade(t, 265.6, 1e9, 0.7), track=0.06, display=True)
+    ov.text(hv(100, 68), hv(532, 546), "YEARS OF STEADY LIGHT STILL AHEAD", size=hv(24, 27), wt="Light", col=WHT, a=a * fade(t, 266.6, 1e9, 0.7), track=hv(0.26, 0.2))
     return img, 1.0
 
 def sh_end(t, ov):
@@ -647,8 +686,13 @@ def sh_end(t, ov):
     caption(ov, t, 274.6, 280.4, "THIS LIGHT IS 8 MIN 20 SEC OLD", "AND IT IS STILL COMING")
     a = fade(t, 281.6, 287.5, 1.0, 0.01)
     if a > 0:
-        ov.text(W / 2, 478, "IF THE SUN VANISHED RIGHT NOW", size=34, wt="Light", col=WHT, a=a, track=0.34, anchor="m")
-        ov.text(W / 2, 548, "IT WON'T", size=17, wt="Regular", col=YEL, a=a * fade(t, 282.8, 99, 0.8), track=0.4, anchor="m")
+        if VERT:
+            ov.text(W / 2, 600, "IF THE SUN VANISHED", size=40, wt="Light", col=WHT, a=a, track=0.3, anchor="m")
+            ov.text(W / 2, 670, "RIGHT NOW", size=40, wt="Light", col=WHT, a=a, track=0.3, anchor="m")
+            ov.text(W / 2, 760, "IT WON'T", size=22, wt="Regular", col=YEL, a=a * fade(t, 282.8, 1e9, 0.8), track=0.4, anchor="m")
+        else:
+            ov.text(W / 2, 478, "IF THE SUN VANISHED RIGHT NOW", size=34, wt="Light", col=WHT, a=a, track=0.34, anchor="m")
+            ov.text(W / 2, 548, "IT WON'T", size=17, wt="Regular", col=YEL, a=a * fade(t, 282.8, 1e9, 0.8), track=0.4, anchor="m")
     return img * k, 1.12
 
 
@@ -679,10 +723,10 @@ if __name__ == "__main__":
     if sys.argv[1] == "still":
         for a in sys.argv[2:]:
             t = float(a); fr = frame(t)
-            cv2.imwrite(f"{SCR}/chk/f_{t:07.2f}.jpg", fr[..., ::-1], [cv2.IMWRITE_JPEG_QUALITY, 93]); print("wrote", t, flush=True)
+            cv2.imwrite(f"{SCR}/chk/{hv('f', 'v')}_{t:07.2f}.jpg", fr[..., ::-1], [cv2.IMWRITE_JPEG_QUALITY, 93]); print("wrote", t, flush=True)
     else:
         a, b = float(sys.argv[1]), float(sys.argv[2]); f0, f1 = int(round(a * FPS)), int(round(b * FPS))
-        out = f"{SCR}/seg/seg_{f0:05d}.mp4"
+        os.makedirs(f"{SCR}/{hv('seg', 'seg_v')}", exist_ok=True); out = f"{SCR}/{hv('seg', 'seg_v')}/seg_{f0:05d}.mp4"
         if os.path.exists(out): print("exists", out); sys.exit(0)
         p = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                               "-c:v", "libx264", "-preset", "fast", "-crf", "14", "-pix_fmt", "yuv420p", "-threads", "2", out + ".part.mp4"], stdin=subprocess.PIPE)
@@ -692,10 +736,12 @@ if __name__ == "__main__":
         EVENTS = [TV, T_DARK, T_MOON, 92.3, 93.7, 97.15, 100.65] + [sh[0] for sh in SHOTS]
         def step(t):
             if any(-0.2 < t - e < 0.6 for e in EVENTS): return 1
-            if t < 3.6 or 55.3 <= t < 59.0 or 128.0 <= t < 138.0 or 200.5 <= t < 241.5 or t > 280.5: return 1
+            if t < 3.6 or 55.3 <= t < 59.0 or t > 280.5: return 1
+            if 128.0 <= t < 138.0 or 200.5 <= t < 241.5: return 2 if VERT else 1      # falling flakes
             i = max(k for k, sh in enumerate(SHOTS) if sh[0] <= t + 1e-6); t0, fn, xf = SHOTS[i]
             if t < t0 + xf + 0.1: return 1
-            return 3 if fn in (sh_earth1, sh_diag_a, sh_diag_b, sh_moon, sh_jupiter, sh_saturn, sh_globe_cold, sh_drift, sh_sun2) else 2
+            slow = fn in (sh_earth1, sh_diag_a, sh_diag_b, sh_moon, sh_jupiter, sh_saturn, sh_globe_cold, sh_drift, sh_sun2)
+            return (4 if slow else 3) if VERT else (3 if slow else 2)
         f = f0; cur = frame(f / FPS); nrender = 1
         while f < f1:
             st = step(f / FPS)

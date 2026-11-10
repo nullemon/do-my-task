@@ -646,8 +646,8 @@ def cam_state(shot, t):
         return orb(-122, 22, 11.0), Vector((-0.5, 0.7, 0.35)), 40, math.radians(-8)
     if shot == "plate_heroB":
         return orb(-80, 12, 8.6), Vector((-0.1, 0.4, 0.3)), 40, math.radians(-5)
-    if shot == "plate_sig":
-        return orb(193, -31, 11.0), Vector((0.0, 0.0, 1.4)), 30, math.radians(6)
+    if shot == "plate_sig":      # from behind and below: the Sun (on the boresight) sits just past the dish rim
+        return orb(200, -70, 11.5), Vector((0.0, 0.0, 3.2)), 30, math.radians(14)
     if shot == "plate_end":
         return orb(-60, 48, 10.5), Vector((-0.3, 0.5, 0.3)), 45, math.radians(12)
     if shot == "plate_fly":
@@ -705,7 +705,7 @@ elif SHOT in ("hero", "sig", "end"):
 elif SHOT == "fly":
     render(SHOT, range(0, 8 * 24, 1), (640, 360), 32, os.path.join(SCR, "fr_fly"))
 elif SHOT.startswith("plate_"):
-    big = SHOT in ("plate_heroA", "plate_heroB", "plate_end", "plate_thumb", "plate_sig")
+    big = SHOT in ("plate_heroA", "plate_heroB", "plate_end", "plate_thumb")
     res = (3200, 1800) if big else ((1600, 900) if SHOT == "plate_fly" else (2560, 1440))
     sc.cycles.adaptive_threshold = 0.012
     render(SHOT, [0], res, 200 if big else 110, os.path.join(SCR, "plates", SHOT))

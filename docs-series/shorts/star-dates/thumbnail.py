@@ -15,6 +15,15 @@ T = 11.25                                         # Vega "2001" just popped, Arc
 keep = {"arct", "vega"}
 S.LABELS[:] = [lb if lb[0] not in keep else lb[:7] + (T - 2.0, T - 1.0, T + 5.0) for lb in S.LABELS]
 caps = sc.caps.draw; sc.caps.draw = lambda out, t: None
+_place = sc.label_place
+def place(lb, x, y, rr):                          # thumbnail only: both labels hang below their stars (no overlap)
+    ax, ay, side = _place(lb, x, y, rr)
+    if lb[0] in keep:
+        ay = y + (150 if vert else 120)
+        side = 1 if x < W * (0.5 if lb[0] == "vega" else 0.85) else -1
+        ax = x + side * 130
+    return ax, ay, side
+sc.label_place = place
 img = sc.frame(T)
 WHITE = (250, 250, 250)
 if vert:

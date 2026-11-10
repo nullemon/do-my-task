@@ -49,6 +49,7 @@ moving sky; see `../lib/README.md`). **Locked camera:** a single tripod frame of
   turns about the real pole by one full sidereal day over the Short. At every frame each star is at its true position for
   the sidereal time shown, but the Sun is ignored, so it's a "night" that lasts a whole turn. Latitude 34° N keeps Sirius
   above the caption row.
+- **Captions:** 9:16 at y = 1000 (52 %), clear of the Shorts UI; 16:9 at y = 790 (73 %), over the mountains. Labels keep 8 % side margins and avoid the caption row.
 - **Lens:** a tilted stereographic (conformal) projection. 9:16 is centred 56° up with f = 700 px. 16:9 is centred 68° up
   with f = 440 px, which is ultra-wide. In 16:9 the true horizon arcs up at the far sides, so stars there are faded at the
   plate's skyline rather than at the true horizon, and a little below-horizon sky shows at the extreme edges.

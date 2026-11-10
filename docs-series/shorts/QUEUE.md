@@ -11,9 +11,9 @@ STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Sh
 | S2 | In 1994, people called 911 about a strange cloud. It was the Milky Way (Northridge blackout; "according to Griffith Observatory staff") | C_city | delivered |
 | S3 | If your eyes saw gamma rays, the Moon would outshine the Sun (radio, microwave/CMB and gamma-ray real all-sky maps) | A2_park | delivered |
 | S4 | What if other stars replaced our Sun? (Sirius, Arcturus, Rigel, Betelgeuse, UY Scuti; real angular sizes and colours) | A2_park | in progress (A_park) |
-| S5 | Every star is a date (light-departure year on real stars; myth-bust: almost none are dead) | A_park, night | in progress |
+| S5 | Every star is a date (light-departure year on real stars; myth-bust: almost none are dead) | A_park, night | delivered |
 | S6 | If the 1859 solar storm hit today (auroras overhead, then city lights fail) | C_city | in progress |
-| S7 | What if Earth had rings? | B_valley | queued |
+| S7 | What if Earth had rings? | B_valley | in progress |
 | S8 | When you see the Sun touch the horizon, it's already gone (refraction) | B_valley | queued |
 | S9 | What if Betelgeuse exploded tonight? | A2_park | queued |
 | S10 | Your sky in 1 million years (real proper motions, HYG catalogue) | B_valley, night | queued |

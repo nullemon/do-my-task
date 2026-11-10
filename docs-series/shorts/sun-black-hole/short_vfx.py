@@ -72,6 +72,7 @@ class VFX(A.Scene):
         self.disk_tex = np.clip(cv2.GaussianBlur(dt, (0, 0), sigmaX=1.0, sigmaY=3.0) * 1.6 + 0.8, 0.15, 2.2).astype(f32)
         self.mist = np.clip(fbm2((512, 1024), 41, 2.6) * 0.5 + 0.45, 0, 1).astype(f32)
         self.noise_x = cv2.resize(fbm2((128, 128), 51, 2.4), (W, H), interpolation=cv2.INTER_CUBIC)
+        self.fine_n = cv2.resize(fbm2((512, 512), 52, 1.6), (W, H), interpolation=cv2.INTER_CUBIC)
         yyf, xxf = np.mgrid[0:H, 0:W].astype(f32)
         self.xx, self.yy = xxf, yyf
 
@@ -244,18 +245,21 @@ class VFX(A.Scene):
     def frost_wave(self, fgc, t, p, level):
         """blue-white frost front sweeping left -> right across grass and trees"""
         fg = self.fg; W, H = self.L.W, self.L.H
-        field = self.xx / W * 0.85 + (1 - self.yy / H) * 0.25 + self.noise_x * 0.06
+        field = self.xx / W * 0.80 + (1 - self.yy / H) * 0.22 + self.noise_x * 0.015 + self.fine_n * 0.012
         front = p * 1.35 - 0.1
-        m = smooth(0.0, 0.05, front - field) * np.maximum(fg.frost_cover, 0.25 * fg.a)
-        edge = np.exp(-((front - field) / 0.018) ** 2) * fg.a
+        dist = front - field
+        cover = np.maximum(fg.frost_cover, 0.6 * fg.a)
+        m = smooth(-0.02, 0.10, dist) * cover                                        # wide, feathered frost edge
+        edge = np.exp(-(dist / 0.035) ** 2) * fg.a                                    # bright leading glow
         y = lum(fgc)[..., None]
         tex = (fg.hf ** 1.4 * fg.crystal)[..., None]
         fcol = (y * 2.2 + 0.03 * level) * tex * np.array([0.72, 0.88, 1.15], f32)
         out = fgc * (1 - m[..., None]) + fcol * m[..., None]
-        out += edge[..., None] * np.array([0.35, 0.65, 1.0], f32) * 0.25 * level
+        out += edge[..., None] * np.array([0.55, 0.78, 1.0], f32) * 0.09 * level + (edge * fg.hf ** 3)[..., None] * np.array([0.7, 0.85, 1.0], f32) * 0.05 * level
         g = fg.glint_xy; mg = m[g[:, 1], g[:, 0]]
         tw = np.clip(np.sin(t * fg.glint_fr * 6.283 + fg.glint_ph), 0, 1) ** 10
-        val = mg * tw * fg.glint_sz * 2.5 * level
+        me = edge[g[:, 1], g[:, 0]]
+        val = (mg + 3.0 * me) * tw * fg.glint_sz * 2.5 * level
         sel = val > 1e-4
         if sel.any():
             lay = np.zeros((H, W), f32); np.add.at(lay, (g[sel, 1], g[sel, 0]), val[sel])

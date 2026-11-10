@@ -327,7 +327,7 @@ def sh_pluto(tl, u, ov):
 def sh_kepler(tl, u, ov):
     pl = plate("kepler"); s2 = pl.meta["second_sun"]; drop = 3.3 * u
     seA = 3.3 - drop; saA = 0.6; seB = seA - 0.45; saB = saA + s2["az"]
-    colA = bbcolor(4450); colB = bbcolor(3300)
+    colA = bbcolor(4450) ** 1.7; colB = bbcolor(3300) ** 1.5          # pushed towards orange / red so the two stars read differently after tone-mapping
     def fn(EL, AZ):
         e = np.maximum(EL, 0); pA = ang(EL, AZ, seA, saA); pB = ang(EL, AZ, seB, saB)
         base = mixa(C(0.62, 0.30, 0.22), C(0.045, 0.04, 0.10), 1 - np.exp(-e / 5.0))

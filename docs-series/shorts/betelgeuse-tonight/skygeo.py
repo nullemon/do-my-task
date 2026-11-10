@@ -54,4 +54,4 @@ class Lens:
 
 def lens_for(vertical, hy):
     """hy = frame row of the true horizon (just behind the far hedge of the park plate)"""
-    return Lens(1080, 1920, 174.0, 30.0, 1100.0, hy) if vertical else Lens(1920, 1080, 166.0, 34.0, 700.0, hy)
+    return Lens(1080, 1920, 174.0, 30.0, 1100.0, hy) if vertical else Lens(1920, 1080, 150.0, 34.0, 700.0, hy)

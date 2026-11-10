@@ -59,7 +59,8 @@ class VFX(A.Scene):
         # night foreground: readable deep-blue grade of the photo (flattened shadows)
         f = self.fg.flat; y = lum(f)[..., None]
         self.fg_night = ((f * 0.35 + y * 0.65) * np.array([0.16, 0.20, 0.42], f32)).astype(f32)
-        self.disk_tex = np.clip(fbm2((256, 1024), 31, 2.2) * 0.35 + fbm2((256, 1024), 32, 1.2) * 0.25 + 0.75, 0.15, 2.0).astype(f32)
+        dt = fbm2((256, 1024), 31, 2.6) * 0.45 + fbm2((256, 1024), 32, 1.8) * 0.20
+        self.disk_tex = np.clip(cv2.GaussianBlur(dt, (0, 0), sigmaX=1.0, sigmaY=3.0) * 1.6 + 0.8, 0.15, 2.2).astype(f32)
         self.mist = np.clip(fbm2((512, 1024), 41, 2.6) * 0.5 + 0.45, 0, 1).astype(f32)
         self.noise_x = cv2.resize(fbm2((128, 128), 51, 2.4), (W, H), interpolation=cv2.INTER_CUBIC)
         yyf, xxf = np.mgrid[0:H, 0:W].astype(f32)
@@ -101,7 +102,7 @@ class VFX(A.Scene):
                 hc = HOT[self.beams.index(b) % len(HOT)]
                 c = c * (1 - ease(col_u)) + hc * ease(col_u)
             acc += c * (g * I)[..., None]
-        return acc * rad[..., None] * 0.30
+        return acc * rad[..., None] * 0.38
 
     def sun_core(self, img, t):
         """Sun core: normal -> swell/wobble -> implode -> point"""
@@ -130,7 +131,7 @@ class VFX(A.Scene):
         zen = np.array([0.006, 0.007, 0.045], f32); hor = np.array([0.020, 0.030, 0.13], f32)
         k = np.exp(-el / 0.30)[..., None]
         base = (zen * (1 - k) + hor * k) * np.ones((1, W, 1), f32)
-        stars = self.stars.render(self.cam, t, cx=2020, cy=1180, rot=-8, gain=1.8, twinkle=1.0, plate_gain=0.9, air=0.6)
+        stars = self.stars.render(self.cam, t, cx=2020, cy=1180, rot=-8, gain=1.5, twinkle=1.0, plate_gain=0.45, air=0.6)
         sky = base + stars * np.array([0.85, 0.9, 1.1], f32)
         if S > 0: sky = self.lens_swirl(sky, t, S)
         return sky
@@ -156,6 +157,7 @@ class VFX(A.Scene):
         return out
 
     def hole(self, img, t, S, pulse):
+        self._core = None
         """black core, photon ring, lensed disk (front band + upper/lower arches), infalling spiral gas, halo"""
         if S <= 0.02: return
         cx, cy = self.C; Rs = self.Rs * S
@@ -176,7 +178,7 @@ class VFX(A.Scene):
         gas = (arms * 0.8 + arms2 * 0.5) * np.exp(-(rr / (3.6 * Rs)) ** 1.6) * smooth(1.05 * Rs, 1.9 * Rs, rr)
         gcol = np.array([0.55, 0.25, 1.0], f32) * (1 - np.exp(-rr / (2.5 * Rs)))[..., None] + np.array([1.0, 0.45, 0.85], f32) * np.exp(-rr / (2.5 * Rs))[..., None]
         reg += gas[..., None] * gcol * 0.55 * pulse
-        reg += (np.exp(-np.maximum(r - Rs, 0) / (0.9 * Rs)) * 0.55 + np.exp(-r / (3.5 * Rs)) * 0.10)[..., None] * np.array([0.75, 0.6, 1.0], f32) * pulse
+        reg += (np.exp(-np.maximum(r - Rs, 0) / (0.7 * Rs)) * 0.45 + np.exp(-r / (3.0 * Rs)) * 0.04)[..., None] * np.array([0.75, 0.6, 1.0], f32) * pulse
         # disk texture lookup (Keplerian shear)
         def disk_val(rho, psi):
             om = 1.6 * (np.maximum(rho, 0.3 * Rs) / (1.3 * Rs)) ** -1.5
@@ -187,10 +189,10 @@ class VFX(A.Scene):
             return prof * tex
         def disk_col(rho, xside):
             w = np.clip((rho / Rs - 1.25) / 2.2, 0, 1)[..., None]
-            c = np.array([1.0, 0.97, 0.92], f32) * (1 - w) + np.array([1.0, 0.62, 0.30], f32) * w * 0.8 + np.array([0.9, 0.35, 1.0], f32) * w * 0.35
+            c = np.array([1.0, 0.90, 0.72], f32) * (1 - w) + np.array([1.0, 0.48, 0.16], f32) * w * 0.9 + np.array([0.9, 0.30, 1.0], f32) * w * 0.25
             dop = (1 - 0.55 * np.clip(xside, -1, 1)) ** 2.2                          # approaching (left) side brighter
             return c * dop[..., None]
-        ci = 0.13
+        ci = 0.17
         rho_f = np.sqrt(xr ** 2 + (yr / ci) ** 2); psi_f = np.arctan2(yr / ci, xr)
         dv = disk_val(rho_f, psi_f)
         front = dv * (yr > 0)                                                        # near half: crosses in front of the core
@@ -213,6 +215,8 @@ class VFX(A.Scene):
         reg += ring[..., None] * np.array([0.92, 0.85, 1.0], f32) * pulse
         reg += front[..., None] * disk_col(rho_f, xs) * 5.0 * pulse
         img[y0:y1, x0:x1] = reg
+        fr = front * 5.0 * pulse
+        self._core = ((y0, y1, x0, x1), (1 - smooth(Rs * 0.90, Rs * 0.99, r)) * np.clip(1 - fr, 0, 1))
 
     # -------------------------------------------------------------------------------------------- cold
     def frost_wave(self, fgc, t, p, level):
@@ -252,7 +256,7 @@ class VFX(A.Scene):
             col_u = 0.0 if t < T_COL else min(1.0, (t - T_COL) / (T_IMPL - T_COL))
             sky = self.sky_day(t)
             bm = self.beams_layer(t, col_u)
-            img = self.up(sky + bm * (1 - 0.4 * col_u))
+            img = self.up(sky * (1 - 0.35 * col_u) + bm * (1 + 0.6 * col_u))
             self.sun_core(img, t)
             tint = self.up(bm.mean(axis=(0, 1), keepdims=True) * np.ones_like(bm[..., :1]))
             fgc = fg.day(1.0) * (1 - 0.25 * col_u) + self.up(bm) * 0.06 + tint * 0.10
@@ -293,6 +297,9 @@ class VFX(A.Scene):
                 img += glow[..., None] * np.array([1.0, 0.86, 0.95], f32)
                 img += (40 * v ** 3) * np.array([1.0, 0.9, 0.95], f32)
         img = bloom(img, 0.8 if t < T_IMPL else 1.4)
+        if t >= T_OUT and getattr(self, "_core", None) is not None:
+            (y0, y1, x0, x1), cm = self._core
+            img[y0:y1, x0:x1] *= (1 - 0.97 * cm)[..., None]
         out = tonemap(img, 1.0)
         out = self.chroma(out)
         out = finish(out, t, grain=0.008, vignette=0.18)

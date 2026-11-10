@@ -50,9 +50,9 @@ class Aurora:
             span = Z * (0.5 * W / f) * 1.9 + 160
             self.cur.append(dict(Z=Z, span=span, ns=2600 if Z < 200 else 1800,
                                  A1=r.uniform(0.10, 0.22) * Z + 6, m1=r.uniform(0.6, 1.4), w1=r.uniform(0.15, 0.35) * r.choice([-1, 1]), p1=r.uniform(0, 6.3),
-                                 A2=r.uniform(0.04, 0.08) * Z + 2, m2=r.uniform(2.5, 4.5), w2=r.uniform(0.5, 1.1) * r.choice([-1, 1]), p2=r.uniform(0, 6.3),
-                                 F=r.uniform(0.05, 0.09) * span, n3=r.uniform(2.0, 3.5), w3=r.uniform(0.3, 0.7) * r.choice([-1, 1]), p3=r.uniform(0, 6.3),
-                                 drift=r.uniform(-1.0, 1.0), off=r.uniform(0, 8192), I=r.uniform(0.8, 1.15) * (0.35 if Z < 80 else (1.3 if Z < 300 else 1.0)), tk=k % 4,
+                                 A2=r.uniform(0.04, 0.08) * Z + 2, m2=r.uniform(2.5, 4.5), w2=r.uniform(0.9, 1.6) * r.choice([-1, 1]), p2=r.uniform(0, 6.3),
+                                 F=r.uniform(0.08, 0.13) * span, n3=r.uniform(2.0, 3.5), w3=r.uniform(0.3, 0.7) * r.choice([-1, 1]), p3=r.uniform(0, 6.3),
+                                 drift=r.uniform(-1.0, 1.0), off=r.uniform(0, 8192), I=r.uniform(0.8, 1.15) * (0.28 if Z < 80 else (1.35 if Z < 300 else 1.0)), tk=k % 4,
                                  hred=r.uniform(210, 270)))
         u = np.linspace(0, 1, 104, dtype=f32)
         self.h = (-14 + 420 * u ** 1.7).astype(f32)                                           # km above lower border
@@ -72,7 +72,7 @@ class Aurora:
         tx = self.tex[c["tk"]]
         i1 = ((s * 1500 + c["off"] + c["drift"] * t * 90.0) % 8192).astype(np.int32)
         i2 = ((s * 700 + c["off"] * 0.5 - t * 260.0 * (1 if c["drift"] > 0 else -1)) % 8192).astype(np.int32)
-        rays = (0.22 + 1.0 * tx[i1] ** 2.0) * (0.50 + 0.70 * tx[(i2 + 1000) % 8192])
+        rays = (0.40 + 0.9 * tx[i1] ** 2.0) * (0.55 + 0.65 * tx[(i2 + 1000) % 8192])
         surge = 1 + 1.3 * np.exp(-(((s - (((t * 0.45 + c["p1"]) % 2.6) - 1.3)) / 0.10) ** 2))
         A = rays * surge * c["I"]
         # sample grid (s x h)
@@ -94,7 +94,7 @@ class Aurora:
         # emission profiles along the field line
         hh = self.h[None, :] + 0 * Yb[:, None]
         flame = 1 + 0.45 * np.sin(2 * np.pi * (hh / 70.0 - 1.6 * t) + s[:, None] * 9 + c["p1"])   # upward-running pulses
-        g = smooth(-3.0, 3.5, hh) * np.exp(-np.maximum(hh, 0) / 48.0) * flame
+        g = smooth(-3.0, 3.5, hh) * (np.exp(-np.maximum(hh, 0) / 42.0) * flame + 0.9 * np.exp(-(np.maximum(hh, 0) / 7.0) ** 2))
         red = np.exp(-((hh - c["hred"]) / 100.0) ** 2) * 0.22 * smooth(60, 140, hh)
         mag = np.exp(-((hh + 3.0) / 6.0) ** 2) * smooth(-14, -8, hh) * storm
         base = (A[:, None] * w * ok).astype(f32)
@@ -125,17 +125,36 @@ class Aurora:
         acc[1] += (rpro[:, None] * (0.25 + rays[None, :])) * 1.1 * crown
         acc[2] += (mpro[:, None] * rays[None, :] ** 2) * 1.2 * crown
 
+    def polar_blur(self, a, sig_px):
+        """blur along the angle with a width that is constant in SCREEN pixels: rays stay soft near the zenith point
+        instead of collapsing into hairline spokes (box filter x3 ~ Gaussian; wrap-around in angle)"""
+        NT, NR = self.NT, self.NR
+        out = np.empty_like(a)
+        edges = np.unique(np.concatenate([[0], np.geomspace(4, NR, 14).astype(int)]))
+        for i0, i1 in zip(edges[:-1], edges[1:]):
+            m = 4; j0, j1 = max(0, i0 - m), min(NR, i1 + m)
+            rc = (0.5 * (i0 + i1) + 0.5) * self.RMAX / NR
+            sb = float(np.clip(sig_px * NT / (2 * np.pi * max(rc, 3.0)), 0.6, NT / 6))
+            k = int(round(math.sqrt(4 * sb * sb + 1))) | 1
+            if k <= 1: out[i0:i1] = a[i0:i1]; continue
+            pad = 2 * k
+            sub = np.concatenate([a[j0:j1, -pad:], a[j0:j1], a[j0:j1, :pad]], 1)
+            for _ in range(3): sub = cv2.blur(sub, (k, 1), borderType=cv2.BORDER_REPLICATE)
+            out[i0:i1] = sub[i0 - j0:i1 - j0, pad:pad + NT]
+        return out
+
     def render(self, t, level, prog=1.0, storm=1.0, crown=1.0):
         """-> linear HDR (H, W, 3) aurora light, and its mean colour over the sky (for tinting the city)"""
         W, H = self.W, self.H
         if level <= 1e-3: return np.zeros((H, W, 3), f32), np.zeros(3, f32)
         acc = [np.zeros((self.NR, self.NT), np.float64) for _ in range(3)]
         for c in self.cur: self._curtain(c, t, prog, acc, storm)
-        if crown > 0: self._crown(t, acc, crown * prog ** 3)
+        if crown > 0: self._crown(t, acc, 0.45 * crown * prog ** 3)
         out = np.zeros((H, W, 3), f32); tint = np.zeros(3, f32)
         for k, col in enumerate((G_COL, R_COL, M_COL)):
             a = acc[k].astype(f32)
-            a = cv2.GaussianBlur(a, (0, 0), sigmaX=1.5, sigmaY=2.2) + cv2.GaussianBlur(a, (0, 0), sigmaX=6, sigmaY=14) * 0.35
+            a = self.polar_blur(a, (2.2, 16.0, 3.0)[k])
+            a = cv2.GaussianBlur(a, (0, 0), sigmaX=0.6, sigmaY=2.4) + cv2.GaussianBlur(a, (0, 0), sigmaX=4, sigmaY=16) * 0.35
             img = cv2.remap(a, self.map_t, self.map_r, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
             out += img[..., None] * col
             tint += float(img[: int(self.hz)].mean()) * col

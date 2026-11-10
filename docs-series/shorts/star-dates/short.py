@@ -101,7 +101,7 @@ def glow_text(txt, size, col, wt="Black", maxw=None):
     if k in _gl: return _gl[k]
     f = font(size, wt, True); w = f.getlength(txt)
     if maxw and w > maxw: f = font(int(size * maxw / w), wt, True); w = f.getlength(txt)
-    asc, desc = f.getmetrics(); pad = int(f.size * 0.55) + 4
+    asc, desc = f.getmetrics(); pad = int(f.size * 1.3) + 4
     Wd, Hd = int(w + 2 * pad), int(asc + desc + 2 * pad)
     sw = max(2, int(f.size * 0.045))
     m = Image.new("L", (Wd, Hd), 0); ImageDraw.Draw(m).text((pad, pad), txt, font=f, fill=255)
@@ -117,12 +117,12 @@ def glow_text(txt, size, col, wt="Black", maxw=None):
     glow = halo[..., None] * np.array(col, f32)
     # soft dark backing so the label reads over bright sky
     sh = cv2.GaussianBlur(a_s, (0, 0), f.size * 0.10)
-    _gl[k] = (rgba.astype(np.uint8), glow.astype(f32), sh.astype(f32))
+    _gl[k] = (rgba.astype(np.uint8), glow.astype(f32), sh.astype(f32), w)
     return _gl[k]
 
 
 def put_glow(dst, layer, cx, cy, alpha, glow_k=0.9):
-    rgba, glow, sh = layer
+    rgba, glow, sh, _ = layer
     h, w = rgba.shape[:2]; H, W = dst.shape[:2]
     x0, y0 = int(round(cx - w / 2)), int(round(cy - h / 2))
     xa, ya, xb, yb = max(0, x0), max(0, y0), min(W, x0 + w), min(H, y0 + h)
@@ -200,18 +200,18 @@ class Scene:
         e = np.clip(alt / (np.pi / 2), 0, 1)
         # night sky: rich deep blue -> violet overhead, teal-blue glow at the horizon (never black)
         k = np.exp(-e / 0.28)[..., None]
-        zen = np.array([0.020, 0.012, 0.085], f32); hor = np.array([0.040, 0.060, 0.230], f32)
+        zen = np.array([0.012, 0.009, 0.068], f32); hor = np.array([0.030, 0.042, 0.190], f32)
         night = zen * (1 - k) + hor * k
-        night += np.exp(-((e - 0.40) / 0.22) ** 2)[..., None] * np.array([0.020, 0.004, 0.035], f32)
+        night += np.exp(-((e - 0.40) / 0.22) ** 2)[..., None] * np.array([0.016, 0.002, 0.030], f32)
         n = cv2.resize(fbm2((96, 96), 61, 3.0), (W, H), interpolation=cv2.INTER_CUBIC)
         night *= (1 + 0.06 * n)[..., None]
         self.night = night.astype(f32)
         # afterglow: the Sun just set in the WSW (az 250, 6 deg down)
         sun = hdir(250.0, -6.0)
         ang = np.degrees(np.arccos(np.clip(self.rays @ sun.astype(f32), -1, 1)))
-        glow = np.exp(-e / 0.10)[..., None] * (0.35 + 0.65 * np.exp(-(ang / 55) ** 2))[..., None] * np.array([1.0, 0.40, 0.14], f32) * 1.1
-        glow += np.exp(-e / 0.30)[..., None] * np.array([0.55, 0.22, 0.50], f32) * 0.35
-        glow += np.array([0.06, 0.09, 0.34], f32) * (1 - 0.3 * e[..., None])
+        glow = np.exp(-e / 0.09)[..., None] * (0.30 + 0.70 * np.exp(-(ang / 50) ** 2))[..., None] * np.array([1.0, 0.36, 0.10], f32) * 1.3
+        glow += np.exp(-e / 0.25)[..., None] * np.array([0.60, 0.16, 0.45], f32) * 0.30
+        glow += np.array([0.022, 0.050, 0.25], f32) * (1 - 0.45 * e[..., None])
         self.dusk = glow.astype(f32)
         self.above = smooth(-0.01, 0.05, alt).astype(f32)                     # below-horizon mask for stars
         # foreground states
@@ -223,22 +223,29 @@ class Scene:
         z = np.load(os.path.join(SCR, "stars.npz"))
         self.sv = eq_vec(z["ra"], z["dec"]).astype(np.float64)
         mag = z["mag"]; self.mag = mag
-        self.flux = (2.2 * 10 ** (-0.4 * 0.80 * mag)).astype(f32)
+        self.flux = (4.5 * 10 ** (-0.4 * 0.90 * mag)).astype(f32)
         T = np.clip(bv_temp(np.clip(z["ci"], -0.4, 2.0)), 2600, 30000)
         cols = np.stack([bbcolor(x) for x in T]); yv = cols @ np.array([0.2126, 0.7152, 0.0722])
         cols = yv[:, None] + (cols - yv[:, None]) * 1.7                       # vivid star colours
         cols = np.clip(cols, 0.02, None); cols /= (cols @ np.array([0.2126, 0.7152, 0.0722]))[:, None]
         self.scol = cols.astype(f32)
-        self.th = np.clip((mag + 1.5) / 8.0, 0, 1) ** 0.9 * 0.85                # darkness at which each star switches on
+        self.th = np.clip((mag + 1.5) / 8.0, 0, 1) ** 0.9 * 0.85 - 0.04               # darkness at which each star switches on
         self.ph = np.random.default_rng(3).uniform(0, 1000, len(mag)).astype(f32)
-        self.bright = np.where(mag < 4.6)[0]
+        self.bright = np.where(mag < 4.6)[0]; self.glint = np.where(mag < 1.3)[0]
         # tiny year labels for the swirl: reasonably well-measured, bright stars
         ly = z["ly"]; names = z["name"]
-        tiny = np.where((mag < 4.4) & (ly > 4) & (ly < 2500))[0]
+        cand = np.where((mag < 4.5) & (ly > 4) & (ly < 2500))[0]
+        cand = cand[np.argsort(mag[cand])]; keep = []
+        for i in cand:                                                          # one label per spot (drop close pairs)
+            if all(float(self.sv[i] @ self.sv[j]) < math.cos(math.radians(1.2)) for j in keep): keep.append(i)
+        tiny = np.array(keep)
         self.tiny = tiny
+        yrs = YEAR_NOW - ly[tiny]
+        age = np.clip(np.log10(np.maximum(YEAR_NOW - yrs, 1)) / np.log10(2500), 0, 1)       # recent -> ancient
+        self.tiny_col = [tuple(np.clip(palette(0.50 - 0.62 * a) * 1.0 + 0.30, 0, 1) * 255) for a in age]
         self.tiny_txt = [year_str(ly[i]) for i in tiny]
         rr = np.random.default_rng(9); self.tiny_t = rr.uniform(0, 1, len(tiny)).astype(f32)
-        self.tiny_size = 23 if vertical else 21
+        self.tiny_size = 26 if vertical else 23
         self.lab_eq = {lb[0]: eq_vec(lb[1], lb[2]) for lb in LABELS}
         self.mw = canvas(os.path.join(SCR, "mw_gal.npz"))
         self.gal = m31_sprite()
@@ -267,25 +274,30 @@ class Scene:
         l1 = LST(t)
         shutter = 1 / 60 + 0.30 * swirl
         l0 = LST(t - shutter)
-        speed_px = abs(l1 - l0) * 15 * 14                                       # rough px moved during the shutter
         on = np.clip((dark - self.th) / 0.06, 0, 1)
         spark = np.where(self.mag < 2.6, 1 + 5.0 * np.exp(-np.maximum(dark - self.th, 0) / 0.035) * (dark > self.th), 1.0)
         vis = np.where(on > 0)[0]
         if len(vis) == 0: return acc[:H, :W]
         nt = np.sin(t * 13.1 + self.ph[vis]) * 0.5 + np.sin(t * 23.7 + self.ph[vis] * 1.7) * 0.3 + np.sin(t * 37.3 + self.ph[vis] * 2.3) * 0.2
-        K = int(np.clip(speed_px / 1.6, 1, 40))
+        xa_, ya_, _, _ = self.proj(self.sv[self.bright], l0); xb_, yb_, okb, zb = self.proj(self.sv[self.bright], l1)
+        m_ = okb & (zb > 0) & (xb_ > 0) & (xb_ < W) & (yb_ > 0) & (yb_ < H)
+        disp = float(np.percentile(np.hypot(xb_ - xa_, yb_ - ya_)[m_], 95)) if m_.any() else 0.0
+        K = int(np.clip(disp / 1.1, 1, 72))
+        visall = vis; visb = vis[self.mag[vis] < 5.3]
         for k in range(K):
             u = (k + 0.5) / K
             lst = l0 + (l1 - l0) * u
+            vis = visall if (K == 1 or k == K - 1) else visb                    # faint stars: only the head
             x, y, ok, z = self.proj(self.sv[vis], lst)
             sel = ok & (x > -3) & (x < W + 3) & (y > -3) & (y < H + 3) & (z > 0)
             if not sel.any(): continue
             idx = vis[sel]; xs = x[sel]; ys = y[sel]; zz = z[sel]
             ext = np.clip(zz / 0.12, 0, 1) ** 0.7
             sig = np.clip(0.10 + 0.35 * np.exp(-zz / 0.15), 0.08, 0.6)
-            tw = np.exp(sig * nt[sel] * 1.6 - 0.5 * sig * sig)
-            fl = self.flux[idx] * on[idx] * spark[idx] * ext * tw / K
-            if K > 1: fl = fl * (0.35 + 1.3 * u)                               # comet-like trails: bright head
+            ntv = nt[np.searchsorted(visall, idx)]
+            tw = np.exp(sig * ntv * 1.6 - 0.5 * sig * sig)
+            fl = self.flux[idx] * on[idx] * spark[idx] * ext * tw
+            if K > 1: fl = fl * (0.25 + 1.5 * u) * (2.2 / K ** 0.5 if k < K - 1 else 1.2)      # glowing trail + bright head
             col = self.scol[idx]
             if swirl > 0.01 and K > 1:
                 pc = palette((u * 0.9 + t * 0.35 + xs / W * 0.3) % 1.0)
@@ -298,9 +310,15 @@ class Scene:
             for dy, dx, wg in ((0, 0, (1 - fx) * (1 - fy)), (0, 1, fx * (1 - fy)), (1, 0, (1 - fx) * fy), (1, 1, fx * fy)):
                 np.add.at(acc, (np.clip(y0 + dy, 0, H + 1), np.clip(x0 + dx, 0, W + 1)), val * wg)
         acc = acc[:H, :W]
+        # 4-point glints on the brightest stars
+        x, y, ok, z = self.proj(self.sv[self.glint], l1)
+        for j in np.where(ok & (z > 0.03) & (x > 0) & (x < W) & (y > 0) & (y < H))[0]:
+            i = self.glint[j]; g = self.flux[i] * on[i] * 0.06 * (1 + 0.3 * math.sin(t * 5 + self.ph[i])) * min(1.0, z[j] / 0.15)
+            c = self.scol[i] * 0.6 + 0.4
+            splat(acc, x[j], y[j], 60, lambda d, dx, dy: ((np.exp(-np.abs(dy) / 0.8) * np.exp(-np.abs(dx) / 16) + np.exp(-np.abs(dx) / 0.8) * np.exp(-np.abs(dy) / 16)) * g)[..., None] * c)
         st = cv2.GaussianBlur(acc, (0, 0), 0.7) * 2.4
-        big = acc * (acc.max(2, keepdims=True) > 0.6)
-        st += cv2.GaussianBlur(big, (0, 0), 2.0) * 1.5 + cv2.GaussianBlur(big, (0, 0), 7.0) * 1.3
+        big = acc * (acc.max(2, keepdims=True) > 0.35)
+        st += cv2.GaussianBlur(big, (0, 0), 2.2) * 2.2 + cv2.GaussianBlur(big, (0, 0), 8.0) * 2.0
         return st
 
     def galaxy(self, img, t, lst, dark):
@@ -316,7 +334,7 @@ class Scene:
         e2 = e + dd * (math.cos(pa) * north + math.sin(pa) * east); e2 /= np.linalg.norm(e2)
         x2, y2, _, _ = self.proj(e2, lst)
         pxdeg = math.hypot(x2 - x, y2 - y); ang = math.atan2(y2 - y, x2 - x)
-        hero = 1.0 + 4.6 * ramp(t, lb[7] - 0.15, lb[7] + 1.1) - 3.0 * ramp(t, T_SWIRL0 + 0.5, T_SWIRL1)
+        hero = 1.0 + 6.0 * ramp(t, lb[7] - 0.15, lb[7] + 1.1) - 4.0 * ramp(t, T_SWIRL0 + 0.5, T_SWIRL1)
         Lpx = 3.2 * pxdeg * hero                                               # 3.2 deg major axis (x hero)
         S = self.gal.shape[0]; sc = Lpx / (0.80 * S)
         R = int(Lpx * 0.75) + 8; H, W = img.shape[:2]
@@ -326,7 +344,7 @@ class Scene:
         ca, sa = math.cos(ang) * sc, math.sin(ang) * sc
         M = np.array([[ca, -sa, x - xa - (ca * S / 2 - sa * S / 2)], [sa, ca, y - ya - (sa * S / 2 + ca * S / 2)]], np.float64)
         patch = cv2.warpAffine(self.gal, M, (xb - xa, yb - ya), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
-        gain = (0.08 + 0.10 * ramp(t, lb[7] - 0.2, lb[7] + 0.8)) * dark * (1 + 0.08 * math.sin(t * 2.2))
+        gain = (0.25 + 0.55 * ramp(t, lb[7] - 0.2, lb[7] + 0.8)) * dark * (1 + 0.08 * math.sin(t * 2.2))
         img[ya:yb, xa:xb] += patch * gain * np.clip(z / 0.1, 0, 1)
         return (x, y, Lpx)
 
@@ -360,9 +378,9 @@ class Scene:
             cv2.circle(fx, (int(x * 4), int(y * 4)), int(rr * 4 * pulse), tuple(float(c) for c in col * 5.0 * a), max(2, int(2.2 * sc)), cv2.LINE_AA, 2)
             for tp, big in ((tn, 1.0), (tb, 1.5)):                               # ring bursts at the name and at the year
                 u = t - tp
-                if 0 <= u < 0.9:
-                    R = rr + (60 + 380 * big * sc) * (u / 0.9) ** 0.55
-                    k = (1 - u / 0.9) ** 1.6 * 3.5 * big
+                if 0 <= u < 0.7:
+                    R = rr + (40 + 200 * big * sc) * (u / 0.7) ** 0.55
+                    k = (1 - u / 0.7) ** 1.8 * 3.5 * big
                     for ch, off in ((0, 7), (1, 0), (2, -7)):
                         c = [0.0, 0.0, 0.0]; c[ch] = float(k * (0.6 + 0.8 * col[ch]))
                         cv2.circle(fx, (int(x * 4), int(y * 4)), int((R + off) * 4), tuple(c), max(2, int(5 * (1 - u))), cv2.LINE_AA, 2)
@@ -400,14 +418,15 @@ class Scene:
             s = 1.0 + 0.30 * math.exp(-max(u, 0) / 0.07) * (u < 0.4)
             s = round(min(s, 1.3) * 20) / 20
             lay = glow_text(lb[5], int(ys * s), lb[3], "Black", int(maxw * s))
-            w = lay[0].shape[1]; pad = 0
-            cx = ax + side * (w / 2 - int(ys * s * 0.5))
-            cx = min(max(cx, w / 2 - ys * 0.4), W - w / 2 + ys * 0.4)
+            hw = lay[3] / 2
+            cx = ax + side * hw
+            cx = min(max(cx, 30 + hw), W - 30 - hw)
             cy = ay + ys * 0.62
             al = a * min(1.0, (u + 0.03) / 0.08)
             put_glow(out, lay, cx, cy, al)
             if lb[6]:
-                hud_text(out, lb[6], cx, cy + ys * 0.75, int(ns * 0.85), "Bold", col, al * ease((u - 0.25) / 0.3), 0.12, display=True)
+                sw_ = font(int(ns * 0.85), "Bold", True).getlength(lb[6]) * 1.14 / 2
+                hud_text(out, lb[6], min(max(cx, 30 + sw_), W - 30 - sw_), cy + ys * 0.75, int(ns * 0.85), "Bold", col, al * ease((u - 0.25) / 0.3), 0.12, display=True)
 
     # ----------------------------------------------------------------------------------------------- frame
     def frame(self, t):
@@ -481,8 +500,7 @@ class Scene:
                     d = math.hypot(x[i] - W / 2, y[i] - H * 1.05)
                     if d < (t - T_WAVE) * 1500: a *= 0.0
                 if a <= 0.02: continue
-                c = np.clip(self.scol[self.tiny[i]] * 0.6 + 0.55, 0, 1) * 255
-                composite(out, tiny_layer(self.tiny_txt[i], self.tiny_size, tuple(c)), x[i] + 10 + len(self.tiny_txt[i]) * self.tiny_size * 0.3, y[i] - self.tiny_size * 0.55, a * 0.95)
+                composite(out, tiny_layer(self.tiny_txt[i], self.tiny_size, tuple(int(v) for v in self.tiny_col[i])), x[i] + 10 + len(self.tiny_txt[i]) * self.tiny_size * 0.3, y[i] - self.tiny_size * 0.55, a * 0.95)
         self.draw_labels(out, t, jobs)
         # factual lifetime labels (myth beat)
         v = L.vertical

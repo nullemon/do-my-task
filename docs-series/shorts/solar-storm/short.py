@@ -31,6 +31,8 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/C_city.png"
 # street-lamp heads in SOURCE px of C_city.png (941x1672) (same as S2)
 LAMPS_SRC = [(575, 1496), (703, 1449), (819, 1456), (470, 1386), (237, 1303)]
+# a few lights that survive the blackout (battery / emergency lights), SOURCE px (from S2)
+SURVIVE_SRC = [(547, 1592), (33, 1418), (264, 1404), (690, 1338)]
 FPS = 30
 LEAD, TAIL = 0.25, 2.0
 
@@ -125,6 +127,11 @@ class City:
         self.t_on = (T_RET0 + 0.1 + (1 - q) * 0.9 + rng.uniform(0, 0.35, n)).astype(f32)
         self.ph = rng.uniform(0, 100, n).astype(f32)
         self.lamp_off, self.lamp_on = LAMP_OFF, LAMP_ON
+        self.surv = np.zeros(n, bool)
+        for px, py in [(x * s, y * s + oy) for x, y in SURVIVE_SRC]:
+            d = (cent[1:, 0] - px) ** 2 + (cent[1:, 1] - py) ** 2
+            i = 1 + int(np.argmin(d))
+            if d[i - 1] < (40 * s) ** 2: self.surv[i] = True
         # night grade of the unlit city + a sky-facing rim (edges with open sky right above them)
         Yd = lum(D)[..., None]
         self.night = ((D * 0.30 + Yd * 0.70) * np.array([0.55, 0.72, 1.20], f32)).astype(f32)
@@ -147,6 +154,9 @@ class City:
             u = (t - self.t_off) / 0.12
             on = pre * fl + (1 - pre) * np.clip(1 - u, 0, 1) * 0.6
             on += np.exp(-((t - self.t_off + 0.06) / 0.035) ** 2) * 1.6     # last-gasp flash
+        if T_OFF0 < t < T_RET0 + 2.0:                                      # dim flickering emergency lights
+            fl = (0.18 + 0.06 * np.sin(t * 9.0 + self.ph) + 0.05 * np.sin(t * 23.0 + self.ph * 3)) * ramp(t, T_OFF1 + 0.6, T_OFF1 + 1.6)
+            on = np.where(self.surv, np.maximum(on, fl), on)
         if t > T_RET0:
             back = np.clip((t - self.t_on) / 0.10, 0, 1)
             back *= 0.80 + 0.20 * (np.sin(t * 90 + self.ph) > -0.6)
@@ -176,11 +186,11 @@ class City:
         onw = self.on_window(t); onl = self.on_lamp(t)
         wmap = onw[self.label][..., None]
         lmap = onl[self.lamp_id][..., None]
-        amb = self.D * (1 - nightlvl) + self.night * 0.17 * nightlvl
+        amb = self.D * (1 - nightlvl) + self.night * 0.075 * nightlvl
         img = amb + self.depth[..., None] * hcol * 0.25
         # aurora light: albedo (lights-off plate, normalised) x aurora colour, stronger on sky-facing surfaces
         alb = self.D / (lum(self.D)[..., None] * 3 + 0.02)
-        img += alb * aur_col * self.upf[..., None] * self.ripple(t)[..., None] * 2.0
+        img += alb * aur_col * self.upf[..., None] * self.ripple(t)[..., None] * 1.5
         img += self.Lw * wmap * 1.25 + self.Lg * lmap * 1.15
         return img.astype(f32)
 
@@ -195,7 +205,7 @@ def palette(x):
 class Scene:
     def __init__(self, vertical=True):
         self.L = Layout(vertical); W, H = self.L.W, self.L.H
-        self.fg = Foreground(FG_PATH, self.L, hz_frac=0.60)
+        self.fg = Foreground(FG_PATH, self.L, hz_frac=0.70)
         self.hz = self.fg.horizon
         self.f = 1150.0 if vertical else 1000.0
         self.cam = SkyCam(W, H, self.hz, self.f)

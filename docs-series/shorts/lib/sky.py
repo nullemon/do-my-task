@@ -265,7 +265,7 @@ class LensSky:
     a continuous Einstein ring at theta = thetaE. Stars are drawn as ~seeing-sized discs (sigma `star_sig` arcsec) rather
     than true points, and the shadow is drawn at `shadow` x thetaE (the real one is ~1e-4 thetaE): label both as enlarged.
     """
-    def __init__(self, half=150.0, res=0.1, n=420, seed=7, star_sig=0.75, stars=(), galaxies=(), n_gal=14):
+    def __init__(self, half=150.0, res=0.1, n=420, seed=7, star_sig=0.75, stars=(), galaxies=(), n_gal=40):
         self.half, self.res = half, res
         N = int(2 * half / res); self.N = N
         r = np.random.default_rng(seed)
@@ -278,7 +278,7 @@ class LensSky:
             c = (0.45 + 0.55 * bbcolor(T)) * f
             splat(tex, (x + half) / res, (y + half) / res, sg * 4, lambda d, dx, dy, c=c: np.exp(-d * d / (2 * sg * sg))[..., None] * c)
         gals = list(galaxies) + [(r.uniform(-half, half), r.uniform(-half, half), r.uniform(1.5, 4), r.uniform(0.3, 0.9),
-                                  r.uniform(0, 180), r.uniform(0.04, 0.10), (0.85, 0.88, 1.0)) for _ in range(n_gal)]
+                                  r.uniform(0, 180), r.uniform(0.02, 0.07), (0.85, 0.88, 1.0)) for _ in range(n_gal)]
         for gx, gy, rad, q, pa, br, col in gals:                   # (x, y, radius", axis ratio, PA deg, brightness, rgb)
             R = rad / res; ca, sa = math.cos(math.radians(pa)), math.sin(math.radians(pa)); col = np.array(col, f32)
             def fn(d, dx, dy, R=R, q=q, ca=ca, sa=sa, br=br, col=col):
@@ -288,7 +288,7 @@ class LensSky:
             splat(tex, (gx + half) / res, (gy + half) / res, R * 5, fn)
         self.tex = tex
 
-    def view(self, size, field, thetaE, lens_off, shadow=0.3, ss=2, seeing=0.5, bg=(0.0013, 0.0016, 0.0024)):
+    def view(self, size, field, thetaE, lens_off, shadow=0.3, ss=2, seeing=0.5, bg=(0.0005, 0.0006, 0.0010)):
         n = size * ss
         g = (np.arange(n, dtype=f32) + 0.5) / n * field - field / 2
         tx, ty = np.meshgrid(g, g)

@@ -85,7 +85,7 @@ class Scene:
         self.L = L = Layout(vertical); W, H = L.W, L.H
         self.fg = Foreground(FG_PATH, L, hz_frac=0.80)
         self.hz = self.fg.horizon
-        self.f = 480.0 if vertical else 420.0
+        self.f = 480.0 if vertical else 300.0                     # wide: shorter lens so the high Moon (and its gamma orb) stays in frame
         self.eph = dict(np.load(os.path.join(SCR, "ephem.npz")))
         self.az0 = self._aim(630.0 if vertical else 1150.0)
         self.geo = SkyGeo(W, H, self.hz, self.f, self.az0, self.eph)

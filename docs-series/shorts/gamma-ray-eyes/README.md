@@ -35,7 +35,7 @@ It uses a locked camera: one tripod frame of the park plate `A2_park.png` (941×
 - `ephem.py` (astropy, bundled IERS data) computes per frame, for Cape Town's latitude on **15 Jan 2026 at 07:30 local**, the Sun and Moon directions and the horizon → galactic rotation. The sky clock runs 30× real time, so the sky turns slowly.
   - The camera faces east and is aimed so the Moon sits at x = 630.
   - The Moon is a waning crescent 40° from the Sun and 10° from the Galactic Centre. A day later it sits right on it.
-- `skymaps.py` projects the textures through a level pinhole camera that matches `lib.sky.SkyCam` (f = 480 px vertical, 420 px wide).
+- `skymaps.py` projects the textures through a level pinhole camera that matches `lib.sky.SkyCam` (f = 480 px vertical, 300 px wide; the wide lens is shorter so the high Moon and its gamma orb stay in frame).
 
 ## Fact check
 - **The claim:** NASA Goddard / Fermi release, 15 Aug 2019 ("Fermi sees the Moon in gamma rays", svs.gsfc.nasa.gov/13236). At gamma-ray energies above about 31 MeV, the Moon is brighter than the Sun.
@@ -48,7 +48,7 @@ It uses a locked camera: one tripod frame of the park plate `A2_park.png` (941×
 - **Sizes are exaggerated:**
   - The visible and infrared Moon is drawn at 26 px radius; the real Moon would be about 2 px at this focal length.
   - The radio and microwave Sun discs are modest glows.
-  - The gamma-ray Moon is a huge orb (100–142 px radius), roughly echoing Fermi's PSF-blurred view.
+  - The gamma-ray Moon is a huge filled orb (100–142 px radius): a white-hot violet core, a mottled PSF-blurred edge, a centre-peaked bloom halo and a gentle pulse, roughly echoing Fermi's fuzzy gamma-ray Moon. The shock ring at "blazes" is a separate expanding ring.
 - **Gamma energy mismatch:** the gamma-ray sky uses >10 GeV photons (3FHL), where the Sun would actually beat the Moon. The Moon and Sun brightness follow the >31 MeV statement instead.
   - The LAT exposure is not divided out; it is nearly uniform.
   - The photon "sparkles" are random draws weighted by the map.

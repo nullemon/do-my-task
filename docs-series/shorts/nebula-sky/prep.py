@@ -22,7 +22,7 @@ def px(D_ly): return F_PX * D_ly / D_REF        # gnomonic: 2 f tan(theta/2) wit
 # key: file, crop box (fractions x0, y0, x1, y1), how many ly the crop's WIDTH spans (None: height given instead),
 #      black-level percentile (None: no subtraction), mask ellipse radii (fractions of half-size), saturation
 NEB = {
-    "orion": dict(f="4K_orion_hearth_4K.png", crop=(0.0, 0.0, 1.0, 1.0), w_ly=24.0, bl=None, mask=(1.0, 1.0), sat=1.15),
+    "orion": dict(f="4K_orion_hearth_4K.png", crop=(0.0, 0.0, 1.0, 1.0), w_ly=24.0, bl=12, mask=(1.0, 1.0), sat=1.55, con=1.35, sharp=0.6),
     "ring":  dict(f="4K_webb_ring.png", crop=(0.0, 0.0, 1.0, 1.0), w_ly=1.0 * 3840 / 2900, bl=4, mask=(1.0, 1.15), sat=1.1),
     "pill":  dict(f="4K_webb_pillars.png", crop=(0.0, 0.0, 1.0, 1.0), h_ly=3400 / 3100 * 4.0, bl=None, mask=(0.95, 0.98), sat=1.1,
                  rot=(47.6, 2150, 1100, 2200, 3400)),   # turned upright: tallest pillar (~3100 px source) = 4 ly
@@ -78,6 +78,11 @@ def main():
         img = cv2.resize(src, (w, h), interpolation=cv2.INTER_AREA)
         if c["bl"] is not None:
             b = np.percentile(lum(img), c["bl"]); img = np.maximum(img - b, 0)
+        if c.get("con"):                                          # contrast about the mean (photo looked flat once additive)
+            y = lum(img)[..., None]; mu = float(y.mean())
+            img = img * (np.maximum(y, 1e-5) / mu) ** (c["con"] - 1)
+        if c.get("sharp"):
+            img = np.maximum(img + c["sharp"] * (img - cv2.GaussianBlur(img, (0, 0), 1.2)), 0)
         y = lum(img)[..., None]; img = np.maximum(y + (img - y) * c["sat"], 0)
         if c["mask"] is not None:
             m = soft_mask(h, w, *c["mask"], seed=300 + i)

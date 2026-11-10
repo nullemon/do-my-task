@@ -48,15 +48,15 @@ def ang(D): return 2 * math.degrees(math.atan(D / (2 * D_REF)))
 NEB = {
     "night": dict(name="", I=0.0, gain=1.0, beams=[(0.3, 0.5, 1.0)], bI=0.0, glow=0.0, expo=1.15),
     "orion": dict(name="ORION NEBULA", tc=(255, 190, 120), l2="24 LY ACROSS · REALLY 1,344 LY AWAY", l3=f"IF IT WERE 15 LY AWAY: {ang(24):.0f}° WIDE",
-                  I=0.55, gain=0.95, occ=0.4, beams=[(1.0, 0.55, 0.20), (0.25, 0.95, 0.85), (0.85, 0.45, 1.0), (1.0, 0.85, 0.5)], bI=0.55, glow=0.10, expo=0.95),
+                  I=0.55, gain=1.3, occ=0.75, beams=[(1.0, 0.55, 0.20), (0.25, 0.95, 0.85), (0.85, 0.45, 1.0), (1.0, 0.85, 0.5)], bI=0.28, glow=0.10, expo=1.0, core=(0.47, 0.42)),
     "ring":  dict(name="RING NEBULA", tc=(120, 230, 255), l2="~1 LY ACROSS · REALLY ~2,600 LY AWAY", l3=f"IF IT WERE 15 LY AWAY: {ang(1.0):.1f}° · 7 FULL MOONS",
-                  I=0.10, gain=1.8, beams=[(0.2, 0.9, 1.0), (1.0, 0.35, 0.25), (0.6, 1.0, 0.6)], bI=0.75, glow=0.30, expo=1.15),
+                  I=0.10, gain=1.8, beams=[(0.2, 0.9, 1.0), (1.0, 0.35, 0.25), (0.6, 1.0, 0.6)], bI=0.18, glow=0.30, expo=1.15, halo=1.0),
     "pill":  dict(name="PILLARS OF CREATION", tc=(255, 170, 110), l2="~4 LY TALL · REALLY ~6,500 LY AWAY", l3=f"IF IT WERE 15 LY AWAY: {ang(4.0):.0f}° TALL",
                   I=0.22, gain=1.5, occ=0.9, beams=[(1.0, 0.5, 0.15), (0.6, 0.45, 1.0), (0.9, 0.85, 0.75)], bI=0.35, glow=0.22, expo=1.1),
     "crab":  dict(name="CRAB NEBULA", tc=(150, 255, 200), l2="~11 LY ACROSS · REALLY ~6,500 LY AWAY", l3=f"IF IT WERE 15 LY AWAY: {ang(11):.0f}° WIDE",
                   I=0.40, gain=1.15, occ=0.3, beams=[(0.35, 0.8, 1.0), (1.0, 0.55, 0.25), (0.55, 1.0, 0.45), (0.9, 0.5, 1.0)], bI=0.6, glow=0.14, expo=1.0),
     "car":   dict(name="CARINA NEBULA", tc=(255, 160, 90), l2="~230 LY ACROSS · REALLY ~7,500 LY AWAY", l3="IF IT WERE 15 LY AWAY: ALL AROUND US",
-                  I=0.60, gain=1.15, beams=[(1.0, 0.5, 0.15), (0.3, 0.6, 1.0), (1.0, 0.8, 0.4)], bI=0.35, glow=0.06, expo=1.0),
+                  I=0.45, gain=1.15, beams=[(1.0, 0.5, 0.15), (0.3, 0.6, 1.0), (1.0, 0.8, 0.4)], bI=0.35, glow=0.06, expo=1.0),
 }
 
 # ------------------------------------------------------------------------------------------------ timeline
@@ -331,13 +331,23 @@ class Scene:
             pk = (1.0 + 2.5 * ramp(t, T_PULSAR - 0.1, T_PULSAR + 0.2)) * (0.25 + 0.75 * beat) * I * s
             splat(neb, fxp, fyp, 160, lambda d, dx, dy: (np.exp(-d / 2.0) * 6 + np.exp(-d / 14) * 0.9 + np.exp(-d / 60) * 0.18
                                                        + (np.exp(-np.abs(dy) / 1.2) * np.exp(-np.abs(dx) / 70) + np.exp(-np.abs(dx) / 1.2) * np.exp(-np.abs(dy) / 70)) * 1.2)[..., None] * pk * np.array([0.7, 0.85, 1.0], f32))
+        if Q.get("core") and M is not None:                                    # bright Trapezium core with a glow
+            ux, uy = Q["core"]; fxc = M[0, 0] * ux * S["w"] + M[0, 1] * uy * S["h"] + M[0, 2]; fyc = M[1, 0] * ux * S["w"] + M[1, 1] * uy * S["h"] + M[1, 2]
+            kc = I * s * (1 + 0.15 * math.sin(t * 2.1))
+            splat(neb, fxc, fyc, 420, lambda d, dx, dy: (np.exp(-d / 6) * 3.0 + np.exp(-d / 40) * 0.6 + np.exp(-d / 150) * 0.15
+                                                       + (np.exp(-np.abs(dy) / 1.5) * np.exp(-np.abs(dx) / 120) + np.exp(-np.abs(dx) / 1.5) * np.exp(-np.abs(dy) / 120)) * 0.8)[..., None] * kc * np.array([0.95, 0.92, 1.0], f32))
         self.twinkles(neb, cur, M, t, I * (1 if cur != "night" else 0.0))
         # nebula glow in the sky + light rays (half res)
         dx, dy = self.hx - cx, self.hy - cy; d = np.sqrt(dx * dx + dy * dy)
         lc = S["light"]
         aure = (np.exp(-np.maximum(d - Rsz * 0.4, 0) / (120 + 0.6 * Rsz)) * Q["glow"] * 2.0 + 0.015 * Q["I"]) * I
         if cur == "night": aure = np.exp(-d / 30) * 0.12 * (s > 1.5)
-        lay = aure[..., None] * lc * 0.25 + self.rays(t, P, Q, w, cx, cy, Rsz, col_u, Q["bI"] * (1 + 1.2 * col_u) * min(1.0, I))
+        if Q.get("halo") and cur != "night":                                   # soft coloured halo so the small ring reads
+            hc = np.array([0.35, 0.85, 1.0], f32) * np.exp(-d / (Rsz * 0.9 + 6))[..., None] + np.array([1.0, 0.35, 0.3], f32) * np.exp(-d / (Rsz * 2.6 + 20))[..., None] * 0.5
+            aure = aure * 0
+            lay0 = hc * Q["halo"] * 0.35 * I
+        else: lay0 = 0.0
+        lay = lay0 + aure[..., None] * lc * 0.25 + self.rays(t, P, Q, w, cx, cy, Rsz, col_u, Q["bI"] * (1 + 1.2 * col_u) * min(1.0, I))
         if prev != "night" and w < 1:                                          # previous nebula's sky glow fading out
             pl = self.sp[prev]["light"]; lay += (0.08 * P["I"] * (1 - w)) * pl * 0.25
         neb = neb + self.up(lay * pulse)

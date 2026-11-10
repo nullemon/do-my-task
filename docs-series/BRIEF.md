@@ -27,3 +27,11 @@ Each video: **16:9 1920×1080, 24 fps, 4:00–5:00 long (target 4:30 = 270 s)**,
 - **Disk is tight (≈9 GB free shared by 3 videos):** keep your scratch ≤ 2.5 GB. Delete intermediate frames once a shot is encoded to a lossless/near-lossless segment (x264 crf 14). Check `df -h /` before big steps.
 - **Memory:** avoid running more than 2 heavy processes yourself at once (an earlier agent was OOM-killed).
 - Folders: `docs-series/05-mariana-trench/`, `06-lituya-bay/`, `07-megalodon-to-scale/`.
+
+## Wave 3 ("Space, round two") overrides — these win over anything above
+- Length **4:00–6:00** (target ~5:00), narration ~600–750 words, same voice (am_michael @ 0.94).
+- **3 videos render at once on 4 cores / 15 GB RAM / ~20 GB free disk.** Keep scratch ≤ 3 GB, at most 2 heavy processes of your own at a time, delete frames once a shot is encoded to a segment. Check `df -h /` before big steps.
+- **Look must be premium** (the user rejected flat/clip-art visuals): real textures where they exist (NASA Blue Marble / night lights / clouds ship in the `three-globe` npm package under `example/img` — `npm pack three-globe`; npm, PyPI and GitHub releases are reachable, most other sites are not), proper lighting, atmosphere glow, bloom, depth; clean thin typography. No stick-figure silhouettes, no flat vector shapes as hero imagery. Reference: `docs-series/03-you-are-not-sitting-still/visuals/thumbnail_earth.py` (numpy analytic Earth) and the 05/07 films.
+- **Deliverables** in `docs-series/<NN-name>/out/`: `<name>-1080p-hq.mp4` (≤ 380 MB), `<name>-4k.mp4` (lanczos upscale, **≤ 740 MB total** so it can be cut into two halves under 380 MB), plus `<name>.srt`, and a **YouTube thumbnail** `thumb.jpg` 1280×720 in the style of thumbnail_earth.py (photoreal hero object, 3–5 huge words, yellow key number/word). No other encodes.
+- Videos are delivered in chat only — never put media on GitHub, don't git commit.
+- Facts: verify every number with WebSearch; list sources in README; hedge honestly.

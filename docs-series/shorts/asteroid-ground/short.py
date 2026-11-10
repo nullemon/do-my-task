@@ -34,6 +34,7 @@ FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8
 FPS = 30
 LEAD, TAIL = 0.25, 1.05
 IMP_SRC_X = 470.0                                     # impact azimuth (just behind the conifer), SOURCE px
+IMP_SRC_X_WIDE = 645.0                                # 16:9: right of the (much larger) conifer
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
@@ -133,8 +134,8 @@ class Scene:
         self.L = L = Layout(vertical); W, H = L.W, L.H; self.vertical = vertical
         self.fg = fg = Foreground(FG_PATH, L, lamps=[], hz_frac=0.68)
         self.hz = hz = float(fg.horizon)
-        self.k = 1.0 if vertical else 0.62                                   # effect scale
-        self.IMP = (IMP_SRC_X * fg.s, hz + 6)
+        self.k = 1.0 if vertical else 0.72                                   # effect scale
+        self.IMP = ((IMP_SRC_X if vertical else IMP_SRC_X_WIDE) * fg.s, hz + 6)
         if vertical:
             self.SUN = (230.0, 330.0); self.A0 = (1010.0, 170.0)
         else:

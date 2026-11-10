@@ -88,6 +88,9 @@ COUNTERS = [
 ]
 FEAT_END = {c[0]: (COUNTERS[i + 1][1] if i + 1 < len(COUNTERS) else T_END) for i, c in enumerate(COUNTERS)}
 FLY = 0.55
+MAXROWS = 5
+ROWLAB = dict(orbit="EARTH'S ORBIT", sun="SUN: H FUSED", dust="SPACE DUST", gal="AROUND GALAXY", cmb="THROUGH COSMOS",
+              stars="STARS BORN", sn="SUPERNOVAE", light="SUNLIGHT SENT")
 APPEAR = [c[1] for c in COUNTERS]
 
 
@@ -155,7 +158,7 @@ def text_img(txt, size, wt="Black"):
     return np.asarray(m, f32) / 255.0, w, pad
 
 
-def glow_put(dst, txt, cx, cy, size, col, alpha, anchor="c", wt="Black", white=0.55, glow=1.0, track=0.0):
+def glow_put(dst, txt, cx, cy, size, col, alpha, anchor="c", wt="Black", white=0.55, glow=1.0, track=0.0, crisp=False):
     """glowing coloured text on the sRGB frame: soft dark backing, coloured halo, white-hot fill with a coloured edge"""
     if alpha <= 0.003: return
     if track > 0: txt = " ".join(txt)
@@ -178,6 +181,40 @@ def glow_put(dst, txt, cx, cy, size, col, alpha, anchor="c", wt="Black", white=0
     fill = col * (1 - white) + white
     a_e = ms[sl][..., None] * alpha; a_f = m[sl][..., None] * alpha
     reg[:] = reg * (1 - a_e) + col * 0.85 * a_e
+    reg[:] = reg * (1 - a_f) + fill * a_f
+    dst[ya:yb, xa:xb] = np.clip(reg, 0, 1)
+    return w
+
+
+def crisp_put(dst, txt, cx, cy, size, col, alpha, anchor="c", wt="Black"):
+    """solid, readable counter text: saturated fill with a light top gradient, dark outline, soft drop shadow and only
+    a subtle coloured outer halo (like the orange captions)"""
+    if alpha <= 0.003: return
+    m, w, pad = text_img(txt, size, wt)
+    h, W_ = m.shape
+    if anchor == "l": cx = cx + w / 2
+    elif anchor == "r": cx = cx - w / 2
+    x0, y0 = int(round(cx - W_ / 2)), int(round(cy - h / 2))
+    H, Wd = dst.shape[:2]
+    xa, ya, xb, yb = max(0, x0), max(0, y0), min(Wd, x0 + W_), min(H, y0 + h)
+    if xb <= xa or yb <= ya: return
+    sl = (slice(ya - y0, yb - y0), slice(xa - x0, xb - x0))
+    col = np.array(col, f32)
+    sw = max(2, int(round(size * 0.075)))
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * sw + 1, 2 * sw + 1))
+    ms = cv2.dilate(m, k)
+    off = max(1, int(size * 0.05))
+    shd = np.zeros_like(ms); shd[off:, off // 2:] = ms[:-off, :ms.shape[1] - off // 2]
+    shd = cv2.GaussianBlur(shd, (0, 0), size * 0.10)
+    halo = cv2.GaussianBlur(ms, (0, 0), size * 0.30)
+    reg = dst[ya:yb, xa:xb]
+    reg += halo[sl][..., None] * col * 0.28 * alpha
+    reg *= (1 - 0.70 * shd[sl] * alpha)[..., None]
+    a_e = ms[sl][..., None] * alpha
+    reg[:] = reg * (1 - a_e) + np.array([0.06, 0.04, 0.10], f32) * a_e
+    gy = np.linspace(1.0, 0.0, h, dtype=f32)[sl[0]][:, None, None]
+    fill = np.clip(col * (0.88 + 0.12 * gy) + (1 - col) * 0.22 * gy, 0, 1)
+    a_f = m[sl][..., None] * alpha
     reg[:] = reg * (1 - a_f) + fill * a_f
     dst[ya:yb, xa:xb] = np.clip(reg, 0, 1)
     return w
@@ -300,10 +337,10 @@ class Scene:
         self.a = a[..., None]
         # --- layout of the counter stack
         if vertical:
-            self.lay = dict(clock=(W / 2, 258, 32), x0=60, x1=W - 60, y0=320, dy=52, ls=28, vs=44,
-                            fx=W / 2, fly=748, fvy=828, fsy=896, fls=34, fvs=100, fss=28, fmaxw=W - 110)
+            self.lay = dict(clock=(W / 2, 258, 34), x0=56, x1=W - 56, y0=330, dy=68, ls=36, vs=58,
+                            fx=W / 2, fly=692, fvy=772, fsy=845, fls=36, fvs=104, fss=30, fmaxw=W - 110)
         else:
-            self.lay = dict(clock=(415, 52, 26), x0=60, x1=770, y0=104, dy=44, ls=22, vs=34,
+            self.lay = dict(clock=(430, 52, 28), x0=56, x1=800, y0=112, dy=58, ls=29, vs=46,
                             fx=1390, fly=300, fvy=380, fsy=452, fls=32, fvs=92, fss=26, fmaxw=860)
 
     # ----------------------------------------------------------------------------------------------- geometry
@@ -562,7 +599,7 @@ class Scene:
         fgc = self.fg_gold * (1 - g2d) + self.fg_dusk * g2d
         fgc = fgc * (1 - 0.85 * d2n) + self.fg_night * 0.85 * d2n
         sx, sy = self.sun_pos(t)
-        rimc = np.array([1.0, 0.62, 0.25], f32) * (0.9 + 0.5 * (pulse - 1) + 1.5 * light_amt)
+        rimc = np.array([1.0, 0.62, 0.25], f32) * (0.9 + 0.5 * (pulse - 1) + 0.5 * light_amt)
         fgc = fgc + self.rim[..., None] * rimc * 0.35
         fgc = fgc + self.fg.flat * np.array([1.0, 0.70, 0.35], f32) * (0.10 * light_amt + 0.04 * (pulse - 1))
         fgc = fgc + self.fg.flat * np.array([0.55, 0.40, 1.0], f32) * 0.05 * min(drive, 1.5)
@@ -606,53 +643,59 @@ class Scene:
     def overlay(self, out, t):
         L = self.L; W, H = L.W, L.H; ly = self.lay; v = L.vertical
         wl = white_level(t); vis_all = 1.0 - 0.85 * wl
-        # soft dark backing behind the stack (readability over the Milky Way)
-        rows = [c for c in COUNTERS if t >= FEAT_END[c[0]]]
-        if rows:
-            y0 = ly["y0"] - ly["dy"] * 0.75; y1 = ly["y0"] + ly["dy"] * (len(rows) - 0.25)
+        # stack state: rows already in (fractional while flying); only the latest MAXROWS stay, older ones slide out the top
+        s_in = sum(ease((t - FEAT_END[c[0]]) / FLY) for c in COUNTERS if t >= FEAT_END[c[0]])
+        off = max(0.0, s_in - MAXROWS)
+        if s_in > 0:
+            n = min(s_in, MAXROWS)
+            y0 = ly["y0"] - ly["dy"] * 0.62; y1 = ly["y0"] + ly["dy"] * (n - 0.38)
             yy = np.arange(H, dtype=f32)[:, None]
-            band = smooth(y0 - 70, y0 + 20, yy) * smooth(y1 + 70, y1 - 20, yy)
-            if not v: band = band * smooth(ly["x1"] + 120, ly["x1"] + 20, np.arange(W, dtype=f32)[None, :])
-            out *= (1 - 0.38 * band * vis_all)[..., None]
+            band = smooth(y0 - 50, y0 + 25, yy) * smooth(y1 + 50, y1 - 25, yy) * min(1.0, s_in * 2)
+            if not v: band = band * smooth(ly["x1"] + 110, ly["x1"] + 25, np.arange(W, dtype=f32)[None, :])
+            out *= (1 - 0.55 * band * vis_all)[..., None]
+            out += (band * 0.025 * vis_all)[..., None] * np.array([0.25, 0.20, 0.55], f32)
         # clock
         cx, cy, cs = ly["clock"]
-        glow_put(out, f"YOU'VE BEEN WATCHING {t:4.1f} S", cx, cy, cs, (0.95, 0.95, 1.0), 0.95 * vis_all * ramp(t, 0.15, 0.45), wt="Bold", white=0.75, glow=0.4)
+        crisp_put(out, f"YOU'VE BEEN WATCHING {t:4.1f} S", cx, cy, cs, (0.97, 0.97, 1.0), vis_all * ramp(t, 0.15, 0.45), wt="Bold")
+        WHITE = (0.97, 0.97, 1.0)
         for i, (key, ta, lab, val, sub, col) in enumerate(COUNTERS):
             if t < ta - 0.02: continue
             te = FEAT_END[key]
-            ry = ly["y0"] + ly["dy"] * i
+            slot = i - off
+            ry = ly["y0"] + ly["dy"] * slot
+            ra = float(np.clip(1 + slot / 0.6, 0, 1)) * vis_all                 # fades as it slides out the top
             vtxt = val(t)
             if t < te:                                                 # featured card
                 age = t - ta
                 a = min(1.0, max(0.0, (age + 0.02) / 0.10)) * vis_all
                 pop = 1 + 0.22 * math.exp(-max(age, 0) / 0.08)
-                glow_put(out, lab, ly["fx"], ly["fly"], ly["fls"], (0.95, 0.96, 1.0), a, wt="Bold", white=0.8, glow=0.4)
-                m, w, _ = text_img(vtxt, int(ly["fvs"]), "Black")
+                crisp_put(out, lab, ly["fx"], ly["fly"], ly["fls"], WHITE, a, wt="Black")
+                w = text_img(vtxt, int(ly["fvs"]), "Black")[1]
                 vs = ly["fvs"] * min(1.0, ly["fmaxw"] / max(w, 1))
-                glow_put(out, vtxt, ly["fx"], ly["fvy"], int(vs * pop), col, a, white=0.30, glow=1.3)
-                glow_put(out, sub, ly["fx"], ly["fsy"], ly["fss"], tuple(c * 0.6 + 0.4 for c in col), a * ramp(age, 0.25, 0.5), wt="Bold", white=0.4, glow=0.3)
+                crisp_put(out, vtxt, ly["fx"], ly["fvy"], int(vs * pop), col, a)
+                crisp_put(out, sub, ly["fx"], ly["fsy"], ly["fss"], tuple(c * 0.55 + 0.45 for c in col), a * ramp(age, 0.25, 0.5), wt="Bold")
             else:                                                       # flying into / sitting in the stack
                 u = ease((t - te) / FLY)
+                if ra <= 0.003: continue
                 if u < 1:
-                    # value: from the featured centre to the right end of its row
-                    m, w, _ = text_img(vtxt, int(ly["vs"]), "Black")
+                    w = text_img(vtxt, int(ly["vs"]), "Black")[1]
                     rx = ly["x1"] - w / 2
                     fvs = ly["fvs"] * min(1.0, ly["fmaxw"] / max(text_img(vtxt, int(ly["fvs"]), "Black")[1], 1))
                     size = int(fvs + (ly["vs"] - fvs) * u)
-                    glow_put(out, vtxt, ly["fx"] + (rx - ly["fx"]) * u, ly["fvy"] + (ry - ly["fvy"]) * u, size, col, vis_all)
-                    glow_put(out, lab, ly["x0"], ry, ly["ls"], (0.92, 0.94, 1.0), u * vis_all, anchor="l", wt="Bold", white=0.85, glow=0.25)
+                    crisp_put(out, vtxt, ly["fx"] + (rx - ly["fx"]) * u, ly["fvy"] + (ry - ly["fvy"]) * u, size, col, ra)
+                    crisp_put(out, ROWLAB[key], ly["x0"], ry, ly["ls"], WHITE, u * ra, anchor="l", wt="Black")
                 else:
                     hl = 0.0
                     if key == "orbit" and t > 1000 / V_ORBIT: hl = math.exp(-(t - 1000 / V_ORBIT) / 0.5)
-                    glow_put(out, lab, ly["x0"], ry, ly["ls"], (0.92, 0.94, 1.0), vis_all, anchor="l", wt="Bold", white=0.85, glow=0.25)
-                    glow_put(out, vtxt, ly["x1"], ry, int(ly["vs"] * (1 + 0.35 * hl)), col, vis_all, anchor="r", glow=1.0 + 2 * hl)
+                    crisp_put(out, ROWLAB[key], ly["x0"], ry, ly["ls"], WHITE, ra, anchor="l", wt="Black")
+                    crisp_put(out, vtxt, ly["x1"], ry, int(ly["vs"] * (1 + 0.35 * hl)), col, ra, anchor="r")
         # finale: "right here" -> how far you went, big
         if t >= T_END:
             age = t - T_END; a = min(1.0, age / 0.15) * vis_all
-            glow_put(out, "WHILE YOU WATCHED, YOU TRAVELLED", ly["fx"], ly["fly"], ly["fls"], (0.95, 0.96, 1.0), a, wt="Bold", white=0.8, glow=0.4)
+            crisp_put(out, "WHILE YOU WATCHED, YOU TRAVELLED", ly["fx"], ly["fly"], ly["fls"], WHITE, a, wt="Black")
             vt = f"{fmt_int(V_ORBIT * t)} KM"
-            glow_put(out, vt, ly["fx"], ly["fvy"], int(ly["fvs"] * (1 + 0.2 * math.exp(-age / 0.08))), CYAN, a)
-            glow_put(out, f"+ {fmt_int(V_CMB * t)} KM THROUGH THE COSMOS", ly["fx"], ly["fsy"], ly["fss"], (0.9, 0.6, 1.0), a * ramp(age, 0.3, 0.6), wt="Bold", white=0.4, glow=0.3)
+            crisp_put(out, vt, ly["fx"], ly["fvy"], int(ly["fvs"] * (1 + 0.2 * math.exp(-age / 0.08))), CYAN, a)
+            crisp_put(out, f"+ {fmt_int(V_CMB * t)} KM THROUGH THE COSMOS", ly["fx"], ly["fsy"], ly["fss"], (0.92, 0.65, 1.0), a * ramp(age, 0.3, 0.6), wt="Bold")
         self.caps.draw(out, t)
 
 

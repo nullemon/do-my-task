@@ -14,8 +14,8 @@ STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Sh
 | S5 | Every star is a date (light-departure year on real stars; myth-bust: almost none are dead) | A_park, night | delivered |
 | S6 | If the 1859 solar storm hit today (auroras overhead, then city lights fail) | C_city | delivered |
 | S7 | What if Earth had rings? | B_valley | delivered |
-| S8 | When you see the Sun touch the horizon, it's already gone (refraction) | B_valley | queued |
-| S9 | What if Betelgeuse exploded tonight? | A2_park | in progress |
+| S8 | When you see the Sun touch the horizon, it's already gone (refraction) | B_valley | in progress |
+| S9 | What if Betelgeuse exploded tonight? | A2_park | delivered |
 | S10 | Your sky in 1 million years (real proper motions, HYG catalogue) | B_valley, night | in progress (A2_park) |
 | S11 | Planets at the Moon's distance | B_valley | delivered |
 | S12 | Everything that happens in space while you watch this Short (30 s counters) | A_park | in progress (B_valley) |

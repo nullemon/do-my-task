@@ -27,7 +27,7 @@ Times are the placed starts/ends of each line (`audio/placement.json`); visuals 
 | 18 | shadow | 283.0 | 291.6 | Earth from space with the Moon's penumbra and umbra crossing North America (after 8 April 2024, approximate) |
 | 19 | final | 291.6 | 298.0 | Totality; 'IT WILL NOT ALWAYS BE THERE.'; credits line; fade |
 
-Neighbouring shots cross-fade over 0.8 s. Every shot carries a small label saying what is schematic, simulated, illustrative or to scale.
+Neighbouring shots cross-fade over 0.8 s. On-screen small print is limited to factual notes (sources, numbers, dates); there are no disclaimer captions (user rule, 10 Nov).
 
 ## Narration
 

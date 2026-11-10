@@ -203,7 +203,7 @@ class Scene:
         if vertical:
             self.mw = dict(cx=2073, cy=704, rot=4.0); self.mw_core, self.mw_ang, self.mw_s = (430.0, 1330.0), 60.0, 1.0
         else:
-            self.mw = dict(cx=2050, cy=1300, rot=-38.0); self.mw_core, self.mw_ang, self.mw_s = (560.0, 640.0), 38.0, 0.85
+            self.mw = dict(cx=2050, cy=1300, rot=-38.0); self.mw_core, self.mw_ang, self.mw_s = (760.0, 615.0), 40.0, 0.85
         self._prep_sky()
 
     def _prep_sky(self):

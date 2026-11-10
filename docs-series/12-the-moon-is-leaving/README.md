@@ -39,6 +39,8 @@ Assets (fetched in this session): `lroc_color_poles_8k.jpg` (NASA SVS CGI Moon K
 - All captions, counters and labels are re-laid: centred, stacked, larger relative to the frame, and kept between 12 % from the top and 20 % from the bottom.
 
 ## What is to scale, and what is not
+Following the user's rule of 10 November, the film carries **no on-screen disclaimer small print** ("not to scale", "illustration", "artist's impression" ...). Only factual notes remain on screen (data sources, numbers, dates, the eclipse-safety line). What is and is not to scale is documented here instead.
+
 | shot | to scale / real | not to scale / illustrative |
 |---|---|---|
 | hook, leave | real lunar and terrestrial maps | sizes and separation of Earth and Moon |

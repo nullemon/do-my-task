@@ -35,9 +35,15 @@ def put(T, s, al, h, v, col=TXT, wt="L", track=None):
     T.put((p[0], p[1]), s, p[2], al, col=col, anchor=p[3] if len(p) > 3 else ("c" if V else "l"), wt=wt, track=track)
 
 
+import re
+_DISC = re.compile(r"NOT TO SCALE|SCHEMATIC|ILLUSTRATI|ARTIST'S IMPRESSION|TIMESCALE|EXAGGERAT|BRIGHTENED|SIMULAT|3D MODEL|TOO FAINT|EARLY SURFACE|APPROXIMATE|PRESENT-DAY GEOGRAPHY")
+
+
 def foot(T, s, al, y=None):
     """small honest-labelling line: bottom right in 16:9; centred, wrapped, inside the safe area in 9:16"""
-    if al <= 0.004: return
+    # user rule (10 Nov): no disclaimer small print - only factual notes (sources, numbers, dates) survive
+    s = "  ·  ".join(p for p in s.split("  ·  ") if not _DISC.search(p))
+    if al <= 0.004 or not s: return
     if not V:
         T.put((W - 60, 1034 if y is None else y), s, 16, al * 0.85, col=DIM, anchor="r"); return
     parts = s.split("  ·  "); lines = [""]
@@ -167,7 +173,6 @@ def shot_reflector(t, lt):
     put(T, "LEFT BY THREE APOLLO CREWS AND TWO SOVIET ROVERS", win(t, 25.2, 39.6, 0.8), (120, 140, 20), (W / 2, 296, 19), col=AMB)
     put(T, "100 GLASS PRISMS  ·  EACH RETURNS LIGHT TO ITS SOURCE", win(t, 32.0, 39.6, 0.8), (120, 184, 20), (W / 2, 760, 20))
     if V: foot(T, "ILLUSTRATION  ·  3D MODEL AFTER THE APOLLO 11 ARRAY (LRRR)", win(t, 24.6, 39.6), y=370)
-    else: T.put((120, 226), "ILLUSTRATION  ·  3D MODEL AFTER THE APOLLO 11 ARRAY (LRRR), NOT A PHOTOGRAPH", 16, win(t, 24.6, 39.6) * 0.9, col=DIM)
     return T.add_to(img)
 
 
@@ -305,7 +310,7 @@ def shot_tides(t, lt):
     lab(mc + (np.array([-150, -MR - 160]) if not V else np.array([MR + 150, -10])), "→ A WIDER ORBIT", win(t, S['tide2'] + 9.0, b0, 0.8), YEL, anchor="c" if not V else "l")
     lab(ec + (np.array([ER * 1.35, ER * 0.95]) if not V else np.array([ER * 1.15, -ER * 1.6])), "PULLED BACK: THE SPIN SLOWS", a_b, RED, anchor="l" if not V else "c")
     put(T, "THE SPIN THE EARTH LOSES, THE MOON GAINS", win(t, S['tide3'] + 3.6, b0, 0.8), (120, 968, 23), (W / 2, 1440, 21), col=AMB)
-    foot(T, "SCHEMATIC  ·  NOT TO SCALE  ·  BULGE AND ANGLE GREATLY EXAGGERATED (THE OPEN-OCEAN BULGE IS UNDER A METRE)", win(t, a0 + 1.0, b0))
+    foot(T, "THE REAL OPEN-OCEAN BULGE IS LESS THAN A METRE HIGH", win(t, a0 + 1.0, b0))
     return T.add_to(img)
 
 
@@ -443,7 +448,7 @@ def shot_origin(t, lt):
     put(T, "THE DEBRIS GATHERS INTO THE MOON  ·  MORE THAN 10× CLOSER THAN TODAY", win(t, ti + 3.2, b0, 0.8), (120, 968, 22), None)
     if V:
         T.put((W / 2, 1340), "THE DEBRIS GATHERS INTO THE MOON", 20, win(t, ti + 3.2, b0, 0.8), anchor="c"); T.put((W / 2, 1376), "MORE THAN 10× CLOSER THAN TODAY", 20, win(t, ti + 3.2, b0, 0.8), anchor="c", col=YEL)
-    foot(T, "ARTIST'S IMPRESSION  ·  NOT TO SCALE  ·  TIMESCALE COMPRESSED (THE MOON MAY HAVE TAKEN MONTHS TO YEARS TO FORM)", win(t, a0 + 1.0, b0))
+    foot(T, "MODELS: THE MOON MAY HAVE TAKEN MONTHS TO YEARS TO FORM", win(t, a0 + 1.0, b0))
     return T.add_to(img)
 
 
@@ -490,7 +495,7 @@ def shot_ancient(t, lt):
     af = win(t, a0 + 1.0, b0)
     if V: foot(T, "ARTIST'S IMPRESSION  ·  THE EARLY SURFACE IS UNKNOWN (TODAY'S LUNAR MAP IS USED)  ·  THE FIRST SEAS CAME LATER, AS THE MOON RETREATED", af, y=400)
     else:
-        T.put((120, 190), "ARTIST'S IMPRESSION  ·  EARLY SURFACE UNKNOWN", 16, af * 0.9, col=DIM); T.put((120, 216), "TODAY'S LUNAR MAP IS USED", 16, af * 0.9, col=DIM); T.put((120, 242), "THE FIRST SEAS CAME LATER", 16, af * 0.9, col=DIM)
+        T.put((120, 190), "THE FIRST SEAS CAME LATER, AS THE MOON RETREATED", 16, af * 0.9, col=DIM)
     return T.add_to(img)
 
 
@@ -535,11 +540,11 @@ def shot_coin(t, lt):
         if not V:
             T.put((A[0], A[1] + 54), "EARTH", 18, p2, anchor="c"); T.put((Mpt[0] + 10, Mpt[1] - 108), "MOON  ·  384,400 KM AWAY", 18, p2, anchor="l")
             T.put((B[0], B[1] + 180), "SUN  ·  149,600,000 KM AWAY", 18, p2, anchor="c")
-            T.put((W / 2, 300), "≈ 400× FARTHER", 96, p2, col=YEL, wt="XL", anchor="c", track=5); T.put((W / 2, 420), "(389× ON AVERAGE)  ·  SCHEMATIC, NOT TO SCALE", 19, p2, col=DIM, anchor="c")
+            T.put((W / 2, 300), "≈ 400× FARTHER", 96, p2, col=YEL, wt="XL", anchor="c", track=5); T.put((W / 2, 420), "(389× ON AVERAGE)", 19, p2, col=DIM, anchor="c")
         else:
             T.put((A[0] + 56, A[1] - 12), "EARTH", 19, p2, anchor="l"); T.put((Mpt[0] + 84, Mpt[1] - 14), "MOON: 384,400 KM", 19, p2, anchor="l")
             T.put((B[0], B[1] + 170), "SUN: 149.6 MILLION KM", 19, p2, anchor="c")
-            T.put((270, 860), "≈ 400×", 84, p2, col=YEL, wt="XL", anchor="c", track=3); T.put((270, 962), "FARTHER", 30, p2, col=YEL, anchor="c"); T.put((270, 1010), "(389× ON AVERAGE)", 18, p2, col=DIM, anchor="c"); T.put((270, 1040), "SCHEMATIC", 17, p2, col=DIM, anchor="c")
+            T.put((270, 860), "≈ 400×", 84, p2, col=YEL, wt="XL", anchor="c", track=3); T.put((270, 962), "FARTHER", 30, p2, col=YEL, anchor="c"); T.put((270, 1010), "(389× ON AVERAGE)", 18, p2, col=DIM, anchor="c")
     if p3 > 0:
         if not V: c1 = (660, 560); c2 = (1260, 560); r = 215
         else: c1 = (540, 620); c2 = (540, 1130); r = 200
@@ -550,7 +555,7 @@ def shot_coin(t, lt):
         put(T, "IN OUR SKY, ALMOST EXACTLY THE SAME SIZE", p3, (W / 2, 900, 26, "c"), (W / 2, 1440, 21), col=AMB)
     L.add_to(img, (0.8, 0.86, 1.0), 0.9, 0.4)
     img = bloom(img, 0.85, 0.5)
-    foot(T, "AVERAGE APPARENT SIZES  ·  THE SUN IS SHOWN AS THROUGH A SOLAR FILTER (SIMULATED SURFACE DETAIL)", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
+    foot(T, "AVERAGE APPARENT SIZES", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
     return T.add_to(img)
 
 
@@ -588,7 +593,7 @@ def shot_eclipse(t, lt):
     put(T, "THE CORONA", win(t, t2 + 0.8, b0, 1.0, 0.6), (120, 940, 30), (W / 2, 1370, 28), col=TXT)
     put(T, "THE SUN'S OUTER ATMOSPHERE  ·  TOTALITY LASTS A FEW MINUTES AT MOST", win(t, t2 + 1.8, b0, 1.0, 0.6), (120, 986, 19), (W / 2, 1444, 0), col=DIM)
     if V: T.put((W / 2, 1414), "THE SUN'S OUTER ATMOSPHERE", 19, win(t, t2 + 1.8, b0, 1.0, 0.6), col=DIM, anchor="c")
-    foot(T, "SIMULATION  ·  LUNAR LIMB RELIEF EXAGGERATED  ·  NEVER LOOK AT THE SUN WITHOUT PROPER ECLIPSE FILTERS (EXCEPT DURING TOTALITY)" if not V else "SIMULATION  ·  LIMB RELIEF EXAGGERATED  ·  NEVER LOOK AT THE SUN WITHOUT ECLIPSE FILTERS", win(t, a0 + 1.0, b0), y=(1040 if not V else 1508))
+    foot(T, "SIMULATION  ·  LUNAR LIMB RELIEF EXAGGERATED  ·  NEVER LOOK AT THE SUN WITHOUT PROPER ECLIPSE FILTERS (EXCEPT DURING TOTALITY)" if not V else "NEVER LOOK AT THE SUN WITHOUT ECLIPSE FILTERS", win(t, a0 + 1.0, b0), y=(1040 if not V else 1508))
     return T.add_to(img)
 
 
@@ -686,8 +691,7 @@ def shot_far(t, lt):
     if V:
         T.put((90, 760), "≈ 50 BILLION YEARS", 40, a1, wt="XL", anchor="l", track=2); T.put((92, 814), "FOR EARTH'S DAY TO", 18, a1, col=DIM, anchor="l"); T.put((92, 842), "MATCH THE MOON'S MONTH", 18, a1, col=DIM, anchor="l")
         T.put((90, 930), "≈ 5 BILLION YEARS", 40, a2, col=RED, wt="XL", anchor="l", track=2); T.put((92, 984), "UNTIL THE SUN SWELLS", 18, a2, col=DIM, anchor="l"); T.put((92, 1012), "INTO A RED GIANT", 18, a2, col=DIM, anchor="l")
-    if V: foot(T, "EARTH, MOON AND THEIR SEPARATION TO SCALE  ·  RED GIANT: ARTIST'S IMPRESSION, NOT TO SCALE", win(t, a0 + 1.0, b0), y=440)
-    else: T.put((120, 1034), "EARTH, MOON AND SEPARATION TO SCALE  ·  RED GIANT: ARTIST'S IMPRESSION", 16, win(t, a0 + 1.0, b0) * 0.9, col=DIM)
+    pass
     return T.add_to(img)
 
 
@@ -749,7 +753,7 @@ def shot_window(t, lt):
     T.put((X(-2.6), Y(1.5)), "↑ FAR LARGER AT FIRST", sz, 0 *  win(t, S['pay1'] + 2.4, b0, 0.8), col=COOL, anchor="c")
     T.put((X(1.5) if not V else X1, Y(0.86) + 6), "TOO SMALL: RINGS ONLY", sz, win(t, S['pay1'] + 6.2, b0, 0.8), col=AMB, anchor="r")
     T.put((X(t_end) + (14 if not V else -10), Y(1.0) - 78 if not V else Y(1.0) - 84), "LAST TOTAL ECLIPSE  ≈ +0.6 BN" if not V else "LAST TOTAL ≈ +0.6 BN", sz, aE, col=YEL, anchor="l" if not V else "r")
-    foot(T, "SCHEMATIC  ·  BAND = THE MOON'S RANGE FROM FARTHEST TO NEAREST  ·  PAST CURVE ILLUSTRATIVE; FUTURE AT TODAY'S 3.8 CM / YEAR", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
+    foot(T, "BAND = THE MOON'S RANGE FROM FARTHEST TO NEAREST  ·  FUTURE AT TODAY'S 3.8 CM / YEAR", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
     return T.add_to(img)
 
 
@@ -794,7 +798,7 @@ def shot_shadow(t, lt):
     put(T, "THE MOON'S SHADOW", win(t, a0 + 0.8, b0, 0.8), (120, 96, 27), (W / 2, 250, 26))
     put(T, "TOTALITY IS ONLY SEEN FROM INSIDE THE SMALL DARK CORE", win(t, a0 + 1.8, b0, 0.8), (120, 140, 20), (W / 2, 296, 0), col=AMB)
     if V: T.put((W / 2, 296), "TOTALITY: ONLY INSIDE THE DARK CORE", 19, win(t, a0 + 1.8, b0, 0.8), col=AMB, anchor="c")
-    foot(T, "ILLUSTRATION  ·  SHADOW SIZE AND PATH APPROXIMATE (AFTER THE ECLIPSE OF 8 APRIL 2024)", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
+    foot(T, "AFTER THE TOTAL ECLIPSE OF 8 APRIL 2024", win(t, a0 + 1.0, b0), y=(1034 if not V else 1508))
     return T.add_to(img)
 
 
@@ -808,10 +812,9 @@ def shot_final(t, lt):
     T = Text()
     put(T, "IT WILL NOT ALWAYS BE THERE.", win(t, a0 + 0.6, b0 - 0.2, 1.0, 1.2), (W / 2, 800, 34, "c"), (W / 2, 1250, 29, "c"), wt="L")
     put(T, "THE MOON IS LEAVING", win(t, a0 + 1.6, b0 - 0.2, 1.0, 1.2), (W / 2, 868, 22, "c"), (W / 2, 1316, 22, "c"), col=AMB)
-    put(T, "MOON: NASA LRO / LOLA  ·  EARTH: NASA BLUE MARBLE  ·  STARS: REAL CATALOGUE  ·  ECLIPSE AND CORONA SIMULATED", win(t, a0 + 2.2, b0 - 0.2, 1.0, 1.2) * 0.8, (W / 2, 1020, 15, "c"), None, col=DIM)
+    put(T, "MOON: NASA LRO / LOLA  ·  EARTH: NASA BLUE MARBLE  ·  STARS: REAL CATALOGUE", win(t, a0 + 2.2, b0 - 0.2, 1.0, 1.2) * 0.8, (W / 2, 1020, 15, "c"), None, col=DIM)
     if V:
         T.put((W / 2, 1440), "MOON: NASA LRO / LOLA  ·  EARTH: NASA BLUE MARBLE", 17, win(t, a0 + 2.2, b0 - 0.2, 1.0, 1.2) * 0.8, col=DIM, anchor="c")
-        T.put((W / 2, 1468), "ECLIPSE AND CORONA SIMULATED", 17, win(t, a0 + 2.2, b0 - 0.2, 1.0, 1.2) * 0.8, col=DIM, anchor="c")
     return T.add_to(img)
 
 
@@ -845,8 +848,8 @@ def main():
         return
     t0, t1 = float(sys.argv[1]), float(sys.argv[2]); f0, f1 = int(round(t0 * FPS)), int(round(t1 * FPS))
     os.makedirs(SCR + "/seg" + sfx, exist_ok=True); out = f"{SCR}/seg{sfx}/seg_{f0:05d}.mp4"
-    if os.path.exists(out): print("exists", out); return
     tmp = out + ".part.mp4"
+    if os.path.exists(out) or os.path.exists(tmp): print("exists", out); return
     p = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
                           "-c:v", "libx264", "-preset", "fast", "-crf", "14", "-pix_fmt", "yuv420p", "-threads", "2", tmp], stdin=subprocess.PIPE)
     st = time.time()

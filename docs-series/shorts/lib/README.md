@@ -25,3 +25,7 @@ under `nice -n 10`; about 2–3 s per 1080×1920 frame on the shared box.
 
 ## User rule: no disclaimer captions
 No on-screen "not to scale" / "illustration" / "enlarged" / "time-compressed" / "time-lapse" / "brightened" style notes. Keep factual text only.
+
+## User rule: STYLE = big, bold, colourful VFX (like the reference Short)
+User rejected the realistic/dark black-hole Short. Reference frames: scratchpad/ref/dense.jpg.
+What they want: a HUGE sky effect filling the upper half of the frame, always moving; saturated colour (rainbow/cyan/magenta/green light beams, glowing orbs with white halos, colour-tinted sky); the night sky stays deep blue and readable (never a pitch-black screen); big obvious transformations; white-out flash endings. Locked camera. Spectacle first, science in the narration.

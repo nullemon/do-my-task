@@ -15,6 +15,11 @@ a full-frame camera), so the Sun's disc is drawn at its true relative size every
 (drawn at a 3.4 px minimum so it survives video compression), a point from Pluto. A small HUD gives the world's name,
 the Sun's apparent size relative to Earth's, the distance in light-time and the length of the day.
 
+By the series rule (10 Nov) there is no disclaimer small print on screen: no "artist's reconstruction", "time-lapse"
+or "same lens" lines. What each view is based on, and where it is speeded up, guessed or imagined, is said in the
+narration ("Every one of these views is a reconstruction, built from measurements", "from a moon of it, if it has one")
+and listed below.
+
 ## Files
 | file | what |
 |---|---|
@@ -55,7 +60,7 @@ Neptune 4.2 h; Pluto 5.5 h (mean distance; 4.6 h at the 2015 fly-by).
   before perihelion the orbital angular speed equals the spin rate, the Sun's apparent motion stops and reverses, and
   resumes about four days after perihelion; only observers who are at sunrise or sunset during those days see a double
   sunrise / sunset (Wikipedia "Mercury (planet)" and mirrors). Perihelion 46 million km, aphelion 70 million km (same).
-  The film says "from some places" and labels the shot as heavily speeded up. The sky is black because the exosphere
+  The film says "from some places"; the shot compresses days into seconds. The sky is black because the exosphere
   is negligible ("almost no air").
 - **Venus.** Surface daylight "about as intense as on Earth during an overcast day", hazy, and filtered to orange
   (astrosociety.org "Venus" unit; stardate.org; astronomy.com Sept 2015). Sidereal rotation 243 d, year 225 d, solar
@@ -95,7 +100,7 @@ Neptune 4.2 h; Pluto 5.5 h (mean distance; 4.6 h at the 2015 fly-by).
   K dwarf (0.649 R☉) and an M dwarf (0.226 R☉) that orbit each other every 41 days (Wikipedia "Kepler-16"). Apparent
   sizes *(computed)*: 0.649/0.705 = 0.92× and 0.226/0.705 = 0.32× our Sun's from Earth (they vary a little as the stars
   move). Distance ≈ 245 light-years (Gaia-based; NASA's 2011 release said "about 200"). The planet is a gas giant with
-  no known moons: the landscape is labelled as an imagined moon.
+  no known moons: the narration says "from a moon of it, if it has one" and the caption states that Kepler-16 b itself is a gas giant.
 - **Payoff line.** "There is only one sunset that human eyes have watched from the ground": the Apollo landings were
   all made in the lunar morning and left before sunset *(from memory)*; astronauts in orbit see the Sun set behind
   Earth's own limb. Sunsets have been photographed from the surface of Mars by rovers; Cassini (Titan, Saturn) and New
@@ -104,15 +109,20 @@ Neptune 4.2 h; Pluto 5.5 h (mean distance; 4.6 h at the 2015 fly-by).
 ## 9:16 version
 The Blender plates are square (2160², 24° × 24°): the 16:9 film uses a 2160 × 1215 band around the horizon and the
 9:16 film a 1215 × 2160 column around the sunset point, both at the same 0.89 scale, so neither is a crop of the other
-and the Sun is the same size in both. `VERT=1` re-lays the HUD (larger, stacked, below the top 12 %), the captions and
-credit lines (above the bottom 20 %), the titles and the recap grid; Saturn and Uranus use a narrower sweep so the Sun
+and the Sun is the same size in both. `VERT=1` re-lays the HUD (larger, stacked, below the top 12 %), the captions
+(above the bottom 20 %), the titles and the recap grid; Saturn and Uranus use a narrower sweep so the Sun
 and the rings stay in the column.
 
+## What each view is based on
+Mars: rover sunset images (Spirit, Curiosity, Perseverance). Mercury: MESSENGER imaging and the orbit. Venus: Venera 13
+and 14 surface panoramas. Jupiter: Juno and Galileo data. Saturn: Cassini data and ring geometry. Uranus: Voyager 2 data
+and the 98° tilt. Titan: Huygens surface images and Cassini radar of the seas. Pluto: New Horizons images of Sputnik
+Planitia. Kepler-16 b: Kepler photometry; the moon is imagined. All shots are time-lapses except Jupiter (real time).
+
 ## Honest limitations
-- Everything is computer-generated, Earth included (labelled). The landscapes are plausible, not maps of real places:
+- Everything is computer-generated, Earth included. The landscapes are plausible, not maps of real places:
   no specific crater, mesa or mountain is reproduced.
-- Sky colours for Jupiter, Saturn and Uranus at cloud-top level have never been photographed; they are informed guesses
-  (labelled on Jupiter). The same goes for the imagined moon of Kepler-16 b, where the red dwarf's share of the light
+- Sky colours for Jupiter, Saturn and Uranus at cloud-top level have never been photographed; they are informed guesses. The same goes for the imagined moon of Kepler-16 b, where the red dwarf's share of the light
   is also exaggerated so that its shadows can be seen.
 - The cloud decks are height fields with translucent shading and distance haze, not volumetric clouds; they do not
   evolve during a shot. Earth's cloud decks drift but do not change shape.

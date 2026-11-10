@@ -3,7 +3,7 @@
 Backgrounds (transparent-sky PNGs from the user), in scratchpad/backgrounds/:
 A_park.png, A2_park.png (house + 2 lamps), B_valley.png, C_city.png
 
-Run one Short at a time, reusing docs-series/shorts/lib/ (built by the Black Hole Short).
+STYLE: big bold colourful VFX like the reference (see lib/README.md). Run one Short at a time, reusing docs-series/shorts/lib/ (built by the Black Hole Short).
 
 | # | Short | Background | Status |
 |---|---|---|---|

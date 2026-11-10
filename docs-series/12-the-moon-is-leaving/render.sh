@@ -13,11 +13,13 @@ if [[ $2 == join ]]; then
   ffmpeg -v error -y -f concat -safe 0 -i $L -c copy -an $SCR/final/joined$SFX.mp4
   ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_frames -of csv=p=0 $SCR/final/joined$SFX.mp4; exit 0
 fi
-n=0
+n=0; KIND=()
 for ((i=0; i<${#B[@]}-1; i++)); do
-  a=${B[$i]}; b=${B[$((i+1))]}
-  if isp $a; then k=P; else n=$((n+1)); [[ $((n%2)) == 1 ]] && k=A || k=B; fi
-  [[ $k == "$2" ]] || continue
-  nice -n 5 python3 comp.py $a $b 2>&1 | grep -v -i warning || echo "FAILED seg $a"
+  if isp ${B[$i]}; then KIND+=(P); else n=$((n+1)); [[ $((n%2)) == 1 ]] && KIND+=(A) || KIND+=(B); fi
+done
+IDX=$(seq 0 $((${#B[@]}-2))); W=$2; [[ $2 == Br ]] && { IDX=$(seq $((${#B[@]}-2)) -1 0); W=B; }
+for i in $IDX; do
+  [[ ${KIND[$i]} == "$W" ]] || continue
+  nice -n 5 python3 comp.py ${B[$i]} ${B[$((i+1))]} 2>&1 | grep -v -i warning || echo "FAILED seg ${B[$i]}"
 done
 echo "render $1 $2 done $(date)"

@@ -35,7 +35,7 @@ CHARS = {
   "naruto": dict(
     sheet="11.webp", cxF=275, cxB=1174, cyS=708.5, feet=976,
     parts={
-      "Head":  dict(f=(165, 375), s=(603, 815), r=(215, 402), parent="Torso", pivot="neck"),
+      "Head":  dict(f=(165, 375), s=(603, 815), r=(215, 402), parent="Torso", suv=(668, 815), pivot="neck"),
       "Torso": dict(f=(150, 400), s=(617, 800), r=(403, 692), parent=None, pivot="hip_center",
                     ov={"L": "edgeF", "R": "edgeF"}),
       "ArmR":  dict(f=(18, 150), s=(619, 800), r=(405, 690), parent="Torso", pivot="shoulder",
@@ -61,7 +61,7 @@ CHARS = {
   "kakashi": dict(
     sheet="9.webp", cxF=307, cxB=1146, cyS=712, feet=967,
     parts={
-      "Head":   dict(f=(205, 409), s=(604, 804), r=(228, 388), parent="Torso", pivot="neck"),
+      "Head":   dict(f=(205, 409), s=(604, 804), r=(228, 388), parent="Torso", suv=(650, 804), pivot="neck"),
       "Collar": dict(f=(206, 407), s=(613, 806), r=(380, 412), parent="Torso", pivot="center"),
       "Torso":  dict(f=(178, 435), s=(614, 810), r=(410, 665), parent=None, pivot="hip_center",
                      ov={"L": "edgeF", "R": "edgeF"}),
@@ -84,7 +84,7 @@ CHARS = {
   "sasuke": dict(
     sheet="10.webp", cxF=290, cxB=1172, cyS=715, feet=934,
     parts={
-      "Head":   dict(f=(196, 386), s=(615, 812), r=(200, 352), parent="Torso", pivot="neck"),
+      "Head":   dict(f=(196, 386), s=(615, 812), r=(200, 352), parent="Torso", suv=(660, 812), pivot="neck"),
       "Collar": dict(f=(180, 398), s=(612, 820), r=(343, 395), parent="Torso", pivot="center"),
       "Torso":  dict(f=(178, 405), s=(627, 803), r=(392, 625), parent=None, pivot="hip_center",
                      ov={"L": "edgeF", "R": "edgeF"}),
@@ -107,7 +107,7 @@ CHARS = {
   "obito": dict(
     sheet="8.webp", cxF=295, cxB=1160, cyS=716, feet=969,
     parts={
-      "Head":   dict(f=(186, 404), s=(612, 830), r=(205, 362), parent="Torso", pivot="neck",
+      "Head":   dict(f=(186, 404), s=(612, 830), r=(205, 362), parent="Torso", suv=(650, 830), pivot="neck",
                      ov={"D": ("px", 200, 385)}),
       "Collar": dict(f=(172, 418), s=(601, 836), r=(348, 402), parent="Torso", pivot="center",
                      ov={"T": ("px", 200, 385)}),
@@ -202,6 +202,11 @@ def uv_of(ctx, face, co, part_box, mode=None, p=None):
         col = c["cxB"] - x / S
     elif face in ("L", "R"):
         col = c["cyS"] + y / S
+        if "suv" in p and mode is None:
+            # remap the face depth onto a sub-range of the SIDE view (e.g. only ear + hair of the head)
+            y0, y1 = part_box[2], part_box[3]
+            a, b = p["suv"]
+            col = a + (y - y0) / (y1 - y0) * (b - a)
         if mode == "edgeF":  # stretch the FRONT view's edge column across the side face
             x0, x1 = part_box[0], part_box[1]
             ex = (x1 - 8 * S) if face == "L" else (x0 + 8 * S)
@@ -233,7 +238,10 @@ def box_mesh(ctx, name, p, mat):
     bm = bmesh.new()
     bv = [bm.verts.new(co) for co in v]
     uvl = bm.loops.layers.uv.new("UVMap")
-    ov = p.get("ov", {})
+    ov = dict(p.get("ov", {}))
+    inner = {"ArmR": "L", "LegR": "L", "ArmL": "R", "LegL": "R"}.get(name)
+    if inner and inner not in ov:
+        ov[inner] = "edgeF"
     for fk, idx in faces.items():
         f = bm.faces.new([bv[i] for i in idx])
         for loop in f.loops:

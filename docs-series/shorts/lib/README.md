@@ -29,3 +29,6 @@ No on-screen "not to scale" / "illustration" / "enlarged" / "time-compressed" / 
 ## User rule: STYLE = big, bold, colourful VFX (like the reference Short)
 User rejected the realistic/dark black-hole Short. Reference frames: scratchpad/ref/dense.jpg.
 What they want: a HUGE sky effect filling the upper half of the frame, always moving; saturated colour (rainbow/cyan/magenta/green light beams, glowing orbs with white halos, colour-tinted sky); the night sky stays deep blue and readable (never a pitch-black screen); big obvious transformations; white-out flash endings. Locked camera. Spectacle first, science in the narration.
+
+## User rule (11 Nov): voice
+Default narration voice is now Kokoro **am_fenrir** (user picked it over am_michael and over Chatterbox, Zonos, StyleTTS2, F5, XTTS v2, Dia and Piper, which the user found worse).

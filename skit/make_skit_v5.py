@@ -193,11 +193,16 @@ def render(T):
         actor(cv, "obito", name, W / 2, T, scale=1.1)
     z = 1 + 0.045 * (t / sc["len"])
     cw, ch = int(W / z), int(H / z)
-    cv = cv.crop(((W - cw) // 2, (H - ch) // 2 + 60, (W - cw) // 2 + cw, (H - ch) // 2 + 60 + ch)).resize((W, H), Image.BILINEAR)
+    y0 = min((H - ch) // 2 + 60, H - ch); x0 = (W - cw) // 2
+    cv = cv.crop((x0, y0, x0 + cw, y0 + ch)).resize((W, H), Image.BILINEAR)
     for c in SC[1:]:
         if 0 <= T - c["a"] < 0.1:
             cv.alpha_composite(Image.new("RGBA", (W, H), (255, 255, 255, int(255 * (1 - (T - c["a"]) / 0.1)))))
-    if shake: cv = Image.fromarray(np.roll(np.array(cv), shake, axis=(0, 1)))
+    if shake:
+        a_ = np.array(cv); dy, dx = shake
+        a_ = np.pad(a_, ((abs(dy), abs(dy)), (abs(dx), abs(dx)), (0, 0)), mode="edge")
+        a_ = a_[abs(dy) - dy: abs(dy) - dy + H, abs(dx) - dx: abs(dx) - dx + W]
+        cv = Image.fromarray(a_)
     return cv.convert("RGB")
 
 np.random.seed(2)

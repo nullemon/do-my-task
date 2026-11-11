@@ -42,4 +42,4 @@ Each video: **16:9 1920×1080, 24 fps, 4:00–5:00 long (target 4:30 = 270 s)**,
 Do NOT put on-screen disclaimer notes such as "not to scale", "illustration", "artist's impression", "not physically possible", "time-compressed", "brightened", "enlarged", "schematic". The user: "no need to add this text, it's logical, people understand." Keep real information text (facts, dates, numbers, labels like "SAME MASS · SAME ORBIT", attributions such as "as recounted by Griffith Observatory"). Honesty lives in the narration wording and the README, not in small print on screen.
 
 ## User rule (11 Nov): voice
-Default narration voice is now Kokoro **am_fenrir** (user picked it over am_michael and over Chatterbox, Zonos, StyleTTS2, F5, XTTS v2, Dia and Piper, which the user found worse).
+Keep Kokoro **am_michael** (as in all videos so far: speed 0.94 for documentaries, 1.05 for Shorts). User tried am_fenrir and other open models (Chatterbox, Zonos, StyleTTS2, F5, XTTS v2, Dia, Piper) and chose to stay with am_michael.

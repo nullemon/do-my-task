@@ -145,7 +145,7 @@ def turnf(y0, y1, p): return yaw_name(y0 + (y1 - y0) * ease(p))
 WORDS = json.load(open(f"{VO}/words.json"))
 SPK = {"kakashi": ("KAKASHI", (110, 140, 190)), "sasuke": ("SASUKE", (120, 80, 170)),
        "naruto": ("NARUTO", (245, 130, 20)), "obito": ("???", (200, 40, 40))}
-F_TXT = ImageFont.truetype("/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf", 60)
+F_TXT = ImageFont.truetype("/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf", 66)
 F_TAG = ImageFont.truetype("/usr/share/fonts/opentype/inter/Inter-ExtraBold.otf", 34)
 CAP_Y, MAXW = 945, 900
 def caption(cv, T):
@@ -165,22 +165,16 @@ def caption(cv, T):
             if cur and cw + sw + ww > MAXW: rows.append((cur, cw)); cur, cw = [], 0
             cw = cw + (sw if cur else 0) + ww; cur.append((j, w, ww))
         rows.append((cur, cw))
-        lh = 76; bw = max(r[1] for r in rows) + 64; bh = lh * len(rows) + 36
+        lh = 84; bw = max(r[1] for r in rows) + 64; bh = lh * len(rows) + 36
         y0 = CAP_Y - bh / 2 + (1 - k) * 14; x0 = W / 2 - bw / 2
-        d.rounded_rectangle((x0, y0, x0 + bw, y0 + bh), 30, fill=(15, 15, 25, 165))
-        name, col = SPK[sp]
-        tw = d.textlength(name, font=F_TAG)
-        d.rounded_rectangle((x0 + 18, y0 - 30, x0 + 18 + tw + 36, y0 + 20), 18, fill=col + (255,))
-        d.text((x0 + 36, y0 - 5), name, font=F_TAG, fill="white", anchor="lm")
         tl = T - st
         for r, (row, rw) in enumerate(rows):
             x = W / 2 - rw / 2; y = y0 + 18 + r * lh + lh / 2
             for j, w, ww in row:
                 a, b = words[j][1], words[j][2]
                 if a <= tl < b + 0.05: fill = (255, 214, 0, 255)       # word being spoken
-                elif tl >= b: fill = (255, 255, 255, 255)              # already spoken
-                else: fill = (165, 165, 178, 255)                      # coming up (solid grey)
-                d.text((x, y), w, font=F_TXT, fill=fill, anchor="lm")
+                else: fill = (255, 255, 255, 255)
+                d.text((x, y), w, font=F_TXT, fill=fill, anchor="lm", stroke_width=7, stroke_fill=(0, 0, 0, 255))
                 x += ww + sw
         if k < 1: lay.putalpha(lay.getchannel("A").point(lambda v: int(v * k)))
         cv.alpha_composite(lay)

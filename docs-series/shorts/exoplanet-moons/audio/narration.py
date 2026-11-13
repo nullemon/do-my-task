@@ -3,15 +3,24 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds)."""
 import re
 
+S_, B_ = 0.35, 0.70        # pause between sentences / at a beat change (voice rule, 13 Nov)
 LINES = [
-    ("hook", "What if the strangest planets ever found replaced our Moon?", 0.12),
-    ("moon", "Same distance, true size. Here's our Moon.", 0.15),
-    ("cnc", "{55 CANCRI e|Fifty-five Cancri E.} {7×|Seven times} wider, likely a glowing ocean of lava.", 0.15),
-    ("hd", "{HD 189733 b|H D one eight nine seven three three B.} {47×|Forty-seven times} wider. Cobalt blue, and it rains glass, sideways.", 0.15),
-    ("wasp", "{WASP-12 b|Wasp twelve B.} Stretched into an egg, as its star slowly eats it.", 0.15),
-    ("tres", "{TrES-2 b|Tress two B.} Darker than coal. A giant shadow, blotting out stars.", 0.15),
-    ("kelt", "{KELT-9 b|Kelt nine B.} The hottest planet known. {4,300 °C|Forty-three hundred degrees,} hotter than most stars.", 0.25),
-    ("end", "Our Moon? Kind of boring. Thankfully.", 0.0),
+    ("hook", "What if the strangest planets ever found replaced our Moon?", B_),
+    ("moon", "Same distance, true size.", S_),
+    ("moon_b", "Here's our Moon.", B_),
+    ("cnc", "{55 CANCRI e|Fifty-five Cancri E.}", S_),
+    ("cnc_b", "{7×|Seven times} wider, likely an ocean of lava.", B_),
+    ("hd", "{HD 189733 b|H D one eight nine seven three three B.}", S_),
+    ("hd_b", "Cobalt blue, where it rains glass.", B_),
+    ("wasp", "{WASP-12 b|Wasp twelve B.}", S_),
+    ("wasp_b", "Stretched into an egg, as its star eats it.", B_),
+    ("tres", "{TrES-2 b|Tress two B.}", S_),
+    ("tres_b", "Darker than coal.", B_),
+    ("kelt", "{KELT-9 b|Kelt nine B.}", S_),
+    ("kelt_b", "The hottest planet known.", S_),
+    ("kelt_c", "Hotter than most stars.", B_),
+    ("end", "Our Moon? Kind of boring.", S_),
+    ("end_b", "Thankfully.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

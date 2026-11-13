@@ -83,12 +83,12 @@ ORDER = ["moon", "cnc", "hd", "wasp", "tres", "kelt"]
 T_SW = {k: LN[k]["start"] - 0.06 for k in ORDER[1:]}
 T_BACK = LN["end"]["start"] - 0.10                   # white-out peak -> our Moon is back
 T_WO0 = T_BACK - 0.75
-T_KELT = T_SW["kelt"]; T_RISEN = wt("kelt", "4,300 °C") + 0.3
+T_KELT = T_SW["kelt"]; T_RISEN = wt("kelt_b", "KNOWN") + 0.3
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_BACK, "moon2")]
 COLLAPSE, BLOOM = 0.42, 0.65
-PULSES = [wt("hook", "STRANGEST"), wt("moon", "MOON"), wt("cnc", "7×"), wt("cnc", "LAVA"), wt("hd", "47×"), wt("hd", "GLASS"),
-          wt("wasp", "EGG"), wt("wasp", "EATS"), wt("tres", "COAL"), wt("tres", "STARS"), wt("kelt", "HOTTEST"),
-          wt("kelt", "4,300 °C"), wt("kelt", "STARS"), wt("end", "THANKFULLY")]
+PULSES = [wt("hook", "STRANGEST"), wt("moon_b", "MOON"), wt("cnc_b", "7×"), wt("cnc_b", "LAVA"), wt("hd_b", "COBALT"), wt("hd_b", "GLASS"),
+          wt("wasp_b", "EGG"), wt("wasp_b", "EATS"), wt("tres_b", "COAL"), wt("kelt_b", "HOTTEST"),
+          wt("kelt_c", "HOTTER"), wt("kelt_c", "STARS"), wt("end_b", "THANKFULLY")]
 
 
 def body_at(t):
@@ -426,7 +426,7 @@ class Scene:
         S = BK[cur]
         x, ys = W / 2, (330, 420, 482)
         a = ramp(t, max(t0, 0.25) + 0.15, max(t0, 0.25) + 0.45)
-        if cur == "moon" and t < T_SW["cnc"]: a = ramp(t, wt("moon", "HERE'S") - 0.1, wt("moon", "HERE'S") + 0.2)
+        if cur == "moon" and t < T_SW["cnc"]: a = ramp(t, wt("moon_b", "HERE'S") - 0.1, wt("moon_b", "HERE'S") + 0.2)
         nxt = [ts for ts, k in SWAPS if ts > t]
         if nxt: a *= 1 - ramp(t, nxt[0] - 0.35, nxt[0] - 0.15)
         if cur == "moon" and t > T_BACK: a = ramp(t, T_BACK + 0.6, T_BACK + 0.9)

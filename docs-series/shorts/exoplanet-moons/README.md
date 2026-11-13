@@ -1,6 +1,6 @@
 # What If Strange Exoplanets Replaced Our Moon? (YouTube Short)
 
-This is a 9:16 Short only: 1080×1920, 30 fps, 39.46 s. It uses the format of `other-suns/` and `planets-as-moon/`:
+This is a 9:16 Short only: 1080×1920, 30 fps, 39.21 s. It uses the format of `other-suns/` and `planets-as-moon/`:
 one locked tripod shot of the user's `B_valley.png` (transparent sky) at blue hour. Here the objects sit **low over
 the ridge**, so the far hills, ridge and pines cut the lower edge of every giant, like a moonrise. The sky swaps from
 our Moon to five famous exoplanets, each placed at the Moon's distance. Every swap has a flash, a chromatic shockwave
@@ -8,12 +8,14 @@ and coloured beams, and the valley is relit by each planet's light. One big oran
 50 % height, synced to the voice. The readout sits at the top of the sky: NAME, × MOON'S SIZE and one weird fact.
 There are no disclaimer captions (user rule).
 
-## Narration (93 words, Kokoro am_michael @ 1.05, −14 LUFS)
-> What if the strangest planets ever found replaced our Moon? Same distance, true size. Here's our Moon. Fifty-five
-> Cancri e. Seven times wider, likely a glowing ocean of lava. HD 189733 b. Forty-seven times wider. Cobalt blue, and
-> it rains glass, sideways. WASP-12 b. Stretched into an egg, as its star slowly eats it. TrES-2 b. Darker than coal.
-> A giant shadow, blotting out stars. KELT-9 b. The hottest planet known. Forty-three hundred degrees, hotter than
-> most stars. Our Moon? Kind of boring. Thankfully.
+## Narration (78 words, Kokoro am_michael @ 0.92, −14 LUFS)
+Re-voiced on 13 Nov after user feedback ("too fast, sounds rushed"). Each sentence is its own line, with ~0.35 s
+pauses between sentences and ~0.7 s at each beat change. The script was trimmed (the "×" sizes and 4,300 °C now
+live only in the readouts).
+> What if the strangest planets ever found replaced our Moon? Same distance, true size. Here's our Moon.
+> Fifty-five Cancri e. Seven times wider, likely an ocean of lava. HD 189733 b. Cobalt blue, where it rains glass.
+> WASP-12 b. Stretched into an egg, as its star eats it. TrES-2 b. Darker than coal. KELT-9 b. The hottest planet
+> known. Hotter than most stars. Our Moon? Kind of boring. Thankfully.
 
 ## Beats (`short.py`)
 Every body is placed at d = 384,400 km and drawn at θ = 2·asin(R/d). The lens has f = 1400 px, the same as

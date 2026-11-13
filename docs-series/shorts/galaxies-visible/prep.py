@@ -92,7 +92,7 @@ def m31():
     yy, xx = np.mgrid[0:h, 0:w].astype(f32); dx, dy = xx - cx, yy - cy
     u = (dx * math.cos(pa_s) + dy * math.sin(pa_s)) / K; v = (-dx * math.sin(pa_s) + dy * math.cos(pa_s)) / K
     r = np.sqrt(u * u + (v / 0.31) ** 2)
-    outer = (np.exp(-r / 0.42) * smooth(1.75, 1.3, r) * 0.06)[..., None] * np.array([0.75, 0.82, 1.0], f32)
+    outer = (np.exp(-r / 0.55) * smooth(1.75, 1.3, r) * 0.16)[..., None] * np.array([0.75, 0.82, 1.0], f32)
     bul = (np.exp(-np.sqrt(u * u + (v / 0.6) ** 2) / 0.07) * 0.5)[..., None] * np.array([1.0, 0.86, 0.62], f32)
     out = big + outer + bul
     return out, (cx, cy), np.maximum(m * valid, smooth(1.75, 1.2, r))
@@ -199,7 +199,7 @@ def lmc():
 
 
 def smc():
-    w, h = int(7.6 * K), int(4.6 * K); cx, cy = w * 0.62, h / 2              # extra room to the west for 47 Tuc
+    w, h = int(7.8 * K), int(6.2 * K); cx, cy = w * 0.60, h / 2              # extra room to the west for 47 Tuc
     yy, xx = np.mgrid[0:h, 0:w].astype(f32)
     E = -(xx - cx) / K; N = -(yy - cy) / K
     nA = cv2.resize(fbm2((192, 192), 201, 2.4), (w, h), interpolation=cv2.INTER_CUBIC)
@@ -227,12 +227,12 @@ def smc():
 def core():
     from mwsky import canvas, WL, PXD as CPXD, HB
     mw = canvas(os.path.join(SCR, "mw_gal.npz"))
-    w, h = int(16 * PXD), int(11 * PXD)                           # screen px (not SS), 16 x 11 deg
+    w, h = int(30 * PXD), int(14 * PXD)                           # screen px (not SS), 30 x 14 deg
     yy, xx = np.mgrid[0:h, 0:w].astype(f32)
     l = -(xx - w / 2) / PXD; b = -(yy - h / 2) / PXD               # east (increasing l) to the left
     mx = (WL / 2 + l * CPXD) % WL; my = HB / 2 - b * CPXD
     out = cv2.remap(mw, mx.astype(f32), my.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-    fe = smooth(0, 0.25 * w, np.minimum(xx, w - 1 - xx)) * smooth(0, 0.3 * h, np.minimum(yy, h - 1 - yy))
+    fe = smooth(1.0, 0.45, np.hypot((xx - w / 2) / (w / 2), (yy - h / 2) / (h / 2))).astype(f32)
     out = out * fe[..., None]
     return vivid(out, 1.2), (w / 2, h / 2), fe
 

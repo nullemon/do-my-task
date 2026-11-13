@@ -49,7 +49,7 @@ Shared rules for every Short in this batch:
 | B6 | galaxies-visible | What If Galaxies Were Bright Enough to See? | C_city | delivered (slow voice) |
 | B7 | star-neighbours | What If Famous Stars Were Our Nearest Neighbour? | C_city | delivered (slow voice) |
 | B8 | star-clusters | What If Star Clusters Were Close By? | B_valley | delivered (slow voice) |
-| B9 | dead-star-suns | What If Dead Stars Replaced Our Sun? | A2_park | in progress |
+| B9 | dead-star-suns | What If Dead Stars Replaced Our Sun? | A2_park | delivered (slow voice) |
 | B10 | moon-ratios | What If Our Moon Matched Other Moons' Size Ratios? | A_park | in progress |
 
 

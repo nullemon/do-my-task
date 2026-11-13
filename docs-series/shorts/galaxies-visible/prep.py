@@ -87,13 +87,13 @@ def m31():
     valid = cv2.GaussianBlur(cv2.erode(valid, np.ones((5, 5), np.uint8)), (0, 0), 6)
     ax, ay = pa_dir(35.0); pa_s = math.atan2(ay, ax)
     m = ell_mask(h, w, cx, cy, 1.62 * K, 0.52 * K, pa_s, 31, 0.45, 0.06)
-    big = vivid(big * (m * valid)[..., None], 1.7, 1.12)
+    big = vivid(big * (m * valid)[..., None], 2.6, 1.15)
     # the faint outer disc beyond the UV image (D25 = 3.17 x 1.0 deg): a soft exponential glow on the same axis
     yy, xx = np.mgrid[0:h, 0:w].astype(f32); dx, dy = xx - cx, yy - cy
     u = (dx * math.cos(pa_s) + dy * math.sin(pa_s)) / K; v = (-dx * math.sin(pa_s) + dy * math.cos(pa_s)) / K
     r = np.sqrt(u * u + (v / 0.31) ** 2)
-    outer = (np.exp(-r / 0.55) * smooth(1.75, 1.3, r) * 0.16)[..., None] * np.array([0.75, 0.82, 1.0], f32)
-    bul = (np.exp(-np.sqrt(u * u + (v / 0.6) ** 2) / 0.07) * 0.5)[..., None] * np.array([1.0, 0.86, 0.62], f32)
+    outer = (np.exp(-r / 0.55) * smooth(1.75, 1.3, r) * 0.24)[..., None] * np.array([0.55, 0.70, 1.0], f32)
+    bul = (np.exp(-np.sqrt(u * u + (v / 0.6) ** 2) / 0.08) * 1.3 + np.exp(-np.sqrt(u * u + (v / 0.5) ** 2) / 0.25) * 0.25)[..., None] * np.array([1.0, 0.74, 0.34], f32)
     out = big + outer + bul
     return out, (cx, cy), np.maximum(m * valid, smooth(1.75, 1.2, r))
 
@@ -110,9 +110,9 @@ def m33():
     out = cv2.warpAffine(img, A, (w, h), flags=cv2.INTER_AREA)
     ax, ay = pa_dir(23.0)
     m = ell_mask(h, w, cx, cy, 0.66 * K, 0.42 * K, math.atan2(ay, ax), 33, 0.5, 0.08)
-    out = vivid(out * m[..., None], 1.8, 1.1)
+    out = vivid(out * m[..., None], 2.6, 1.12)
     yy, xx = np.mgrid[0:h, 0:w].astype(f32)
-    out += (np.exp(-np.hypot(xx - cx, yy - cy) / (0.05 * K)) * 0.25)[..., None] * np.array([1.0, 0.92, 0.8], f32)
+    out += ((np.exp(-np.hypot(xx - cx, yy - cy) / (0.05 * K)) * 0.6 + np.exp(-np.hypot(xx - cx, yy - cy) / (0.35 * K)) * 0.05) * m)[..., None] * np.array([1.0, 0.80, 0.5], f32)
     return out, (cx, cy), m
 
 
@@ -165,62 +165,93 @@ def knot(h, w, x, y, R, seed, col, I, core=None):
     return out
 
 
+def knots_local(img, x, y, R, seed, col, I):
+    """a small HII region drawn on a local patch only (cheap enough for dozens)"""
+    h, w = img.shape[:2]; r = int(R * 3) + 2
+    x0, x1, y0, y1 = max(0, int(x) - r), min(w, int(x) + r), max(0, int(y) - r), min(h, int(y) + r)
+    if x1 <= x0 or y1 <= y0: return
+    yy, xx = np.mgrid[y0:y1, x0:x1].astype(f32)
+    d = np.hypot(xx - x, yy - y) / R
+    n = cv2.resize(fbm2((32, 32), seed, 1.8), (x1 - x0, y1 - y0), interpolation=cv2.INTER_CUBIC)
+    fil = np.clip(1 - np.abs(n) * 1.6, 0, 1) ** 2
+    g = np.exp(-d ** 2 * 1.3) * (0.4 + 0.6 * fil) + np.exp(-d / 0.15) * 0.6
+    img[y0:y1, x0:x1] += g[..., None] * np.array(col, f32) * I
+
+
+def blue_knots(img, dens, n, seed, K_, rmin, rmax, I=0.8):
+    """young-star clusters: compact blue-white knots, placed where the density is high"""
+    h, w = img.shape[:2]; r = np.random.default_rng(seed)
+    p = dens.ravel().astype(np.float64) ** 2; p /= p.sum()
+    for idx in r.choice(h * w, n, p=p):
+        x, y = idx % w, idx // w; R = r.uniform(rmin, rmax) * K_
+        rr = int(R * 4) + 2; x0, x1, y0, y1 = max(0, x - rr), min(w, x + rr), max(0, y - rr), min(h, y + rr)
+        yy, xx = np.mgrid[y0:y1, x0:x1].astype(f32); d = np.hypot(xx - x, yy - y) / R
+        img[y0:y1, x0:x1] += (np.exp(-d * 1.6) * I * r.uniform(0.5, 1.2))[..., None] * np.array([0.55, 0.78, 1.0], f32)
+
+
+def pink_knots(img, dens, n, seed, K_, rmin, rmax, I=0.6):
+    h, w = img.shape[:2]; r = np.random.default_rng(seed)
+    p = dens.ravel().astype(np.float64) ** 2; p /= p.sum()
+    for j, idx in enumerate(r.choice(h * w, n, p=p)):
+        knots_local(img, idx % w, idx // w, r.uniform(rmin, rmax) * K_, seed * 100 + j, (1.0, 0.22, 0.52), I * r.uniform(0.5, 1.2))
+
+
 def lmc():
     # extent 10.75 x 9.17 deg; sprite 12 x 11 deg
     w, h = int(12.0 * K), int(11.0 * K); cx, cy = w / 2, h / 2
     yy, xx = np.mgrid[0:h, 0:w].astype(f32)
     E = -(xx - cx) / K; N = -(yy - cy) / K                         # degrees
-    nA = cv2.resize(fbm2((256, 256), 101, 2.6), (w, h), interpolation=cv2.INTER_CUBIC)
-    nB = cv2.resize(fbm2((256, 256), 102, 2.7), (w, h), interpolation=cv2.INTER_CUBIC)
-    nC = cv2.resize(fbm2((256, 256), 103, 3.2), (w, h), interpolation=cv2.INTER_CUBIC)
-    # outer disc (nearly round, slightly flattened N-S), irregular edge
+    def nz(sd, beta, n=256): return cv2.resize(fbm2((n, n), sd, beta), (w, h), interpolation=cv2.INTER_CUBIC)
+    nA, nB, nC, nK = nz(101, 2.6), nz(102, 2.7), nz(103, 3.2), nz(105, 2.0, 512)
     r = np.sqrt((E / 5.37) ** 2 + (N / 4.58) ** 2) * (1 + 0.10 * nC)
     disc = np.exp(-r * 1.9) * smooth(1.08, 0.70, r)
-    # the bar: centre slightly SW of the disc centre, 4.2 deg x 1.1 deg, PA 115 deg
+    # the off-centre bar: 4.2 x 1.1 deg at PA 115, centred SW of the disc centre
     bx, by = -0.35, -0.45; p = math.radians(115.0); ue, un = math.sin(p), math.cos(p)
     a = (E - bx) * ue + (N - by) * un; b = -(E - bx) * un + (N - by) * ue
     bar = np.exp(-(a / 2.1) ** 4 - (b / 0.55) ** 2) * (1 + 0.25 * nB)
-    # northern star-forming arm: arc from N11 (NW) via N44 to 30 Dor (NE)
     t = np.arctan2(N - 0.2, E - 0.0); rr = np.hypot(E, N - 0.2)
     arm = np.exp(-((rr - 2.9 - 0.4 * nA) / 0.75) ** 2) * smooth(-0.1, 0.9, np.sin(t)) * np.clip(0.6 + 0.6 * nB, 0, 1.6)
-    clouds = np.clip(0.65 + 0.35 * nA + 0.15 * nB, 0.1, 1.8)
-    blue = np.array([0.35, 0.60, 1.0], f32); white = np.array([1.0, 0.86, 0.62], f32)
-    img = (disc * clouds * 0.26)[..., None] * blue + (bar * 0.45)[..., None] * white + (arm * 0.26)[..., None] * np.array([0.5, 0.75, 1.0], f32)
-    dust = np.clip(np.abs(nC) - 1.2, 0, 1) * 0.6 * (disc > 0.05)
+    clumps = np.clip(nK - 0.2, 0, 3) ** 1.5 * (disc > 0.03)                 # clumpy star clouds
+    img = (disc * (0.25 + 0.6 * clumps) * 0.10)[..., None] * np.array([0.40, 0.62, 1.0], f32) \
+        + (bar * 0.22)[..., None] * np.array([1.0, 0.82, 0.55], f32) + (arm * (0.3 + clumps) * 0.08)[..., None] * np.array([0.45, 0.72, 1.0], f32)
+    dust = np.clip(np.abs(nC) - 1.1, 0, 1) * 0.7 * (disc > 0.05)
     img *= (1 - dust)[..., None]
-    dens = disc * clouds * 0.6 + bar * 3.0 + arm * 1.4 + 0.002
-    img += starfield(h, w, dens, 260000, 104) * 0.8
-    # HII regions (offsets in deg E, N from the LMC centre RA 80.89, Dec -69.76)
-    pink = (1.0, 0.25, 0.55)
-    for (e, n, R, I, sd) in ((1.33, 0.66, 0.42, 1.6, 111), (1.40, -0.05, 0.22, 0.7, 112), (-2.56, 3.36, 0.30, 0.7, 113),
-                             (0.0, 1.80, 0.26, 0.6, 114), (-1.3, 2.6, 0.16, 0.4, 115), (2.2, 1.6, 0.14, 0.35, 116), (-0.9, -1.6, 0.12, 0.3, 117)):
+    dens = (disc * (0.3 + 2.0 * clumps) + bar * 6.0 + arm * (1 + 2 * clumps) + 0.002) * (1 - dust)
+    img += starfield(h, w, dens, 700000, 104) * 1.1                          # fine grainy star texture
+    img += starfield(h, w, bar + 0.001, 160000, 106, temps=(3200, 6500)) * 1.0   # dense old-star bar
+    blue_knots(img, arm * (0.3 + clumps) + disc * clumps * 0.4, 70, 107, K, 0.02, 0.06, 0.9)
+    pink = (1.0, 0.22, 0.52)
+    for (e, n, R, I, sd) in ((1.33, 0.66, 0.42, 1.6, 111), (1.40, -0.05, 0.22, 0.9, 112), (-2.56, 3.36, 0.30, 0.9, 113),
+                             (0.0, 1.80, 0.26, 0.8, 114), (-1.3, 2.6, 0.16, 0.6, 115), (2.2, 1.6, 0.14, 0.5, 116), (-0.9, -1.6, 0.12, 0.5, 117)):
         img += knot(h, w, cx - e * K, cy - n * K, R * K, sd, pink, I * 0.9, core=(0.55, 1.0, 0.9) if sd == 111 else None)
-    return vivid(img.astype(f32), 1.6), (cx, cy), np.clip(disc * 4, 0, 1)
+    pink_knots(img, arm + disc * clumps * 0.5, 34, 118, K, 0.04, 0.12, 0.7)
+    return vivid(img.astype(f32), 1.7), (cx, cy), np.clip(disc * 4, 0, 1)
 
 
 def smc():
     w, h = int(7.8 * K), int(6.2 * K); cx, cy = w * 0.60, h / 2              # extra room to the west for 47 Tuc
     yy, xx = np.mgrid[0:h, 0:w].astype(f32)
     E = -(xx - cx) / K; N = -(yy - cy) / K
-    nA = cv2.resize(fbm2((192, 192), 201, 2.4), (w, h), interpolation=cv2.INTER_CUBIC)
-    nB = cv2.resize(fbm2((192, 192), 202, 2.6), (w, h), interpolation=cv2.INTER_CUBIC)
+    def nz(sd, beta, n=192): return cv2.resize(fbm2((n, n), sd, beta), (w, h), interpolation=cv2.INTER_CUBIC)
+    nA, nB, nK = nz(201, 2.4), nz(202, 2.6), nz(205, 2.0, 384)
     p = math.radians(45.0); ue, un = math.sin(p), math.cos(p)
     a = E * ue + N * un; b = -E * un + N * ue
     r = np.sqrt((a / 2.66) ** 2 + (b / 1.54) ** 2) * (1 + 0.12 * nB)
     body = np.exp(-r * 2.4) * smooth(1.08, 0.7, r)
     bar = np.exp(-(a / 1.6) ** 2 - (b / 0.45) ** 2) * (1 + 0.3 * nA)
     wing = np.exp(-((E - 1.45) / 0.75) ** 2 - ((N + 0.55) / 0.45) ** 2) * np.clip(0.5 + 0.6 * nA, 0, 1.5)
-    clouds = np.clip(0.6 + 0.45 * nA, 0.05, 2)
-    img = (body * clouds * 0.24)[..., None] * np.array([0.6, 0.75, 1.0], f32) + (bar * 0.42)[..., None] * np.array([0.95, 0.92, 0.9], f32) \
-        + (wing * 0.09)[..., None] * np.array([0.5, 0.7, 1.0], f32)
-    img += starfield(h, w, body * clouds + bar * 2.5 + wing + 0.002, 90000, 203) * 0.8
-    img += knot(h, w, cx - 0.48 * K, cy - 0.65 * K, 0.22 * K, 211, (1.0, 0.25, 0.55), 0.9)        # NGC 346
-    img += knot(h, w, cx + 0.5 * K, cy + 0.4 * K, 0.12 * K, 212, (1.0, 0.25, 0.55), 0.3)
+    clumps = np.clip(nK - 0.2, 0, 3) ** 1.5 * (body > 0.03)
+    img = (body * (0.3 + 0.6 * clumps) * 0.12)[..., None] * np.array([0.5, 0.7, 1.0], f32) + (bar * 0.20)[..., None] * np.array([0.95, 0.88, 0.8], f32) \
+        + (wing * 0.07)[..., None] * np.array([0.5, 0.7, 1.0], f32)
+    img += starfield(h, w, body * (0.3 + 2 * clumps) + bar * 5 + wing * (1 + clumps) + 0.002, 260000, 203) * 1.1
+    blue_knots(img, wing + bar * clumps + body * clumps * 0.3, 30, 207, K, 0.02, 0.05, 0.9)
+    img += knot(h, w, cx - 0.48 * K, cy - 0.65 * K, 0.22 * K, 211, (1.0, 0.22, 0.52), 1.0)        # NGC 346
+    pink_knots(img, bar + wing + body * clumps * 0.4, 16, 212, K, 0.04, 0.10, 0.7)
     # 47 Tucanae (Milky Way globular, 2.3 deg W of the SMC, 0.5 deg across)
     tx, ty = cx + 2.19 * K, cy - 0.75 * K
     d = np.hypot(xx - tx, yy - ty) / K
     img += (np.exp(-d / 0.035) * 1.2 + np.exp(-d / 0.10) * 0.15)[..., None] * np.array([1.0, 0.9, 0.7], f32)
-    return vivid(img.astype(f32), 1.6), (cx, cy), np.clip(body * 4, 0, 1)
+    return vivid(img.astype(f32), 1.7), (cx, cy), np.clip(body * 4, 0, 1)
 
 
 # ------------------------------------------------------------------------------------------------ Milky Way core

@@ -47,24 +47,24 @@ def wt(key, cap, n=0):
 SC = {
     "night": dict(items=[], I=0.0, beams=[(0.3, 0.5, 1.0)], bI=0.0, expo=1.15, c=P31),
     "m31": dict(items=[("m31", *P31, 0)], name="ANDROMEDA (M31)", tc=(170, 205, 255),
-                l=["6× THE MOON'S SIZE", "2.5 MILLION LY", "1 TRILLION STARS"], I=0.6, gain=2.8,
+                l=["6× THE MOON'S SIZE", "2.5 MILLION LY", "1 TRILLION STARS"], I=0.6, gain=3.0,
                 beams=[(0.45, 0.65, 1.0), (1.0, 0.8, 0.45), (0.75, 0.5, 1.0), (0.35, 0.95, 1.0)], bI=0.30, expo=1.05, c=P31,
                 moon=(880, 830), halo=(0.55, 0.65, 1.0)),
     "m33": dict(items=[("m33", 540.0, 720.0, 0)], name="TRIANGULUM (M33)", tc=(160, 235, 255),
-                l=["2.3× THE MOON'S SIZE", "2.7 MILLION LY", "~40 BILLION STARS"], I=0.45, gain=3.2,
+                l=["2.3× THE MOON'S SIZE", "2.7 MILLION LY", "~40 BILLION STARS"], I=0.45, gain=3.4,
                 beams=[(0.3, 0.85, 1.0), (0.6, 0.6, 1.0), (1.0, 0.95, 0.8)], bI=0.26, expo=1.08, c=(540.0, 720.0),
                 moon=(790, 830), halo=(0.45, 0.75, 1.0)),
     "mc": dict(items=[("lmc", 470.0, 920.0, 0), ("smc", 800.0, 600.0, 0)], name="MAGELLANIC CLOUDS", tc=(255, 150, 210),
-               l=["LMC 20× · SMC 10× THE MOON'S SIZE", "160,000 & 200,000 LY", "LMC: ~30 BILLION STARS"], I=0.8, gain=2.4,
+               l=["LMC 20× · SMC 10× THE MOON'S SIZE", "160,000 & 200,000 LY", "LMC: ~30 BILLION STARS"], I=0.8, gain=3.6,
                beams=[(1.0, 0.35, 0.65), (0.45, 0.7, 1.0), (1.0, 0.85, 0.7), (0.7, 0.4, 1.0)], bI=0.34, expo=1.0, c=(470.0, 920.0),
                moon=(985, 1150), halo=(0.75, 0.6, 1.0)),
     "m51": dict(items=[("m51", 720.0, 540.0, 0)], name="WHIRLPOOL (M51)", tc=(255, 140, 230),
-                l=["1/3 OF THE MOON'S SIZE", "~30 MILLION LY", "~100 BILLION STARS"], I=0.3, gain=2.6,
+                l=["1/3 OF THE MOON'S SIZE", "~30 MILLION LY", "~100 BILLION STARS"], I=0.3, gain=3.8,
                 beams=[(0.8, 0.35, 1.0), (0.3, 0.6, 1.0), (1.0, 0.45, 0.6)], bI=0.22, expo=1.1, c=(720.0, 540.0),
                 moon=(880, 560), halo=(0.8, 0.45, 1.0), loupe=(420.0, 770.0, 215.0)),
     "all": dict(items=[("core", 640.0, 1230.0, -103 - 22), ("lmc", 300.0, 900.0, 0), ("smc", 850.0, 800.0, 0), ("m33", 930.0, 520.0, 0),
                        ("m31", 600.0, 330.0, 0)],
-                I=0.6, gain=2.3, beams=[(1.0, 0.6, 0.25), (0.4, 0.7, 1.0), (1.0, 0.4, 0.7), (0.5, 1.0, 0.8)], bI=0.38, expo=1.0,
+                I=0.65, gain=3.6, beams=[(1.0, 0.6, 0.25), (0.4, 0.7, 1.0), (1.0, 0.4, 0.7), (0.5, 1.0, 0.8)], bI=0.38, expo=1.0,
                 c=(560.0, 760.0),
                 labels=[("ANDROMEDA", 600, 225), ("TRIANGULUM", 930, 440), ("SMC", 850, 650), ("LMC", 150, 560), ("MILKY WAY CORE", 820, 1120)]),
 }
@@ -330,7 +330,7 @@ class Scene:
         lc = self.light_of(cur)
         lay = 0.0
         if cur != "night":
-            aure = (np.exp(-np.maximum(d - R * 0.3, 0) / (160 + 0.5 * R)) * 0.24 + 0.008) * I * Q["I"]
+            aure = (np.exp(-np.maximum(d - R * 0.3, 0) / (160 + 0.5 * R)) * 0.14 + 0.006) * I * Q["I"]
             lay = aure[..., None] * lc + self.rays(t, P, Q, w, cx, cy, R, col_u, Q["bI"] * (1 + 1.2 * col_u) * min(1.0, I))
         if prev != "night" and w < 1:
             lay = lay + (0.03 * P["I"] * (1 - w)) * self.light_of(prev)

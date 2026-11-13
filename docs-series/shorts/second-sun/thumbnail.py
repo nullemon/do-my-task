@@ -27,7 +27,7 @@ for w, col, size, maxw, x, y in [("IF EARTH", WHITE, 150, 1000, 540, 430), ("HAD
                                  ("SUNS", ORANGE, 300, 1000, 540, 830)]:
     rgba, _ = word_layer(w, size, maxw, fill=col); composite(v, rgba, x, y, 1.0)
 save(v, os.path.join(OUT, "thumb-vertical.jpg"))
-y0 = 1040; crop = base[y0:y0 + 608].copy()                             # 1080 x 608 (16:9) around the suns + lawn
-for w, col, size, maxw, x, y in [("IF EARTH HAD", WHITE, 92, 1000, 540, 90), ("TWO SUNS", ORANGE, 150, 1000, 540, 215)]:
+y0 = 960; crop = base[y0:y0 + 608].copy()                              # 1080 x 608 (16:9): suns above, lawn below
+for w, col, size, maxw, x, y in [("IF EARTH HAD", WHITE, 84, 1000, 540, 400), ("TWO SUNS", ORANGE, 140, 1000, 540, 515)]:
     rgba, _ = word_layer(w, size, maxw, fill=col); composite(crop, rgba, x, y, 1.0)
 save(crop, os.path.join(OUT, "thumb.jpg"), (1280, 720))

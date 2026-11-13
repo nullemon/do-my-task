@@ -330,7 +330,7 @@ class Scene:
         lc = self.light_of(cur)
         lay = 0.0
         if cur != "night":
-            aure = (np.exp(-np.maximum(d - R * 0.3, 0) / (160 + 0.5 * R)) * 0.26 + 0.02) * I * Q["I"]
+            aure = (np.exp(-np.maximum(d - R * 0.3, 0) / (160 + 0.5 * R)) * 0.24 + 0.008) * I * Q["I"]
             lay = aure[..., None] * lc + self.rays(t, P, Q, w, cx, cy, R, col_u, Q["bI"] * (1 + 1.2 * col_u) * min(1.0, I))
         if prev != "night" and w < 1:
             lay = lay + (0.03 * P["I"] * (1 - w)) * self.light_of(prev)

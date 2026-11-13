@@ -255,20 +255,44 @@ class City:
             cv2.line(posts, (int(hx), int(hy_)), (int(hx - 2), int(by)), 1.0, 3, cv2.LINE_AA)
         shS = np.clip(smear(tree, 40, (600, 1540)) + smear(posts, 70, (600, 1580)), 0, 1) * street
         def soft(m): return cv2.GaussianBlur(m, (0, 0), 0.8)
-        self.surf = S2O(np.clip(roofL * 0.9 + roofN * 1.0 + street * 0.85, 0, 1)).astype(f32)
+        # the three tall towers throw long shadows away from the star onto the lower roofs and blocks in front of them
+        towers = np.clip(poly_mask(shp, [(8, 1112), (170, 1112), (172, 1300), (8, 1300)])
+                         + poly_mask(shp, [(606, 962), (730, 975), (732, 1268), (606, 1268)])
+                         + poly_mask(shp, [(812, 1082), (925, 1088), (928, 1268), (812, 1268)]), 0, 1)
+        midroof = poly_mask(shp, [(455, 1262), (941, 1258), (941, 1284), (455, 1288)])
+        tsh = np.zeros(shp, f32)
+        for bx, by, ln in ((90, 1300, 150), (668, 1268, 260), (870, 1268, 200)):
+            dx, dy = bx - vx, by - vy; d = math.hypot(dx, dy); dx, dy = dx / d, max(dy / d, 0.35)
+            m = towers * (np.abs(np.arange(Ws)[None, :] - bx) < 90)
+            acc = np.zeros(shp, f32)
+            for j in range(0, 41):
+                acc = np.maximum(acc, shift(m, dx * ln * j / 40, dy * ln * j / 40) * (1 - 0.35 * j / 40))
+            tsh = np.maximum(tsh, acc)
+        tsh = cv2.GaussianBlur(tsh * (1 - towers) * (sra_a := (np.asarray(Image.open(FG_PATH).convert("RGBA"))[..., 3] > 127).astype(f32)), (0, 0), 2.0)
+        self.tshadow = S2O(np.clip(tsh, 0, 1)).astype(f32)
+        self.surf = S2O(np.clip(roofL * 0.9 + roofN * 1.0 + street * 0.85 + midroof * 0.9, 0, 1)).astype(f32)
         self.shadow = S2O(soft(np.clip(shL + shN + shS, 0, 1))).astype(f32)
         self.treeO = S2O(tree)
         self.yy = yy
 
-    def render(self, t, E, c, amb_col, tw):
-        """E: star illuminance (0..1), c: star colour, amb_col: scattered skylight colour, tw: twilight level"""
-        on = np.ones(self.n, f32)
+    def render(self, t, E, c, amb_col, tw, beat=0, tb=10.0):
+        """E: star illuminance (0..1), c: star colour, amb_col: scattered skylight colour, tw: twilight level
+        beat: index of the current star; tb: time since its swap (windows switch as people react to the new star)"""
+        def state(b):
+            b = 0 if b >= 8 else b                                          # the final beat matches the opening (loop)
+            return (np.random.default_rng(100 + b).uniform(0, 1, self.n) < 0.80 + 0.025 * b).astype(f32)
+        on = state(beat)
+        if beat > 0:
+            prev = state(beat - 1)
+            delay = np.random.default_rng(200 + beat).uniform(0.2, 2.0, self.n)
+            on = np.where(tb < delay, prev, on)
         on *= 0.92 + 0.08 * np.sin(t * 1.3 + self.ph)                       # windows breathe a little
         on[0] = 0
         wmap = on[self.label][..., None]
         img = self.night + self.Lw * wmap * 1.25 + self.Lg * 1.15
         if E > 0:
             lit = (self.surf * (1 - 0.88 * self.shadow) * 1.1 + self.rim * 1.6 + self.open * 0.35 * (0.4 + 0.6 * self.top))
+            lit = lit * (1 - 0.8 * self.tshadow * smooth(0.12, 0.3, E))
             img = img + self.alb * c * (E * 4.0) * lit[..., None] + self.D * c * (E * 0.9)
         if tw > 0:                                                         # scattered skylight on everything
             img = img + self.alb * amb_col * (0.30 * tw) * (0.5 + 0.5 * self.top)[..., None]
@@ -517,7 +541,7 @@ class Scene:
             sky = sky + cv2.resize(bm, (W, H), interpolation=cv2.INTER_LINEAR)
         # ---- city
         amb_col = (self.twi[200, 540] * 2.0).astype(f32)
-        cityimg = self.city.render(t, E * (1 - 0.0), c / max(c.max(), 1e-3), amb_col, tw)
+        cityimg = self.city.render(t, E, c / max(c.max(), 1e-3), amb_col, tw, st['i'], t - st['ts'])
         img = sky * (1 - self.a) + cityimg * self.a
         # ---- the star
         self.hero(img, t, st)

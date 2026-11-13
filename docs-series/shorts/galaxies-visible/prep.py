@@ -175,7 +175,7 @@ def lmc():
     nC = cv2.resize(fbm2((256, 256), 103, 3.2), (w, h), interpolation=cv2.INTER_CUBIC)
     # outer disc (nearly round, slightly flattened N-S), irregular edge
     r = np.sqrt((E / 5.37) ** 2 + (N / 4.58) ** 2) * (1 + 0.10 * nC)
-    disc = np.exp(-r * 2.6) * smooth(1.08, 0.75, r)
+    disc = np.exp(-r * 1.9) * smooth(1.08, 0.70, r)
     # the bar: centre slightly SW of the disc centre, 4.2 deg x 1.1 deg, PA 115 deg
     bx, by = -0.35, -0.45; p = math.radians(115.0); ue, un = math.sin(p), math.cos(p)
     a = (E - bx) * ue + (N - by) * un; b = -(E - bx) * un + (N - by) * ue
@@ -185,7 +185,7 @@ def lmc():
     arm = np.exp(-((rr - 2.9 - 0.4 * nA) / 0.75) ** 2) * smooth(-0.1, 0.9, np.sin(t)) * np.clip(0.6 + 0.6 * nB, 0, 1.6)
     clouds = np.clip(0.65 + 0.35 * nA + 0.15 * nB, 0.1, 1.8)
     blue = np.array([0.35, 0.60, 1.0], f32); white = np.array([1.0, 0.86, 0.62], f32)
-    img = (disc * clouds * 0.10)[..., None] * blue + (bar * 0.55)[..., None] * white + (arm * 0.13)[..., None] * np.array([0.5, 0.75, 1.0], f32)
+    img = (disc * clouds * 0.26)[..., None] * blue + (bar * 0.45)[..., None] * white + (arm * 0.26)[..., None] * np.array([0.5, 0.75, 1.0], f32)
     dust = np.clip(np.abs(nC) - 1.2, 0, 1) * 0.6 * (disc > 0.05)
     img *= (1 - dust)[..., None]
     dens = disc * clouds * 0.6 + bar * 3.0 + arm * 1.4 + 0.002
@@ -211,7 +211,7 @@ def smc():
     bar = np.exp(-(a / 1.6) ** 2 - (b / 0.45) ** 2) * (1 + 0.3 * nA)
     wing = np.exp(-((E - 1.45) / 0.75) ** 2 - ((N + 0.55) / 0.45) ** 2) * np.clip(0.5 + 0.6 * nA, 0, 1.5)
     clouds = np.clip(0.6 + 0.45 * nA, 0.05, 2)
-    img = (body * clouds * 0.12)[..., None] * np.array([0.6, 0.75, 1.0], f32) + (bar * 0.42)[..., None] * np.array([0.95, 0.92, 0.9], f32) \
+    img = (body * clouds * 0.24)[..., None] * np.array([0.6, 0.75, 1.0], f32) + (bar * 0.42)[..., None] * np.array([0.95, 0.92, 0.9], f32) \
         + (wing * 0.09)[..., None] * np.array([0.5, 0.7, 1.0], f32)
     img += starfield(h, w, body * clouds + bar * 2.5 + wing + 0.002, 90000, 203) * 0.8
     img += knot(h, w, cx - 0.48 * K, cy - 0.65 * K, 0.22 * K, 211, (1.0, 0.25, 0.55), 0.9)        # NGC 346

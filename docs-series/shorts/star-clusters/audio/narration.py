@@ -4,12 +4,12 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "Our night sky has a few thousand stars. Now imagine living inside a star cluster.", 0.30),
-    ("ple", "The Pleiades. A thousand young, blue-white stars. Dozens outshine Sirius, glowing through blue dust.", 0.30),
-    ("hya", "The {HYADES|Hiadeez}. Older, with orange giants brighter than Sirius.", 0.30),
-    ("ome", "Omega Centauri. {10 MILLION|Ten million} stars. Near the core, almost a million are naked-eye, thousands beat Sirius, and the night never gets dark.", 0.30),
-    ("nsc", "And the galaxy's heart: a million stars within three light-years. The brightest rival the full Moon.", 0.35),
-    ("end", "We live in the quiet suburbs of the galaxy. That's why our sky is dark.", 0.0),
+    ("hook", "Our night sky has a few thousand stars. Now imagine living inside a star cluster.", 0.25),
+    ("ple", "The Pleiades. A thousand young blue stars. Dozens outshine Sirius, glowing through blue dust.", 0.25),
+    ("hya", "The {HYADES|Hiadeez}. Older, with orange giants brighter than Sirius.", 0.25),
+    ("ome", "Omega Centauri. {10 MILLION|Ten million} stars. Near the core, almost a million are naked-eye, thousands beat Sirius, and night never gets dark.", 0.25),
+    ("nsc", "And the galaxy's heart: a million stars within three light-years. The brightest rival the full Moon.", 0.30),
+    ("end", "We live in the galaxy's quiet suburbs. That's why our sky is dark.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

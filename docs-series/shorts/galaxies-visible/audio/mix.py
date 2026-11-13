@@ -1,9 +1,9 @@
-"""Sound for "What If Famous Nebulas Were in Our Sky?": voice chain; a soft city-night bed (distant traffic hum);
-a chord pad that changes key and colour with each nebula; a rushing riser as Orion flies in; whoosh + implosion sweep +
-sub thump + bloom shimmer at every swap; the Crab pulsar as a real 30-per-second click train; the bed drains to a muffled
-hush for the "eye view" ghost; a phone-shutter click + hit for the camera view; white-out riser and a deep hit back into
-the normal night. Ducked under the voice, two-pass loudnorm to -14 LUFS / -1 dBTP, plus the SRT.
-Run: /home/user/ttsenv/bin/python audio/mix.py  -> SCR/audio/mix.wav, ../out/nebula-sky.srt"""
+"""Sound for "What If Galaxies Were Bright Enough to See?": voice chain; a soft city-night bed (distant traffic hum);
+a chord pad that changes key and colour with each galaxy; six bell plinks as the six full Moons line up; a riser on
+"what if your eyes could"; whoosh + sub thump + bloom shimmer at every swap; a huge drone for the all-at-once finale;
+white-out riser and a deep hit back into the plain city night. Ducked under the voice, two-pass loudnorm to
+-14 LUFS / -1 dBTP, plus the SRT.
+Run: /home/user/ttsenv/bin/python audio/mix.py  -> SCR/audio/mix.wav, ../out/galaxies-visible.srt"""
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path.join(HERE, ".."), os.path.join(HERE, "..", "..")]
 import numpy as np, soundfile as sf
@@ -15,8 +15,8 @@ OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
 
 # chord per scene: (root Hz, intervals in semitones, brightness)
-CHORDS = {"night": (110.0, (0, 7, 12, 14, 19), 0.25), "orion": (130.8, (0, 4, 7, 11, 14, 19), 0.8), "ring": (164.8, (0, 3, 7, 10, 14), 0.9),
-          "pill": (98.0, (0, 7, 12, 15, 19, 22), 0.6), "crab": (146.8, (0, 5, 7, 12, 17), 0.75), "car": (87.3, (0, 4, 7, 11, 12, 16, 19), 1.0)}
+CHORDS = {"night": (110.0, (0, 7, 12, 14, 19), 0.25), "m31": (130.8, (0, 4, 7, 11, 14, 19), 0.8), "m33": (164.8, (0, 4, 7, 9, 14), 0.9),
+          "mc": (98.0, (0, 7, 12, 15, 19, 22), 0.7), "m51": (146.8, (0, 5, 7, 12, 17), 0.75), "all": (87.3, (0, 4, 7, 11, 12, 16, 19), 1.0)}
 
 
 def chord(root, iv, bright, seed):
@@ -46,24 +46,10 @@ def bloom_swell(t0, seed, gain=0.4):
     return sh * A.env(N, [(0, 0), (t0, 0), (t0 + 0.05, 1), (t0 + 1.6, 0), (S.DUR, 0)])[:, None] * gain
 
 
-def pulsar(t0, t1, gain):
-    """Crab pulsar: 29.6 clicks per second (its real rotation rate), each a short damped knock"""
-    out = np.zeros((N, 2)); n = int(0.012 * SR); k = np.arange(n) / SR
-    clk = (np.sin(2 * np.pi * 1400 * k) * 0.6 + np.sin(2 * np.pi * 380 * k)) * np.exp(-k / 0.0025)
-    tp = t0
-    while tp < t1:
-        a = int(tp * SR)
-        if a + n < N: out[a:a + n] += clk[:, None]
-        tp += 1 / 29.6
-    return out * gain * A.env(N, [(0, 0), (t0, 0), (t0 + 0.4, 1), (t1 - 0.2, 1), (t1, 0), (S.DUR, 0)])[:, None]
-
-
-def shutter(t0, gain=0.6):
-    out = np.zeros((N, 2)); r = np.random.default_rng(77)
-    for dt, g in ((0.0, 1.0), (0.055, 0.7)):
-        a = int((t0 + dt) * SR); n = int(0.03 * SR); k = np.arange(n) / SR
-        x = A.hp(r.standard_normal(n), 2500) * np.exp(-k / 0.006) + np.sin(2 * np.pi * 2200 * k) * np.exp(-k / 0.003) * 0.5
-        out[a:a + n] += (x * g)[:, None]
+def plink(t0, f, gain=0.25):
+    out = np.zeros((N, 2)); n = int(1.2 * SR); k = np.arange(n) / SR; a = int(t0 * SR)
+    x = (np.sin(2 * np.pi * f * k) + 0.4 * np.sin(2 * np.pi * 2.76 * f * k) * np.exp(-k / 0.08)) * np.exp(-k / 0.35)
+    m = min(n, N - a); out[a:a + m] += x[:m, None]
     return out * gain
 
 
@@ -77,28 +63,22 @@ def main():
         if i == 0: e = A.env(N, [(0, 0), (0.4, 1), (te - 0.45, 1), (te - 0.05, 0), (S.DUR + 1, 0)])
         elif i == len(seq) - 1: e = A.env(N, [(0, 0), (ts, 0), (ts + 0.3, 1), (S.DUR - 0.4, 1), (S.DUR, 0)])
         else: e = A.env(N, [(0, 0), (max(ts - 0.05, 0), 0), (ts + 0.25, 1), (te - 0.45, 1), (te - 0.05, 0.0), (S.DUR + 1, 0)])
-        bed += chord(root, iv, br, 10 + i) * e[:, None] * (1.3 if k == "car" else 1.0)
+        bed += chord(root, iv, br, 10 + i) * e[:, None] * (1.3 if k == "all" else 1.0)
     # city ambience: distant traffic hum, always there
     r = np.random.default_rng(5)
     city = np.stack([A.bp(r.standard_normal(N), 70, 600) for _ in range(2)], 1) * (1 + 0.3 * np.sin(2 * np.pi * 0.07 * tt))[:, None]
     bed += city * 0.10
-    # Orion rushes in
-    bed += A.riser(N, S.T_RUSH0 - 0.2, S.T_RUSH1, seed=21) * 1.0
-    bed += whoosh(S.T_RUSH1, 1.0, seed=22, gain=0.7)
+    # six full Moons line up (one plink each, rising)
+    for i in range(6): bed += plink(S.T_MOONS + 0.12 * i, 880 * 2 ** ([0, 2, 4, 7, 9, 12][i] / 12), 0.22)
+    # "what if your eyes could" -> riser into Andromeda
+    bed += A.riser(N, S.T_CAN, S.T_SW["m31"], seed=21) * 1.0
     for i, (ts, k) in enumerate(S.SWAPS):
-        if k not in ("orion", "night"): bed += whoosh(ts, 0.55, seed=40 + i, gain=0.55)
-        bed += A.thump(N, ts, 0.9 if k not in ("car", "night") else 1.3)
-        if k != "night": bed += bloom_swell(ts + 0.02, 50 + i, 0.45 if k == "car" else 0.32)
-    # Crab pulsar
-    bed += pulsar(S.T_SW["crab"] + 0.5, S.T_SW["car"] - 0.25, 0.10) + pulsar(S.T_PULSAR - 0.1, S.T_SW["car"] - 0.25, 0.10)
-    # Carina: a big airy drone while we're inside it
-    bed += A.drone(N, root=43.65, seed=64, bright=0.35) * 1.1 * A.env(N, [(0, 0), (S.T_SW["car"], 0), (S.T_SW["car"] + 0.6, 1), (S.T_BACK - 0.05, 1.2), (S.T_BACK, 0), (S.DUR, 0)])[:, None]
-    # eye view: the bed drains to a hush (muffled), the camera view snaps it back
-    hush = A.env(N, [(0, 1), (S.T_FAINT, 1), (S.T_FAINT + 0.45, 0.25), (S.T_CAM - 0.02, 0.25), (S.T_CAM + 0.03, 1), (S.DUR, 1)])
-    bed = A.lp(bed, 900, 2) * (1 - hush)[:, None] * 0.6 + bed * hush[:, None]
-    bed += shutter(S.T_CAM, 0.9) + A.hit(N, S.T_CAM + 0.02, gain=0.35, root=65.4)
-    bed += A.shimmer(N, S.T_CAM, S.T_WO0, seed=71, gain=0.25)
-    # white-out back to the normal night (loops)
+        if k != "night": bed += whoosh(ts, 0.55, seed=40 + i, gain=0.55)
+        bed += A.thump(N, ts, 1.3 if k in ("all", "night") else 0.9)
+        if k != "night": bed += bloom_swell(ts + 0.02, 50 + i, 0.45 if k == "all" else 0.32)
+    # finale: a big airy drone while everything is up
+    bed += A.drone(N, root=43.65, seed=64, bright=0.35) * 1.1 * A.env(N, [(0, 0), (S.T_SW["all"], 0), (S.T_SW["all"] + 0.6, 1), (S.T_BACK - 0.05, 1.2), (S.T_BACK, 0), (S.DUR, 0)])[:, None]
+    # white-out back to the plain city night (loops)
     bed += A.riser(N, S.T_WO0 - 0.3, S.T_BACK, seed=65) * 1.2
     bed += A.hit(N, S.T_BACK, gain=0.5, root=55.0)
     bed = A.duck(bed, voice, depth=0.45)
@@ -109,7 +89,7 @@ def main():
     A.loudnorm(raw, os.path.join(OUT, "mix.wav"), -14.0, -1.0); os.remove(raw)
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)
-    A.write_srt(os.path.join(HERE, "..", "out", "nebula-sky.srt"), S.PL, lambda k: pc[k])
+    A.write_srt(os.path.join(HERE, "..", "out", "galaxies-visible.srt"), S.PL, lambda k: pc[k])
     print("ok", S.DUR)
 
 

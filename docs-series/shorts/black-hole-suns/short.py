@@ -30,7 +30,7 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 LAMPS = [(630, 1185, 1336), (845, 1095, 1342)]       # A_park lamp (head x, head y, pole base y) in SOURCE px (as in other-suns)
 FPS = 30
-LEAD, TAIL = 0.25, 0.85
+LEAD, TAIL = 0.25, 0.60
 F_PX = 960.0
 RSUN_AU = 0.00465047
 
@@ -75,7 +75,7 @@ SC = [
     dict(key="m87", name="M87*", l2="6.5 BILLION × SUN'S MASS", l3="HORIZON: 128 AU RADIUS", l4="WE'RE INSIDE IT", tc=(215, 140, 255),
          zen=(0.05, 0.010, 0.13), hor=(0.30, 0.05, 0.42), beams=[(0.7, 0.2, 1.0), (0.3, 0.6, 1.0), (1.0, 0.2, 0.8), (0.5, 0.3, 1.0)], bI=0.9,
          gain=0.50, tint=(0.62, 0.32, 1.0), flat=0.5, amb=0.35, night=0.3, lamps=0.5, expo=1.05, fc=(0.8, 0.5, 1.0)),
-    dict(key="ton", name="TON 618", l2="40–66 BILLION × SUN'S MASS", l3="HORIZON: 800–1,300 AU RADIUS", tc=(255, 200, 110),
+    dict(key="ton", name="TON 618", l2="40–66 BILLION × SUN'S MASS", l3="HORIZON: 800–1,300 AU RADIUS", l4="SEEN FROM 8,000 AU", tc=(255, 200, 110),
          zen=(0.07, 0.035, 0.05), hor=(0.70, 0.36, 0.14), beams=[(1.0, 0.75, 0.35), (1.0, 0.95, 0.75), (1.0, 0.45, 0.12), (0.9, 0.55, 0.9)], bI=1.1,
          gain=1.15, tint=(1.0, 0.72, 0.42), flat=0.25, amb=0.25, night=0.0, lamps=0.0, expo=0.85, fc=(1.0, 0.85, 0.6)),
 ]
@@ -84,14 +84,16 @@ SK = {s["key"]: s for s in SC}
 # ------------------------------------------------------------------------------------------------ timeline
 T_SW = {k: LN[k]["start"] - 0.06 for k in ("one", "cyg", "sgr", "m87", "ton")}
 T_SUNBACK = LN["end"]["start"] - 0.10
-T_WO0 = T_SUNBACK - 0.80
+T_WO0 = T_SUNBACK - 0.55
 T_SWAL = wt("ton", "SWALLOW") - 0.1
+T_PULL0, T_PULL1 = wt("ton", "SO") - 0.30, wt("ton", "8,000×") + 0.45     # pull back 8,000x: from inside to the outside view
+Z_IN = 1.9
 ORDER = ["sun", "one", "cyg", "sgr", "m87", "ton"]
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_SUNBACK, "sun2")]
 PULSES = [wt("hook", "REPLACED"), wt("one", "6 KM"), wt("one", "DARK"), wt("cyg", "21"), wt("cyg", "WEEKS"), wt("sgr", "4 MILLION"),
           wt("sgr", "24°"), wt("m87", "6.5 BILLION"), wt("m87", "NEPTUNE"), wt("m87", "INSIDE"), wt("ton", "66 BILLION"), wt("end", "KIND")]
 M87_R0, M87_R1 = 1.06, 1.004                           # tunnel: camera radius (Rs) at the start / end of the M87* beat
-TON_R = 9.0                                            # TON 618 view: camera at 6 Rs (snapshot; the real 1 au is inside)
+TON_R = r_obs_of(6.6e10) * 8000.0                     # TON 618 seen from 8,000 au = 6.14 Rs -> shadow 45.6 deg (1 au would be inside)
 
 
 def scene_at(t):
@@ -106,6 +108,12 @@ def prev_of(t0):
     for i, (ts, k) in enumerate(SWAPS):
         if ts == t0: return "sun" if i == 0 else ("sun" if SWAPS[i - 1][1] == "sun2" else SWAPS[i - 1][1])
     return None
+
+
+def ton_zoom(t):
+    """TON 618 framing: close in (the hole overfills the sky) until "so here it is", then pulled back to 8,000 au"""
+    if t < T_PULL0: return Z_IN - 0.25 * ramp(t, T_SW["ton"], T_PULL0)
+    return 1.0 + (Z_IN - 0.25 - 1.0) * (1 - ease((t - T_PULL0) / (T_PULL1 - T_PULL0)))
 
 
 def lerp(a, b, w): return tuple(x + (y - x) * w for x, y in zip(a, b)) if isinstance(a, tuple) else a + (b - a) * w
@@ -225,7 +233,7 @@ class Scene:
         f = fg.flat; y = lum(f)[..., None]
         self.fg_night = ((f * 0.35 + y * 0.65) * np.array([0.19, 0.22, 0.48], f32)).astype(f32)
         emph = {"SMALL", "6 KM", "DARK", "FOREVER", "21", "WEEKS", "4 MILLION", "24°", "6.5 BILLION", "NEPTUNE", "INSIDE",
-                "66 BILLION", "SWALLOW", "KIND", "X-1", "A*", "M87*", "TON 618"}
+                "66 BILLION", "SWALLOW", "KIND", "8,000×", "FARTHER", "X-1", "A*", "M87*", "TON 618"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         L.cap_y = 1010 if vertical else 590
         self._views = {}
@@ -293,7 +301,7 @@ class Scene:
         ck = (key, r_obs, half)
         if ck in self._views: return self._views[ck]
         if key == "sgr": r, incl, roll, rin, rout, F = R_SGR, 32.0, -14.0, 1.6, 4.6, self.Fd
-        elif key == "ton": r, incl, roll, rin, rout, F = TON_R, 84.0, -9.0, 3.0, 6.5, self.Fd
+        elif key == "ton": r, incl, roll, rin, rout, F = TON_R, 80.0, -8.0, 2.0, 4.8, self.Fd
         else: r, incl, roll, rin, rout, F = r_obs, 70.0, 20.0, 2.2, 12.0, -self.Fd              # m87: looking outward
         dirs = self.dirs_h if half else self.dirs
         amax = math.radians(80) if key != "m87" else math.pi - 1e-3
@@ -323,8 +331,8 @@ class Scene:
                 col = afmhot(I * 0.6) * 3.0
                 a = np.clip(prof * tex * 0.7, 0, 0.85)
             elif mode == "ton":
-                Fr = (r ** -3) * (1 - np.sqrt(3.0 / np.maximum(r, 3.0))); Fr = Fr / 0.00366
-                prof = np.clip(Fr, 0, 1.2) * smooth(rout, rout - 0.6, r) * smooth(rin, rin + 0.12, r)
+                prof = (rin / r) ** 1.8 * smooth(rin, rin + 0.45, r) * smooth(rout, rout - 1.4, r)
+                tex = 0.55 + 0.45 * tex
                 Tm = 6500.0 * np.maximum(prof, 0.02) ** 0.25 * g
                 col = bb_vec(Tm) * np.array([1.0, 0.80, 0.52], f32)
                 y_ = lum(col)[:, None]; col = y_ + (col - y_) * 1.5
@@ -353,6 +361,8 @@ class Scene:
         out = em + sky * trn[..., None]
         if key == "sgr":                                               # EHT-like softness on the emission, keep a sharp core
             out = out * 0.6 + cv2.GaussianBlur(out, (0, 0), 3.5) * 0.55
+        if key == "ton":                                               # thick glowing halo / gas volume around the thin-disk image
+            out = out + cv2.GaussianBlur(em, (0, 0), 5.0) * 0.6 + cv2.GaussianBlur(em, (0, 0), 18.0) * 0.35
         return out, v
 
     # -------------------------------------------------------------------------------------------- sky helpers
@@ -526,9 +536,8 @@ class Scene:
         pre = 1 + 2.0 * ramp(t, t1 - 0.35, t1) if t1 < 1e8 else 1.0           # anticipation before each swap
         atm = self.atmos(A, B, w)
         if cur in ("sgr", "ton") and t0 > 0:                                   # the shadow stays dark (only thin airglow in front)
-            cm = np.ones(atm.shape[:2], f32); cm[:self.Hs // 2] = self.cmask_h(cur)
-            sw_ = ramp(t, T_SWAL, T_SWAL + 1.2) if cur == "ton" else 0.0
-            atm = atm * ((0.22 + 0.78 * cm) * (1 - sw_) + 0.22 * sw_)[..., None]
+            cm = np.ones(atm.shape[:2], f32); cm[:self.Hs // 2] = self.cmask_h(cur, ton_zoom(t) if cur == "ton" else 1.0)
+            atm = atm * (0.22 + 0.78 * cm)[..., None]
         img = self.up(atm)
         R0 = 0.0; twist = 0.0; light = 1.0
         if cur == "sun":
@@ -550,21 +559,21 @@ class Scene:
         elif cur in ("sgr", "ton"):
             lay, v = self.bh_sky(cur, t)
             k = pulse * pre * (0.25 + 0.75 * g_in)
-            if cur == "ton" and t > T_SWAL:                                      # falling in: the shadow swallows the view
-                z = math.exp(math.log(7.0) * ease((t - T_SWAL) / (T_SUNBACK - T_SWAL)) ** 1.4)
-                M = cv2.getRotationMatrix2D(self.C, 25 * ease((t - T_SWAL) / (T_SUNBACK - T_SWAL)), z)
-                lay = cv2.warpAffine(lay, M, (W, self.Hs), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+            zz = ton_zoom(t) if cur == "ton" else 1.0
+            if zz > 1.001:                                                      # close in (inside-ish) -> pull back 8,000x
+                M = cv2.getRotationMatrix2D(self.C, -12 * (zz - 1) / (Z_IN - 1), zz)
+                lay = cv2.warpAffine(lay, M, (W, self.Hs), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
             self.place_sky(img, lay * k)
-            R0 = self.f * math.tan(v["ac"]) * 0.98
+            R0 = self.f * math.tan(v["ac"]) * 0.98 * zz
         elif cur == "m87":
             lay, win = self.tunnel(t, pulse * pre * (0.3 + 0.7 * g_in))
             self.place_sky(img, lay)
             R0 = min(win, 900.0); twist = 1.8
-        swal = ramp(t, T_SWAL, T_SUNBACK - 0.3) if cur == "ton" else 0.0
+        swal = 0.55 * (ton_zoom(t) - 1) / (Z_IN - 1) if cur == "ton" else 0.0
         bm = self.beams_layer(t, S, R0, twist, pulse * pre * g_in * (1 - 0.8 * swal))
         if not isinstance(bm, float):
             bmu = self.up(bm)
-            if cur in ("sgr", "ton"): bmu[:self.Hs] *= self.cmask(cur)[..., None]
+            if cur in ("sgr", "ton"): bmu[:self.Hs] *= self.up(self.cmask_h(cur, ton_zoom(t) if cur == "ton" else 1.0), self.Hs)[..., None]
             img += bmu
         # ---- foreground
         light = 1.0 + 0.12 * (pulse - 1)
@@ -600,8 +609,9 @@ class Scene:
         if overlay: self.overlay(out, t, cur, t0)
         return out
 
-    def cmask_h(self, key):
-        self.cmask(key); return self._views[("cm", key)]
+    def cmask_h(self, key, z=1.0):
+        R = self.f * math.tan(self.get_view(key)["ac"]) * z
+        return smooth(R * 0.98, R * 1.25, self.d[:self.Hs // 2]).astype(f32)
 
     def cmask(self, key):
         """1 outside the shadow, 0 inside (half-res) so the beams start at the shadow edge"""
@@ -657,7 +667,6 @@ class Scene:
         if nxt: a *= 1 - ramp(t, nxt[0] - 0.35, nxt[0] - 0.15)
         if cur == "sun" and t > T_SUNBACK: a = ramp(t, T_SUNBACK + 0.9, T_SUNBACK + 1.2)
         if T_WO0 < t < T_SUNBACK: a = 0.0
-        if cur == "ton": a *= 1 - ramp(t, T_SWAL + 0.6, T_SWAL + 1.0)
         if a > 0.01:
             dy = (1 - a) * 18
             big = int(L.hud_size * (1.45 if len(S["name"]) < 12 else 1.05))
@@ -667,6 +676,7 @@ class Scene:
             hud_text(out, S["l3"], x, ys[2] + dy, int(L.hud_size * 0.46), "Bold", (235, 240, 250), a, 0.08, display=True)
             if S.get("l4"):
                 a4 = a * (ramp(t, wt("cyg", "YEAR") - 0.2, wt("cyg", "YEAR") + 0.1) if cur == "cyg" else 1.0)
+                if cur == "ton": a4 = a * ramp(t, T_PULL0 + 0.2, T_PULL0 + 0.5)
                 hud_text(out, S["l4"], x, ys[3] + dy, int(L.hud_size * 0.46), "Black", S["tc"], a4, 0.08, display=True)
         if cur == "one":
             ap = ramp(t, T_SW["one"] + 0.5, T_SW["one"] + 0.9) * (1 - ramp(t, T_SW["cyg"] - 0.3, T_SW["cyg"] - 0.1))
@@ -725,7 +735,7 @@ if __name__ == "__main__":
     if sys.argv[1] == "info":
         print("DUR", DUR, "r_sgr", round(R_SGR, 3), "shadow deg", round(2 * math.degrees(lens.alpha_shadow(R_SGR)), 2),
               "shadow px", round(F_PX * math.tan(lens.alpha_shadow(R_SGR)), 1), "comp px", round(rad_px(COMP_R), 1))
-        print({k: round(v, 2) for k, v in T_SW.items()}, "swal", round(T_SWAL, 2), "sunback", round(T_SUNBACK, 2)); sys.exit()
+        print({k: round(v, 2) for k, v in T_SW.items()}, "pull", round(T_PULL0, 2), round(T_PULL1, 2), "ton shadow deg", round(2 * math.degrees(lens.alpha_shadow(TON_R)), 1), "sunback", round(T_SUNBACK, 2)); sys.exit()
     if sys.argv[1] == "patch":
         patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"

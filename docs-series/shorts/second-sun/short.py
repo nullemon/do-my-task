@@ -133,9 +133,9 @@ ALG = dict(a=13.29, i=math.radians(98.7), q=0.70 / 3.17, RA=2.73, RB=3.48, TA=12
 WUM = dict(a=2.44, i=math.radians(86.0), q=0.57 / 1.19, R1=1.08, R2=0.78, T=6200.0, d_au=1.54)
 def px_per_rsun(d_au): return F_PX * RSUN_AU / d_au
 
-POS = dict(sun=(640.0, 600.0), acenA=(640.0, 600.0), acenB=(880.0, 700.0), sirA=(640.0, 600.0), sirB=(930.0, 520.0),
+POS = dict(sun=(598.0, 600.0), acenA=(598.0, 600.0), acenB=(490.0, 660.0), sirA=(598.0, 600.0), sirB=(930.0, 520.0),
            pair=(590.0, 640.0))
-LOUPE = dict(cx=862.0, cy=640.0, R=140.0)
+LOUPE = dict(cx=790.0, cy=1168.0, R=196.0)
 
 BEAMS = {
     "sun": "rainbow",
@@ -164,7 +164,7 @@ def algol_phase(t):
     return math.radians(kf(t, [(A0, -52.0), (T_ECL0, -30.0), (T_ECLM, -1.5), (T_ECLM + 0.35, 1.5), (A1 - 0.2, 34.0), (A1 + 1.0, 45.0)]))
 
 
-def wuma_phase(t): return 2 * math.pi * (t - W0) / 3.2 + 0.9
+def wuma_phase(t): return 2 * math.pi * (t - W0) / 5.0 + 1.35
 
 
 def sky_xy(r, phi, inc):
@@ -198,7 +198,7 @@ def binary_field(kind, phi, X, Y):
     ax = np.array([x2 - x1, y2 - y1]); pl = np.hypot(*ax); fs = pl / W["a"]; ax = ax / max(pl, 1e-6)
     def sd(x, y, R):
         dx, dy = X - x, Y - y; al = dx * ax[0] + dy * ax[1]; pp = -dx * ax[1] + dy * ax[0]
-        e = 1 + 0.16 * fs                                                       # tidal elongation along the axis
+        e = 1 + 0.22 * fs                                                       # tidal elongation along the axis
         return np.sqrt((al / e) ** 2 + pp ** 2) - R
     s1, s2 = sd(x1, y1, W["R1"]), sd(x2, y2, W["R2"])
     k = 0.30 * fs + 0.02
@@ -241,69 +241,101 @@ HY = VAN_SRC * (1080 / 941) + (1920 - 1672 * (1080 / 941)) + 8           # true 
 def alt_of(y): return math.degrees(math.atan((HY - y) / F_PX))
 
 
+SKYLINE = None                                                             # set by Scene (frame skyline row per column)
+def disc_vis(x, y, R):
+    """fraction of a disc above the park's skyline (the hedge / roofs hide a setting sun)"""
+    if SKYLINE is None: return 1.0
+    sy = float(SKYLINE[int(np.clip(round(x), 0, len(SKYLINE) - 1))])
+    return float(smooth(sy + R, sy - R, y))
+
+
 def kepler_pos(t):
     u = (t - K0)
-    ya = kf(t, [(K0 - 1, 1180.0), (K0, 1180.0), (T_DSUN, 1368.0), (T_DSHAD + 0.25, 1407.0), (K1, 1419.0), (K1 + 2, 1440.0)])
-    yb = kf(t, [(K0 - 1, 1000.0), (K0, 1000.0), (T_DSUN, 1055.0), (T_DSHAD + 0.25, 1080.0), (K1, 1100.0), (K1 + 2, 1130.0)])
-    return (698.0 + 4 * u, ya), (546.0 + 4 * u, yb)
+    ya = kf(t, [(K0 - 1, 1120.0), (K0, 1120.0), (T_DSUN, 1228.0), (T_DSHAD + 0.2, 1256.0), (K1, 1298.0), (K1 + 2, 1330.0)])
+    yb = kf(t, [(K0 - 1, 1000.0), (K0, 1000.0), (T_DSUN, 1098.0), (T_DSHAD + 0.2, 1128.0), (K1, 1200.0), (K1 + 2, 1240.0)])
+    return (606.0 + 2 * u, ya), (468.0 + 2 * u, yb)
+
+
+# per-beat sky + grade. zen/hor: sky at full light (linear); low: optional horizon band; tint/con/sat: park grade
+G = {
+    "sun": dict(zen=(0.012, 0.075, 0.42), hor=(0.30, 0.50, 0.85), low=None, tint=(1.0, 1.0, 1.0), con=1.0, sat=1.0, stars=0.0, halo=0.0),
+    "acen_d": dict(zen=(0.025, 0.080, 0.33), hor=(0.95, 0.66, 0.30), low=(1.25, 0.70, 0.22), tint=(1.16, 0.96, 0.70), con=1.08, sat=1.15, stars=0.0, halo=0.3),
+    "acen_n": dict(zen=(0.022, 0.016, 0.060), hor=(0.30, 0.115, 0.040), low=(0.42, 0.15, 0.04), tint=(1.0, 0.62, 0.32), con=1.05, sat=1.1, stars=1.0, halo=0.7),
+    "sir": dict(zen=(0.000, 0.20, 0.60), hor=(0.50, 0.95, 1.30), low=None, tint=(0.76, 0.94, 1.32), con=1.30, sat=1.15, stars=0.0, halo=0.9),
+    "kep": dict(zen=(0.050, 0.020, 0.085), hor=(0.80, 0.17, 0.05), low=(2.1, 0.62, 0.08), tint=(1.25, 0.72, 0.42), con=1.12, sat=1.25, stars=0.25, halo=1.0),
+    "alg": dict(zen=(0.006, 0.090, 0.55), hor=(0.42, 0.62, 1.05), low=None, tint=(0.88, 0.96, 1.18), con=1.12, sat=1.05, stars=0.0, halo=0.5),
+    "alg_dusk": dict(zen=(0.010, 0.010, 0.060), hor=(0.20, 0.10, 0.20), low=(0.32, 0.12, 0.10), tint=(0.62, 0.70, 1.15), con=1.0, sat=0.9, stars=1.0, halo=0.3),
+    "wuma": dict(zen=(0.16, 0.050, 0.48), hor=(1.00, 0.78, 1.20), low=(1.25, 1.05, 1.35), tint=(1.06, 0.92, 1.20), con=1.10, sat=1.1, stars=0.0, halo=1.3),
+}
+def gmix(a, b, w):
+    return {k: (None if a[k] is None and b[k] is None else lerp(a[k] if a[k] is not None else b["hor"], b[k] if b[k] is not None else a["hor"], w))
+            for k in a}
 
 
 def state(key, t):
-    """lights (for sky + park), star draw ops, sky mode weights, lamps, exposure, loupe"""
-    S = dict(lights=[], draws=[], mode=dict(day=1.0), lamps=0.0, expo=1.0, loupe=None, amb=0.30, labels=[])
+    """lights (for sky + park), star draw ops, sky/grade, lamps, exposure, loupe"""
+    S = dict(lights=[], draws=[], grade=G["sun"], lamps=0.0, expo=1.0, loupe=None, amb=0.30, labels=[], lv=1.0)
     if key == "sun":
         x, y = POS["sun"]
-        S["lights"] = [dict(x=x, y=y, T=5772.0, E=1.0, beams="sun", bI=1.0, el=20.0)]
+        S["lights"] = [dict(x=x, y=y, T=5772.0, E=1.0, beams="sun", bI=1.0, el=16.0)]
         S["draws"] = [dict(kind="disc", x=x, y=y, Rp=rpx(ANG["sun"]), T=5772.0, surf=40.0, glow=1.0, spikes=0.6, u=0.6)]
     elif key == "acen":
         (xa, ya), (xb, yb) = POS["acenA"], POS["acenB"]
         n = ramp(t, T_NIGHT0, T_NIGHT1)
-        S["mode"] = dict(day=1 - n, night=n)
-        S["lights"] = [dict(x=xa, y=ya, T=5790.0, E=1.0 * (1 - n), beams="acenA", bI=1.0, el=20.0),
-                       dict(x=xb, y=yb, T=5260.0, E=0.004 * (1 - n) + 0.30 * n, beams="acenB", bI=0.15 + 0.85 * n, el=16.0)]
+        S["grade"] = gmix(G["acen_d"], G["acen_n"], n)
+        # B's real share of the daylight is 1/250-1/2500; its daytime shadow is drawn at 0.22 (README: liberty)
+        S["lights"] = [dict(x=xa, y=ya, T=5790.0, E=1.0 * (1 - n), beams="acenA", bI=1.0, el=14.0),
+                       dict(x=xb, y=yb, T=5260.0, E=0.004 * (1 - n) + 0.42 * n, Esh=0.50 * (1 - n) + 0.42 * n, col=vivid(bbcolor(5260.0), 1.6),
+                            beams="acenB", bI=0.25 + 0.85 * n, el=13.0)]
         S["draws"] = [dict(kind="disc", x=xa, y=ya, Rp=rpx(ANG["acenA"]), T=5790.0, surf=40.0 * (1 - n), glow=1.0 * (1 - n), spikes=0.6 * (1 - n), u=0.6),
-                      dict(kind="disc", x=xb, y=yb, Rp=0.6, T=5260.0, surf=26.0, glow=0.55 + 0.9 * n, spikes=0.35 + 0.6 * n, u=0.6)]
-        S["lamps"] = n; S["expo"] = 1.0 + 0.35 * n; S["amb"] = 0.26 * (1 - n) + 0.16 * n
+                      dict(kind="disc", x=xb, y=yb, Rp=0.6, T=4600.0, col=vivid(bbcolor(5260.0), 2.2), surf=30.0, glow=0.9 + 1.0 * n, spikes=0.5 + 0.6 * n, u=0.6)]
+        S["lamps"] = n; S["expo"] = 1.0 + 0.30 * n; S["amb"] = 0.24 * (1 - n) + 0.14 * n
         S["labels"] = [("A", xa, ya, 1 - n), ("B", xb, yb, 1.0)]
     elif key == "sir":
         (xa, ya), (xb, yb) = POS["sirA"], POS["sirB"]
-        S["lights"] = [dict(x=xa, y=ya, T=9940.0, E=1.0, beams="sirA", bI=1.35, el=20.0)]
-        S["draws"] = [dict(kind="disc", x=xa, y=ya, Rp=rpx(ANG["sirA"]), T=9940.0, surf=150.0, glow=1.9, spikes=1.3, u=0.45),
-                      dict(kind="disc", x=xb, y=yb, Rp=0.45, T=25000.0, surf=14.0, glow=0.45, spikes=0.45, u=0.5)]
-        S["amb"] = 0.34; S["expo"] = 0.95
+        S["grade"] = G["sir"]
+        S["lights"] = [dict(x=xa, y=ya, T=9940.0, E=1.15, beams="sirA", bI=1.5, el=14.0)]
+        S["draws"] = [dict(kind="disc", x=xa, y=ya, Rp=rpx(ANG["sirA"]), T=9940.0, surf=170.0, glow=2.4, spikes=1.6, u=0.45),
+                      dict(kind="disc", x=xb, y=yb, Rp=0.45, T=25000.0, surf=14.0, glow=0.55, spikes=0.5, u=0.5)]
+        S["amb"] = 0.20; S["expo"] = 0.92
         S["labels"] = [("A", xa, ya, 1.0), ("B", xb, yb, 1.0)]
-        S["pointer"] = (xb, yb)
+        S["loupe"] = dict(kind="sirb", star=(xb, yb))
     elif key == "kep":
         (xa, ya), (xb, yb) = kepler_pos(t)
         alA, alB = alt_of(ya), alt_of(yb); XA, XB = airmass(alA), airmass(alB)
         tA = 10 ** (-0.4 * 0.21 * XA); tB = 10 ** (-0.4 * 0.21 * XB)
-        visA = smooth(1418.0, 1398.0, ya)                                        # behind the hedge line at x ~ 870
-        EA = 0.963 * 0.31 * tA * visA; EB = 0.037 * 0.31 * tB * 4.0               # B: x4 (README: liberty)
-        gain = 2.4 * (0.963 * 0.31 * tA + EB) ** -0.75                          # eye adaptation (keeps the A:B ratio)
+        RA, RB = rpx(ANG["kepA"]), rpx(ANG["kepB"])
+        visA, visB = disc_vis(xa, ya, RA), disc_vis(xb, yb, RB)
+        EA = 0.963 * 0.31 * tA * visA; EB = 0.037 * 0.31 * tB * 6.0 * visB        # B: x6 (README: liberty)
+        gain = 2.6 * (0.963 * 0.31 * tA + EB) ** -0.75                          # eye adaptation (keeps the A:B ratio)
         EA, EB = EA * gain, EB * gain
-        cA = redden(bbcolor(4450.0), XA * 0.55); cB = redden(bbcolor(3311.0), XB * 0.55)
-        S["mode"] = dict(sunset=1.0)
-        S["sunset"] = ramp(t, K0 - 0.2, T_DSUN)
-        S["lights"] = [dict(x=xa, y=ya, T=4450.0, E=EA, col=cA, beams="kepA", bI=1.15, el=max(alA, 6.0)),
-                       dict(x=xb, y=yb, T=3311.0, E=EB, col=cB, beams="kepB", bI=0.85, el=max(alB, 6.0))]
-        S["draws"] = [dict(kind="disc", x=xa, y=ya, Rp=rpx(ANG["kepA"]), T=4450.0, col=cA, surf=34.0 * max(tA, 0.05), glow=1.4, spikes=0.5, u=0.7),
-                      dict(kind="disc", x=xb, y=yb, Rp=rpx(ANG["kepB"]), T=3311.0, col=cB, surf=30.0 * max(tB, 0.1), glow=1.3, spikes=0.45, u=0.75)]
-        S["lamps"] = ramp(t, T_DSUN - 0.5, T_DSUN + 1.0) * 0.8; S["amb"] = 0.07; S["expo"] = 1.05
-        S["labels"] = [("A", xa, ya, visA), ("B", xb, yb, 1.0)]
+        cA = redden(bbcolor(4450.0), XA * 0.40); cB = redden(bbcolor(3311.0), XB * 0.55) * np.array([1.0, 0.55, 1.6], f32)   # B tinted crimson-pink
+        S["grade"] = gmix(G["sun"], G["kep"], ramp(t, K0 - 0.2, T_DSUN - 0.6))
+        S["lights"] = [dict(x=xa, y=ya, T=4450.0, E=EA, col=cA, beams="kepA", bI=1.25, el=max(alA, 9.0), halo=1.0),
+                       dict(x=xb, y=yb, T=3311.0, E=EB, Esh=max(EB, 0.75 * EA), col=cB, beams="kepB", bI=1.0, el=max(alB, 11.0), halo=1.0)]
+        S["draws"] = [dict(kind="disc", x=xa, y=ya, Rp=RA, T=4450.0, col=cA, surf=34.0 * max(tA, 0.08), glow=2.0, spikes=0.5, u=0.7),
+                      dict(kind="disc", x=xb, y=yb, Rp=RB, T=3311.0, col=cB, surf=34.0 * max(tB, 0.1), glow=1.8, spikes=0.45, u=0.75)]
+        S["lamps"] = ramp(t, T_DSUN - 0.5, T_DSUN + 1.0) * 0.8; S["amb"] = 0.06; S["expo"] = 1.05
+        S["labels"] = [("A", xa, ya, visA), ("B", xb, yb, visB)]
     elif key == "alg":
         x, y = POS["pair"]
         phi = algol_phase(t); fl = binary_flux("alg", phi)
-        S["lights"] = [dict(x=x, y=y, T=11800.0 * fl + 4500 * (1 - fl) if fl < 0.98 else 11800.0, E=fl, beams="alg", bI=1.2 * (0.35 + 0.65 * fl), el=20.0)]
+        dk = float(np.clip((1 - fl) / (1 - 0.324), 0, 1)) ** 0.8                 # 0 out of eclipse, 1 at minimum light
+        S["grade"] = gmix(G["alg"], G["alg_dusk"], dk); S["lv"] = 1.0
+        S["lights"] = [dict(x=x, y=y, T=11800.0 * fl + 4500 * (1 - fl) if fl < 0.98 else 11800.0, E=fl, beams="alg", bI=1.2 * (0.35 + 0.65 * fl), el=14.0)]
         S["draws"] = [dict(kind="alg", x=x, y=y, phi=phi, scale=px_per_rsun(ALG["d_au"]), surf=95.0, glow=1.6 * fl, spikes=1.0 * fl, T=11800.0)]
-        S["loupe"] = dict(kind="alg", phi=phi, scale=LOUPE["R"] / 14.5, star=(x, y))
-        S["amb"] = 0.32; S["expo"] = 0.95; S["dim"] = fl
+        S["loupe"] = dict(kind="alg", phi=phi, scale=LOUPE["R"] / 14.0, star=(x, y))
+        fl_on = smooth(0.35, 0.7, dk)
+        S["lamps"] = fl_on * (0.55 + 0.45 * (noise1(t, 77, 11.0) > -0.2 if fl_on < 0.95 else 1.0))
+        S["amb"] = 0.26; S["expo"] = 0.95 + 0.6 * dk; S["dim"] = fl
     elif key == "wuma":
         x, y = POS["pair"]
         phi = wuma_phase(t); fl = binary_flux("wuma", phi)
-        S["lights"] = [dict(x=x, y=y, T=6200.0, E=fl, beams="wuma", bI=1.1, el=20.0)]
-        S["draws"] = [dict(kind="wuma", x=x, y=y, phi=phi, scale=px_per_rsun(WUM["d_au"]), surf=42.0, glow=1.2 * fl, spikes=0.7, T=6200.0)]
+        S["grade"] = G["wuma"]
+        S["lights"] = [dict(x=x, y=y, T=6200.0, E=fl, col=np.array([1.0, 0.90, 1.12], f32), beams="wuma", bI=1.3, el=14.0, halo=1.3)]
+        S["draws"] = [dict(kind="wuma", x=x, y=y, phi=phi, scale=px_per_rsun(WUM["d_au"]), surf=42.0, glow=1.6 * fl, spikes=0.9, T=6200.0)]
         S["loupe"] = dict(kind="wuma", phi=phi, scale=LOUPE["R"] / 2.75, star=(x, y))
-        S["amb"] = 0.30; S["expo"] = 1.0
+        S["amb"] = 0.26; S["expo"] = 0.95
     return S
 
 
@@ -314,6 +346,8 @@ class Scene:
         lamps = [(lx, ly, by) for lx, ly, by in LAMPS_SRC]
         self.fg = fg = Foreground(FG_PATH, L, lamps=lamps, hz_frac=0.84)
         self.hz = HY
+        global SKYLINE
+        SKYLINE = fg.skyline.copy()
         hw, hh = W // 2, H // 2
         yy, xx = np.mgrid[0:hh, 0:hw].astype(f32) * 2 + 1.0
         self.hx, self.hy = xx, yy
@@ -335,6 +369,12 @@ class Scene:
         self.rim = (cv2.GaussianBlur(np.clip(a - sh, 0, 1), (0, 0), 3.0) * a).astype(f32)
         self.alb = np.clip(fg.flat, 0, 1).astype(f32)
         self._shadow_src()
+        rs = np.random.default_rng(31); ls = np.zeros((440, 440, 3), f32)
+        for _ in range(160):
+            x_, y_ = rs.integers(0, 440, 2); ls[y_, x_] += bbcolor(float(rs.uniform(3500, 15000))) * float(rs.uniform(0.2, 1.0) ** 3) * 2.5
+        self.loupe_stars = cv2.GaussianBlur(ls, (0, 0), 0.6)
+        et = np.stack([fbm2((128, 256), 51, 2.4), fbm2((128, 256), 52, 2.8)], -1)
+        self.earth_tex = np.clip(et * 0.22 + 0.4, 0, 1).astype(f32)
         self.shcache = {}
         self.caps = Captions(L, WORDS, emphasis={"SECOND", "SUN", "HUNDREDS", "DARK", "BLAZE", "DWARF", "EARTH'S", "KEPLER-16b",
                                                  "SUNSET", "SHADOWS", "DEMON", "2.87", "ECLIPSES", "FADES", "TOUCHING", "ATMOSPHERE",
@@ -352,6 +392,16 @@ class Scene:
         self.syy = yy
         fg = self.fg; self.M = np.array([[fg.s, 0, 0], [0, fg.s, fg.oy]], np.float64)
         self.lawn = self.warp(cv2.GaussianBlur(self.lawn_src.astype(f32), (0, 0), 0.7))
+        # treeline profile: for each column, the solid run straight up from the far lawn edge (capped; the conifer and
+        # the big tree have their own casters)
+        cols = []
+        for xs_ in range(2, self.sw_ - 1, 2):
+            if 395 <= xs_ <= 545 or xs_ < 140: continue
+            y = LAWN_SRC - 3
+            if a[y, xs_] < 0.5: continue
+            while y > LAWN_SRC - 170 and a[y - 1, xs_] > 0.5: y -= 1
+            if LAWN_SRC - y > 6: cols.append((xs_, float(y)))
+        self.tl_cols = cols
 
     def warp(self, m):
         return cv2.warpAffine(m, self.M, (self.W, self.H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0).astype(f32)
@@ -387,8 +437,10 @@ class Scene:
             return 4.2 * (1 - v) ** 1.1 * (0.72 + 0.28 * tier) * jit[int(v * 63)] + 0.05
         cast(470, 1318, 950, conifer, 500)
         for lx, ly, by in LAMPS_SRC:
-            cast(lx, by, ly, lambda u: 0.80 if u > 0.94 else 0.42, 600, kl)
+            cast(lx, by, ly, lambda u: 0.42, 600, kl)
         cast(22, 1384, 1050, lambda u: 0.55, 200)
+        for xs_, top in self.tl_cols:                                                    # hedge / bush / tree line
+            cast(xs_, LAWN_SRC, top, lambda u: 0.11, 40)
         Ms = cv2.resize(P.astype(f32) / 255, (sw_, sh_), interpolation=cv2.INTER_AREA)
         Mb = cv2.GaussianBlur(Ms, (0, 0), 3.0)
         w = 0.7 * np.clip((self.syy - LAWN_SRC) / 300.0, 0, 1) ** 0.8
@@ -399,38 +451,28 @@ class Scene:
         return out
 
     # -------------------------------------------------------------------------------------------- sky
-    def sky(self, t, lights, mode, sunset_k):
+    def sky(self, t, lights, g, lv=1.0):
         tot = sum(l["E"] for l in lights) + 1e-6
-        cm = sum(l["E"] * (l["col"] / max(float(lum(l["col"])), 1e-4) if "col" in l else bbcolor(l["T"]) / max(float(lum(bbcolor(l["T"]))), 1e-4)) for l in lights) / tot
-        rel = np.clip(cm / (SUN_C / float(lum(SUN_C))), 0.2, 4.0) ** 1.6                    # Rayleigh sky under this light
+        def lc(l):
+            c = l["col"] if "col" in l else bbcolor(l["T"]); return np.asarray(c, f32) / max(float(lum(c)), 1e-4)
+        cm = sum(l["E"] * lc(l) for l in lights) / tot
+        rel = np.clip(cm / (SUN_C / float(lum(SUN_C))), 0.3, 3.0) ** 0.5                   # tint of the mixed starlight
         rel = rel / max(float(lum(rel)), 1e-4)
-        sky = np.zeros(self.hx.shape + (3,), f32)
-        wd = mode.get("day", 0.0); wn = mode.get("night", 0.0); ws = mode.get("sunset", 0.0)
-        lv = max(min(tot, 1.2), 0.08)
-        if wd > 0:
-            zen = np.array([0.012, 0.075, 0.42], f32) * rel * (0.1 + 0.9 * lv); hor = np.array([0.30, 0.50, 0.85], f32) * (0.6 * rel + 0.4) * (0.1 + 0.9 * lv)
-            sky += (zen * (1 - self.k_hor) + hor * self.k_hor) * wd
-        if wn > 0:
-            zen = np.array([0.010, 0.016, 0.085], f32); hor = np.array([0.050, 0.045, 0.150], f32) + np.array([0.06, 0.025, 0.005], f32)
-            sky += (zen * (1 - self.k_hor) + hor * self.k_hor) * wn
-        if ws > 0:
-            sk = sunset_k
-            zen = np.array([0.020, 0.055, 0.30], f32) * (1 - 0.45 * sk) + np.array([0.03, 0.02, 0.10], f32) * sk
-            mid = np.array([0.30, 0.30, 0.55], f32) * (1 - sk) + np.array([0.48, 0.12, 0.16], f32) * sk
-            low = np.array([0.60, 0.55, 0.65], f32) * (1 - sk) + np.array([1.35, 0.42, 0.08], f32) * sk
-            g = zen * (1 - self.k_hor) + mid * self.k_hor
-            kl_ = np.exp(-self.e / 0.16)[..., None]
-            g = g * (1 - kl_) + low * kl_
-            sky += g * ws * 0.55
-        # aureole + beams around each light
+        zen, hor = np.array(g["zen"], f32), np.array(g["hor"], f32)
+        sky = zen * (1 - self.k_hor) + hor * self.k_hor
+        if g["low"] is not None:
+            kl_ = np.exp(-self.e / 0.15)[..., None]
+            sky = sky * (1 - kl_) + np.array(g["low"], f32) * kl_
+        sky = sky * rel * lv
         bm = np.zeros_like(sky)
         for l in lights:
             if l["E"] < 1e-3 and l.get("bI", 0) < 0.05: continue
             dx = self.hx - l["x"]; dy = self.hy - l["y"]; d = np.sqrt(dx * dx + dy * dy) + 1e-3
-            c = l["col"] / max(float(lum(l["col"])), 1e-4) if "col" in l else bbcolor(l["T"]) / max(float(lum(bbcolor(l["T"]))), 1e-4)
+            c = lc(l)
             Ea = min(l["E"], 1.2) ** 0.6
-            aure = np.exp(-d / 45) * 0.9 + np.exp(-d / 220) * 0.12 + ws * np.exp(-d / 520) * 0.15
-            sky += (aure * Ea)[..., None] * ((0.35 + 0.65 * c) * (1 - ws) + c * ws * 1.4)
+            hk = g["halo"] * l.get("halo", 0.6)
+            aure = np.exp(-d / 45) * 0.9 + np.exp(-d / 220) * 0.12 + hk * (np.exp(-d / 110) * 0.6 + np.exp(-d / 420) * 0.18)
+            sky += (aure * Ea)[..., None] * (0.25 + 0.75 * c)
             if l.get("beams"):
                 bm += self.beams_layer(t, l, d, np.arctan2(dy, dx))
         return sky, bm
@@ -528,53 +570,106 @@ class Scene:
         self.spikes(reg, dx, dy, Re, S["spikes"] * I_mul, sc, t)
 
     # -------------------------------------------------------------------------------------------- loupe
-    def loupe(self, img, t, lp, alpha, bg):
-        """magnifier inset with the true shapes (same geometry as the main view), ring + leader lines"""
-        if alpha <= 0.01: return
-        cx, cy, R = LOUPE["cx"], LOUPE["cy"], LOUPE["R"] * (0.6 + 0.4 * ease(alpha))
-        H, W = img.shape[:2]
-        r = int(R) + 6; x0, y0 = int(cx) - r, int(cy) - r
+    def loupe_content(self, t, lp, r, R):
+        """HDR content of the magnifier (2r x 2r): true shapes from the same geometry as the main view"""
         g = np.arange(2 * r) + 0.5 - r
+        XX, YY = np.meshgrid(g, g); XX, YY = XX.astype(f32), YY.astype(f32)
+        k = R / LOUPE["R"]
+        if lp["kind"] == "sirb":
+            # Sirius B and Earth side by side at the same scale (R_B = 5,840 km, R_Earth = 6,371 km)
+            pk = 46.0 * k / 5844.0
+            rb, re_ = 5844.0 * pk, 6371.0 * pk
+            bx, ex = -0.36 * R, 0.36 * R
+            d = np.hypot(XX - bx, YY); mu = np.sqrt(np.clip(1 - (d / rb) ** 2, 0, 1))
+            inside = smooth(rb + 0.8, rb - 0.8, d)
+            cB = bbcolor(25000.0)
+            col = (inside * (1 - 0.45 * (1 - mu)) * (5.0 + 0.4 * math.sin(t * 6)))[..., None] * (0.35 + 0.65 * cB)
+            dd = np.maximum(d - rb, 0)
+            col += ((np.exp(-dd / 6) * 1.6 + np.exp(-dd / 30) * 0.45 + np.exp(-dd / 110) * 0.10) * (1 + 0.1 * math.sin(t * 9)))[..., None] * (0.3 + 0.7 * cB)
+            de = np.hypot(XX - ex, YY); ins = smooth(re_ + 0.8, re_ - 0.8, de)
+            u = ((XX - ex) / re_); v = (YY / re_); z = np.sqrt(np.clip(1 - u * u - v * v, 0, 1))
+            lon = (np.arctan2(u, z) / np.pi * 0.5 + 0.5 + t * 0.03) % 1.0; lat = np.clip(v * 0.5 + 0.5, 0, 0.999)
+            tex = self.earth_tex[(lat * 127).astype(int), (lon * 255).astype(int)]
+            land = smooth(0.25, 0.45, tex[..., 0]); cloud = smooth(0.55, 0.85, tex[..., 1])
+            alb = np.array([0.02, 0.07, 0.30], f32) * (1 - land[..., None]) + np.array([0.10, 0.16, 0.05], f32) * land[..., None]
+            alb = alb * (1 - cloud[..., None]) + 0.75 * cloud[..., None]
+            lit = np.clip(-u * 0.9 + z * 0.45, 0, 1)                                    # lit from Sirius B's side
+            col += (ins * lit)[..., None] * alb * 4.0 * (0.3 + 0.7 * cB) + (ins * np.exp(-((1 - z) / 0.08) ** 2) * lit * 0.4)[..., None] * np.array([0.3, 0.55, 1.0], f32)
+            return col
         ss = 2; gs = (np.arange(2 * r * ss) + 0.5) / ss - r
-        X, Y = np.meshgrid(gs / lp["scale"] / (R / LOUPE["R"]), gs / lp["scale"] / (R / LOUPE["R"]))
+        X, Y = np.meshgrid(gs / lp["scale"] / k, gs / lp["scale"] / k)
         v, T = binary_field(lp["kind"], lp["phi"], X.astype(f32), Y.astype(f32))
-        col = bb_vec(T) * v[..., None]
-        col = cv2.resize(col, (2 * r, 2 * r), interpolation=cv2.INTER_AREA)
-        surf = 6.0 if lp["kind"] == "alg" else 0.95
-        glow = cv2.GaussianBlur(col, (0, 0), 9) * 1.4 + cv2.GaussianBlur(col, (0, 0), 30) * 0.8
-        if lp["kind"] == "wuma":                                                   # shared envelope glow + L2 outflow swirl
-            XX, YY = np.meshgrid(g, g); rr = np.hypot(XX, YY) / R; th = np.arctan2(YY, XX)
-            sw = np.exp(-((np.sin(2 * (th - lp["phi"] * 0.6) + 6 * rr) + 1) * 2.0)) * np.exp(-((rr - 0.62) / 0.28) ** 2)
-            glow += (sw * 0.35)[..., None] * np.array([1.0, 0.85, 0.55], f32)
+        if lp["kind"] == "wuma":
+            rim = np.clip(1 - v / 0.95, 0, 1) * (v > 0)
+            col = bb_vec(T) * v[..., None] * (1 - 0.45 * rim[..., None]) + (rim * v)[..., None] * np.array([0.55, 0.35, 1.0], f32)
+        else:
+            col = bb_vec(T) * v[..., None]
+        col = cv2.resize(col.astype(f32), (2 * r, 2 * r), interpolation=cv2.INTER_AREA)
+        surf = 6.0 if lp["kind"] == "alg" else 1.3
+        out = col * surf
+        glow = cv2.GaussianBlur(col, (0, 0), 7) * 1.2 + cv2.GaussianBlur(col, (0, 0), 26) * 0.9
+        rr = np.hypot(XX, YY) / R; th = np.arctan2(YY, XX)
+        if lp["kind"] == "wuma":                                                   # shared envelope + L2 outflow spiral
+            ax = math.sin(lp["phi"]); ay = math.cos(lp["phi"]) * math.cos(WUM["i"])
+            al = (XX * ax + YY * ay) / (math.hypot(ax, ay) + 1e-6); pp = (-XX * ay + YY * ax) / (math.hypot(ax, ay) + 1e-6)
+            env = np.exp(-((al / (R * (0.42 + 0.2 * math.hypot(ax, ay)))) ** 2 + (pp / (R * 0.30)) ** 2) * 1.6)
+            sw = np.exp(-((np.sin(2 * (th - lp["phi"]) + 7 * rr) + 1) * 2.2)) * np.exp(-((rr - 0.66) / 0.24) ** 2)
+            out += (env * 0.9)[..., None] * np.array([0.9, 0.75, 1.25], f32) + (sw * 0.55)[..., None] * np.array([1.0, 0.70, 1.15], f32)
+        else:                                                                      # Algol: B -> A gas stream (Roche-lobe overflow)
+            (xa, ya, za), (xb, yb, zb) = algol_bodies(lp["phi"])
+            sc = lp["scale"] * k
+            P0 = np.array([xb, yb]) + (np.array([xa, ya]) - np.array([xb, yb])) * (ALG["RB"] / ALG["a"])
+            P1 = np.array([xa, ya]); n = 60
+            pts = [(P0 + (P1 - P0) * u + np.array([-(P1 - P0)[1], (P1 - P0)[0]]) * 0.25 * math.sin(math.pi * u)) * sc for u in np.linspace(0, 1, n)]
+            m = np.zeros((2 * r, 2 * r), f32)
+            for (x0_, y0_), (x1_, y1_) in zip(pts, pts[1:]):
+                cv2.line(m, (int((x0_ + r) * 4), int((y0_ + r) * 4)), (int((x1_ + r) * 4), int((y1_ + r) * 4)), 1.0, 5, cv2.LINE_AA, shift=2)
+            flick = 0.8 + 0.2 * math.sin(t * 7)
+            m = cv2.GaussianBlur(m, (0, 0), 2.5) * flick
+            front = 1.0 if zb < za else 0.6
+            out += (m * 0.9 * front)[..., None] * np.array([1.0, 0.55, 0.25], f32)
+        return out + glow * surf * 0.30
+
+    def loupe(self, img, t, lp, alpha, bg):
+        """big magnifier inset (deep-space backdrop, true shapes, glowing ring) + leader lines from the star"""
+        if alpha <= 0.01: return
+        cx, cy, R = LOUPE["cx"], LOUPE["cy"], LOUPE["R"] * (0.55 + 0.45 * back_out(alpha, 1.6))
+        H, W = img.shape[:2]
+        r = int(R) + 8; x0, y0 = int(cx) - r, int(cy) - r
+        g = np.arange(2 * r) + 0.5 - r
         XX, YY = np.meshgrid(g, g); rr = np.hypot(XX, YY)
         inside = smooth(R + 0.8, R - 0.8, rr)[..., None]
-        base = np.asarray(bg, f32) * 0.55
-        patch = base + col * surf + glow * surf * 0.35
-        ring = np.exp(-((rr - R) / 2.2) ** 2)[..., None] * np.array([1.6, 1.5, 1.3], f32) + np.exp(-np.maximum(rr - R, 0) / 18)[..., None] * (rr > R)[..., None] * 0.10
+        base = np.asarray(bg, f32) * 0.10 + np.array([0.004, 0.006, 0.018], f32) + (np.exp(-rr / R * 1.3) * 0.03)[..., None] * np.asarray(bg, f32) / max(float(lum(np.asarray(bg, f32))), 1e-3)
+        st = self.loupe_stars[:2 * r, :2 * r]
+        patch = base + st + self.loupe_content(t, lp, r, R)
+        ring = np.exp(-((rr - R) / 2.4) ** 2)[..., None] * np.array([1.7, 1.55, 1.35], f32) + (np.exp(-np.maximum(rr - R, 0) / 14) * (rr > R) * 0.22)[..., None] * np.array([1.0, 0.85, 1.0], f32)
         reg = img[y0:y0 + 2 * r, x0:x0 + 2 * r]
         reg[:] = reg * (1 - inside * alpha) + patch * inside * alpha + ring * alpha
-        # leader lines: from the star to the two tangent points of the loupe circle
         sx, sy = lp["star"]; dx, dy = cx - sx, cy - sy; D = math.hypot(dx, dy)
         if D > R + 5:
             m = np.zeros((H, W), f32); base_a = math.atan2(dy, dx); off = math.asin(R / D)
             for sgn in (-1, 1):
                 a = base_a + sgn * off; Lt = math.sqrt(D * D - R * R)
                 ex, ey = sx + Lt * math.cos(a), sy + Lt * math.sin(a)
-                bx, by = sx + 16 * math.cos(a), sy + 16 * math.sin(a)
+                bx, by = sx + 18 * math.cos(a), sy + 18 * math.sin(a)
                 cv2.line(m, (int(bx * 4), int(by * 4)), (int(ex * 4), int(ey * 4)), 1.0, 2, cv2.LINE_AA, shift=2)
-            m = cv2.GaussianBlur(m, (0, 0), 0.7)
-            img += (m * alpha * 0.9)[..., None] * np.array([1.0, 0.95, 0.85], f32)
+            m = cv2.GaussianBlur(m, (0, 0), 0.8)
+            img += (m * alpha * 1.1)[..., None] * np.array([1.0, 0.95, 0.88], f32)
+            ring2 = np.zeros((H, W), f32)
+            cv2.circle(ring2, (int(sx * 4), int(sy * 4)), int(18 * 4), 1.0, 2, cv2.LINE_AA, shift=2)
+            img += (cv2.GaussianBlur(ring2, (0, 0), 0.8) * alpha)[..., None] * np.array([1.0, 0.95, 0.88], f32)
 
     # -------------------------------------------------------------------------------------------- foreground
-    def relight(self, t, lights, amb_col, amb, lamps):
+    def relight(self, t, lights, amb_col, amb, lamps, g):
         fg = self.fg; lawn = self.lawn[..., None]
         direct_l = np.zeros((self.H, self.W, 3), f32); direct_o = np.zeros(3, f32); rimc = np.zeros(3, f32)
-        Emax = max([l["E"] for l in lights] + [1e-6])
+        Emax = max([l.get("Esh", l["E"]) for l in lights] + [1e-6])
         for l in lights:
-            if l["E"] < 2e-3: continue
+            E = l.get("Esh", l["E"])
+            if E < 2e-3: continue
             c = (l["col"] / max(float(lum(l["col"])), 1e-4)) if "col" in l else light_col(l["T"])
-            c = vivid(c, 1.25) * l["E"]
-            if l["E"] > 0.04 * Emax and l["y"] < self.hz + 30:
+            c = vivid(c, 1.25) * E
+            if E > 0.04 * Emax and l["y"] < self.hz + 30:
                 S = self.shadow(l["x"], l.get("el", 20.0))
                 direct_l += c * (1 - 0.97 * S)[..., None]
             else:
@@ -582,8 +677,12 @@ class Scene:
             direct_o += c * 0.50; rimc += c
         out = self.alb * (amb_col * amb + direct_l * lawn + direct_o * (1 - lawn))
         out = out + self.rim[..., None] * rimc * 0.35
+        out = out * np.array(g["tint"], f32)
+        if g["con"] != 1.0 or g["sat"] != 1.0:
+            y = lum(out)[..., None]
+            out = (y + (out - y) * g["sat"]) * np.clip(y / 0.12, 0.05, 8) ** (g["con"] - 1)
         if lamps > 0.01: out = fg.lamps_light(out, lamps * 1.4, t)
-        return out
+        return np.maximum(out, 0)
 
     # -------------------------------------------------------------------------------------------- frame
     def frame(self, t):
@@ -600,18 +699,14 @@ class Scene:
         # lights: crossfade old -> new
         lights = [dict(l, E=l["E"] * w, bI=l["bI"] * w) for l in Sc["lights"]]
         if Sp: lights += [dict(l, E=l["E"] * (1 - w), bI=l["bI"] * (1 - w) * 0.0) for l in Sp["lights"]]
-        mode = {}
-        for k, v in Sc["mode"].items(): mode[k] = mode.get(k, 0) + v * w
-        if Sp:
-            for k, v in Sp["mode"].items(): mode[k] = mode.get(k, 0) + v * (1 - w)
-        sunset_k = Sc.get("sunset", 0.0) * w + (Sp.get("sunset", 1.0) * (1 - w) if Sp else 0.0)
+        g = gmix(Sp["grade"], Sc["grade"], w) if Sp else Sc["grade"]
         amb = lerp(Sp["amb"], Sc["amb"], w) if Sp else Sc["amb"]
         expo = lerp(Sp["expo"], Sc["expo"], w) if Sp else Sc["expo"]
         lamps = lerp(Sp["lamps"], Sc["lamps"], w) if Sp else Sc["lamps"]
         # ---- sky
-        sky, bm = self.sky(t, lights, mode, sunset_k)
+        sky, bm = self.sky(t, lights, g)
         bm = bm * (1 + 0.6 * col_u)
-        ns = self.night_stars(t, mode.get("night", 0.0) + 0.5 * mode.get("sunset", 0) * smooth(0.6, 1.0, sunset_k) * ramp(t, T_DSHAD, K1))
+        ns = self.night_stars(t, g["stars"] * (1.0 if cur != "kep" else ramp(t, T_DSUN, K1)))
         if ns is not None: sky = sky + ns
         img = self.up(sky * (1 - 0.3 * col_u) + bm)
         amb_col = (sky[: sky.shape[0] // 2].reshape(-1, 3).mean(0) * 0.5 + sky[int(sky.shape[0] * 0.65)].mean(0) * 0.5)
@@ -632,14 +727,14 @@ class Scene:
         # occlude stars behind the park (the sky is drawn under the plate)
         # ---- foreground
         light = 1.0 + 0.10 * (pulse - 1) - 0.2 * col_u
-        fgc = self.relight(t, lights, amb_col, amb, lamps) * light
+        fgc = self.relight(t, lights, amb_col, amb, lamps, g) * light
         fgc = fgc + self.up(bm) * 0.04 * fg.a[..., None]
         a = fg.a[..., None]
         img = img * (1 - a) + fgc * a
         # ---- loupe (Algol / W UMa)
         if Sc.get("loupe"):
             la = ramp(t, t0 + 0.35, t0 + 0.75) * (1 - ramp(t, t1 - 0.45, t1 - 0.2))
-            bgc = sky[int(LOUPE["cy"] / 2), int(LOUPE["cx"] / 2)]
+            bgc = sky[int(min(LOUPE["cy"], 1200) / 2), int(LOUPE["cx"] / 2)]
             self.loupe(img, t, Sc["loupe"], la, bgc)
         # ---- swap flash + chromatic shockwave
         for ts, k in SWAPS:
@@ -700,6 +795,14 @@ class Scene:
             for lab, lx, ly, la in Sc.get("labels", []):
                 if la > 0.05 and ly < 1420:
                     hud_text(out, lab, lx + 26, ly - 30, 34, "Black", (255, 255, 255), a * la, 0.0, display=True)
+        lp = Sc.get("loupe")
+        if lp and lp["kind"] == "sirb":
+            t1 = star_at(t)[2]
+            la = ramp(t, t0 + 0.55, t0 + 0.9) * (1 - ramp(t, t1 - 0.45, t1 - 0.2))
+            if la > 0.01:
+                cx, cy, R = LOUPE["cx"], LOUPE["cy"], LOUPE["R"]
+                hud_text(out, "SIRIUS B", cx - 0.36 * R, cy + 0.42 * R, 30, "Black", (200, 225, 255), la, 0.08, display=True)
+                hud_text(out, "EARTH", cx + 0.36 * R, cy + 0.42 * R, 30, "Black", (170, 220, 255), la, 0.08, display=True)
         if Sc.get("pointer") and a > 0.01:
             px, py = Sc["pointer"]; pr = 26 + 4 * math.sin(t * 5)
             ov = np.zeros_like(out[..., 0])

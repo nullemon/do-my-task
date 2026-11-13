@@ -9,7 +9,7 @@ LINES = [
     ("cyg", "Cygnus {X-1|X one}, {21|twenty-one} Suns. Earth's year would last weeks.", 0.12),
     ("sgr", "Sagittarius {A*|A star}. {4 MILLION|Four million} Suns. Its shadow spans {24°|twenty-four degrees}.", 0.12),
     ("m87", "{M87*|M eighty-seven star}. {6.5 BILLION|Six and a half billion} Suns. Its horizon is four times past Neptune. We're inside.", 0.12),
-    ("ton", "And {TON 618|Ton six eighteen}? Up to {66 BILLION|sixty-six billion} Suns. It would swallow our solar system, so here it is {8,000×|eight thousand times} farther.", 0.18),
+    ("ton", "And {TON 618|Ton six eighteen}? Up to {66 BILLION|sixty-six billion} Suns. It would swallow our solar system, so here it is {8,000×|eight thousand times} farther.", 0.50),
     ("end", "Suddenly, the Sun seems... kind.", 0.0),
 ]
 

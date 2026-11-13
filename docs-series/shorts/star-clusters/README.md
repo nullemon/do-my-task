@@ -70,7 +70,7 @@ Wolf-Rayet/O stars about 1 pc away, about as bright as the full Moon at −12.7)
   veils are procedural and screen-space around the brightest stars. From inside, they would be fainter.
 - Galactic centre: no extinction within the cluster is assumed, but the dark dust lanes are procedural and stylised. The
   circumnuclear disk, 1.5–4 pc out, is real dusty gas. The young stars' M_V (−7 to −1) is approximate, and the
-  ~1,000,000-strong population is drawn as a smooth glow plus ~70k distinct stars with V < −0.8.
+  ~1,000,000-strong population is drawn as a smooth glow plus ~20,000 distinct stars with V < −0.8.
 - The star shadows on the valley are faint 2D shears of the two trees' silhouettes, cast from the three brightest stars.
   They are physically faint because diffuse light dominates.
 - The counts depend on the random seed and on where the observer stands. Ranges over seeds are given in the table.

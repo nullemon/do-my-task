@@ -50,8 +50,10 @@ Shared rules for every Short in this batch:
 | B7 | star-neighbours | What If Famous Stars Were Our Nearest Neighbour? | C_city | delivered (slow voice) |
 | B8 | star-clusters | What If Star Clusters Were Close By? | B_valley | delivered (slow voice) |
 | B9 | dead-star-suns | What If Dead Stars Replaced Our Sun? | A2_park | delivered (slow voice) |
-| B10 | moon-ratios | What If Our Moon Matched Other Moons' Size Ratios? | A_park | in progress |
+| B10 | moon-ratios | What If Our Moon Matched Other Moons' Size Ratios? | A_park | delivered (slow voice) |
 
 
 ## Voice re-do (13 Nov)
 User: narration too fast and rushed. All batch-2 Shorts (done and in progress) get re-voiced at speed 0.92 with sentence pauses, a trimmed script, re-timed visuals and a re-render. Done ones to redo: black-hole-suns, moon-closer, second-sun, exoplanet-moons.
+
+Batch 2 complete; all 10 sent together as batch2-part1/2 zips.

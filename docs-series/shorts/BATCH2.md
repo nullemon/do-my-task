@@ -17,7 +17,7 @@ Shared rules for every Short in this batch:
 - **OUTPUT: 9:16 ONLY.** 1080x1920, 30 fps, strictly 30–40 s.
   - out/<name>-short.mp4, out/<name>.srt, out/thumb-vertical.jpg, and out/thumb.jpg (1280x720 is still useful for the channel page).
   - NO 16:9 video.
-- **Voice:** Kokoro **am_michael**, speed 1.05 (via lib/voice.py with word timings). 80–110 words, with a hook in the first 2 s. Big orange one-word captions at about 50% height. −14 LUFS.
+- **Voice (UPDATED 13 Nov, user feedback 'too fast, sounds rushed'):** Kokoro **am_michael**, speed **0.92**, with natural pauses: ~0.35 s between sentences and ~0.7 s at each beat change. Trim the narration to ~65–80 words so the Short stays within 40 s. The delivery must feel calm, unhurried and pleasant to listen to. (Older note: speed 1.05 (via lib/voice.py with word timings). 80–110 words, with a hook in the first 2 s. Big orange one-word captions at about 50% height. −14 LUFS.
 - **USER RULES** (see lib/README.md):
   - Big, bold, colourful VFX spectacle with constant motion.
   - The sky is never pitch black.
@@ -51,3 +51,7 @@ Shared rules for every Short in this batch:
 | B8 | star-clusters | What If Star Clusters Were Close By? | B_valley | in progress |
 | B9 | dead-star-suns | What If Dead Stars Replaced Our Sun? | A2_park | queued |
 | B10 | moon-ratios | What If Our Moon Matched Other Moons' Size Ratios? | A_park | queued |
+
+
+## Voice re-do (13 Nov)
+User: narration too fast and rushed. All batch-2 Shorts (done and in progress) get re-voiced at speed 0.92 with sentence pauses, a trimmed script, re-timed visuals and a re-render. Done ones to redo: black-hole-suns, moon-closer, second-sun, exoplanet-moons.

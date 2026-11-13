@@ -190,7 +190,7 @@ def back_end():
 G = {
     "sun": dict(zen=(0.012, 0.075, 0.42), hor=(0.30, 0.50, 0.85), low=None, tint=(1.0, 1.0, 1.0), con=1.0, sat=1.0, stars=0.0, halo=0.0),
     "wd_day": dict(zen=(0.000, 0.16, 0.62), hor=(0.45, 0.85, 1.30), low=None, tint=(0.74, 0.92, 1.35), con=1.30, sat=1.10, stars=0.0, halo=1.0),
-    "wd": dict(zen=(0.004, 0.012, 0.095), hor=(0.060, 0.120, 0.360), low=(0.10, 0.14, 0.42), tint=(0.60, 0.78, 1.35), con=1.10, sat=1.1, stars=0.55, halo=1.2),
+    "wd": dict(zen=(0.003, 0.008, 0.060), hor=(0.035, 0.070, 0.210), low=(0.06, 0.09, 0.26), tint=(0.50, 0.68, 1.30), con=1.05, sat=0.55, stars=0.75, halo=1.2),
     "night": dict(zen=(0.004, 0.009, 0.040), hor=(0.030, 0.052, 0.125), low=(0.05, 0.07, 0.16), tint=(0.55, 0.70, 1.25), con=1.05, sat=1.0, stars=1.0, halo=0.5),
     "psr": dict(zen=(0.008, 0.007, 0.050), hor=(0.040, 0.050, 0.150), low=(0.06, 0.07, 0.19), tint=(0.62, 0.74, 1.25), con=1.05, sat=1.05, stars=1.0, halo=0.6),
     "mag": dict(zen=(0.018, 0.004, 0.055), hor=(0.110, 0.030, 0.180), low=(0.17, 0.05, 0.24), tint=(0.85, 0.62, 1.30), con=1.08, sat=1.15, stars=0.85, halo=1.0),
@@ -211,12 +211,15 @@ def state(key, t):
         S["lights"] = [dict(x=x, y=y, T=5772.0, E=1.0, beams="sun", bI=1.0, el=16.0)]
         S["draws"] = [dict(kind="disc", x=x, y=y, Rp=rpx(ANG["sun"]), T=5772.0, surf=40.0, glow=1.0, spikes=0.6, u=0.6)]
     elif key == "wd":
-        # true visible light: 1/400 of the Sun's (M_V 11.3 vs 4.8). Shown first eye-adapted, then fading to twilight
-        n = ramp(t, T_DIM0, T_DIM1)
+        # true visible light: 1/400 of the Sun's (M_V 11.3 vs 4.8): ~250 lux, a cold dim twilight from the swap on,
+        # deepening further on "Daylight fades to twilight"
+        n = 0.75 * ramp(t, T_SW["wd"], T_SW["wd"] + 1.1) + 0.25 * ramp(t, T_DIM0, T_DIM1)
         S["grade"] = gmix(G["wd_day"], G["wd"], n)
-        S["lights"] = [dict(x=x, y=y, T=25000.0, E=1.0 * (1 - n) + 0.16 * n, beams="wd", bI=1.5 - 0.5 * n, el=16.0, halo=1.2)]
+        S["lights"] = [dict(x=x, y=y, T=25000.0, E=1.0 * (1 - n) + 0.10 * n, beams="wd", bI=1.5 - 0.6 * n, el=16.0, halo=1.2)]
         S["draws"] = [dict(kind="disc", x=x, y=y, Rp=rpx(ANG["wd"]), T=25000.0, surf=60.0, glow=2.6 - 0.6 * n, spikes=1.8 - 0.4 * n, u=0.5)]
-        S["amb"] = 0.20 - 0.06 * n; S["expo"] = 0.95 + 0.55 * n; S["lamps"] = 0.85 * ramp(t, T_DIM1 - 0.3, T_DIM1 + 0.5)
+        S["amb"] = 0.20 - 0.08 * n; S["expo"] = 0.95 + 0.45 * n
+        lo = ramp(t, T_SW["wd"] + 0.8, T_SW["wd"] + 2.2)                     # lamps flicker on in the gloom
+        S["lamps"] = 0.85 * lo * (1.0 if lo > 0.97 else (0.5 + 0.5 * (noise1(t, 78, 13.0) > -0.1)))
         S["frost"] = ramp(t, T_FREEZE, T_FREEZE + 2.2)
         S["loupe"] = dict(kind="wd", star=(x, y))
     elif key == "ns":

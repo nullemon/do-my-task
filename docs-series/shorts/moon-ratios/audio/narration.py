@@ -12,7 +12,7 @@ LINES = [
     ("gan", "Ganymede and Jupiter: a tiny dot.", 0.70),
     ("tit", "Titan and Saturn: a little orange spark.", 0.70),
     ("tri", "Triton and Neptune: still {5×|five times} smaller.", 0.70),
-    ("cha", "But Charon is half as wide as Pluto.", 0.35),
+    ("cha", "But {CHARON|Sharon} is half as wide as Pluto.", 0.35),
     ("cha_b", "Nearly twice our Moon.", 0.35),
     ("cha_c", "A double world.", 0.70),
     ("end", "Pluto's a dwarf planet.", 0.35),
@@ -41,7 +41,7 @@ def spoken(text):
 
 def pieces(text):
     """subtitle strings aligned 1:1 with caption tokens (numbers kept as digits)"""
-    rep = {"27%": "27 percent", "42 KM": "42 kilometers", "5×": "five times"}
+    rep = {"27%": "27 percent", "CHARON": "Charon", "42 KM": "42 kilometers", "5×": "five times"}
     out = []
     for cap, ws in tokens(text):
         if len(ws) == 1 and cap == ws[0]: out.append(cap)

@@ -8,12 +8,17 @@ white-out back to the Sun, so the Short loops. There are no disclaimer captions 
 `out/thumb.jpg` (1280×720) is a separate 16:9 render for the channel page, made with a wider lens (f = 600 px) so the
 whole TON 618 shadow fits.
 
-## Narration (92 words, Kokoro am_michael @ 1.05, −14 LUFS / −1 dBTP)
-> What if black holes replaced our Sun? Let's start small. One Sun of mass, six kilometers wide. Same gravity, same
-> orbit. But it's dark forever. Cygnus X-1, twenty-one Suns. Earth's year would last weeks. Sagittarius A*. Four
-> million Suns. Its shadow spans twenty-four degrees. M87*. Six and a half billion Suns. Its horizon is four times past
-> Neptune. We're inside. And TON 618? Up to sixty-six billion Suns. It would swallow our solar system, so here it is
-> eight thousand times farther. Suddenly, the Sun seems… kind.
+## Narration (79 words, Kokoro am_michael @ 0.92, −14 LUFS / −1 dBTP)
+Re-voiced on 13 Nov after user feedback that the first version was too fast. The new read is slower, with ~0.35 s
+pauses between sentences and ~0.6–0.7 s at each beat change. Each sentence is its own TTS line (`hook`, `one`,
+`one.2`, …), and the visuals are re-timed to the new word timings.
+> What if black holes replaced our Sun? One Sun of mass, six kilometers wide. Same orbit, but dark forever. Cygnus
+> X-1, twenty-one Suns. Earth's year would last weeks. Sagittarius A*, four million Suns. Its shadow spans twenty-four
+> degrees. M87*, six and a half billion Suns. We're inside its horizon. TON 618, up to sixty-six billion Suns. It would
+> swallow our solar system. Here it is, eight thousand times farther. Suddenly, the Sun seems… kind.
+
+Dropped from the first version to fit 40 s: "Let's start small", "Same gravity", and "four times past Neptune" (the
+128 AU readout still shows the size).
 
 ## Beats and numbers
 Constants: Rs = 2GM/c² = 2.953 km per solar mass (GM☉ = 1.32712×10²⁰ m³ s⁻²), 1 au = 1.495979×10⁸ km. The camera is
@@ -40,7 +45,7 @@ a gnomonic lens with f = 960 px (90° vertical field of view). The hole sits at 
 - **Sgr A*:** the orbit question is not narrated. For the record: a circular orbit at 11.8 Rs is technically stable
   (the ISCO is at 3 Rs), but the year would be 4.2 hours at 0.21 c. Earth is outside its Roche limit (0.60 au) but
   under strong tides. The beat is presented as "the view".
-- **M87*:** Rs = 128 au ≈ 4.3 × Neptune's 30 au, hence "four times past Neptune". From r = 1 au, any infall reaches
+- **M87*:** Rs = 128 au ≈ 4.3 × Neptune's 30 au (no longer narrated). From r = 1 au, any infall reaches
   the singularity in ≲ 30 s of proper time (τ ≈ (2/3) r^{3/2}/(c√Rs) = 29 s). This is not narrated.
 - **TON 618:** mass from Shemmer et al. 2004 (6.6×10¹⁰, Hβ). Lower estimates are about 4×10¹⁰ M☉, hence "up to" and
   the range in the readout. Even the low value gives Rs ≈ 800 au, far beyond the planets, the Kuiper belt and the
@@ -76,8 +81,8 @@ This extends `../sun-black-hole/short_vfx.py`'s point-lens warp to exact null ge
 - **M87\* inside view:** no observer can hover inside a horizon. The tunnel is the view of a static observer just
   outside it (1.06 → 1.004 Rs), looking out, used as a stand-in for "we're inside". The blueshift and the wall
   streaks are approximate or artistic.
-- **TON 618:** during "it would swallow…" the framing is a 1.9× close-in of the 8,000 au view rather than a true inside
-  view. On "so here it is" it pulls back to the true 8,000 au framing. The disk is truncated at 4.8 Rs (the camera
+- **TON 618:** until "here it is" the framing is a 1.9× close-in of the 8,000 au view rather than a true inside
+  view. On "here it is" it pulls back to the true 8,000 au framing. The disk is truncated at 4.8 Rs (the camera
   is at 6.14 Rs). Extra glow/halo blur is added for the thick Interstellar look.
 - **Cygnus X-1:** the companion would light (and roast) Earth like a supergiant sun, so the sky is shown as a blazing
   blue day. Its tidal stretch, the shape of the stream and the disk glow are drawn by hand rather than simulated; the

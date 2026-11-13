@@ -33,7 +33,7 @@ VAN_SRC = 1300
 F_SRC = 1000.0
 CAM_H = 1.3
 FPS = 30
-LEAD, TAIL = 0.25, 1.20
+LEAD, TAIL = 0.25, 0.80
 RSUN_AU = 0.00465047
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
@@ -41,7 +41,9 @@ WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0, end=False):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t1" if end else "t0"]
+    """time of the n-th caption word `cap` within a beat (all lines whose key is `key` or starts with `key_`)"""
+    ws = [w for l in PL if l["key"] == key or l["key"].startswith(key + "_") for w in l["words"] if w["cap"] == cap]
+    return ws[n]["t1" if end else "t0"]
 
 
 # ------------------------------------------------------------------------------------------------ timeline
@@ -55,9 +57,9 @@ T_NIGHT0 = wt("acen", "SOME") - 0.45; T_NIGHT1 = T_NIGHT0 + 0.8            # Alp
 K0, K1 = T_SW["kep"], T_SW["alg"]
 T_DSUN = wt("kep", "SUNSET"); T_DSHAD = wt("kep", "SHADOWS")
 A0, A1 = T_SW["alg"], T_SW["wuma"]
-T_ECL0 = wt("alg", "ECLIPSES") - 0.25; T_ECLM = wt("alg", "DAYLIGHT") + 0.05
+T_ECL0 = wt("alg", "EVERY") + 0.3; T_ECLM = wt("alg", "ECLIPSES") + 0.35
 W0 = T_SW["wuma"]
-PULSES = [wt("hook", "SECOND"), wt("acen", "HUNDREDS"), wt("acen", "DARK"), wt("sir", "BLAZE"), wt("sir", "DWARF"), wt("sir", "EARTH'S"),
+PULSES = [wt("hook", "SECOND"), wt("acen", "HUNDREDS"), wt("acen", "DARK"), wt("sir", "BLAZE"), wt("sir", "DWARF"), wt("sir", "EARTH"),
           T_DSUN, T_DSHAD, wt("alg", "DEMON"), wt("alg", "2.87"), wt("wuma", "TOUCHING"), wt("end", "SINGLE")]
 
 
@@ -376,8 +378,8 @@ class Scene:
         et = np.stack([fbm2((128, 256), 51, 2.4), fbm2((128, 256), 52, 2.8)], -1)
         self.earth_tex = np.clip(et * 0.22 + 0.4, 0, 1).astype(f32)
         self.shcache = {}
-        self.caps = Captions(L, WORDS, emphasis={"SECOND", "SUN", "HUNDREDS", "DARK", "BLAZE", "DWARF", "EARTH'S", "KEPLER-16b",
-                                                 "SUNSET", "SHADOWS", "DEMON", "2.87", "ECLIPSES", "FADES", "TOUCHING", "ATMOSPHERE",
+        self.caps = Captions(L, WORDS, emphasis={"SECOND", "SUN", "HUNDREDS", "DARK", "BLAZE", "DWARF", "EARTH", "KEPLER-16b",
+                                                 "SUNSET", "SHADOWS", "DEMON", "2.87", "ECLIPSES", "OTHER", "TOUCHING",
                                                  "PARTNER", "SINGLE"})
         L.cap_y = 880
 

@@ -1,18 +1,21 @@
 # What If Earth Had a Second Sun? (YouTube Short)
 
-The cut is vertical only: 1080×1920 at 30 fps, 39.33 s long. It is one locked tripod shot of the user's `A2_park.png`
+The cut is vertical only: 1080×1920 at 30 fps, 39.88 s long. It is one locked tripod shot of the user's `A2_park.png`
 (transparent sky) in the "swap" format of `../other-suns`. Our lone Sun is replaced by one real binary-star system
 after another. Every swap has a flash, a chromatic shockwave and coloured beams, and each system gets its own sky and
 grade. The park is relit by every star separately, so there are coloured double shadows. Each system gets a bold
 readout (SYSTEM / STAR A + STAR B / one fact) and one big orange word at a time at ~46 % height. A white-out returns
 to the opening Sun, so the Short loops. There are no disclaimer captions (user rule).
 
-## Narration (95 words, Kokoro am_michael @ 1.05, real word timings)
-> What if Earth had a second Sun? Alpha Centauri: a golden sun, plus an orange one hundreds of times brighter than the
-> full Moon. Some nights never get dark. Sirius: a blue-white blaze, plus a white dwarf: a Sun's mass, crushed to
-> Earth's size. Kepler-16b. A real planet with two suns. Double sunset, double shadows. Algol, the Demon Star. Every
-> 2.87 days, one star eclipses the other. Daylight fades. And W Ursae Majoris: two stars touching, sharing one
-> atmosphere. Nearly half of Sun-like stars have a partner. Ours is single.
+## Narration (re-voiced 13 Nov: Kokoro am_michael @ 0.92, ~0.35 s between sentences, ~0.65 s at beat changes)
+77 words as written (82 spoken, counting "Kepler sixteen B", "two point eight seven", "Double-U"):
+> What if Earth had a second Sun? Alpha Centauri: its orange partner outshines hundreds of full Moons. Some nights
+> never get dark. Sirius: a blue-white blaze, and a white dwarf. A Sun's mass, the size of Earth. Kepler-16b, a real
+> planet with two suns. Double sunset. Double shadows. Algol, the Demon Star. Every 2.87 days, one star eclipses the
+> other. W Ursae Majoris. Two stars, touching. Nearly half of Sun-like stars have a partner. Ours is single.
+
+The first cut (1.05, 95 words) was rejected as rushed. Each sentence is now its own voice line, so the pauses are
+exact. The visuals are re-timed to the new word times; the picture is unchanged.
 
 ## The framing (one rule for every system)
 We stand on a planet where a planet could really orbit. Each disc is drawn at its true angular size through the
@@ -36,20 +39,20 @@ plate's own lens (f = 1148 px, the ground-plane fit of `../betelgeuse-tonight`).
 ## Beats (`short.py`)
 | t (s) | beat | look |
 |---|---|---|
-| 0–2.1 | our Sun | blue sky, rainbow beams, single conifer shadow |
-| 2.1–10.5 | α Cen | golden afternoon. A is Sun-like, B is a vivid orange point, and there are two conifer shadows in a V. On "Some nights" A sets: an orange-tinted night with stars and lamps, lit and shadowed by B alone |
-| 10.5–16.4 | Sirius | deep-cyan sky, harsh blue-white glare, crisp blue-graded shadow. Loupe: Sirius B beside Earth at the same scale |
-| 16.4–22.1 | Kepler-16 | the sky turns red-orange. Both suns flank the conifer with big halos and sink toward the treeline, casting a V of shadows: A's shadow is lit crimson by B, and B's shadow is lit gold by A |
-| 22.1–29.2 | Algol | blue-white day. The loupe shows B (big, dim, orange) sliding across A with a gas stream. The total light follows the computed eclipse: the sky drops to violet dusk, stars appear, lamps flicker on, then it all recovers |
-| 29.2–34.3 | W UMa | violet-white glare. The loupe shows the tidally stretched peanut, the shared glowing envelope and a spiral outflow. The daylight pulses twice per orbit (computed light curve) |
-| 34.3–39.3 | white-out → our Sun | "Nearly half of Sun-like stars have a partner. Ours is single." Loops to frame 0 |
+| 0–2.7 | our Sun | blue sky, rainbow beams, single conifer shadow |
+| 2.7–10.7 | α Cen | golden afternoon. A is Sun-like, B is a vivid orange point, and there are two conifer shadows in a V. On "Some nights" A sets: an orange-tinted night with stars and lamps, lit and shadowed by B alone |
+| 10.7–16.8 | Sirius | deep-cyan sky, harsh blue-white glare, crisp blue-graded shadow. Loupe: Sirius B beside Earth at the same scale |
+| 16.8–23.7 | Kepler-16 | the sky turns red-orange. Both suns flank the conifer with big halos and sink toward the treeline, casting a V of shadows: A's shadow is lit crimson by B, and B's shadow is lit gold by A |
+| 23.7–30.5 | Algol | blue-white day. The loupe shows B (big, dim, orange) sliding across A with a gas stream. The total light follows the computed eclipse: the sky drops to violet dusk, stars appear, lamps flicker on, then it all recovers |
+| 30.5–34.7 | W UMa | violet-white glare. The loupe shows the tidally stretched peanut, the shared glowing envelope and a spiral outflow. The daylight pulses twice per orbit (computed light curve) |
+| 34.7–39.9 | white-out → our Sun | "Nearly half of Sun-like stars have a partner. Ours is single." Loops to frame 0 |
 
 ## Science notes and sources
 - **α Centauri:** radii from Kervella et al. 2017, Teff A 5,790 K and B 5,260 K, L ≈ 1.52 and 0.50 L☉. Orbit:
   a ≈ 23.6 au, e = 0.52, so the separation runs ~11.4–35.9 au (Pourbaix & Boffin 2016). B's V magnitude from the planet
   is M_V(B) = 5.71, giving m = −20.6 at 11.4 au and −18.1 at 35.9 au. The full Moon is −12.74, so B is **~140 to
   ~1,400× brighter than the full Moon** ("hundreds of times"). That is ~250–2,500 lux-scale light, enough that nights
-  with B above the horizon never get dark ("some nights").
+  with B above the horizon never get dark ("some nights"). The narration says "outshines hundreds of full Moons".
 - **Sirius:** A 1.711 R☉, 9,940 K, 25.4 L☉ (Davis et al. 2011; Adelman 2004; Liebert et al. 2005). B is 1.02 M☉,
   0.0084 R☉ ≈ 5,840 km (Earth is 6,371 km), ~25,000 K (Barstow et al. 2005). Orbit a = 19.8 au, e = 0.59, so 8.1–31.5
   au. From 5 au around A, B is mag −12.7 to −15.7: as bright as 1 to 15 full Moons, a brilliant point.

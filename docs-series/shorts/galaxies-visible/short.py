@@ -334,7 +334,8 @@ class Scene:
             lay = aure[..., None] * lc + self.rays(t, P, Q, w, cx, cy, R, col_u, Q["bI"] * (1 + 1.2 * col_u) * min(1.0, I))
         if prev != "night" and w < 1:
             lay = lay + (0.03 * P["I"] * (1 - w)) * self.light_of(prev)
-        if not isinstance(lay, float): gal = gal + self.up(lay * pulse)
+        if isinstance(lay, np.ndarray) and lay.ndim == 3: gal = gal + self.up(lay * pulse)
+        elif not isinstance(lay, float): gal = gal + np.asarray(lay, f32) * pulse
         sky = sky + gal
         # ---- city: night grade, windows on, relit by the galaxy light
         lw = (Q["I"] * w * min(I, 1.6) + P["I"] * (1 - w)) * (0.9 + 0.1 * pulse)

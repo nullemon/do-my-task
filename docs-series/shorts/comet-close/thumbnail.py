@@ -24,8 +24,8 @@ v = img.copy()
 for w, col, size, x, y in [("IF A COMET", WHITE, 130, 540, 1040), ("CAME THIS", ORANGE, 190, 540, 1210), ("CLOSE", ORANGE, 260, 540, 1420)]:
     rgba, _ = word_layer(w, size, 1000, fill=col); composite(v, rgba, x, y, 1.0)
 save(v, os.path.join(OUT, "thumb-vertical.jpg"))
-# 16:9: the sky half of the frame (head + tails) scaled into 1280x720, text on the right
-crop = img[220:220 + 608, 0:1080]
+# 16:9: a band from the coma down to the treeline scaled into 1280x720, text on the right
+crop = img[560:560 + 608, 0:1080]
 im = Image.fromarray((np.clip(crop, 0, 1) * 255 + 0.5).astype(np.uint8)).resize((1280, 720), Image.LANCZOS)
 w = np.asarray(im).astype(np.float32) / 255
 for t_, col, size, x, y in [("IF A COMET", WHITE, 92, 330, 470), ("CAME THIS CLOSE", ORANGE, 110, 640, 600)]:

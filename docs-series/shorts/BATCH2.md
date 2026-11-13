@@ -42,10 +42,10 @@ Shared rules for every Short in this batch:
 | # | name | title | bg | status |
 |---|---|---|---|---|
 | B1 | black-hole-suns | What If Black Holes Replaced Our Sun? | A_park | delivered |
-| B2 | moon-closer | What If the Moon Got Closer? | B_valley | delivered |
+| B2 | moon-closer | What If the Moon Got Closer? | B_valley | re-voicing |
 | B3 | exoplanet-moons | What If Strange Exoplanets Replaced Our Moon? | B_valley | delivered |
 | B4 | second-sun | What If Earth Had a Second Sun? | A2_park | delivered |
-| B5 | comet-close | What If Comets Passed as Close as the Moon? | A2_park | in progress |
+| B5 | comet-close | What If Comets Passed as Close as the Moon? | A2_park | delivered (slow voice) |
 | B6 | galaxies-visible | What If Galaxies Were Bright Enough to See? | C_city | in progress |
 | B7 | star-neighbours | What If Famous Stars Were Our Nearest Neighbour? | C_city | in progress |
 | B8 | star-clusters | What If Star Clusters Were Close By? | B_valley | in progress |

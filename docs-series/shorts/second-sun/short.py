@@ -243,8 +243,8 @@ def alt_of(y): return math.degrees(math.atan((HY - y) / F_PX))
 
 def kepler_pos(t):
     u = (t - K0)
-    ya = kf(t, [(K0 - 1, 1180.0), (K0, 1180.0), (T_DSUN, 1362.0), (T_DSHAD + 0.25, 1398.0), (K1, 1418.0), (K1 + 2, 1440.0)])
-    yb = kf(t, [(K0 - 1, 965.0), (K0, 965.0), (T_DSUN, 1050.0), (T_DSHAD + 0.25, 1080.0), (K1, 1100.0), (K1 + 2, 1130.0)])
+    ya = kf(t, [(K0 - 1, 1180.0), (K0, 1180.0), (T_DSUN, 1368.0), (T_DSHAD + 0.25, 1407.0), (K1, 1419.0), (K1 + 2, 1440.0)])
+    yb = kf(t, [(K0 - 1, 1000.0), (K0, 1000.0), (T_DSUN, 1055.0), (T_DSHAD + 0.25, 1080.0), (K1, 1100.0), (K1 + 2, 1130.0)])
     return (698.0 + 4 * u, ya), (546.0 + 4 * u, yb)
 
 
@@ -278,8 +278,8 @@ def state(key, t):
         alA, alB = alt_of(ya), alt_of(yb); XA, XB = airmass(alA), airmass(alB)
         tA = 10 ** (-0.4 * 0.21 * XA); tB = 10 ** (-0.4 * 0.21 * XB)
         visA = smooth(1418.0, 1398.0, ya)                                        # behind the hedge line at x ~ 870
-        EA = 0.963 * 0.31 * tA * visA; EB = 0.037 * 0.31 * tB * 2.2               # B: x2.2 (README: liberty)
-        gain = 0.95 * (0.963 * 0.31 * tA + EB) ** -0.75                          # eye adaptation (keeps the A:B ratio)
+        EA = 0.963 * 0.31 * tA * visA; EB = 0.037 * 0.31 * tB * 4.0               # B: x4 (README: liberty)
+        gain = 2.4 * (0.963 * 0.31 * tA + EB) ** -0.75                          # eye adaptation (keeps the A:B ratio)
         EA, EB = EA * gain, EB * gain
         cA = redden(bbcolor(4450.0), XA * 0.55); cB = redden(bbcolor(3311.0), XB * 0.55)
         S["mode"] = dict(sunset=1.0)
@@ -406,9 +406,9 @@ class Scene:
         rel = rel / max(float(lum(rel)), 1e-4)
         sky = np.zeros(self.hx.shape + (3,), f32)
         wd = mode.get("day", 0.0); wn = mode.get("night", 0.0); ws = mode.get("sunset", 0.0)
-        lv = min(tot, 1.2) ** 0.85
+        lv = max(min(tot, 1.2), 0.08)
         if wd > 0:
-            zen = np.array([0.012, 0.075, 0.42], f32) * rel * (0.25 + 0.75 * lv); hor = np.array([0.30, 0.50, 0.85], f32) * (0.6 * rel + 0.4) * (0.25 + 0.75 * lv)
+            zen = np.array([0.012, 0.075, 0.42], f32) * rel * (0.1 + 0.9 * lv); hor = np.array([0.30, 0.50, 0.85], f32) * (0.6 * rel + 0.4) * (0.1 + 0.9 * lv)
             sky += (zen * (1 - self.k_hor) + hor * self.k_hor) * wd
         if wn > 0:
             zen = np.array([0.010, 0.016, 0.085], f32); hor = np.array([0.050, 0.045, 0.150], f32) + np.array([0.06, 0.025, 0.005], f32)
@@ -416,12 +416,12 @@ class Scene:
         if ws > 0:
             sk = sunset_k
             zen = np.array([0.020, 0.055, 0.30], f32) * (1 - 0.45 * sk) + np.array([0.03, 0.02, 0.10], f32) * sk
-            mid = np.array([0.30, 0.30, 0.55], f32) * (1 - sk) + np.array([0.42, 0.13, 0.20], f32) * sk
+            mid = np.array([0.30, 0.30, 0.55], f32) * (1 - sk) + np.array([0.48, 0.12, 0.16], f32) * sk
             low = np.array([0.60, 0.55, 0.65], f32) * (1 - sk) + np.array([1.35, 0.42, 0.08], f32) * sk
             g = zen * (1 - self.k_hor) + mid * self.k_hor
             kl_ = np.exp(-self.e / 0.16)[..., None]
             g = g * (1 - kl_) + low * kl_
-            sky += g * ws
+            sky += g * ws * 0.55
         # aureole + beams around each light
         bm = np.zeros_like(sky)
         for l in lights:
@@ -429,7 +429,7 @@ class Scene:
             dx = self.hx - l["x"]; dy = self.hy - l["y"]; d = np.sqrt(dx * dx + dy * dy) + 1e-3
             c = l["col"] / max(float(lum(l["col"])), 1e-4) if "col" in l else bbcolor(l["T"]) / max(float(lum(bbcolor(l["T"]))), 1e-4)
             Ea = min(l["E"], 1.2) ** 0.6
-            aure = np.exp(-d / 45) * 0.9 + np.exp(-d / 220) * 0.12 + ws * np.exp(-d / 520) * 0.25
+            aure = np.exp(-d / 45) * 0.9 + np.exp(-d / 220) * 0.12 + ws * np.exp(-d / 520) * 0.15
             sky += (aure * Ea)[..., None] * ((0.35 + 0.65 * c) * (1 - ws) + c * ws * 1.4)
             if l.get("beams"):
                 bm += self.beams_layer(t, l, d, np.arctan2(dy, dx))
@@ -576,7 +576,7 @@ class Scene:
             c = vivid(c, 1.25) * l["E"]
             if l["E"] > 0.04 * Emax and l["y"] < self.hz + 30:
                 S = self.shadow(l["x"], l.get("el", 20.0))
-                direct_l += c * (1 - 0.92 * S)[..., None]
+                direct_l += c * (1 - 0.97 * S)[..., None]
             else:
                 direct_l += c
             direct_o += c * 0.50; rimc += c

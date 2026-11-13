@@ -30,7 +30,7 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 LAMPS = [(630, 1185, 1336), (845, 1095, 1342)]       # A_park lamp (head x, head y, pole base y) in SOURCE px (as in other-suns)
 FPS = 30
-LEAD, TAIL = 0.25, 1.00
+LEAD, TAIL = 0.25, 0.85
 F_PX = 960.0
 RSUN_AU = 0.00465047
 

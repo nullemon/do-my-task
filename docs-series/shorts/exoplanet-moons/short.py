@@ -161,14 +161,14 @@ class Scene:
             "moon": Body("moon", BK["moon"]["Rp"], pole_vec(-12, 4), tex="8k_moon.jpg", model="rock", surf=9.0, detail=0.0),
             "cnc": Body("cnc", BK["cnc"]["Rp"], pole_vec(-15, 20), alb=la, emis=le, model="rock", surf=1.3, spin=0.045,
                         sun=(-0.80, 0.10, -0.55), emis_day=0.35, emis_ld=0.2, rim=(2.0, 0.45, 0.08), detail=0.0, ss=3, seed=2),
-            "hd": Body("hd", BK["hd"]["Rp"], pole_vec(12, 18), alb=co, emis=Z3, emis2=sp, emis2_spin=0.30, winds=0.035, spin=0.05,
+            "hd": Body("hd", BK["hd"]["Rp"], pole_vec(12, 18), alb=co, emis=Z3, emis2=sp * 0.5, emis2_spin=0.30, winds=0.006, spin=0.04,
                        haze=(0.02, 0.06, 0.25), rim=(0.10, 0.25, 0.95), surf=1.7, detail=0.012, seed=3),
             "wasp": Body("wasp", BK["wasp"]["Rp"], pole_vec(WASP_ANG + 90 - 90, 8), alb=wa, emis=we, stretch=WASP_STRETCH,
-                         emis_day=0.5, surf=0.6, spin=0.02, winds=0.02, rim=(1.2, 0.35, 0.08), haze=(0.04, 0.01, 0.0), detail=0.012, seed=4),
+                         emis_day=0.5, surf=0.6, spin=0.02, winds=0.006, rim=(1.2, 0.35, 0.08), haze=(0.04, 0.01, 0.0), detail=0.012, seed=4),
             "tres": Body("tres", BK["tres"]["Rp"], pole_vec(-6, 12), alb=ca, emis=ce, sun=(0.62, -0.42, 0.66), emis_day=0.3,
                          surf=4.0, night=0.0, rim=(0.55, 0.07, 0.03), spin=0.02, seed=5),
             "kelt": Body("kelt", BK["kelt"]["Rp"], pole_vec(-5, 6), alb=ka, emis=ke, emis_day=0.25, emis_ld=0.55, surf=0.0,
-                         spin=0.015, winds=0.01, rim=(3.0, 1.6, 0.6), emis_limb=(0.45, 1.3, 2.6), seed=6),
+                         spin=0.015, winds=0.003, rim=(3.0, 1.6, 0.6), emis_limb=(0.45, 1.3, 2.6), seed=6),
         }
         # foreground prep: rim light on the skyline
         a = fg.a

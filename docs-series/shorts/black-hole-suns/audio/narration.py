@@ -4,12 +4,12 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if black holes replaced our Sun? Let's start small.", 0.15),
-    ("one", "One Sun of mass, {6 KM|six kilometers} wide. Same gravity, Earth keeps orbiting. But it's dark forever.", 0.15),
-    ("cyg", "Cygnus {X-1|X one}, {21|twenty-one} Suns. Earth's year would last weeks.", 0.15),
-    ("sgr", "Sagittarius {A*|A star}. {4 MILLION|Four million} Suns. Its shadow spans {24°|twenty-four degrees}.", 0.15),
-    ("m87", "{M87*|M eighty-seven star}. {6.5 BILLION|Six and a half billion} Suns. Its horizon reaches four times past Neptune. We're inside.", 0.15),
-    ("ton", "And {TON 618|Ton six eighteen}? Up to {66 BILLION|sixty-six billion} Suns. It would swallow our entire solar system, so here it is from {8,000×|eight thousand times} farther.", 0.22),
+    ("hook", "What if black holes replaced our Sun? Let's start small.", 0.12),
+    ("one", "One Sun of mass, {6 KM|six kilometers} wide. Same gravity, same orbit. But it's dark forever.", 0.12),
+    ("cyg", "Cygnus {X-1|X one}, {21|twenty-one} Suns. Earth's year would last weeks.", 0.12),
+    ("sgr", "Sagittarius {A*|A star}. {4 MILLION|Four million} Suns. Its shadow spans {24°|twenty-four degrees}.", 0.12),
+    ("m87", "{M87*|M eighty-seven star}. {6.5 BILLION|Six and a half billion} Suns. Its horizon is four times past Neptune. We're inside.", 0.12),
+    ("ton", "And {TON 618|Ton six eighteen}? Up to {66 BILLION|sixty-six billion} Suns. It would swallow our solar system, so here it is {8,000×|eight thousand times} farther.", 0.18),
     ("end", "Suddenly, the Sun seems... kind.", 0.0),
 ]
 

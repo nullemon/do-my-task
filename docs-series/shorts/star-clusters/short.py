@@ -85,11 +85,11 @@ SCN = {
     "pleiades": dict(name="PLEIADES", l2="~1,000 STARS · 444 LY AWAY", sir=st["pleiades"]["n_sirius"],
                      near=f"{st['pleiades']['nearest_ly']:.1f} LY", tc=(130, 190, 255),
                      hyg=1.0, mw=0.85, cl="pleiades", core=M45, beams=[(0.35, 0.65, 1.0), (0.55, 0.45, 1.0), (0.3, 0.95, 1.0), (0.8, 0.85, 1.0)],
-                     bI=0.9, air=0.10, aircol=(0.35, 0.55, 1.0), fg=(0.45, 0.66, 1.30), expo=1.15, neb=1.0, spark=1.3, pop=2.2),
+                     bI=0.45, air=0.10, aircol=(0.35, 0.55, 1.0), fg=(0.45, 0.66, 1.30), expo=1.15, neb=1.0, spark=1.3, pop=3.2, ng=70, gth=3.5),
     "hyades": dict(name="HYADES", l2="~700 STARS · 153 LY AWAY", sir=st["hyades"]["n_sirius"],
                    near=f"{st['hyades']['nearest_ly']:.1f} LY", tc=(255, 170, 90),
                    hyg=1.0, mw=0.95, cl="hyades", core=HYA, beams=[(1.0, 0.55, 0.15), (1.0, 0.8, 0.4), (0.4, 0.8, 1.0), (1.0, 0.35, 0.2)],
-                   bI=0.7, air=0.04, aircol=(0.6, 0.5, 0.8), fg=(1.0, 0.72, 0.55), expo=1.2, spark=1.2, pop=3.5),
+                   bI=0.7, air=0.04, aircol=(0.6, 0.5, 0.8), fg=(1.0, 0.72, 0.55), expo=1.2, spark=1.2, pop=4.0, ng=40, gth=3.0),
     "omega": dict(name="OMEGA CENTAURI", l2="~10 MILLION STARS · 17,000 LY AWAY", sir=st["omega"]["n_sirius"],
                   near=f"{st['omega']['nearest_ly']:.2f} LY", tc=(255, 200, 90),
                   hyg=0.0, mw=0.0, cl="omega", core="az180alt50", beams=[(1.0, 0.75, 0.25), (1.0, 0.5, 0.15), (1.0, 0.9, 0.6), (1.0, 0.45, 0.55)],
@@ -97,7 +97,7 @@ SCN = {
     "nsc": dict(name="GALACTIC CENTRE", l2="~1.5 MILLION STARS WITHIN 3 LY", sir=st["nsc"]["n_sirius"],
                 near=f"{st['nsc']['nearest_ly'] * 365.25:.0f} LIGHT-DAYS", tc=(255, 215, 140),
                 hyg=0.0, mw=0.0, cl="nsc", core="az180alt62", beams=[(1.0, 0.85, 0.5), (0.5, 0.75, 1.0), (1.0, 0.45, 0.75), (1.0, 0.65, 0.2)],
-                bI=1.25, air=0.7, aircol=(0.75, 0.62, 0.85), fg=(1.0, 0.84, 0.62), expo=0.6, spark=0.9, hp=0.30, fk=0.55),
+                bI=1.25, air=0.45, aircol=(0.55, 0.45, 0.85), fg=(1.0, 0.84, 0.62), expo=0.55, spark=0.9, hp=0.30, fk=0.55, gpop=2.2, vlim=-0.8, fblur=3.5, ng=70, gth=12.0, dust=1.0, glowcol=(1.0, 0.60, 0.30)),
 }
 
 
@@ -218,7 +218,7 @@ class Scene:
         if S["cl"]:
             z = np.load(os.path.join(SCR, f"cl_{S['cl']}.npz"))
             R = rot_to(self.core_eq(key))
-            vlim = 6.5
+            vlim = S.get("vlim", 6.5)
             sel = z["V"] < vlim
             d_.append(z["dirs"][sel].astype(np.float64) @ R.T); V_.append(z["V"][sel]); c_.append(star_rgb(z["T"][sel]))
             fm = z["faint"].astype(f32)
@@ -232,7 +232,7 @@ class Scene:
                 dec_c = 90 - (yi + 0.5) / MH * 180
                 pix_sr = (2 * np.pi / MW_) * (np.pi / MH) * np.cos(np.radians(dec_c))
                 np.add.at(fm, (yi, xi), (f / pix_sr).astype(f32))
-            faint = cv2.GaussianBlur(fm, (0, 0), 1.2)
+            faint = cv2.GaussianBlur(fm, (0, 0), S.get("fblur", 1.2))
         d = np.concatenate(d_); V = np.concatenate(V_).astype(f32); col = np.concatenate(c_)
         o = np.argsort(V); d, V, col = d[o], V[o], col[o]
         out = dict(d=d, V=V, col=col, fd=disp_flux(V), ph=self.ph_rng.uniform(0, 1000, len(V)).astype(f32), R=R, faint=faint)
@@ -274,6 +274,23 @@ class Scene:
         tex = np.clip(np.clip(n3 * 0.45 + 0.55, 0, 2) ** 1.6 * (0.75 + 0.5 * streak) + 0.25 * np.clip(n1 * 0.5 + 0.5, 0, 2), 0, 3)
         return tex.astype(f32)
 
+    def dust(self, cx, cy, t):
+        """dark, warped dust lanes cutting across the galactic-centre glow (half res transmission)"""
+        if not hasattr(self, "_dn"):
+            self._dn = (fbm2((512, 512), 91, 2.8), fbm2((512, 512), 92, 2.2))
+        n1, n2 = self._dn
+        a = math.radians(-22)
+        x = self.hx - cx; y = self.hy - cy
+        u = x * math.cos(a) + y * math.sin(a); v = -x * math.sin(a) + y * math.cos(a)
+        mu = ((u * 0.45 + t * 3.0) % 512).astype(f32); mv = ((v * 0.45) % 512).astype(f32)
+        w1 = cv2.remap(n1, mu, mv, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        w2 = cv2.remap(n2, mu, ((v * 0.9) % 512).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        vv = v + 70 * w1
+        lanes = (np.exp(-((vv - 40) / 55) ** 2) * 1.0 + np.exp(-((vv + 170) / 35) ** 2) * 0.8
+                 + np.exp(-((vv - 290) / 40) ** 2) * 0.7) * np.clip(0.55 + 0.45 * w2, 0, 1)
+        lanes += np.clip(w2 - 0.9, 0, 1) * 0.5 * np.exp(-np.abs(v) / 500)
+        return np.clip(1 - 0.93 * lanes, 0.05, 1).astype(f32)
+
     def mw_layer(self, lst):
         M = EQ2GAL @ eq2hor(lst).T
         g = self.rays_h @ M.T.astype(f32)
@@ -290,7 +307,8 @@ class Scene:
         mx = ra / 360 * MW_ - 0.5; my = (90 - dec) / 180 * MH - 0.5
         return cv2.remap(s["faint"], mx.astype(f32), my.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
 
-    def stars_layer(self, s, t, lst, gain=1.0, spark=1.0, hp=0.85, pop=1.0):
+    def stars_layer(self, s, t, lst, gain=1.0, spark=1.0, hp=0.85, pop=1.0, ng=28, gth=6.0, gpop=None):
+        gpop = pop if gpop is None else gpop
         """all point stars: bilinear splat (bincount), scintillation, multi-scale halos for the bright ones, 4-point glints"""
         L = self.L; W, H = L.W, L.H
         h = s["d"] @ eq2hor(lst).T
@@ -329,13 +347,15 @@ class Scene:
             halo = cv2.GaussianBlur(hb, (0, 0), 0.8) * 0.30 + cv2.GaussianBlur(hb, (0, 0), 2.5) * 0.050 + cv2.GaussianBlur(hb, (0, 0), 8.0) * 0.008
             st += cv2.resize(halo, (W, H), interpolation=cv2.INTER_LINEAR)
         # glints on the brightest
-        order = np.argsort(-fd)[:28]
+        order = list(np.argsort(-fd)[:ng])
+        red = np.where(col[:, 0] > 1.6 * col[:, 2])[0]
+        order += [j for j in red[np.argsort(-fd[red])][:max(ng // 3, 8)] if j not in order]
         for j in order:
             g = fd[j]
-            if g < 6: break
-            c = col[j] * 0.6 + 0.4
-            Lk = (6 + 7 * math.log(g / 6 + 1) ** 1.2) * pop ** 0.5
-            a = min(g, 150.0) ** 0.8 * 0.06 * pop * (1 + 0.25 * math.sin(t * 5 + ph[j]))
+            if g < gth * (0.5 if col[j, 0] > 1.6 * col[j, 2] else 1.0): continue
+            c = col[j] * 0.85 + 0.15
+            Lk = min((6 + 7 * math.log(g / 6 + 1) ** 1.2) * gpop ** 0.5, 46.0)
+            a = min(g, 150.0) ** 0.8 * 0.06 * gpop * (1 + 0.25 * math.sin(t * 5 + ph[j]))
             splat(st, x[j], y[j], int(Lk * 4) + 6, lambda d, dx, dy: ((np.exp(-np.abs(dy) / 0.8) * np.exp(-np.abs(dx) / Lk) + np.exp(-np.abs(dx) / 0.8) * np.exp(-np.abs(dy) / Lk)) * a)[..., None] * c)
         return st, (x, y, fd, col)
 
@@ -362,12 +382,12 @@ class Scene:
         acc = np.zeros(self.hx.shape, f32)
         for j in np.argsort(-fd)[:14]:
             if fd[j] < 8: break
-            R = 90 + 30 * math.log(fd[j])
+            R = 110 + 40 * math.log(fd[j])
             acc += np.exp(-np.sqrt((self.hx - x[j]) ** 2 + (self.hy - y[j]) ** 2) / R) * math.log(fd[j] / 4)
         u = ((self.hx - cx) * 0.5 + t * 2.0) % 512; v = ((self.hy - cy) * 0.5) % 512
         tex = cv2.remap(self.neb_tex, u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        wide = np.exp(-np.sqrt((self.hx - cx) ** 2 + (self.hy - cy) ** 2) / 520) * 0.6
-        return ((acc * 0.55 + wide) * tex)[..., None] * np.array([0.12, 0.34, 1.0], f32) * 0.11
+        wide = np.exp(-np.sqrt((self.hx - cx) ** 2 + (self.hy - cy) ** 2) / 520) * 0.35
+        return ((acc * 0.55 + wide) * tex ** 1.4)[..., None] * np.array([0.12, 0.34, 1.0], f32) * 0.20
 
     # ----------------------------------------------------------------------------------------------- sky of one scene
     def sky(self, key, t, lst, fade_in=1.0):
@@ -384,6 +404,7 @@ class Scene:
             fl = self.faint_layer(s, lst)
             # unresolved starlight: flux/sr -> display (compressed); colour from the mean light
             fc = 0.35 + 0.65 * lt["col"] / max(lt["col"].max(), 1e-6)
+            if S.get("glowcol"): fc = np.array(S["glowcol"], f32)
             half += ((np.maximum(fl, 0) / 100.0) ** 0.6 * 0.05 * S.get("fk", 1.0))[..., None] * fc[None, None, :]
         core = None
         ce = self.core_eq(key)
@@ -391,7 +412,12 @@ class Scene:
             hc = eq2hor(lst) @ ce
             cx, cy, okc = self.lens.project(hc[None]); core = (float(cx[0]), float(cy[0]))
         sky += cv2.resize(half, (W, H), interpolation=cv2.INTER_LINEAR)
-        stl, pts = self.stars_layer(s, t, lst, gain=fade_in, spark=S["spark"], hp=S.get("hp", 0.85), pop=S.get("pop", 1.0))
+        stl, pts = self.stars_layer(s, t, lst, gain=fade_in, spark=S["spark"], hp=S.get("hp", 0.85), pop=S.get("pop", 1.0),
+                                    ng=S.get("ng", 28), gth=S.get("gth", 6.0), gpop=S.get("gpop"))
+        if S.get("dust") and core is not None:
+            tr = self.dust(core[0], core[1], t)
+            sky = self.night + (sky - self.night) * cv2.resize(tr, (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
+            stl = stl * cv2.resize(np.maximum(tr, 0.35), (W, H), interpolation=cv2.INTER_LINEAR)[..., None]
         sky += stl
         if S.get("neb") and core is not None:
             sky += cv2.resize(self.nebula(t, core[0], core[1], pts), (W, H), interpolation=cv2.INTER_LINEAR) * fade_in
@@ -554,7 +580,7 @@ class Scene:
             composite(out, rgba, x, ys[0] + dy, a)
             hud_text(out, S["l2"], x, ys[1] + dy, int(L.hud_size * 0.56), "Black", (255, 255, 255), a, 0.06, display=True)
             # counter ticks up after the swap
-            n = S["sir"]; cnt = int(round(n * ease((t - t0 - 0.3) / 0.9))) if (t0 > 0 and cur != "today") else n
+            n = S["sir"]; cnt = int(round(n * ease((t - t0 - 0.15) / 0.6))) if (t0 > 0 and cur != "today") else n
             ctxt = fmt(cnt) if cnt < 1000 or cnt != n else round_count(n)
             hud_text(out, f"STARS BRIGHTER THAN SIRIUS: {ctxt}", x, ys[2] + dy, int(L.hud_size * 0.48), "Bold", (255, 236, 170), a, 0.08, display=True)
             hud_text(out, f"NEAREST STAR: {S['near']}", x, ys[3] + dy, int(L.hud_size * 0.48), "Bold", (200, 230, 255), a, 0.08, display=True)

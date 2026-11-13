@@ -17,6 +17,7 @@ def save(img, path):
     im = Image.fromarray((np.clip(img, 0, 1) * 255 + 0.5).astype(np.uint8)); im.save(path, quality=92); print(path, im.size)
 
 
+V.T_GHOST_C = 1e9                                                # no ghost outline in the thumbnail
 sc = V.Scene(True)
 sc.overlay = lambda out, t, cur, t0, la=0.0: None               # no captions / readouts
 base = sc.frame(T)

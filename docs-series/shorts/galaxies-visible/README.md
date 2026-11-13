@@ -1,18 +1,19 @@
 # What If Galaxies Were Bright Enough to See? (YouTube Short, 9:16 only)
 
-1080×1920 at 30 fps, 37.07 s. Batch-2 swap format: one **locked** tripod shot of the user's `C_city.png` rooftop city at
+1080×1920 at 30 fps, 33.88 s. Batch-2 swap format: one **locked** tripod shot of the user's `C_city.png` rooftop city at
 night, with windows and street lamps still lit. The sky swaps from one galaxy to the next, each with a flash, a chromatic
 shockwave and coloured light rays. The city is relit in each galaxy's colour. One big orange word is shown at a time.
 Each galaxy gets a readout: NAME / × MOON'S SIZE / DISTANCE / STARS. A real full Moon (0.52°) sits next to each galaxy at
 the same scale. The ending is a white-out back to the plain city sky, so the Short loops. There are no disclaimer
 captions (user rule).
 
-## Narration (94 words, Kokoro am_michael @ 1.05, −14.0 LUFS)
-> There's a galaxy in our sky six times wider than the full Moon. You just can't see it. But what if your eyes could?
-> Andromeda. A trillion stars, two and a half million light-years away. Triangulum, a face-on spiral, almost three million
-> light-years out. Down south, the Magellanic Clouds. The large one spans twenty full Moons, its Tarantula Nebula glowing
-> pink. The Whirlpool is tiny, a third of the Moon, thirty million light-years away. They're all up there right now, this
+## Narration (74 words, Kokoro am_michael @ 0.92, about 0.35 s pauses between sentences and 0.7 s at beat changes, −14.0 LUFS)
+> There's a galaxy in our sky six times wider than the Moon. You just can't see it. But what if your eyes could?
+> Andromeda. A trillion stars. Triangulum. A face-on spiral, almost three million light-years out. The Magellanic Clouds.
+> The large one spans twenty full Moons. The Whirlpool: tiny, a third of the Moon. They're all up there right now, this
 > big. Their light is just spread too thin. Your eyes aren't sensitive enough.
+
+The distances, star counts and Tarantula are given in the on-screen readouts and the picture, which keeps the voice calm.
 
 ## Premise and geometry
 Every galaxy is shown at its **true angular size**. Only its surface brightness is raised to long-exposure-camera level.

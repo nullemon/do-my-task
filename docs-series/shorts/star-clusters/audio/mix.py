@@ -63,7 +63,7 @@ def main():
         bed += sh * A.env(N, [(0, 0), (ts, 0), (ts + 0.05, 1), (ts + 1.6, 0), (S.DUR, 0)])[:, None] * 0.35
         bed += A.ticks(N, ts + 0.3, ts + 1.2, rate=14.0, gain=0.07, accel=1.5)
     # target ring pings on "Now imagine..."
-    bed += A.ticks(N, S.wt("hook", "NOW") - 0.05, S.T_SW["ple"] - 0.6, rate=1.1, gain=0.10)
+    bed += A.ticks(N, S.wt("hook_b", "NOW") - 0.05, S.T_SW["ple"] - 0.6, rate=1.1, gain=0.10)
     # galactic centre: deep drone under the blaze
     bed += A.drone(N, root=32.7, seed=64, bright=0.3) * 1.0 * A.env(N, [(0, 0), (S.T_SW["nsc"], 0), (S.T_SW["nsc"] + 0.4, 1), (S.T_BACK, 1), (S.T_BACK + 0.1, 0), (S.DUR + 1, 0)])[:, None]
     bed += A.riser(N, S.T_WO0 - 0.3, S.T_BACK, seed=65) * 1.2

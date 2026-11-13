@@ -4,14 +4,16 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if the brightest stars in our galaxy were our nearest {NEIGHBOUR|neighbor}?", 0.20),
-    ("now", "Tonight, it's Alpha Centauri. Just a bright star.", 0.25),
-    ("sir", "Swap in Sirius. As bright as Jupiter. Still just a star.", 0.20),
-    ("vega", "Vega. Brighter, but still a dot.", 0.20),
-    ("bet", "Betelgeuse. Over a hundred times brighter than Venus. Now the city casts shadows.", 0.20),
-    ("rig", "Rigel. Blue-white, almost a full Moon, from one tiny point.", 0.20),
-    ("den", "Deneb. As bright as the full Moon.", 0.25),
-    ("eta", "And Eta Carinae, five million Suns. In its {1843|eighteen forty-three} outburst? Over a hundred full Moons. Night turns to twilight.", 0.30),
+    ("hook", "What if the brightest stars in our galaxy were our nearest {NEIGHBOUR|neighbor}?", 0.70),
+    ("now", "Tonight, it's Alpha Centauri.", 0.70),
+    ("sir", "Sirius. As bright as Jupiter.", 0.70),
+    ("vega", "Vega. Still just a dot.", 0.70),
+    ("bet", "Betelgeuse. Over a hundred times brighter than Venus.", 0.35),
+    ("bet2", "Now the city casts shadows.", 0.70),
+    ("rig", "Rigel. Almost a full Moon, from one tiny point.", 0.70),
+    ("den", "Deneb. As bright as the full Moon.", 0.70),
+    ("eta", "Eta Carinae. In its {1843|eighteen forty-three} outburst, over a hundred full Moons.", 0.35),
+    ("eta2", "Night turns to twilight.", 0.70),
     ("end", "Lucky for us, our neighbours are small.", 0.0),
 ]
 

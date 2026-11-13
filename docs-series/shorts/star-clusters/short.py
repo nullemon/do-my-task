@@ -531,7 +531,7 @@ class Scene:
 
     def target_ring(self, sky, t, lst):
         """pulsing chromatic target ring on the real Pleiades (M45) while the hook says 'star cluster'"""
-        a = ramp(t, wt("hook", "NOW") - 0.1, wt("hook", "NOW") + 0.4)
+        a = ramp(t, wt("hook_b", "NOW") - 0.1, wt("hook_b", "NOW") + 0.4)
         if a <= 0: return
         hc = eq2hor(lst) @ eq_vec(*M45); px, py, _ = self.lens.project(hc[None]); px, py = float(px[0]), float(py[0])
         lay = np.zeros_like(sky)

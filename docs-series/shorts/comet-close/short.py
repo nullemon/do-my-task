@@ -43,7 +43,10 @@ WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0, end=False):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t1" if end else "t0"]
+    """word time; `key` also covers its continuation lines (halley, halley2, halley3 ...)"""
+    import re
+    ws = [w for l in PL if re.fullmatch(re.escape(key) + r"\d*", l["key"]) for w in l["words"] if w["cap"] == cap]
+    return ws[n]["t1" if end else "t0"]
 
 
 def px_of_km(km):
@@ -62,8 +65,8 @@ COLLAPSE, BLOOM = 0.42, 0.65
 T_LOUPE_H = (wt("halley", "NUCLEUS") - 0.25, wt("halley", "BUT") + 0.1)
 T_LOUPE_D = (T_SW["duck"] + 0.45, T_SW["mcn"] - 0.30)
 OUTBURSTS = [wt("duck", "67P") + 0.55, wt("duck", "SPITTING"), wt("duck", "JETS") + 0.25]
-PULSES = [wt("hook", "COMET"), wt("hook", "MOON"), wt("halley", "COMA"), wt("halley", "15°"), wt("halley", "SKY"), wt("hb", "GIANT"),
-          wt("hb", "SHADOWS"), wt("neo", "GOLDEN"), wt("neo", "SODIUM"), wt("duck", "JETS"), wt("mcn", "BRIGHTEST"), wt("mcn", "STRIPED"),
+PULSES = [wt("hook", "COMET"), wt("hook", "MOON"), wt("halley", "COMA"), wt("halley", "15°"), wt("hb", "HALE-BOPP"),
+          wt("hb", "SHADOWS"), wt("neo", "GOLDEN"), wt("neo", "SODIUM"), wt("duck", "JETS"), wt("mcn", "MCNAUGHT"), wt("mcn", "STRIPED"),
           wt("mcn", "ENTIRE"), wt("end", "SNOWBALLS"), wt("end", "MILLIONS")]
 
 

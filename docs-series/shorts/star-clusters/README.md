@@ -1,6 +1,6 @@
 # What If We Lived Inside a Star Cluster? (YouTube Short, 9:16 only)
 
-1080×1920, 30 fps, 38.4 s. BATCH2 "swap" format: one locked tripod shot of the user's `B_valley.png` at night, under a
+1080×1920, 30 fps, 37.2 s. BATCH2 "swap" format: one locked tripod shot of the user's `B_valley.png` at night, under a
 deep blue/violet sky that is never pitch black. The sky swaps from today's real sky to the sky seen from inside four star
 clusters. Each swap has a tinted flash and a chromatic shockwave that starts at the new cluster's core and reveals the new
 sky inside the ring, plus coloured light beams from the core. The valley is relit by the combined starlight: cold blue
@@ -9,14 +9,16 @@ readout appears for each sky: NAME / STARS · DISTANCE / STARS BRIGHTER THAN SIR
 white-out at the end returns to today's quiet sky (sidereal time is re-based, so the last frame matches the first and the
 Short loops). Big orange one-word captions. No disclaimer captions (user rule).
 
-## Narration (88 words, Kokoro am_michael @ 1.05, real word timings)
-> Our night sky has a few thousand stars. Now imagine living inside a star cluster. The Pleiades. A thousand young blue
-> stars. Dozens outshine Sirius, glowing through blue dust. The Hyades. Older, with orange giants brighter than Sirius.
-> Omega Centauri. Ten million stars. Near the core, almost a million are naked-eye, thousands beat Sirius, and night
-> never gets dark. And the galaxy's heart: a million stars within three light-years. The brightest rival the full Moon.
-> We live in the galaxy's quiet suburbs. That's why our sky is dark.
+## Narration (72 words, Kokoro am_michael @ 0.92, calm delivery, real word timings)
+Pauses are about 0.35 s between sentences and about 0.7 s at each beat change (one LINES entry per sentence). Each swap
+lands in the 0.7 s pause just before the cluster's name.
+> Our night sky holds a few thousand stars. Now imagine living inside a star cluster. The Pleiades. A thousand young blue
+> stars, dozens brighter than Sirius. The Hyades. Older, with glowing orange giants. Omega Centauri. Ten million stars.
+> Near its core, thousands outshine Sirius, and night never gets dark. And the galaxy's heart. A million stars within
+> three light-years. We live in the galaxy's quiet suburbs. That's why our sky is dark.
 
-"Hyades" is spoken via the respelling "Hiadeez", because Kokoro read it as "HY-aydz".
+"Hyades" is spoken via the respelling "Hiadeez", because Kokoro read it as "HY-aydz". An earlier 88-word cut at speed 1.05
+was dropped after user feedback that it sounded rushed.
 
 ## How the skies are made (`clusters.py`)
 - **Today:** the real sky from HYG v4.1 (`catalog.py`, the same source as star-dates). It contains 5,019 stars with V < 6.0
@@ -41,7 +43,7 @@ Short loops). Big orange one-word captions. No disclaimer captions (user rule).
 | galactic centre (NSC) | 1.5 M stars within 1 pc (~10⁶ M☉ of stars, Genzel+ 2010, Schödel+ 2018), 25 M within 10 pc; 8.2 kpc (26,700 ly); + ~280 young O/B/Wolf-Rayet stars within 0.5 pc (Paumard+ 2006, Lu+ 2009) and the red supergiant IRS 7 | ~12,700 | ~2.2 million | 0.016 ly ≈ 6 light-days (typical ~12 light-days) | V ≈ −15.9 (≈ 20 full Moons) |
 
 Brightest single stars: Pleiades −6.3, Hyades −3.2 (an orange giant), Omega Cen −8, galactic centre −12.1 (young
-Wolf-Rayet/O stars about 1 pc away: "the brightest rival the full Moon", −12.7).
+Wolf-Rayet/O stars about 1 pc away, about as bright as the full Moon at −12.7).
 
 ## Corrections to the brief (verified numbers)
 - **Omega Cen density:** the core holds about 10⁴ stars/pc³, which is roughly **100,000×** the solar neighbourhood
@@ -49,7 +51,7 @@ Wolf-Rayet/O stars about 1 pc away: "the brightest rival the full Moon", −12.7
   cluster-wide average (10⁷ stars in a 150-ly sphere is ~200 stars/pc³). The Short does not quote a density factor.
 - **Omega Cen, stars brighter than Sirius:** the brief said "tens of thousands". The simulation gives about **2,200**, so
   the narration says "thousands". "Almost a million naked-eye stars" (842,000 with V < 6) and "night never gets dark"
-  (the total starlight is about a full Moon) both hold.
+  (the total starlight is about a full Moon) both hold; the readout gives the counts.
 - **Finale:** the nuclear star cluster was chosen over 47 Tuc. It gives ~1.5 million stars within 1 pc (3.3 ly); the
   narration's "a million stars within three light-years" is the round lower figure, and the readout says ~1.5 million.
   Its density at 1 pc is ~1.5×10⁵ stars/pc³ (~1.5 million× ours).

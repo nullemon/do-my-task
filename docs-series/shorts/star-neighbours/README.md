@@ -1,6 +1,6 @@
 # What If Famous Stars Were Our Nearest Neighbour? (YouTube Short, B7)
 
-The video is 1080×1920 at 30 fps and 38.8 s long, 9:16 only. It uses the batch-2 "swap" format: one locked tripod
+The video is 1080×1920 at 30 fps and 38.6 s long, 9:16 only. It uses the batch-2 "swap" format: one locked tripod
 shot of the user's `C_city.png` at night with the city lights on, under the real southern sky. The sky is HYG v4.1 at
 its true RA/Dec and B−V colours, at latitude 34° S and sidereal time 10.85 h, facing south-east, with the Southern
 Cross and the Pointers over the skyline.
@@ -16,12 +16,12 @@ The city is relit by each new star. The ending is a white-out back to Alpha Cent
 word is shown at a time, and each star gets a bold readout: NAME / MAGNITUDE · × / comparison. There are no
 disclaimer captions.
 
-## Narration (94 words, Kokoro am_michael @ 1.05, real word timings)
-> What if the brightest stars in our galaxy were our nearest neighbour? Tonight, it's Alpha Centauri. Just a bright
-> star. Swap in Sirius. As bright as Jupiter. Still just a star. Vega. Brighter, but still a dot. Betelgeuse. Over a
-> hundred times brighter than Venus. Now the city casts shadows. Rigel. Blue-white, almost a full Moon, from one tiny
-> point. Deneb. As bright as the full Moon. And Eta Carinae, five million Suns. In its 1843 outburst? Over a hundred
-> full Moons. Night turns to twilight. Lucky for us, our neighbours are small.
+## Narration (78 words, Kokoro am_michael @ 0.92, real word timings, calm pacing)
+There are pauses of ~0.35 s between sentences and ~0.7 s at each beat change.
+> What if the brightest stars in our galaxy were our nearest neighbour? Tonight, it's Alpha Centauri. Sirius. As
+> bright as Jupiter. Vega. Still just a dot. Betelgeuse. Over a hundred times brighter than Venus. Now the city casts
+> shadows. Rigel. Almost a full Moon, from one tiny point. Deneb. As bright as the full Moon. Eta Carinae. In its
+> 1843 outburst, over a hundred full Moons. Night turns to twilight. Lucky for us, our neighbours are small.
 
 ## The numbers (m = M + 5·log10(d / 10 pc), d = 4.37 ly = 1.340 pc, so the offset is −4.365)
 Check: Alpha Cen A has M = 4.38, which gives m = 0.01. That matches its real V = −0.01.
@@ -63,7 +63,7 @@ The brightness factors in the next table are relative to:
     hundred times brighter than Venus", which holds across the whole range.
   - **Eta Carinae:**
     - M_V ≈ −8.6 (2012 value as given in the literature and on Wikipedia).
-    - L ≈ 5 × 10⁶ L☉ for the system ("five million Suns"; Davidson & Humphreys 1997/2012).
+    - L ≈ 5 × 10⁶ L☉ for the system (the readout says "5 MILLION × THE SUN'S POWER"; Davidson & Humphreys 1997/2012).
     - Distance ~2.3 kpc. It has brightened by ~0.5 mag since 2012, so today it is perhaps −13.5 at 1.34 pc.
     - The 1843 Great Eruption peaked at apparent V ≈ −0.8. With ~2 mag of extinction, that gives M_V ≈ −13.5 to −14.3.
       At 1.34 pc this is m ≈ −17.9 to −18.7, which is 120–250 full Moons. The narration says "over a hundred full

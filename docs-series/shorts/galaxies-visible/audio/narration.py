@@ -4,13 +4,17 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds)."""
 import re
 
-LINES = [
-    ("hook", "There's a galaxy in our sky {6×|six times} wider than the full Moon. You just can't see it.", 0.25),
-    ("m31", "But what if your eyes could? Andromeda. A trillion stars, {2.5|two and a half} million light-years away.", 0.25),
-    ("m33", "Triangulum, a face-on spiral, almost three million light-years out.", 0.2),
-    ("mc", "Down south, the Magellanic Clouds. The large one spans {20|twenty} full Moons, its Tarantula Nebula glowing pink.", 0.2),
-    ("m51", "The Whirlpool is tiny, a third of the Moon, {30|thirty} million light-years away.", 0.25),
-    ("end", "They're all up there right now, this big. Their light is just spread too thin. Your eyes aren't sensitive enough.", 0.0),
+LINES = [   # pauses: ~0.35 s between sentences, ~0.7 s at each beat change (user rule, 13 Nov)
+    ("hook", "There's a galaxy in our sky {6×|six times} wider than the Moon.", 0.35),
+    ("hook2", "You just can't see it.", 0.7),
+    ("m31a", "But what if your eyes could?", 0.35),
+    ("m31", "Andromeda. A trillion stars.", 0.7),
+    ("m33", "Triangulum. A face-on spiral, almost three million light-years out.", 0.7),
+    ("mc", "The Magellanic Clouds. The large one spans {20|twenty} full Moons.", 0.7),
+    ("m51", "The Whirlpool: tiny, a third of the Moon.", 0.7),
+    ("end", "They're all up there right now, this big.", 0.35),
+    ("end2", "Their light is just spread too thin.", 0.35),
+    ("end3", "Your eyes aren't sensitive enough.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

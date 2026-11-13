@@ -4,13 +4,20 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if a comet passed as close as the Moon?", 0.25),
-    ("halley", "Halley's Comet. Its nucleus: a dark potato just {15|fifteen} kilometres long. But its green coma would span {15°|fifteen degrees}, its tails the whole sky.", 0.25),
-    ("hb", "Hale-Bopp. A giant, {60|sixty} kilometres wide, bright enough to cast shadows.", 0.25),
-    ("neo", "NEOWISE. A golden, curving dust tail, tinted by sodium.", 0.25),
-    ("duck", "{67P|Sixty-seven P}, the rubber-duck comet, spitting jets.", 0.25),
-    ("mcn", "And {MCNAUGHT|Mac Nawt}, brightest in forty years: a striped dust fan filling the entire sky.", 0.30),
-    ("end", "Comets are dirty snowballs a few kilometres wide... with tails millions of kilometres long.", 0.0),
+    ("hook", "What if a comet passed as close as the Moon?", 0.70),
+    ("halley", "Halley's Comet.", 0.35),
+    ("halley2", "Its nucleus is a dark potato, just {15|fifteen} kilometres long.", 0.35),
+    ("halley3", "But its green coma would span {15°|fifteen degrees}.", 0.70),
+    ("hb", "Hale-Bopp.", 0.35),
+    ("hb2", "Bright enough to cast shadows.", 0.70),
+    ("neo", "NEOWISE.", 0.35),
+    ("neo2", "A golden tail, tinted by sodium.", 0.70),
+    ("duck", "{67P|Sixty-seven P}, the rubber-duck comet.", 0.35),
+    ("duck2", "Spitting jets.", 0.70),
+    ("mcn", "And {MCNAUGHT|Mac Nawt}.", 0.35),
+    ("mcn2", "A striped fan, filling the entire sky.", 0.70),
+    ("end", "Comets are dirty snowballs, a few kilometres wide...", 0.35),
+    ("end2", "with tails millions of kilometres long.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

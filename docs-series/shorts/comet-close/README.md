@@ -1,6 +1,6 @@
 # What If Comets Passed as Close as the Moon? (YouTube Short)
 
-The cut is vertical only: 1080×1920 at 30 fps, 39.79 s. It is one locked tripod shot of `A2_park.png` at night, under a
+The cut is vertical only: 1080×1920 at 30 fps, 38.82 s. It is one locked tripod shot of `A2_park.png` at night, under a
 deep-blue sky that is never black, in the "swap" format of `../other-suns` and `../planets-as-moon`. The Moon is
 replaced by famous comets placed at the Moon's distance (384,400 km). Every swap has a tinted flash, a chromatic
 shockwave and beams. The new comet blooms in and its tails shoot out. The park is relit by the comet's light, which is
@@ -12,12 +12,11 @@ Files: `short.py` (scene and timeline), `comets.py` (comet renderer and nucleus 
 mix), `encode.sh vert`, `thumbnail.py`. Scratch is in `scratchpad/series/B2-comet-close/`.
 Outputs are in `out/`: `comet-close-short.mp4`, `comet-close.srt`, `thumb-vertical.jpg` and `thumb.jpg`.
 
-## Narration (90 words, Kokoro am_michael @ 1.05, real word timings)
-> What if a comet passed as close as the Moon? Halley's Comet. Its nucleus: a dark potato just 15 kilometres long. But
-> its green coma would span 15 degrees, its tails the whole sky. Hale-Bopp. A giant, 60 kilometres wide, bright enough
-> to cast shadows. NEOWISE. A golden, curving dust tail, tinted by sodium. 67P, the rubber-duck comet, spitting jets.
-> And McNaught, brightest in forty years: a striped dust fan filling the entire sky. Comets are dirty snowballs a few
-> kilometres wide... with tails millions of kilometres long.
+## Narration (74 words, Kokoro am_michael @ 0.92, real word timings; ~0.35 s between sentences, ~0.7 s at beat changes)
+> What if a comet passed as close as the Moon? / Halley's Comet. Its nucleus is a dark potato, just 15 kilometres long.
+> But its green coma would span 15 degrees. / Hale-Bopp. Bright enough to cast shadows. / NEOWISE. A golden tail,
+> tinted by sodium. / 67P, the rubber-duck comet. Spitting jets. / And McNaught. A striped fan, filling the entire sky. /
+> Comets are dirty snowballs, a few kilometres wide... with tails millions of kilometres long.
 
 ## Geometry (the plate's lens, f = 1148 px, horizon at y = 1501)
 | object | true size | at 384,400 km | on screen |
@@ -59,7 +58,7 @@ m = m_peak − 5 log10(Δ / 384,400 km).
 - **Halley 1986:** +2.4 at 0.42 AU, giving ≈ −8.7.
 - **NEOWISE:** ~+1 at 0.69 AU, giving ≈ −11.
 - **Hale-Bopp:** −0.8 at 1.32 AU, giving **−14.3**, about 4.4× the full Moon (−12.74). That is the source of the
-  readout "~4× brighter than the full Moon" and of "bright enough to cast shadows".
+  readout "~4× brighter than the full Moon" and of "bright enough to cast shadows". The narration no longer says it, but the readout still gives Hale-Bopp's nucleus as ~60 km.
 - **67P (2021):** ~+9 at 1.3 AU, giving ≈ −4.5.
 - **McNaught:** −5.5 at ~0.82 AU, giving ≈ −18.
 

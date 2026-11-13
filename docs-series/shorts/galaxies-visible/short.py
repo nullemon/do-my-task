@@ -72,17 +72,17 @@ GAIN = dict(m31=1.0, m33=1.0, lmc=1.0, smc=1.0, m51=1.0, core=0.55)
 
 # ------------------------------------------------------------------------------------------------ timeline
 T_MOONS = wt("hook", "6×") - 0.05
-T_MOONS1 = wt("hook", "YOU")
-T_CAN = wt("m31", "BUT")
+T_MOONS1 = wt("hook2", "YOU")
+T_CAN = wt("m31a", "BUT")
 T_SW = dict(m31=wt("m31", "ANDROMEDA") - 0.12, m33=LN["m33"]["start"] - 0.06, mc=LN["mc"]["start"] - 0.06,
             m51=LN["m51"]["start"] - 0.06, all=LN["end"]["start"] - 0.06)
-T_BACK = wt("end", "YOUR") - 0.08                       # white-out peak -> plain city night
+T_BACK = wt("end3", "YOUR") - 0.08                       # white-out peak -> plain city night
 T_WO0 = T_BACK - 0.75
 T_BIG = wt("end", "BIG")
 COLLAPSE, BLOOM = 0.42, 0.65
 SWAPS = [(T_SW[k], k) for k in ("m31", "m33", "mc", "m51", "all")] + [(T_BACK, "night")]
-PULSES = [wt("m31", "TRILLION"), wt("m31", "2.5"), wt("m33", "THREE"), wt("mc", "20"), wt("mc", "PINK"), wt("m51", "TINY"),
-          wt("m51", "30"), T_BIG]
+PULSES = [wt("m31", "TRILLION"), wt("m33", "SPIRAL"), wt("m33", "THREE"), wt("mc", "20"), wt("mc", "MOONS"), wt("m51", "TINY"),
+          wt("m51", "THIRD"), T_BIG]
 
 
 def scene_at(t):

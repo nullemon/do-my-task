@@ -4,12 +4,19 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "Our night sky has a few thousand stars. Now imagine living inside a star cluster.", 0.25),
-    ("ple", "The Pleiades. A thousand young blue stars. Dozens outshine Sirius, glowing through blue dust.", 0.25),
-    ("hya", "The {HYADES|Hiadeez}. Older, with orange giants brighter than Sirius.", 0.25),
-    ("ome", "Omega Centauri. {10 MILLION|Ten million} stars. Near the core, almost a million are naked-eye, thousands beat Sirius, and night never gets dark.", 0.25),
-    ("nsc", "And the galaxy's heart: a million stars within three light-years. The brightest rival the full Moon.", 0.30),
-    ("end", "We live in the galaxy's quiet suburbs. That's why our sky is dark.", 0.0),
+    ("hook", "Our night sky holds a few thousand stars.", 0.35),
+    ("hook_b", "Now imagine living inside a star cluster.", 0.70),
+    ("ple", "The Pleiades.", 0.35),
+    ("ple_b", "A thousand young blue stars, dozens brighter than Sirius.", 0.70),
+    ("hya", "The {HYADES|Hiadeez}.", 0.35),
+    ("hya_b", "Older, with glowing orange giants.", 0.70),
+    ("ome", "Omega Centauri.", 0.35),
+    ("ome_b", "{10 MILLION|Ten million} stars.", 0.35),
+    ("ome_c", "Near its core, thousands outshine Sirius, and night never gets dark.", 0.70),
+    ("nsc", "And the galaxy's heart.", 0.35),
+    ("nsc_b", "A million stars within three light-years.", 0.70),
+    ("end", "We live in the galaxy's quiet suburbs.", 0.35),
+    ("end_b", "That's why our sky is dark.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

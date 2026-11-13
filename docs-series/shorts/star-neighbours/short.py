@@ -71,11 +71,11 @@ T_SW = {"sir": wt("sir", "SIRIUS") - 0.10, "vega": wt("vega", "VEGA") - 0.08, "b
         "rig": wt("rig", "RIGEL") - 0.08, "den": wt("den", "DENEB") - 0.08, "eta": wt("eta", "ETA") - 0.08}
 T_ERU0 = wt("eta", "1843") - 0.05                       # the eruption builds ...
 T_ERU = wt("eta", "OUTBURST") - 0.03                    # ... and bursts
-T_TWI = wt("eta", "NIGHT")                              # the sky goes to twilight
-T_WO0 = wt("eta", "TWILIGHT") + 0.15                    # white-out builds through "twilight"
+T_TWI = wt("eta2", "NIGHT")                              # the sky goes to twilight
+T_WO0 = wt("eta2", "TWILIGHT") + 0.15                    # white-out builds through "twilight"
 T_BACK = LN["end"]["start"] - 0.02                      # snap back to Alpha Centauri
 SEQ = [(0.0, "ac")] + [(T_SW[k], k) for k in ("sir", "vega", "bet", "rig", "den", "eta")] + [(T_ERU, "eru"), (T_BACK, "ac")]
-T_SHADOW = wt("bet", "SHADOWS")
+T_SHADOW = wt("bet2", "SHADOWS")
 
 
 def mag_to_E(m):

@@ -107,7 +107,7 @@ def alt_of(y): return math.degrees(math.atan((HY - y) / F_PX))
 # ------------------------------------------------------------------------------------------------ the comets
 # Rc: coma radius px from the true coma size at 384,400 km. theta: anti-sun direction on screen (deg, y down).
 COMETS = {
-    "halley": dict(head=(770.0, 700.0), theta=-124.0, Rc=px_of_km(100000), Ic=1.70, core=1.0,
+    "halley": dict(head=(770.0, 700.0), theta=-124.0, Rc=px_of_km(100000), Ic=1.40, core=1.0, halo=0.40,
                    Ii=1.25, iw=10.0, disc_T=5.5, disc_ph=1.0,
                    Id=0.95, side=1, bend=0.75, fan=(0.03, 0.40), r0=900, striae=0.25, nstr=4, skew=0.6, inner=0.3,
                    dcol=(1.0, 0.86, 0.60)),
@@ -133,15 +133,15 @@ MOON = dict(head=(720.0, 640.0), Rp=F_PX * math.tan(math.radians(0.518 / 2)))
 LOOK = {
     "moon": dict(zen=(0.0, 0.0, 0.0), hor=(0.0, 0.0, 0.0), E=0.10, lcol=(0.70, 0.82, 1.10), sh=0.0, bI=0.10, expo=1.0, stars=1.0,
                  beams=[(0.55, 0.65, 1.0), (0.80, 0.55, 1.0), (0.45, 0.95, 1.0)], glow=(0.55, 0.62, 0.80)),
-    "halley": dict(zen=(0.0, 0.012, 0.012), hor=(0.0, 0.020, 0.025), E=0.22, lcol=(0.45, 1.0, 0.75), sh=0.0, bI=0.45, expo=1.0, stars=0.9,
+    "halley": dict(zen=(0.0, 0.012, 0.012), hor=(0.0, 0.020, 0.025), E=0.30, lcol=(0.40, 1.0, 0.65), sh=0.0, bI=0.45, expo=1.0, stars=0.9,
                    beams=[(0.25, 1.0, 0.55), (0.25, 0.55, 1.0), (0.55, 1.0, 0.95), (1.0, 0.85, 0.55)], glow=(0.3, 1.0, 0.55)),
-    "hb": dict(zen=(0.006, 0.030, 0.050), hor=(0.010, 0.045, 0.060), E=0.95, lcol=(0.55, 1.0, 0.80), sh=0.85, bI=0.75, expo=0.95, stars=0.55,
+    "hb": dict(zen=(0.006, 0.030, 0.050), hor=(0.010, 0.045, 0.060), E=1.10, lcol=(0.45, 1.0, 0.62), sh=0.85, bI=0.75, expo=0.95, stars=0.55,
                beams=[(0.25, 1.0, 0.55), (0.20, 0.50, 1.0), (0.95, 0.95, 0.75), (0.40, 0.95, 1.0)], glow=(0.35, 1.0, 0.6)),
-    "neo": dict(zen=(0.020, 0.012, 0.004), hor=(0.060, 0.034, 0.010), E=0.50, lcol=(1.0, 0.80, 0.45), sh=0.5, bI=0.6, expo=1.0, stars=0.75,
+    "neo": dict(zen=(0.020, 0.012, 0.004), hor=(0.060, 0.034, 0.010), E=0.55, lcol=(1.0, 0.72, 0.32), sh=0.5, bI=0.6, expo=1.0, stars=0.75,
                 beams=[(1.0, 0.72, 0.30), (1.0, 0.55, 0.15), (0.35, 0.60, 1.0), (1.0, 0.90, 0.55)], glow=(1.0, 0.75, 0.40)),
     "duck": dict(zen=(0.0, 0.004, 0.004), hor=(0.0, 0.008, 0.008), E=0.08, lcol=(0.55, 1.0, 0.8), sh=0.0, bI=0.35, expo=1.0, stars=1.0,
                  beams=[(0.30, 1.0, 0.60), (0.85, 1.0, 1.0), (0.35, 0.70, 1.0)], glow=(0.4, 1.0, 0.65)),
-    "mcn": dict(zen=(0.050, 0.040, 0.026), hor=(0.110, 0.080, 0.040), E=1.6, lcol=(1.0, 0.86, 0.62), sh=0.9, bI=0.8, expo=0.85, stars=0.30,
+    "mcn": dict(zen=(0.050, 0.040, 0.026), hor=(0.110, 0.080, 0.040), E=1.7, lcol=(1.0, 0.78, 0.45), sh=0.9, bI=0.8, expo=0.85, stars=0.30,
                 beams=[(1.0, 0.85, 0.50), (1.0, 0.65, 0.30), (0.95, 0.95, 0.80), (0.50, 1.0, 0.70)], glow=(1.0, 0.85, 0.55)),
 }
 
@@ -360,8 +360,14 @@ class Scene:
             else:
                 direct_l += c
             direct_o += c * 0.5; rimc += c
-        out = self.alb * (amb_col * 0.75 + direct_l * lawn + direct_o * (1 - lawn))
-        out = out + self.rim[..., None] * (rimc * 0.45 + amb_col * 0.6)
+        # night grade: the park sees a faint cool sky ambient (scotopic: desaturated, blue-green) plus the comet's own
+        # coloured light, scaled so even Hale-Bopp stays 'moonlit', not daylight
+        y = lum(self.alb)[..., None]
+        alb_n = (self.alb * 0.35 + y * 0.65) * np.array([0.62, 0.85, 1.15], f32)
+        amb = 0.030 + 0.20 * float(lum(amb_col))
+        k = 0.22
+        out = alb_n * amb * np.array([0.75, 0.90, 1.20], f32) + self.alb * (direct_l * lawn + direct_o * (1 - lawn)) * k
+        out = out + self.rim[..., None] * (rimc * 0.10 + amb_col * 0.15)
         out = fg.lamps_light(out, 0.9, t)
         return np.maximum(out, 0)
 
@@ -414,7 +420,7 @@ class Scene:
         light = 1.0 + 0.12 * (pulse - 1) - 0.25 * col_u
         heads = [MOON["head"] if prev in (None, "moon") else COMETS[prev]["head"], head]
         I_l = (0.3 + 0.7 * grow) if cur != "moon" else 1.0
-        fgc = self.relight(t, [(A, 1 - w if prev else 0.0), (B, w)], 1.0, heads, amb_col * 2.2, I_l) * light
+        fgc = self.relight(t, [(A, 1 - w if prev else 0.0), (B, w)], 1.0, heads, amb_col, I_l) * light
         fgc = fgc + self.up(bm) * 0.05 * fg.a[..., None]
         a = fg.a[..., None]
         img = img * (1 - a) + fgc * a

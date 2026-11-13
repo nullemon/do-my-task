@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mux picture + sound + soft subtitles -> out/. Usage: bash encode.sh vert|wide
+# Mux picture + sound + soft subtitles -> out/. Usage: bash encode.sh [vert]  (9:16 only)
 # (no -shortest: it truncates when subtitles are muxed; the mix is exactly DUR long)
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -7,7 +7,6 @@ SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scr
 TAG=${1:-vert}
 case "$TAG" in
   vert) OUTF="$HERE/out/comet-close-short.mp4" ;;
-  wide) OUTF="$HERE/out/comet-close-WIDE-UNUSED.mp4" ;;
 esac
 nice -n 10 ffmpeg -v error -y -i "$SCR/video_$TAG.mp4" -i "$SCR/audio/mix.wav" -i "$HERE/out/comet-close.srt" \
   -map 0:v -map 1:a -map 2:s -c:v copy -c:a aac -b:a 256k -c:s mov_text -metadata:s:s:0 language=eng \

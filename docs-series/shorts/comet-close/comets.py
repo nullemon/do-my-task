@@ -24,9 +24,17 @@ _ION_TEX = None
 def ion_tex():
     global _ION_TEX
     if _ION_TEX is None:
-        n = fbm2((128, 1024), 71, 1.5)
-        n = n + 0.6 * fbm2((128, 1024), 72, 1.1)                                   # sharper rays
-        _ION_TEX = np.clip(0.5 + 0.30 * n, 0, 1.4).astype(f32)
+        # smooth, fine, field-aligned filaments: a 1-D transverse comb of thin streamers (periodic in u), with only a
+        # very slow brightness modulation along the tail (no speckle)
+        r = np.random.default_rng(71); u = np.arange(128, dtype=f32)
+        fil = np.zeros(128, f32)
+        for _ in range(14):
+            c = r.uniform(0, 128); wdt = r.uniform(1.4, 3.2); amp = r.uniform(0.3, 1.0)
+            d = (u - c + 64) % 128 - 64; fil += amp * np.exp(-(d / wdt) ** 2)
+        fil = 0.12 + 1.3 * fil / fil.max()
+        slow = cv2.GaussianBlur(fbm2((128, 1024), 72, 2.0), (0, 0), sigmaX=1.5, sigmaY=40)
+        slow = slow / (slow.std() + 1e-6)
+        _ION_TEX = np.clip(fil[None, :] * (0.75 + 0.25 * slow.T), 0.05, 2.0).astype(f32)   # rows: along (v), cols: across (u)
     return _ION_TEX
 
 
@@ -50,6 +58,7 @@ def comet_field(C, X, Y, t, sc=1.0, grow=1.0, I=1.0):
     if C.get("shells", 0) > 0:                                                    # expanding shells (sunward)
         sh = 0.5 + 0.5 * np.cos(re / Rc * 18 - t * 2.6 + 0.6 * np.arctan2(b, -a))
         coma = coma * (1 + C["shells"] * (sh ** 3 - 0.3) * smooth(0.1 * Rc, 0.3 * Rc, re) * smooth(Rc * 0.4, -Rc * 0.2, a))
+    coma = coma + C.get("halo", 0.15) * np.exp(-(re / Rc) ** 2) * (1 + 0.06 * np.sin(re / Rc * 6 - t * 1.5))   # the visible extent of the coma
     breathe = 1 + 0.05 * math.sin(t * 2.1 + hx)
     out += coma[..., None] * C2_GREEN * (C["Ic"] * breathe)
     core = np.exp(-rho / (1.5 + 0.015 * Rc)) * 6.0 + np.exp(-rho / (5 + 0.06 * Rc)) * 1.2
@@ -62,11 +71,11 @@ def comet_field(C, X, Y, t, sc=1.0, grow=1.0, I=1.0):
         ad = 40 + 520 * tau                                                       # disconnection front (px)
         kink = 28 * smooth(ad - 30, ad + 90, ap) * math.sin(0.7 * tau + 1)
         bb = b - kink - 6 * np.sin(ap / 260 - t * 0.9)                            # gentle rippling of the tail
-        u = (bb / w) * 22 + 64; v = (ap * 0.16 - t * 34) % 1024                   # streamers flow outwards
-        tex = cv2.remap(ion_tex(), u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        u = (bb / w) * 22 + 64; v = (ap * 0.05 - t * 22) % 1024                   # streamers flow outwards
+        tex = cv2.remap(ion_tex().T.copy(), u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         prof = np.exp(-(bb / w) ** 2 * 1.4)
         gap = 1 - 0.85 * np.exp(-((ap - ad) / 45) ** 2) * smooth(0.0, 0.4, tau)
-        ion = prof * (tex ** 2.0) * 3.2 * (C["iw"] / w) ** 0.45 / (1 + ap / 1100) * smooth(-Rc * 0.1, Rc * 0.4, a) * gap * tmask
+        ion = prof * (0.25 + tex) * 1.6 * (C["iw"] / w) ** 0.45 / (1 + ap / 1100) * smooth(-Rc * 0.1, Rc * 0.4, a) * gap * tmask
         ion = ion + np.exp(-(bb / (w * 0.18 + 1.5)) ** 2) * 0.5 / (1 + ap / 500) * smooth(0, Rc * 0.3, a) * tmask * gap  # bright central ray
         out += ion[..., None] * ION_BLUE * C["Ii"]
     # ---- dust tail (curved fan of synchrones)

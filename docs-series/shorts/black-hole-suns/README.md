@@ -1,11 +1,12 @@
 # What If Black Holes Replaced Our Sun? (YouTube Short, 9:16 only)
 
-The cut is 1080×1920 at 30 fps and about 39.7 s long. It uses the `other-suns/` swap format: one **locked** tripod shot
+The cut is 1080×1920 at 30 fps and 39.70 s long (ffprobe). It uses the `other-suns/` swap format: one **locked** tripod shot
 of the user's `A_park.png`, which starts in daytime. The sky swaps from the Sun to five black holes, and each swap has
 a flash, a chromatic shockwave, light beams and a relit park. One big orange word is shown at a time, synced to the
 voice. Each object gets a readout: NAME / × SUN'S MASS / HORIZON radius, plus an optional fact line. The ending is a
 white-out back to the Sun, so the Short loops. There are no disclaimer captions (user rule). There is no 16:9 video.
-`out/thumb.jpg` (1280×720) is a separate 16:9 render for the channel page.
+`out/thumb.jpg` (1280×720) is a separate 16:9 render for the channel page, made with a wider lens (f = 600 px) so the
+whole TON 618 shadow fits.
 
 ## Narration (92 words, Kokoro am_michael @ 1.05, −14 LUFS / −1 dBTP)
 > What if black holes replaced our Sun? Let's start small. One Sun of mass, six kilometers wide. Same gravity, same

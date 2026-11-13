@@ -41,7 +41,7 @@ def pieces(text):
     for cap, ws in tokens(text):
         if len(ws) == 1 and cap == ws[0]: out.append(cap)
         else:
-            tail = re.findall(r"[.,?!]+$", ws[-1]); out.append(cap + (tail[0] if tail else ""))
+            tail = re.findall(r"[.,?!]+$", ws[-1]); out.append({"NEIGHBOUR": "neighbour"}.get(cap, cap) + (tail[0] if tail else ""))
     return out
 
 

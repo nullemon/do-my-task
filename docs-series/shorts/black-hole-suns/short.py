@@ -30,7 +30,7 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 LAMPS = [(630, 1185, 1336), (845, 1095, 1342)]       # A_park lamp (head x, head y, pole base y) in SOURCE px (as in other-suns)
 FPS = 30
-LEAD, TAIL = 0.25, 0.60
+LEAD, TAIL = 0.20, 0.50
 F_PX = 960.0
 RSUN_AU = 0.00465047
 
@@ -39,7 +39,8 @@ WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
+    """time of the n-th caption word `cap` in beat `key` (a beat may span several sentence lines: key, key.2, ...)"""
+    ws = [w for l in PL if l["key"].split(".")[0] == key for w in l["words"] if w["cap"] == cap]; return ws[n]["t0"]
 
 
 # ------------------------------------------------------------------------------------------------ physics (README)
@@ -86,12 +87,12 @@ T_SW = {k: LN[k]["start"] - 0.06 for k in ("one", "cyg", "sgr", "m87", "ton")}
 T_SUNBACK = LN["end"]["start"] - 0.10
 T_WO0 = T_SUNBACK - 0.55
 T_SWAL = wt("ton", "SWALLOW") - 0.1
-T_PULL0, T_PULL1 = wt("ton", "SO") - 0.30, wt("ton", "8,000×") + 0.45     # pull back 8,000x: from inside to the outside view
+T_PULL0, T_PULL1 = wt("ton", "HERE") - 0.30, wt("ton", "8,000×") + 0.45     # pull back 8,000x: from inside to the outside view
 Z_IN = 1.9
 ORDER = ["sun", "one", "cyg", "sgr", "m87", "ton"]
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_SUNBACK, "sun2")]
 PULSES = [wt("hook", "REPLACED"), wt("one", "6 KM"), wt("one", "DARK"), wt("cyg", "21"), wt("cyg", "WEEKS"), wt("sgr", "4 MILLION"),
-          wt("sgr", "24°"), wt("m87", "6.5 BILLION"), wt("m87", "NEPTUNE"), wt("m87", "INSIDE"), wt("ton", "66 BILLION"), wt("end", "KIND")]
+          wt("sgr", "24°"), wt("m87", "6.5 BILLION"), wt("m87", "INSIDE"), wt("ton", "66 BILLION"), wt("end", "KIND")]
 M87_R0, M87_R1 = 1.06, 1.004                           # tunnel: camera radius (Rs) at the start / end of the M87* beat
 TON_R = r_obs_of(6.6e10) * 8000.0                     # TON 618 seen from 8,000 au = 6.14 Rs -> shadow 45.6 deg (1 au would be inside)
 

@@ -76,7 +76,7 @@ SC = [
          zen=(0.05, 0.010, 0.13), hor=(0.30, 0.05, 0.42), beams=[(0.7, 0.2, 1.0), (0.3, 0.6, 1.0), (1.0, 0.2, 0.8), (0.5, 0.3, 1.0)], bI=0.9,
          gain=0.50, tint=(0.62, 0.32, 1.0), flat=0.5, amb=0.35, night=0.3, lamps=0.5, expo=1.05, fc=(0.8, 0.5, 1.0)),
     dict(key="ton", name="TON 618", l2="40–66 BILLION × SUN'S MASS", l3="HORIZON: 800–1,300 AU RADIUS", tc=(255, 200, 110),
-         zen=(0.12, 0.06, 0.06), hor=(0.95, 0.55, 0.25), beams=[(1.0, 0.75, 0.35), (1.0, 0.95, 0.75), (1.0, 0.45, 0.12), (0.9, 0.55, 0.9)], bI=1.1,
+         zen=(0.07, 0.035, 0.05), hor=(0.70, 0.36, 0.14), beams=[(1.0, 0.75, 0.35), (1.0, 0.95, 0.75), (1.0, 0.45, 0.12), (0.9, 0.55, 0.9)], bI=1.1,
          gain=1.15, tint=(1.0, 0.72, 0.42), flat=0.25, amb=0.25, night=0.0, lamps=0.0, expo=0.85, fc=(1.0, 0.85, 0.6)),
 ]
 SK = {s["key"]: s for s in SC}
@@ -319,14 +319,15 @@ class Scene:
             tex = map_tex(self.disk_tex, u, vv)
             if mode == "sgr":
                 prof = (rin / r) ** 2.0 * smooth(rin, rin + 0.6, r) * smooth(rout, rout - 1.6, r)
-                I = prof * tex * np.clip(g, 0.05, 3) ** 2.2
-                col = afmhot(I * 0.6) * 2.6
+                I = prof * tex * np.clip(g, 0.05, 3) ** 1.6 * 1.6
+                col = afmhot(I * 0.6) * 3.0
                 a = np.clip(prof * tex * 0.7, 0, 0.85)
             elif mode == "ton":
                 Fr = (r ** -3) * (1 - np.sqrt(3.0 / np.maximum(r, 3.0))); Fr = Fr / 0.00366
                 prof = np.clip(Fr, 0, 1.2) * smooth(rout, rout - 0.6, r) * smooth(rin, rin + 0.12, r)
-                Tm = 9000.0 * np.maximum(prof, 0.02) ** 0.25 * g
-                col = bb_vec(Tm) * (0.55 + 0.45 * np.array([1.0, 0.85, 0.65], f32))
+                Tm = 6500.0 * np.maximum(prof, 0.02) ** 0.25 * g
+                col = bb_vec(Tm) * np.array([1.0, 0.80, 0.52], f32)
+                y_ = lum(col)[:, None]; col = y_ + (col - y_) * 1.5
                 I = (0.15 + prof) * tex * np.clip(g, 0.05, 3) ** 3 * 1.3
                 col = col * I[:, None]
                 a = np.clip((0.35 + prof) * tex * 0.9, 0, 0.97)
@@ -524,6 +525,10 @@ class Scene:
         g_in = 1 - (1 - u_in) ** 3
         pre = 1 + 2.0 * ramp(t, t1 - 0.35, t1) if t1 < 1e8 else 1.0           # anticipation before each swap
         atm = self.atmos(A, B, w)
+        if cur in ("sgr", "ton") and t0 > 0:                                   # the shadow stays dark (only thin airglow in front)
+            cm = np.ones(atm.shape[:2], f32); cm[:self.Hs // 2] = self.cmask_h(cur)
+            sw_ = ramp(t, T_SWAL, T_SWAL + 1.2) if cur == "ton" else 0.0
+            atm = atm * ((0.22 + 0.78 * cm) * (1 - sw_) + 0.22 * sw_)[..., None]
         img = self.up(atm)
         R0 = 0.0; twist = 0.0; light = 1.0
         if cur == "sun":
@@ -594,6 +599,9 @@ class Scene:
         out = finish(out, t, grain=0.008, vignette=0.16)
         if overlay: self.overlay(out, t, cur, t0)
         return out
+
+    def cmask_h(self, key):
+        self.cmask(key); return self._views[("cm", key)]
 
     def cmask(self, key):
         """1 outside the shadow, 0 inside (half-res) so the beams start at the shadow edge"""

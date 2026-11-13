@@ -133,9 +133,9 @@ ALG = dict(a=13.29, i=math.radians(98.7), q=0.70 / 3.17, RA=2.73, RB=3.48, TA=12
 WUM = dict(a=2.44, i=math.radians(86.0), q=0.57 / 1.19, R1=1.08, R2=0.78, T=6200.0, d_au=1.54)
 def px_per_rsun(d_au): return F_PX * RSUN_AU / d_au
 
-POS = dict(sun=(640.0, 600.0), acenA=(640.0, 600.0), acenB=(870.0, 800.0), sirA=(640.0, 600.0), sirB=(930.0, 520.0),
-           pair=(640.0, 560.0))
-LOUPE = dict(cx=845.0, cy=770.0, R=150.0)
+POS = dict(sun=(640.0, 600.0), acenA=(640.0, 600.0), acenB=(880.0, 700.0), sirA=(640.0, 600.0), sirB=(930.0, 520.0),
+           pair=(590.0, 640.0))
+LOUPE = dict(cx=862.0, cy=640.0, R=140.0)
 
 BEAMS = {
     "sun": "rainbow",
@@ -211,7 +211,7 @@ def binary_field(kind, phi, X, Y):
     sdl = np.minimum(sdl, u_ + 0.0)
     rr = np.clip(1 + sdl / Rl, 0, 1); mu = np.sqrt(1 - rr * rr)
     neck = np.exp(-(np.minimum(s1, s2) / (0.25 * W["R2"])) ** 2) * (np.minimum(s1, s2) > -0.05)
-    val = (1 - 0.6 * (1 - mu)) * (1 - 0.18 * neck * fs) * (u_ < 0)
+    val = (1 - 0.75 * (1 - mu)) * (0.45 + 0.55 * mu) * (1 - 0.25 * neck * fs) * (u_ < 0)
     T = W["T"] * (0.9 + 0.1 * mu) * (1 - 0.04 * neck)
     return val.astype(f32), T.astype(f32)
 
@@ -243,9 +243,9 @@ def alt_of(y): return math.degrees(math.atan((HY - y) / F_PX))
 
 def kepler_pos(t):
     u = (t - K0)
-    ya = kf(t, [(K0 - 1, 1130.0), (K0, 1130.0), (T_DSUN, 1352.0), (T_DSHAD + 0.25, 1396.0), (K1, 1418.0), (K1 + 2, 1440.0)])
-    yb = kf(t, [(K0 - 1, 830.0), (K0, 830.0), (T_DSUN, 1010.0), (T_DSHAD + 0.25, 1052.0), (K1, 1085.0), (K1 + 2, 1120.0)])
-    return (690.0 + 5 * u, ya), (515.0 + 5 * u, yb)
+    ya = kf(t, [(K0 - 1, 1180.0), (K0, 1180.0), (T_DSUN, 1362.0), (T_DSHAD + 0.25, 1398.0), (K1, 1418.0), (K1 + 2, 1440.0)])
+    yb = kf(t, [(K0 - 1, 965.0), (K0, 965.0), (T_DSUN, 1050.0), (T_DSHAD + 0.25, 1080.0), (K1, 1100.0), (K1 + 2, 1130.0)])
+    return (698.0 + 4 * u, ya), (546.0 + 4 * u, yb)
 
 
 def state(key, t):
@@ -287,8 +287,8 @@ def state(key, t):
         S["lights"] = [dict(x=xa, y=ya, T=4450.0, E=EA, col=cA, beams="kepA", bI=1.15, el=max(alA, 6.0)),
                        dict(x=xb, y=yb, T=3311.0, E=EB, col=cB, beams="kepB", bI=0.85, el=max(alB, 6.0))]
         S["draws"] = [dict(kind="disc", x=xa, y=ya, Rp=rpx(ANG["kepA"]), T=4450.0, col=cA, surf=34.0 * max(tA, 0.05), glow=1.4, spikes=0.5, u=0.7),
-                      dict(kind="disc", x=xb, y=yb, Rp=rpx(ANG["kepB"]), T=3311.0, col=cB, surf=16.0 * max(tB, 0.1), glow=1.0, spikes=0.35, u=0.75)]
-        S["lamps"] = ramp(t, T_DSUN - 0.5, T_DSUN + 1.0) * 0.8; S["amb"] = 0.12; S["expo"] = 1.05
+                      dict(kind="disc", x=xb, y=yb, Rp=rpx(ANG["kepB"]), T=3311.0, col=cB, surf=30.0 * max(tB, 0.1), glow=1.3, spikes=0.45, u=0.75)]
+        S["lamps"] = ramp(t, T_DSUN - 0.5, T_DSUN + 1.0) * 0.8; S["amb"] = 0.07; S["expo"] = 1.05
         S["labels"] = [("A", xa, ya, visA), ("B", xb, yb, 1.0)]
     elif key == "alg":
         x, y = POS["pair"]
@@ -339,7 +339,7 @@ class Scene:
         self.caps = Captions(L, WORDS, emphasis={"SECOND", "SUN", "HUNDREDS", "DARK", "BLAZE", "DWARF", "EARTH'S", "KEPLER-16b",
                                                  "SUNSET", "SHADOWS", "DEMON", "2.87", "ECLIPSES", "FADES", "TOUCHING", "ATMOSPHERE",
                                                  "PARTNER", "SINGLE"})
-        L.cap_y = 985
+        L.cap_y = 880
 
     def up(self, a): return cv2.resize(a, (self.W, self.H), interpolation=cv2.INTER_LINEAR)
 
@@ -430,7 +430,7 @@ class Scene:
             c = l["col"] / max(float(lum(l["col"])), 1e-4) if "col" in l else bbcolor(l["T"]) / max(float(lum(bbcolor(l["T"]))), 1e-4)
             Ea = min(l["E"], 1.2) ** 0.6
             aure = np.exp(-d / 45) * 0.9 + np.exp(-d / 220) * 0.12 + ws * np.exp(-d / 520) * 0.25
-            sky += (aure * Ea)[..., None] * (0.35 + 0.65 * c) * (1.0 + 0.6 * ws)
+            sky += (aure * Ea)[..., None] * ((0.35 + 0.65 * c) * (1 - ws) + c * ws * 1.4)
             if l.get("beams"):
                 bm += self.beams_layer(t, l, d, np.arctan2(dy, dx))
         return sky, bm
@@ -540,7 +540,7 @@ class Scene:
         v, T = binary_field(lp["kind"], lp["phi"], X.astype(f32), Y.astype(f32))
         col = bb_vec(T) * v[..., None]
         col = cv2.resize(col, (2 * r, 2 * r), interpolation=cv2.INTER_AREA)
-        surf = 6.0 if lp["kind"] == "alg" else 1.5
+        surf = 6.0 if lp["kind"] == "alg" else 0.95
         glow = cv2.GaussianBlur(col, (0, 0), 9) * 1.4 + cv2.GaussianBlur(col, (0, 0), 30) * 0.8
         if lp["kind"] == "wuma":                                                   # shared envelope glow + L2 outflow swirl
             XX, YY = np.meshgrid(g, g); rr = np.hypot(XX, YY) / R; th = np.arctan2(YY, XX)

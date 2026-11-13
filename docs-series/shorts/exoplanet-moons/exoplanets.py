@@ -91,49 +91,111 @@ def map_lava(h=1024, w=2048, seed=11):
     return alb.astype(f32), em.astype(f32)
 
 
-def map_cobalt(h=1024, w=2048, seed=21):
-    """HD 189733 b: deep cobalt-blue banded clouds with long wind streaks (silicate haze). -> albedo"""
+def _swirl(v, cx, cy, R, A, asp=1.0):
+    """rotate the texture around (cx, cy) by an angle A*exp(-(d/R)^2) (a vortex roll-up), in place on a local patch;
+    x wraps around in longitude"""
+    h, w = v.shape[:2]
+    rx, ry = int(2.2 * R * asp) + 2, int(2.2 * R) + 2
+    y0, y1 = max(0, int(cy) - ry), min(h, int(cy) + ry)
+    if y1 <= y0: return
+    xs = np.arange(int(cx) - rx, int(cx) + rx); ys = np.arange(y0, y1)
+    X_, Y_ = np.meshgrid(xs.astype(f32), ys.astype(f32))
+    dx = (X_ - cx) / asp; dy = Y_ - cy
+    th = A * np.exp(-(dx * dx + dy * dy) / (R * R))
+    c, s_ = np.cos(th), np.sin(th)
+    sx = cx + (c * dx - s_ * dy) * asp; sy = cy + (s_ * dx + c * dy)
+    patch = cv2.remap(v, (sx % w).astype(f32), np.clip(sy, 0, h - 1).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+    v[y0:y1, xs % w] = patch
+
+
+def banded(h=1024, w=2048, seed=21, nb=17, curls=260, vortices=6, edge=0.016):
+    """gas-giant cloud field in [0, 1]: latitude bands of varied widths (alternating light zones / dark belts),
+    wavy band edges, Kelvin-Helmholtz roll-ups along the edges (sign set by the local shear) and a few oval vortices.
+    -> v, list of vortices (cx, cy, R) in texel units"""
+    r = np.random.default_rng(seed)
+    wd = r.uniform(0.45, 1.7, nb); wd = wd / wd.sum() * np.pi
+    edges = -np.pi / 2 + np.cumsum(wd)[:-1]
+    vals = np.array([(0.64 if i % 2 else 0.36) + r.uniform(-0.18, 0.18) for i in range(nb)])
     lat = _lat_grid(h, w)
-    n = fbm2((h, w), seed, 2.2)
-    streak = cv2.GaussianBlur(fbm2((h, w), seed + 1, 1.2), (0, 0), sigmaX=22, sigmaY=0.9); streak /= streak.std() + 1e-6
-    fine = cv2.GaussianBlur(fbm2((h, w), seed + 2, 1.0), (0, 0), sigmaX=8, sigmaY=0.5); fine /= fine.std() + 1e-6
-    wy = cv2.GaussianBlur(fbm2((h, w), seed + 3, 2.5), (0, 0), sigmaX=10, sigmaY=2)
-    bands = (np.sin(lat * 9.0 + 0.6 * wy + 0.25 * n) * 0.5 + 0.5) ** 1.5
-    bands2 = np.sin(lat * 23.0 + 0.9 * wy) * 0.5 + 0.5
-    v = 0.50 * bands + 0.18 * bands2 + 0.16 * streak + 0.08 * fine
-    v = (v - v.min()) / (v.max() - v.min())
-    deep = srgb_to_lin(np.array([0.03, 0.10, 0.42], f32)); mid = srgb_to_lin(np.array([0.10, 0.30, 0.80], f32))
-    pale = srgb_to_lin(np.array([0.48, 0.70, 1.00], f32))
-    v3 = v[..., None]
-    col = deep * (1 - smooth(0.0, 0.55, v3)) + mid * smooth(0.0, 0.55, v3)
-    col = col * (1 - smooth(0.6, 1.0, v3)) + pale * smooth(0.6, 1.0, v3)
-    col = col * (0.82 + 0.18 * np.cos(lat)[..., None] ** 0.5)                 # darker hazy poles
+    wave = cv2.GaussianBlur(fbm2((h, w), seed + 1, 2.8), (0, 0), sigmaX=6, sigmaY=3) * 0.020
+    le = lat + wave
+    v = np.full((h, w), vals[0], f32)
+    for i, e in enumerate(edges):
+        v += (vals[i + 1] - vals[i]) * smooth(e - edge, e + edge, le)
+    fine = cv2.GaussianBlur(fbm2((h, w), seed + 2, 1.3), (0, 0), sigmaX=2.5, sigmaY=0.9); fine /= fine.std() + 1e-6
+    mid = cv2.GaussianBlur(fbm2((h, w), seed + 3, 2.0), (0, 0), sigmaX=4, sigmaY=1.5); mid /= mid.std() + 1e-6
+    v = v + 0.045 * fine + 0.08 * mid
+    v = v.astype(f32)
+    # Kelvin-Helmholtz curls along band edges
+    for k in range(curls):
+        i = r.integers(0, len(edges)); e = edges[i]
+        if abs(e) > 1.25: continue
+        bw = min(wd[i], wd[i + 1]) / np.pi * h
+        R = r.uniform(0.12, 0.38) * bw
+        cy = (0.5 - e / np.pi) * h + r.uniform(-0.15, 0.15) * R; cx = r.uniform(0, w)
+        sgn = 1 if i % 2 else -1
+        _swirl(v, cx, cy, max(R, 3.0), sgn * r.uniform(1.4, 2.8), asp=1.0 / max(np.cos(e), 0.3))
+    vort = []
+    for k in range(vortices):
+        i = r.integers(1, nb - 1)
+        if abs(edges[min(i, len(edges) - 1)]) > 1.1: continue
+        latc = (edges[i - 1] + edges[min(i, len(edges) - 1)]) / 2
+        R = wd[i] / np.pi * h * r.uniform(0.28, 0.42); cy = (0.5 - latc / np.pi) * h; cx = r.uniform(0, w)
+        _swirl(v, cx, cy, R, r.choice([-1, 1]) * r.uniform(3.0, 5.0), asp=2.0)
+        vort.append((cx, cy, R))
+    v = cv2.GaussianBlur(v, (0, 0), sigmaX=1.6, sigmaY=0.9) * 0.6 + v * 0.4
+    return np.clip(v, 0, 1), vort
+
+
+def _oval_mask(h, w, vort, asp=2.0):
+    m = np.zeros((h, w), f32)
+    yy, xx = np.mgrid[0:h, 0:w].astype(f32)
+    for cx, cy, R in vort:
+        dx = ((xx - cx + w / 2) % w - w / 2) / asp; dy = yy - cy
+        m = np.maximum(m, np.exp(-(dx * dx + dy * dy) / (0.55 * R) ** 2))
+    return m
+
+
+def _ramp(v, stops):
+    """map v in [0,1] through colour stops [(x, rgb), ...] (linear rgb)"""
+    xs = np.array([x for x, _ in stops], f32); cs = np.array([c for _, c in stops], f32)
+    out = np.empty(v.shape + (3,), f32)
+    for c in range(3): out[..., c] = np.interp(v, xs, cs[:, c])
+    return out
+
+
+def map_cobalt(h=1024, w=2048, seed=21):
+    """HD 189733 b: deep cobalt-blue gas giant (silicate haze): banded, with Kelvin-Helmholtz roll-ups and a few
+    vortices. -> albedo"""
+    v, vort = banded(h, w, seed)
+    ov = _oval_mask(h, w, vort)
+    lin = lambda *c: srgb_to_lin(np.array(c, f32))
+    col = _ramp(v, [(0.0, lin(0.02, 0.05, 0.26)), (0.35, lin(0.05, 0.16, 0.58)), (0.65, lin(0.16, 0.38, 0.88)),
+                    (1.0, lin(0.50, 0.72, 1.00))])
+    col = col * (1 - 0.35 * ov[..., None]) + lin(0.55, 0.78, 1.0) * 0.35 * ov[..., None]
+    lat = _lat_grid(h, w)
+    col = col * (0.80 + 0.20 * np.cos(lat)[..., None] ** 0.5)
     return (col * 0.85).astype(f32)
 
 
-def map_sparkle(h=512, w=1024, seed=23, n=700):
+def map_sparkle(h=512, w=1024, seed=23, n=420):
     """glass-rain glints: sparse streaks (emission), drifted fast in longitude at render time"""
     r = np.random.default_rng(seed)
     m = np.zeros((h, w), f32)
     ys = (np.arcsin(r.uniform(-0.95, 0.95, n)) / np.pi + 0.5) * h; xs = r.uniform(0, w, n)
     np.add.at(m, (np.clip(ys.astype(int), 0, h - 1), xs.astype(int) % w), r.uniform(0.3, 1.0, n) ** 3)
-    m = cv2.GaussianBlur(m, (0, 0), sigmaX=6.0, sigmaY=0.35) * 40
+    m = cv2.GaussianBlur(m, (0, 0), sigmaX=2.2, sigmaY=0.4) * 26
     return np.stack([m * 0.55, m * 0.80, m * 1.0], -1).astype(f32)
 
 
 def map_wasp(h=1024, w=2048, seed=31):
     """WASP-12 b: a very dark hot giant (one of the least reflective planets measured), ~2,600 K on its day side:
-    charcoal-maroon cloud belts + a deep red-orange thermal glow, brightest in the belts. -> albedo, emission"""
-    lat = _lat_grid(h, w)
-    n = fbm2((h, w), seed, 2.3)
-    st = cv2.GaussianBlur(fbm2((h, w), seed + 1, 1.3), (0, 0), sigmaX=10, sigmaY=1.5); st /= st.std() + 1e-6
-    wv = cv2.GaussianBlur(fbm2((h, w), seed + 2, 2.4), (0, 0), sigmaX=6, sigmaY=2)
-    bands = (np.sin(lat * 8.0 + 0.8 * wv + 0.3 * n) * 0.5 + 0.5) ** 2
-    v = np.clip(0.65 * bands + 0.22 * st * 0.5 + 0.15 * n * 0.4 + 0.12, 0, 1)
+    the same banded / roll-up structure as a gas giant, seen as deep-red to hot-orange thermal glow. -> albedo, emission"""
+    v, vort = banded(h, w, seed, nb=13, curls=150, vortices=4, edge=0.012)
+    ov = _oval_mask(h, w, vort)
+    v = np.clip(v + 0.25 * ov, 0, 1)
     alb = np.stack([0.05 + 0.04 * v, 0.03 + 0.02 * v, 0.03 + 0.015 * v], -1)
-    deep = np.array([0.70, 0.07, 0.02], f32); hot = np.array([1.0, 0.42, 0.08], f32)
-    em = deep[None, None] * (1 - v[..., None]) + hot * v[..., None]
-    em = em * (0.15 + 0.85 * v[..., None] ** 1.3) * (0.8 + 0.2 * smooth(-1.5, 1.5, n)[..., None])
+    em = _ramp(v, [(0.0, (0.25, 0.02, 0.005)), (0.35, (0.70, 0.08, 0.02)), (0.65, (1.0, 0.35, 0.06)), (1.0, (1.0, 0.62, 0.18))])
     return alb.astype(f32), em.astype(f32)
 
 
@@ -149,12 +211,23 @@ def map_coal(h=1024, w=2048, seed=41):
 
 
 def map_kelt(h=1024, w=2048, seed=51):
-    """KELT-9 b: ~4,600 K day side, star-like: boiling convective cells and hot spots. -> albedo (~0), emission"""
-    g = cv2.GaussianBlur(fbm2((h, w), seed, 1.6, lo=16), (0, 0), 1.5)          # convective cells
-    g = g / (g.std() + 1e-6)
-    g2 = fbm2((h, w), seed + 3, 2.4, lo=3)                                      # large hot / cool regions
-    v = 0.78 + 0.07 * g + 0.10 * g2
-    T = 4600 + 900 * (v - 0.78) / 0.2
+    """KELT-9 b: ~4,600 K day side, incandescent like a star: convective granulation (bright cell centres, dark
+    lanes, Voronoi on the sphere) over large hot / cool regions; no streaks. -> albedo (~0), emission"""
+    from scipy.spatial import cKDTree
+    xyz = _sphere_xyz(h, w)
+    r = np.random.default_rng(seed)
+    jit = np.stack([fbm2((h, w), seed + 7 + i, 2.6) for i in range(3)], -1) * 0.012
+    q = xyz + jit; q = q / np.linalg.norm(q, axis=-1, keepdims=True)
+    def cells(n, sd):
+        p = np.random.default_rng(sd).standard_normal((n, 3)); p /= np.linalg.norm(p, axis=1, keepdims=True)
+        d, _ = cKDTree(p).query(q.reshape(-1, 3), k=2); d = d.reshape(h, w, 2)
+        f1, f2 = d[..., 0], d[..., 1]
+        return (1 - np.exp(-((f2 - f1) / (0.35 * np.sqrt(4 * np.pi / n))) ** 2)) * (1 - 0.5 * f1 / (f2 + 1e-6))
+    g = 0.65 * cells(5000, seed) + 0.35 * cells(900, seed + 1)
+    g = cv2.GaussianBlur(g.astype(f32), (0, 0), 0.8)
+    g2 = fbm2((h, w), seed + 3, 2.6, lo=2)
+    v = 0.62 + 0.30 * g + 0.07 * g2
+    T = 4600 + 1100 * (v - 0.80) / 0.2
     col = np.stack([bbcolor(float(x)) for x in np.linspace(3400, 5800, 49)])        # LUT
     idx = np.clip((T - 3400) / 2400 * 48, 0, 48)
     i0 = np.floor(idx).astype(int); i1 = np.minimum(i0 + 1, 48); fr = (idx - i0)[..., None]

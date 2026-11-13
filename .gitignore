@@ -1,0 +1,9 @@
+models/
+lib/maps/node_modules/
+cases/*/work/
+cases/*/footage/
+cases/*/deliver/*.mp4
+cases/*/deliver/qc/
+logs/
+__pycache__/
+*.tmp.mp4

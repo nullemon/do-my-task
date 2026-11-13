@@ -41,7 +41,7 @@ Shared rules for every Short in this batch:
 ## Queue (lead's tracking)
 | # | name | title | bg | status |
 |---|---|---|---|---|
-| B1 | black-hole-suns | What If Black Holes Replaced Our Sun? | A_park | re-voicing |
+| B1 | black-hole-suns | What If Black Holes Replaced Our Sun? | A_park | delivered (slow voice) |
 | B2 | moon-closer | What If the Moon Got Closer? | B_valley | delivered (slow voice) |
 | B3 | exoplanet-moons | What If Strange Exoplanets Replaced Our Moon? | B_valley | re-voicing |
 | B4 | second-sun | What If Earth Had a Second Sun? | A2_park | re-voicing |
@@ -50,7 +50,7 @@ Shared rules for every Short in this batch:
 | B7 | star-neighbours | What If Famous Stars Were Our Nearest Neighbour? | C_city | delivered (slow voice) |
 | B8 | star-clusters | What If Star Clusters Were Close By? | B_valley | delivered (slow voice) |
 | B9 | dead-star-suns | What If Dead Stars Replaced Our Sun? | A2_park | in progress |
-| B10 | moon-ratios | What If Our Moon Matched Other Moons' Size Ratios? | A_park | queued |
+| B10 | moon-ratios | What If Our Moon Matched Other Moons' Size Ratios? | A_park | in progress |
 
 
 ## Voice re-do (13 Nov)

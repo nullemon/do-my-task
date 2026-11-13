@@ -9,6 +9,7 @@ a pointer ring, a dashed ghost outline of today's Moon and a zoom loupe. The Cha
 park. A white-out returns to today's Moon at dusk (loops).
 Usage (one heavy process, under nice):
   /home/user/ttsenv/bin/python short.py vert                    full render -> SCR/video_vert.mp4
+  /home/user/ttsenv/bin/python short.py segs                    resumable render in 8 segments -> SCR/video_vert.mp4
   /home/user/ttsenv/bin/python short.py vert 1.0,9.5            stills -> SCR/stills/vert_<t>.png
   /home/user/ttsenv/bin/python short.py patch vert 3.9:5.2      re-render only those time ranges
   /home/user/ttsenv/bin/python short.py info
@@ -586,6 +587,31 @@ def run(stills=None):
     enc.close(); print("done", time.time() - t0)
 
 
+def segments(nseg=8):
+    """resumable full render: frames split into nseg segment files (each finalised on its own; finished ones are
+    skipped on a re-run), then concatenated losslessly -> SCR/video_vert.mp4"""
+    import subprocess
+    n = int(round(DUR * FPS)); sc = None
+    d = os.path.join(SCR, "segs"); os.makedirs(d, exist_ok=True)
+    lst = []
+    for k in range(nseg):
+        a, b = n * k // nseg, n * (k + 1) // nseg
+        f = os.path.join(d, f"seg_{k:02d}_{a}_{b}.mp4"); lst.append(f)
+        if os.path.exists(f):
+            print("skip", f, flush=True); continue
+        sc = sc or Scene(True)
+        tmp = f + ".part.mp4"; enc = Encoder(tmp, sc.L.W, sc.L.H, FPS, crf=16); t0 = time.time()
+        for i in range(a, b):
+            enc.write(sc.frame(i / FPS))
+            if i % 60 == 0: print(f"seg {k} frame {i}/{n}  {time.time() - t0:.0f}s", flush=True)
+        enc.close(); os.replace(tmp, f)
+    with open(os.path.join(d, "list.txt"), "w") as fh:
+        for f in lst: fh.write(f"file '{f}'\n")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", os.path.join(d, "list.txt"), "-c", "copy",
+                    os.path.join(SCR, "video_vert.mp4")], check=True)
+    print("done", n)
+
+
 def patch(ranges):
     """re-render only frames inside `ranges` [(t0, t1)], copying the others from the existing render"""
     import subprocess
@@ -609,6 +635,8 @@ if __name__ == "__main__":
                   f"  | {b['l1']} | {b['l2']} | {b['l3']} | {b['l4']}")
         print({k: round(v, 2) for k, v in T_SW.items()}, "ghostC", round(T_GHOST_C, 2), "double", round(T_DOUBLE, 2),
               "wo", round(T_WO0, 2), "back", round(T_BACK, 2)); sys.exit()
+    if sys.argv[1] == "segs":
+        segments(); sys.exit()
     if sys.argv[1] == "patch":
         patch([tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     st = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else None

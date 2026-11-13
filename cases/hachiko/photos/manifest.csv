@@ -2,7 +2,7 @@ key,file,title,lic,artist,date,page,size
 portrait,photos/portrait.jpg,Hachiko.JPG,Public domain,Unknown authorUnknown author,"before 8 March 1935date QS:P,+19",https://commons.wikimedia.org/wiki/File:Hachiko.JPG,385x566
 photo34,photos/photo34.jpg,Faithful Dog Hachiko Photo.png,Public domain,Unknown,"circa 1934date QS:P,+1934-00-00T",https://commons.wikimedia.org/wiki/File:Faithful_Dog_Hachiko_Photo.png,1173x1496
 taxiderm,photos/taxiderm.jpg,"Hachiko, Saito, Taxiderm.webp",Public domain,Unknown authorUnknown author,1935,"https://commons.wikimedia.org/wiki/File:Hachiko,_Saito,_Taxiderm.webp",297x223
-grave,photos/grave.jpg,Hachiko-3.jpg,CC BY-SA 4.0,"<a href=""//commons.wikimedia.org/wiki/User:%E6%B1%9F%E6%88%B8%E6%9D%91%E3%81%AE%E3%81%A8%E3%81%8F%E3%81%9E%E3%81%86"" tit","Taken on 21 March 2019, 12:17:59",https://commons.wikimedia.org/wiki/File:Hachiko-3.jpg,1920x1281
+grave,photos/grave.jpg,Hachiko-3.jpg,CC BY-SA 4.0,Edomura no Tokuzō,"Taken on 21 March 2019, 12:17:59",https://commons.wikimedia.org/wiki/File:Hachiko-3.jpg,1920x1281
 museum,photos/museum.jpg,Hachiko in National Museum of Nature and Science.jpg,CC BY-SA 3.0,Momotarou2012,2011-04-24,https://commons.wikimedia.org/wiki/File:Hachiko_in_National_Museum_of_Nature_and_Science.jpg,1920x1440
 famweb,photos/famweb.jpg,Hachiko family.webp,Public domain,Unknown authorUnknown author,"circa 1924date QS:P,+1924-00-00T",https://commons.wikimedia.org/wiki/File:Hachiko_family.webp,800x600
 onwatch,photos/onwatch.jpg,Hachiko on watch.webp,Public domain,Unknown authorUnknown author,"circa 1933date QS:P,+1933-00-00T",https://commons.wikimedia.org/wiki/File:Hachiko_on_watch.webp,800x567
@@ -12,5 +12,5 @@ ueno2,photos/ueno2.jpg,Portrait of Hidesaburō Ueno.jpg,Public domain,Unknown ph
 stuffed35,photos/stuffed35.jpg,Stuffed production of Hachiko Scan10038.JPG,Public domain,Unknown authorUnknown author,1935,https://commons.wikimedia.org/wiki/File:Stuffed_production_of_Hachiko_Scan10038.JPG,973x833
 yaeko,photos/yaeko.jpg,Yaeko Sakano.jpg,Public domain,Unknown,1923,https://commons.wikimedia.org/wiki/File:Yaeko_Sakano.jpg,250x362
 yaekohachi,photos/yaekohachi.jpg,Yaeko hachiko.webp,Public domain,Unknown authorUnknown author,"circa 1933date QS:P,+1933-00-00T",https://commons.wikimedia.org/wiki/File:Yaeko_hachiko.webp,800x573
-shibuya23,photos/shibuya23.jpg,Shibuya Station (53331238098).jpg,CC BY 2.0,Dick Thomas Johnson from T,2023-09-30 20:18,https://commons.wikimedia.org/wiki/File:Shibuya_Station_(53331238098).jpg,1920x1280
-wall,photos/wall.jpg,"Wall at Shibuya Station Honoring Hachikō, the Loyal Akita Dog (53415731862).jpg",CC BY 2.0,Stephen Kelly from San Fra,"19 October 2023, 12:23","https://commons.wikimedia.org/wiki/File:Wall_at_Shibuya_Station_Honoring_Hachikō,_the_Loyal_Akita_Dog_(53415731862).jpg",1920x1440
+shibuya23,photos/shibuya23.jpg,Shibuya Station (53331238098).jpg,CC BY 2.0,Dick Thomas Johnson,2023-09-30 20:18,https://commons.wikimedia.org/wiki/File:Shibuya_Station_(53331238098).jpg,1920x1280
+wall,photos/wall.jpg,"Wall at Shibuya Station Honoring Hachikō, the Loyal Akita Dog (53415731862).jpg",CC BY 2.0,Stephen Kelly,"19 October 2023, 12:23","https://commons.wikimedia.org/wiki/File:Wall_at_Shibuya_Station_Honoring_Hachikō,_the_Loyal_Akita_Dog_(53415731862).jpg",1920x1440

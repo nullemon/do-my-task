@@ -51,8 +51,8 @@ def ang_deg(R): return 2 * math.degrees(math.asin(R / D_KM))
 # light (tint, gain), star visibility, exposure, readout colour, emission scale E, centre on screen (vertical).
 BODIES = [
     dict(key="moon", name="OUR MOON", R=R_MOON, l2="1× MOON'S SIZE", l3="0.52° WIDE", tc=(235, 240, 255),
-         zen=(0.0, 0.0, 0.0), hor=(0.0, 0.0, 0.0), glow=(0.55, 0.62, 0.80), gl=0.9,
-         beams=[(0.55, 0.65, 1.0), (0.80, 0.55, 1.0), (0.45, 0.95, 1.0)], bI=0.09, corona=1.0,
+         zen=(0.0, 0.0, 0.0), hor=(0.0, 0.0, 0.0), glow=(0.55, 0.62, 0.80), gl=0.28,
+         beams=[(0.55, 0.65, 1.0), (0.80, 0.55, 1.0), (0.45, 0.95, 1.0)], bI=0.09, corona=0.35,
          tint=(0.75, 0.85, 1.10), gain=0.05, stars=1.0, expo=1.0, E=0.0, C=(560.0, 1105.0)),
     dict(key="cnc", name="55 CANCRI e", R=1.88 * R_E, l2="7× MOON'S SIZE", l3="LAVA-OCEAN WORLD", tc=(255, 120, 50),
          zen=(0.012, 0.002, 0.0), hor=(0.10, 0.02, 0.004), glow=(1.0, 0.32, 0.06), gl=1.2,
@@ -61,19 +61,19 @@ BODIES = [
     dict(key="hd", name="HD 189733 b", R=1.138 * R_J, l2="47× MOON'S SIZE", l3="IT RAINS GLASS", tc=(90, 150, 255),
          zen=(0.0, 0.010, 0.07), hor=(0.0, 0.03, 0.12), glow=(0.22, 0.42, 1.0), gl=0.9,
          beams=[(0.15, 0.30, 1.0), (0.40, 0.25, 1.0), (0.15, 0.70, 1.0), (0.55, 0.55, 1.0)], bI=0.6, corona=0.0,
-         tint=(0.35, 0.55, 1.35), gain=0.30, stars=0.7, expo=1.0, E=1.0, C=(540.0, 1110.0)),
+         tint=(0.35, 0.55, 1.35), gain=0.30, stars=0.7, expo=1.0, E=1.0, C=(540.0, 1250.0)),
     dict(key="wasp", name="WASP-12 b", R=1.937 * R_J, l2="80× MOON'S SIZE", l3="BEING EATEN BY ITS STAR", tc=(255, 150, 70),
          zen=(0.02, 0.004, 0.012), hor=(0.10, 0.025, 0.02), glow=(1.0, 0.40, 0.12), gl=0.8,
          beams=[(1.0, 0.35, 0.10), (1.0, 0.20, 0.45), (1.0, 0.65, 0.20), (0.8, 0.25, 0.9)], bI=0.55, corona=0.0,
-         tint=(1.05, 0.45, 0.25), gain=0.20, stars=0.6, expo=1.0, E=1.0, C=(600.0, 1230.0)),
+         tint=(1.05, 0.45, 0.25), gain=0.20, stars=0.6, expo=1.0, E=1.0, C=(600.0, 1335.0)),
     dict(key="tres", name="TrES-2 b", R=1.2 * R_J, l2="49× MOON'S SIZE", l3="DARKER THAN COAL", tc=(225, 90, 80),
          zen=(-0.004, -0.008, -0.03), hor=(0.0, -0.01, -0.03), glow=(0.55, 0.08, 0.05), gl=0.35,
          beams=[(0.55, 0.06, 0.08), (0.30, 0.10, 0.45), (0.50, 0.15, 0.10)], bI=0.22, corona=0.0,
-         tint=(0.55, 0.40, 0.55), gain=0.02, stars=1.35, expo=1.05, E=0.020, C=(520.0, 1110.0)),
+         tint=(0.55, 0.40, 0.55), gain=0.02, stars=1.35, expo=1.05, E=0.020, C=(520.0, 1255.0)),
     dict(key="kelt", name="KELT-9 b", R=1.891 * R_J, l2="78× MOON'S SIZE", l3="4,300 °C", tc=(255, 215, 120),
          zen=(0.05, 0.09, 0.22), hor=(0.95, 0.45, 0.10), glow=(1.0, 0.70, 0.35), gl=1.6,
          beams=[(1.0, 0.85, 0.50), (1.0, 0.55, 0.20), (1.0, 0.95, 0.75), (1.0, 0.40, 0.30)], bI=0.9, corona=0.0,
-         tint=(1.30, 0.85, 0.50), gain=1.5, stars=0.0, expo=0.75, E=9.0, C=(540.0, 1185.0)),
+         tint=(1.30, 0.85, 0.50), gain=1.5, stars=0.0, expo=0.75, E=9.0, C=(540.0, 1330.0)),
 ]
 for b in BODIES: b["Rp"] = rad_px(b["R"])
 BK = {b["key"]: b for b in BODIES}
@@ -127,6 +127,7 @@ class Scene:
     def __init__(self, vertical=True):
         self.L = L = Layout(vertical); W, H = L.W, L.H; self.vertical = vertical
         self.fg = fg = Foreground(FG_PATH, L, lamps=[], hz_frac=0.70)
+        fg.a[fg.a > 0.9] = 1.0                              # the plate is fully opaque: nothing in the sky bleeds through
         self.hz = float(fg.horizon)
         self.cam = SkyCam(W, H, self.hz, F_PX)
         self.stars = StarSky()
@@ -157,13 +158,13 @@ class Scene:
         la, le = X.map_lava(); co = X.map_cobalt(); sp = X.map_sparkle(); wa, we = X.map_wasp(); ca, ce = X.map_coal(); ka, ke = X.map_kelt()
         Z3 = np.zeros((4, 8, 3), f32)
         self.body = {
-            "moon": Body("moon", BK["moon"]["Rp"], pole_vec(-12, 4), tex="8k_moon.jpg", model="rock", surf=5.0, detail=0.0),
+            "moon": Body("moon", BK["moon"]["Rp"], pole_vec(-12, 4), tex="8k_moon.jpg", model="rock", surf=9.0, detail=0.0),
             "cnc": Body("cnc", BK["cnc"]["Rp"], pole_vec(-15, 20), alb=la, emis=le, model="rock", surf=1.3, spin=0.045,
                         sun=(-0.80, 0.10, -0.55), emis_day=0.35, emis_ld=0.2, rim=(2.0, 0.45, 0.08), detail=0.0, ss=3, seed=2),
             "hd": Body("hd", BK["hd"]["Rp"], pole_vec(12, 18), alb=co, emis=Z3, emis2=sp, emis2_spin=0.30, winds=0.035, spin=0.05,
-                       haze=(0.02, 0.06, 0.25), rim=(0.10, 0.25, 0.95), surf=1.7, detail=0.05, seed=3),
+                       haze=(0.02, 0.06, 0.25), rim=(0.10, 0.25, 0.95), surf=1.7, detail=0.012, seed=3),
             "wasp": Body("wasp", BK["wasp"]["Rp"], pole_vec(WASP_ANG + 90 - 90, 8), alb=wa, emis=we, stretch=WASP_STRETCH,
-                         emis_day=0.5, surf=0.6, spin=0.02, winds=0.02, rim=(1.2, 0.35, 0.08), haze=(0.04, 0.01, 0.0), seed=4),
+                         emis_day=0.5, surf=0.6, spin=0.02, winds=0.02, rim=(1.2, 0.35, 0.08), haze=(0.04, 0.01, 0.0), detail=0.012, seed=4),
             "tres": Body("tres", BK["tres"]["Rp"], pole_vec(-6, 12), alb=ca, emis=ce, sun=(0.62, -0.42, 0.66), emis_day=0.3,
                          surf=4.0, night=0.0, rim=(0.55, 0.07, 0.03), spin=0.02, seed=5),
             "kelt": Body("kelt", BK["kelt"]["Rp"], pole_vec(-5, 6), alb=ka, emis=ke, emis_day=0.25, emis_ld=0.55, surf=0.0,
@@ -208,7 +209,7 @@ class Scene:
         if cur == "tres": return (C[0] + 9.0 * (t - T_SW["tres"]), C[1] - 3.0 * (t - T_SW["tres"]))
         if cur == "wasp": return (C[0] - 4.0 * (t - T_SW["wasp"]), C[1] + 2.0 * (t - T_SW["wasp"]))
         if cur != "kelt": return C
-        J0 = (520.0, 1820.0)
+        J0 = (520.0, 1980.0)
         v = min(max((t - T_KELT) / (T_RISEN - T_KELT), 0), 1)
         u = 0.5 * ease(v) ** 0.8 + 0.5 * (1 - (1 - v) ** 2.2)
         drift = max(t - T_RISEN, 0) * 7.0
@@ -430,7 +431,7 @@ class Scene:
         if nxt: a *= 1 - ramp(t, nxt[0] - 0.35, nxt[0] - 0.15)
         if cur == "moon" and t > T_BACK: a = ramp(t, T_BACK + 0.6, T_BACK + 0.9)
         if T_WO0 < t < T_BACK: a = 0.0
-        if cur == "kelt": a *= smooth(1600, 1400, self.pos(cur, t)[1])
+        if cur == "kelt": a *= smooth(1750, 1500, self.pos(cur, t)[1])
         if a > 0.01:
             dy = (1 - a) * -18
             big = int(L.hud_size * 1.45)

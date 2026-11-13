@@ -9,7 +9,7 @@ LINES = [
     ("cyg", "Cygnus {X-1|X one}, {21|twenty-one} Suns. Earth's year would last weeks.", 0.15),
     ("sgr", "Sagittarius {A*|A star}. {4 MILLION|Four million} Suns. Its shadow spans {24°|twenty-four degrees}.", 0.15),
     ("m87", "{M87*|M eighty-seven star}. {6.5 BILLION|Six and a half billion} Suns. Its horizon reaches four times past Neptune. We're inside.", 0.15),
-    ("ton", "And {TON 618|Ton six eighteen}? Up to {66 BILLION|sixty-six billion} Suns. It would swallow our entire solar system.", 0.22),
+    ("ton", "And {TON 618|Ton six eighteen}? Up to {66 BILLION|sixty-six billion} Suns. It would swallow our entire solar system, so here it is from {8,000×|eight thousand times} farther.", 0.22),
     ("end", "Suddenly, the Sun seems... kind.", 0.0),
 ]
 
@@ -29,7 +29,7 @@ def spoken(text): return " ".join(w for _, ws in tokens(text) for w in ws)
 
 
 REP = {"6 KM": "6 kilometers", "21": "21", "4 MILLION": "4 million", "24°": "24 degrees", "6.5 BILLION": "6.5 billion",
-       "66 BILLION": "66 billion", "X-1": "X-1", "A*": "A*", "M87*": "M87*", "TON 618": "TON 618"}
+       "66 BILLION": "66 billion", "8,000×": "8,000 times", "X-1": "X-1", "A*": "A*", "M87*": "M87*", "TON 618": "TON 618"}
 
 
 def pieces(text):

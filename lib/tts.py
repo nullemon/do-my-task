@@ -8,8 +8,50 @@ import numpy as np, soundfile as sf
 
 VOICE, SPEED, SR = "af_heart", 0.93, 24000
 
+ONES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen".split()
+TENS = "_ _ twenty thirty forty fifty sixty seventy eighty ninety".split()
+def two(n):
+    if n < 20: return ONES[n]
+    return TENS[n // 10] + ("-" + ONES[n % 10] if n % 10 else "")
+def say_year(y):
+    """1923 -> nineteen twenty-three, 1905 -> nineteen oh five, 1900 -> nineteen hundred,
+    2000 -> two thousand, 2005 -> two thousand five, 2011 -> twenty eleven"""
+    hi, lo = divmod(y, 100)
+    if 2000 <= y <= 2009: return "two thousand" + (" " + ONES[lo] if lo else "")
+    if lo == 0: return two(hi) + " hundred"
+    if lo < 10: return two(hi) + " oh " + ONES[lo]
+    return two(hi) + " " + two(lo)
+def years(t):
+    # 4-digit years 1100-2099 standing alone (not part of 3,500 or 12345); "1920s" -> "nineteen twenties"
+    def dec(m):
+        w = say_year(int(m.group(1)))
+        return (w[:-1] + "ies" if w.endswith("y") else w + "s") if m.group(2) else w
+    return re.sub(r"(?<![\d,.])(1[1-9]\d\d|20\d\d)(s)?(?!\d|,\d)", dec, t)
+
+def to_phonemes(k, text, pron):
+    """phonemize the narration, but drop in exact IPA for names: PRON values written as /ipa/ are used as-is,
+    other values are phonemized as a respelling.  "Ueno's" -> IPA + z."""
+    t = years(text).replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
+    keys = sorted(pron, key=len, reverse=True)
+    if not keys: return k.tokenizer.phonemize(t, "en-us")
+    rx = re.compile(r"(?<!\w)(" + "|".join(re.escape(x) for x in keys) + r")('s)?(?!\w)")
+    out, pos = [], 0
+    for m in rx.finditer(t):
+        chunk = t[pos:m.start()]
+        if chunk.strip(): out.append(k.tokenizer.phonemize(chunk, "en-us"))
+        v = pron[m.group(1)]
+        ipa = v.strip("/") if v.startswith("/") else k.tokenizer.phonemize(v, "en-us")
+        out.append(ipa + ("z" if m.group(2) else ""))
+        pos = m.end()
+    rest = t[pos:]
+    if rest.strip():
+        ph = k.tokenizer.phonemize(rest, "en-us")
+        if rest[0] in ",.!?;:" and out: out[-1] += ph[0]; ph = ph[1:].lstrip()
+        out.append(ph)
+    return " ".join(x for x in out if x).replace(" ,", ",").replace(" .", ".").replace(" ?", "?").replace(" !", "!")
+
 def spoken(text, pron):
-    t = text.replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
+    t = years(text).replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
     for k, v in sorted(pron.items(), key=lambda kv: -len(kv[0])):
         t = re.sub(r"(?<!\w)" + re.escape(k) + r"(?!\w)", v, t)
     return t
@@ -53,13 +95,14 @@ def main(code):
     res = []
     for i, s in enumerate(scr.SEG):
         if s["kind"] != "narr": continue
-        wav = os.path.join(out, f"seg{i:02d}.wav"); sp = spoken(s["text"], pron)
+        wav = os.path.join(out, f"seg{i:02d}.wav"); sp = to_phonemes(k, s["text"], pron)
         if i in old and old[i].get("spoken") == sp and os.path.exists(wav) and not os.environ.get("FORCE") and not os.environ.get("REALIGN"):
             res.append(old[i]); continue
         if os.environ.get("REALIGN") and os.path.exists(wav):
             a, sr = sf.read(wav)
         else:
-            a, sr = k.create(sp, voice=VOICE, speed=getattr(cfg, "SPEED", SPEED), lang="en-us")
+            ph = to_phonemes(k, s["text"], pron)
+            a, sr = k.create(ph, voice=VOICE, speed=getattr(cfg, "SPEED", SPEED), lang="en-us", is_phonemes=True)
             nz = np.where(np.abs(a) > 0.008)[0]
             if len(nz): a = a[max(0, nz[0] - 200): nz[-1] + 1200]
             sf.write(wav, a, sr)

@@ -8,10 +8,11 @@ TITLE_SMALL = "THE DOG WHO WAITED"
 # hook overlay beats: (t0, t1, [(line, colour w|y|r)])
 HOOK = [(0.0, 3.4, [("HIS OWNER", "w"), ("NEVER", "r"), ("CAME HOME", "w")]),
         (3.4, 7.0, [("HE WAITED", "w"), ("9 YEARS", "y")])]
-PRON = {"Hachikō": "Hachikoh", "Hachi": "Hah-chee", "Ōdate": "Oh-dah-teh", "Hidesaburō": "Hee-deh-sah-boo-roh",
-        "Ueno": "Oo-eh-noh", "Kikusaburō": "Kee-koo-sah-boo-roh", "Kobayashi": "Koh-bah-yah-shee", "Hirokichi": "Hee-roh-kee-chee",
-        "Saitō": "Sigh-toh", "Shibuya": "Shee-boo-yah", "Asahi Shimbun": "Ah-sah-hee Shim-boon", "Aoyama": "Ah-oh-yah-mah",
-        "Akita": "Ah-kee-tah", "yakitori": "yah-kee-toh-ree", "Teru Andō": "Teh-roo Ahn-doh", "kō": "koh"}
+PRON = {  # /ipa/ = exact phonemes for the voice (captions keep the real spelling)
+    "Hachikō": "/hˌɑːtʃiːkˈoʊ/", "Hachi": "/hˈɑːtʃi/", "kō": "/kˈoʊ/", "Ōdate": "/oʊdˈɑːteɪ/", "Akita": "/əkˈiːtə/",
+    "Hidesaburō": "/hˌiːdɛsəbˈʊɹoʊ/", "Ueno": "/ˈuːɛnoʊ/", "Shibuya": "/ʃɪbˈuːjə/", "Kikusaburō": "/kˌiːkusəbˈʊɹoʊ/",
+    "Kobayashi": "/kˌoʊbəjˈɑːʃi/", "Hirokichi": "/hˌiːɹoʊkˈiːtʃi/", "Saitō": "/sˈaɪtoʊ/", "Asahi": "/əsˈɑːhi/",
+    "Shimbun": "/ʃˈɪmbʊn/", "Aoyama": "/ˌɑːoʊjˈɑːmə/", "yakitori": "/jˌækɪtˈɔːɹi/"}
 SPEED = 0.93
 SRC = {}            # footage key -> file (filled once the fetcher zips arrive)
 SRC_CREDIT = {}

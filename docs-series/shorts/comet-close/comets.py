@@ -45,8 +45,8 @@ def comet_field(C, X, Y, t, sc=1.0, grow=1.0, I=1.0):
     # ---- coma
     aa = np.where(a < 0, a * C.get("hood", 1.7), a * 0.72)
     re = np.sqrt(aa * aa + b * b) + 1e-3
-    r0 = 0.05 * Rc + 2.0
-    coma = (r0 / (re + r0)) * np.exp(-(re / Rc) ** 1.6) * 1.0 + np.exp(-re / (2.6 * Rc)) * 0.05
+    r0 = 0.22 * Rc + 2.0
+    coma = (r0 / (re + r0)) * np.exp(-(re / Rc) ** 1.8) * 1.0 + np.exp(-re / (2.2 * Rc)) * 0.08
     if C.get("shells", 0) > 0:                                                    # expanding shells (sunward)
         sh = 0.5 + 0.5 * np.cos(re / Rc * 18 - t * 2.6 + 0.6 * np.arctan2(b, -a))
         coma = coma * (1 + C["shells"] * (sh ** 3 - 0.3) * smooth(0.1 * Rc, 0.3 * Rc, re) * smooth(Rc * 0.4, -Rc * 0.2, a))
@@ -66,7 +66,7 @@ def comet_field(C, X, Y, t, sc=1.0, grow=1.0, I=1.0):
         tex = cv2.remap(ion_tex(), u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         prof = np.exp(-(bb / w) ** 2 * 1.4)
         gap = 1 - 0.85 * np.exp(-((ap - ad) / 45) ** 2) * smooth(0.0, 0.4, tau)
-        ion = prof * (tex ** 2.2) * 2.2 * (C["iw"] / w) ** 0.6 / (1 + ap / 900) * smooth(-Rc * 0.1, Rc * 0.4, a) * gap * tmask
+        ion = prof * (tex ** 2.0) * 3.2 * (C["iw"] / w) ** 0.45 / (1 + ap / 1100) * smooth(-Rc * 0.1, Rc * 0.4, a) * gap * tmask
         ion = ion + np.exp(-(bb / (w * 0.18 + 1.5)) ** 2) * 0.5 / (1 + ap / 500) * smooth(0, Rc * 0.3, a) * tmask * gap  # bright central ray
         out += ion[..., None] * ION_BLUE * C["Ii"]
     # ---- dust tail (curved fan of synchrones)
@@ -79,11 +79,15 @@ def comet_field(C, X, Y, t, sc=1.0, grow=1.0, I=1.0):
         x = (phi - f0) / (f1 - f0)
         fan = smooth(-0.15, 0.08, x) * smooth(1.18, 0.92, x)
         fan = fan * (0.55 + 0.45 * np.exp(-((x - 0.92) / 0.22) ** 2) + C.get("inner", 0.0) * np.exp(-(x / 0.18) ** 2))
-        if C.get("striae", 0) > 0:
+        if C.get("striae", 0) > 0:                                                # synchrone bands: uneven spacing + strength
             q = C["nstr"] * x + C.get("skew", 0.0) * np.log1p(r / 300) - 0.05 * t
-            st = (0.5 + 0.5 * np.cos(2 * np.pi * q)) ** 2.5
-            fan = fan * (1 - C["striae"] + C["striae"] * 2.0 * st)
-        rad = 1 / (1 + r / C.get("r0", 700)) * smooth(-Rc * 0.05, Rc * 0.5, a)
+            q = q + 0.35 * np.sin(q * 0.73 + 1.3) + 0.2 * np.sin(q * 1.91 + 0.4)
+            amp = 0.55 + 0.45 * np.sin(q * 2.37 + 0.8) * np.sin(q * 0.61 + 2.0)
+            st = (0.5 + 0.5 * np.cos(2 * np.pi * q)) ** 2.0 * amp
+            st = st * smooth(0.0, 900.0, r) + 0.5 * (1 - smooth(0.0, 900.0, r))        # striae appear away from the head
+            fan = fan * (1 - C["striae"] + C["striae"] * 1.8 * st)
+        r0 = C.get("r0", 700)
+        rad = (1 / (1 + r / r0)) ** 1.25 * (0.6 + 0.4 * np.exp(-r / (0.15 * r0))) * smooth(-Rc * 0.05, Rc * 0.5, a)
         dust = fan * rad * tmask
         col = DUST if "dcol" not in C else np.array(C["dcol"], f32)
         out += dust[..., None] * col * C["Id"]
@@ -110,11 +114,11 @@ def nucleus_mask(kind, XX, YY, t, spin):
         d = rr / bump - 1
         d = d - 0.10 * np.exp(-(((X - 0.15) / 0.18) ** 2 + ((Y + 0.5) / 0.15) ** 2))   # a waist (Halley's 'peanut' hint)
     else:                                                                         # 67P: big lobe 4.1 x 3.3, small lobe 2.6 x 2.3 km
-        k = 1 / 4.3
-        d1 = np.sqrt(((X + 0.18) / (2.05 * k * 2)) ** 2 + ((Y + 0.05) / (1.65 * k * 2)) ** 2) - 1
-        Xr = (X - 0.52) * math.cos(0.5) + (Y + 0.38) * math.sin(0.5); Yr = -(X - 0.52) * math.sin(0.5) + (Y + 0.38) * math.cos(0.5)
-        d2 = np.sqrt((Xr / (1.30 * k * 2)) ** 2 + (Yr / (1.15 * k * 2)) ** 2) - 1
-        kk = 0.12
+        k = 1 / 3.2                                                                # loupe units per km
+        d1 = np.sqrt(((X + 0.25) / (2.05 * k)) ** 2 + ((Y - 0.15) / (1.65 * k)) ** 2) - 1
+        Xr = (X - 0.47) * math.cos(0.6) + (Y + 0.45) * math.sin(0.6); Yr = -(X - 0.47) * math.sin(0.6) + (Y + 0.45) * math.cos(0.6)
+        d2 = np.sqrt((Xr / (1.30 * k)) ** 2 + (Yr / (1.15 * k)) ** 2) - 1
+        kk = 0.06
         d = -kk * np.log(np.exp(-d1 / kk) + np.exp(-d2 / kk))                       # smooth union -> the 'neck'
         ang = np.arctan2(Y, X)
         d = d + 0.03 * np.sin(7 * ang + 1.0)
@@ -136,7 +140,7 @@ def nucleus_loupe(kind, r, R, t, sun_dir, jets=1.0, outburst=0.0):
     lam = np.clip(n @ L, 0, 1)
     rough = 0.75 + 0.25 * cv2.resize(fbm2((64, 64), 13, 2.2), (2 * r, 2 * r))
     alb = 0.045                                                                   # darker than coal
-    body = m * (lam * rough * alb * 55.0 + 0.010)
+    body = m * (lam ** 1.4 * rough * alb * 14.0 + 0.004)
     out = body[..., None] * np.array([1.0, 0.95, 0.88], f32)
     rr = np.sqrt(XX * XX + YY * YY)
     out += ((np.exp(-rr / (0.55 * R)) * 0.35 + np.exp(-rr / (1.4 * R)) * 0.12) * (1 - 0.8 * m))[..., None] * C2_GREEN
@@ -167,7 +171,7 @@ def nucleus_loupe(kind, r, R, t, sun_dir, jets=1.0, outburst=0.0):
         ox, oy = sx * size * 0.45, sy * size * 0.45
         dd = np.sqrt((XX - ox) ** 2 + (YY - oy) ** 2)
         Rb = R * (0.1 + 0.9 * outburst)
-        puff = np.exp(-((dd - Rb * 0.6) / (Rb * 0.35)) ** 2) * (1 - outburst) ** 1.2 * 2.5 + np.exp(-dd / (Rb * 0.5)) * (1 - outburst) * 2.0
+        puff = np.exp(-((dd - Rb * 0.6) / (Rb * 0.45)) ** 2) * (1 - outburst) ** 1.2 * 1.6 + np.exp(-dd / (Rb * 0.5)) * (1 - outburst) * 2.0
         cone = np.clip(((XX - ox) * sx + (YY - oy) * sy) / (dd + 1e-3), 0, 1) ** 1.5
         out += (puff * (0.3 + 0.7 * cone) * (1 - 0.8 * m))[..., None] * np.array([1.0, 0.97, 0.85], f32)
     return out

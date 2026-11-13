@@ -34,7 +34,7 @@ for w, col, size, x, y in (("THIS IS IN", WHITE, 120, 540, 960), ("OUR SKY", ORA
     rgba, _ = word_layer(w, size, 1020, fill=col); composite(v, rgba, x, y, 1.0)
 save(v, os.path.join(OUT, "thumb-vertical.jpg"))
 
-h = render(700.0, 880.0, 2.6)[600:600 + 608]          # 1080 x 608 crop with the skyline at the bottom
-for w, col, size, x, y in (("THIS IS IN OUR SKY", ORANGE, 112, 540, 95), ("RIGHT NOW", WHITE, 96, 250, 520)):
+h = render(640.0, 1050.0, 2.4)[760:760 + 608]          # 1080 x 608 crop with the skyline at the bottom
+for w, col, size, x, y in (("THIS IS IN OUR SKY", ORANGE, 112, 540, 95), ("RIGHT NOW", WHITE, 96, 290, 540)):
     rgba, _ = word_layer(w, size, 1040, fill=col); composite(h, rgba, x, y, 1.0)
 save(h, os.path.join(OUT, "thumb.jpg"), (1280, 720))

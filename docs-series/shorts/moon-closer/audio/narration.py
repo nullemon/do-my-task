@@ -4,14 +4,21 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if the Moon got closer? Much closer?", 0.15),
-    ("today", "Here's today's Moon, for scale.", 0.20),
-    ("d200", "{200,000|Two hundred thousand} kilometers: twice as wide, tides {7×|seven times} stronger.", 0.15),
-    ("d100", "{100,000|A hundred thousand:} {57×|fifty-seven times.} Oceans surge inland.", 0.15),
-    ("d50", "{50,000|Fifty thousand:} {450×|four hundred fifty times.} Quakes, volcanoes, and every crater in sharp detail.", 0.15),
-    ("d20", "{20,000|Twenty thousand.} Tides kilometers high. Moonlight hundreds of times brighter.", 0.20),
-    ("roche", "{18,000|Eighteen thousand:} the {ROCHE|Roshe} limit. Earth's gravity rips the Moon into a ring.", 1.70),
-    ("end", "In reality, it's drifting away: {3.8 CM|three point eight centimeters} a year.", 0.0),
+    ("hook", "What if the Moon got closer?", 0.35),
+    ("hook_b", "Much closer?", 0.70),
+    ("today", "Here's the Moon today.", 0.70),
+    ("d200", "{200,000|Two hundred thousand} kilometers: twice as wide.", 0.35),
+    ("d200_b", "Tides, {7×|seven times} stronger.", 0.70),
+    ("d100", "{100,000|A hundred thousand:} {57×|fifty-seven times.}", 0.35),
+    ("d100_b", "Oceans surge inland.", 0.70),
+    ("d50", "{50,000|Fifty thousand.}", 0.35),
+    ("d50_b", "Quakes, volcanoes, and every crater in sharp detail.", 0.70),
+    ("d20", "{20,000|Twenty thousand.}", 0.35),
+    ("d20_b", "Tides kilometers high.", 0.70),
+    ("roche", "{18,000|Eighteen thousand:} the {ROCHE|Roshe} limit.", 0.35),
+    ("roche_b", "Earth's gravity rips the Moon into a ring.", 0.85),
+    ("end", "In reality, it's drifting away.", 0.35),
+    ("end_b", "{3.8 CM|Three point eight centimeters} a year.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!:]*)|(\S+)")
@@ -36,7 +43,7 @@ def spoken(text):
 
 def pieces(text):
     """subtitle strings aligned 1:1 with caption tokens (numbers kept as digits)"""
-    rep = {"7×": "7 times", "57×": "57 times", "450×": "450 times", "3.8 CM": "3.8 centimeters", "ROCHE": "Roche"}
+    rep = {"7×": "7 times", "57×": "57 times", "3.8 CM": "3.8 centimeters", "ROCHE": "Roche"}
     out = []
     for cap, ws in tokens(text):
         if len(ws) == 1 and cap == ws[0]: out.append(cap)

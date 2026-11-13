@@ -1,6 +1,6 @@
 # What If the Moon Got Closer? (YouTube Short, 9:16 only)
 
-The video is 1080×1920 at 30 fps and 38.6 s long. It follows the BATCH2 "swap" format, as in `other-moons/` and
+The video is 1080×1920 at 30 fps and 39.4 s long. It follows the BATCH2 "swap" format, as in `other-moons/` and
 `planets-as-moon/`. It is one locked tripod shot of the user's `B_valley.png` (transparent sky), going from blue hour
 into night. The Moon is swapped in at closer and closer distances. Every swap has a flash, a chromatic shockwave and
 coloured moonlight beams, and the valley is relit by a brighter Moon each time. At the Roche limit the Moon cracks,
@@ -8,12 +8,15 @@ breaks into fragments that shear along its orbit, and spreads into a glowing rin
 small Moon, so the Short loops. Big orange one-word captions are synced to the voice. A readout appears at each stage:
 DISTANCE / × TODAY'S SIZE · degrees / TIDES × STRONGER / OCEAN TIDE. There are no disclaimer captions (user rule).
 
-## Narration (80 words, Kokoro am_michael @ 1.05)
-> What if the Moon got closer? Much closer? Here's today's Moon, for scale. Two hundred thousand kilometers: twice as
-> wide, tides seven times stronger. A hundred thousand: fifty-seven times. Oceans surge inland. Fifty thousand: four
-> hundred fifty times. Quakes, volcanoes, and every crater in sharp detail. Twenty thousand. Tides kilometers high.
-> Moonlight hundreds of times brighter. Eighteen thousand: the Roche limit. Earth's gravity rips the Moon into a
-> ring. In reality, it's drifting away: three point eight centimeters a year.
+## Narration (70 words, Kokoro am_michael @ 0.92, re-voiced 13 Nov)
+The user found the first cut too fast, so it was re-voiced at 0.92. Each sentence is its own line, with ~0.35 s
+between sentences, ~0.7 s at each beat change and 0.85 s after the ring line. The beats were re-timed to the new
+word timings.
+> What if the Moon got closer? Much closer? Here's the Moon today. Two hundred thousand kilometers: twice as wide.
+> Tides, seven times stronger. A hundred thousand: fifty-seven times. Oceans surge inland. Fifty thousand. Quakes,
+> volcanoes, and every crater in sharp detail. Twenty thousand. Tides kilometers high. Eighteen thousand: the Roche
+> limit. Earth's gravity rips the Moon into a ring. In reality, it's drifting away. Three point eight centimeters a
+> year.
 
 "Roche" is spoken as "Roshe" (Kokoro reads "Roche" as "roach"). "Rips" replaced "tears", which Kokoro read as "teers".
 
@@ -44,8 +47,7 @@ sizes are exact. Today's Moon is 36 px wide and the Roche-limit Moon is 760 px.
   81× stronger than the Moon raises on Earth, so tidal heating and stress would rise on both. This is plausible but
   qualitative.
 - **Moonlight:** the Moon's surface brightness does not change with distance, so the illuminance it gives scales with
-  its solid angle, ∝ 1/d². That is 369× full moonlight at 20,000 km (roughly 40–100 lux, like a lit room), hence
-  "hundreds of times brighter". In the picture the valley light is compressed (∝ M^0.56) and the camera stops down.
+  its solid angle, ∝ 1/d². That is 369× full moonlight at 20,000 km (roughly 40–100 lux, like a lit room). The new narration no longer states it; the valley relight shows it. In the picture the valley light is compressed (∝ M^0.56) and the camera stops down.
 - **3.8 cm/year:** the recession rate measured by Lunar Laser Ranging.
 - **Phase:** a gibbous Moon with a ~36° phase angle, lit from the lower right (the Sun is below the horizon behind the
   camera at blue hour). Earthshine on the night side grows as the Moon nears, because Earth's light on the Moon goes

@@ -28,7 +28,7 @@ from moon import Moon, pole_vec, night_mask
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-moon-closer"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/B_valley.png"
 FPS = 30
-LEAD, TAIL = 0.25, 1.20
+LEAD, TAIL = 0.25, 1.00
 F_PX = 4000.0            # the lens for the Moon discs (27 deg vertical FOV)
 F_SKY = 1400.0           # sky gradient / extinction / star field (stylised blue-hour dome)
 D0 = 384400.0
@@ -94,14 +94,14 @@ T_BACK = wt("end", "DRIFTING") - 0.15             # white-out peak -> today's Mo
 T_WO0 = T_BACK - 0.70
 T_RISE0, T_RISE1 = T_SW["d20"], T_SW["d20"] + 2.8
 T_CRACK = wt("roche", "ROCHE") - 0.15
-T_RIP = wt("roche", "RIPS") - 0.05
-T_RING = wt("roche", "RING")
+T_RIP = wt("roche_b", "RIPS") - 0.05
+T_RING = wt("roche_b", "RING")
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_BACK, "end")]
 COLLAPSE, BLOOM = 0.42, 0.65
-PULSES = [wt("hook", "CLOSER", 1), wt("today", "SCALE"), wt("d200", "TWICE"), wt("d200", "7×"), wt("d100", "57×"), wt("d100", "INLAND"),
-          wt("d50", "450×"), wt("d50", "QUAKES"), wt("d50", "DETAIL"), wt("d20", "HIGH"), wt("d20", "BRIGHTER"), wt("roche", "ROCHE"),
+PULSES = [wt("hook_b", "CLOSER"), wt("today", "TODAY"), wt("d200", "TWICE"), wt("d200_b", "7×"), wt("d100", "57×"), wt("d100_b", "INLAND"),
+          wt("d50", "50,000"), wt("d50_b", "QUAKES"), wt("d50_b", "DETAIL"), wt("d20_b", "HIGH"), wt("roche", "ROCHE"),
           wt("end", "AWAY")]
-QUAKES = [(wt("d50", "QUAKES"), 1.0), (wt("d50", "VOLCANOES"), 0.8), (wt("d20", "TIDES"), 0.9), (wt("d20", "HIGH"), 1.0),
+QUAKES = [(wt("d50_b", "QUAKES"), 1.0), (wt("d50_b", "VOLCANOES"), 0.8), (wt("d20_b", "TIDES"), 0.9), (wt("d20_b", "HIGH"), 1.0),
           (T_CRACK, 1.0), (T_RIP, 1.6), (T_RING, 1.0)]
 
 
@@ -189,7 +189,7 @@ class Scene:
         yyf2, xxf2 = np.mgrid[0:H, 0:W].astype(f32); self.xx, self.yy = xxf2, yyf2
         self._fragments()
         emph = {"MOON", "CLOSER", "SCALE", "200,000", "TWICE", "7×", "100,000", "57×", "INLAND", "50,000", "450×", "QUAKES",
-                "VOLCANOES", "CRATER", "DETAIL", "20,000", "KILOMETERS", "HIGH", "BRIGHTER", "18,000", "ROCHE", "RIPS", "RING",
+                "VOLCANOES", "CRATER", "DETAIL", "20,000", "KILOMETERS", "HIGH", "TODAY", "18,000", "ROCHE", "RIPS", "RING",
                 "3.8 CM", "AWAY"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         L.cap_y = 1040
@@ -526,7 +526,7 @@ class Scene:
             bd = self.moon[cur]
             bd.render(img, cx, cy, t, I=I_mul, scale=scale, es=es, ext=self.ext)
             if cur in ("d50", "d20"):
-                self.lava(img, cx, cy, Rp, t, ramp(t, wt("d50", "VOLCANOES") - 0.2, wt("d50", "VOLCANOES") + 0.4) * (1 - col_u) * (0.7 + 0.3 * pulse))
+                self.lava(img, cx, cy, Rp, t, ramp(t, wt("d50_b", "VOLCANOES") - 0.2, wt("d50_b", "VOLCANOES") + 0.4) * (1 - col_u) * (0.7 + 0.3 * pulse))
         # ---- foreground
         light = 1.0 + 0.10 * (pulse - 1) - 0.2 * col_u
         if cur == "roche": light *= 1 + 0.4 * ringl + 0.4 * math.exp(-max(t - T_RIP, 0) / 0.5) * (t > T_RIP)

@@ -194,7 +194,7 @@ G = {
     "night": dict(zen=(0.004, 0.009, 0.040), hor=(0.030, 0.052, 0.125), low=(0.05, 0.07, 0.16), tint=(0.55, 0.70, 1.25), con=1.05, sat=1.0, stars=1.0, halo=0.5),
     "psr": dict(zen=(0.008, 0.007, 0.050), hor=(0.040, 0.050, 0.150), low=(0.06, 0.07, 0.19), tint=(0.62, 0.74, 1.25), con=1.05, sat=1.05, stars=1.0, halo=0.6),
     "mag": dict(zen=(0.018, 0.004, 0.055), hor=(0.110, 0.030, 0.180), low=(0.17, 0.05, 0.24), tint=(0.85, 0.62, 1.30), con=1.08, sat=1.15, stars=0.85, halo=1.0),
-    "mag_fl": dict(zen=(0.30, 0.06, 0.80), hor=(0.95, 0.30, 1.40), low=(1.2, 0.5, 1.5), tint=(1.10, 0.85, 1.40), con=1.15, sat=1.2, stars=0.0, halo=2.0),
+    "mag_fl": dict(zen=(0.14, 0.015, 0.42), hor=(0.50, 0.10, 0.80), low=(0.65, 0.18, 0.90), tint=(1.10, 0.85, 1.40), con=1.15, sat=1.2, stars=0.0, halo=2.0),
     "bd": dict(zen=(0.003, 0.007, 0.036), hor=(0.020, 0.036, 0.100), low=(0.03, 0.05, 0.13), tint=(0.50, 0.66, 1.25), con=1.05, sat=0.9, stars=1.0, halo=0.0),
 }
 def gmix(a, b, w):
@@ -232,19 +232,19 @@ def state(key, t):
     elif key == "psr":
         fl = psr_flash(t)
         S["grade"] = G["psr"]
-        S["lights"] = [dict(x=x, y=y, T=40000.0, E=0.004 + 0.9 * fl, col=np.array([0.70, 0.92, 1.25], f32), bI=0.0, el=16.0, halo=1.0)]
-        S["draws"] = [dict(kind="disc", x=x, y=y, Rp=0.3, T=40000.0, col=np.array([0.75, 0.92, 1.2], f32), surf=30.0 + 400 * fl,
-                           glow=0.9 + 3.0 * fl, spikes=0.6 + 2.5 * fl, u=0.5)]
+        S["lights"] = [dict(x=x, y=y, T=40000.0, E=0.004 + 0.28 * fl, col=np.array([0.70, 0.92, 1.25], f32), bI=0.0, el=16.0, halo=1.0)]
+        S["draws"] = [dict(kind="disc", x=x, y=y, Rp=0.3, T=40000.0, col=np.array([0.75, 0.92, 1.2], f32), surf=30.0 + 200 * fl,
+                           glow=0.9 + 1.6 * fl, spikes=0.6 + 1.6 * fl, u=0.5)]
         S["amb"] = 0.10; S["expo"] = 1.7; S["lamps"] = 1.0; S["frost"] = 1.0; S["psr"] = 1.0; S["flash"] = fl
     elif key == "mag":
         u = t - T_FLARE
         fl = 0.0 if u < 0 else math.exp(-u / 1.4)                          # the giant flare and its afterglow
         S["grade"] = gmix(G["mag"], G["mag_fl"], min(fl * 1.3, 1.0))
-        S["lights"] = [dict(x=x, y=y, T=30000.0, E=0.006 + 2.0 * fl, col=np.array([0.95, 0.72, 1.30], f32), beams="mag",
+        S["lights"] = [dict(x=x, y=y, T=30000.0, E=0.006 + 0.8 * fl, col=np.array([0.95, 0.60, 1.40], f32), beams="mag",
                             bI=0.35 + 1.4 * fl, el=16.0, halo=1.2)]
         S["draws"] = [dict(kind="disc", x=x, y=y, Rp=0.3, T=30000.0, col=np.array([0.92, 0.75, 1.25], f32), surf=40.0 + 300 * fl,
                            glow=1.4 + 4.0 * fl, spikes=0.8 + 2.0 * fl, u=0.5)]
-        S["amb"] = 0.12; S["expo"] = 1.6 - 0.5 * fl; S["lamps"] = 1.0 * (1 - smooth(0.05, 0.4, fl)) if u > 0 else 1.0
+        S["amb"] = 0.12; S["expo"] = 1.6 - 0.7 * fl; S["lamps"] = 0.0 if u > 0.04 else 1.0                          # the flare knocks the lamps out
         S["frost"] = 1.0; S["field"] = 1.0; S["flare"] = fl
     elif key == "bd":
         S["grade"] = G["bd"]
@@ -628,7 +628,7 @@ class Scene:
             cy = (np.arange(H // 2, dtype=f32)[:, None] * 2 / 256.0 + u * 0.9) % 1.0
             cur_ = self.curtain[(cy * 255).astype(int), (np.arange(W // 2)[None, :] * 2 % 256)]
             vv = np.clip((HY - self.hy) / HY, 0, 1)
-            bm = bm + (cur_ * vv * flare * 1.4)[..., None] * np.array([0.85, 0.35, 1.25], f32)
+            bm = bm + (cur_ ** 2 * vv * flare * 1.0)[..., None] * np.array([0.80, 0.18, 1.30], f32)
         img = self.up(sky * (1 - 0.3 * col_u) + bm)
         st = self.starfield(t, g["stars"], lens)
         if st is not None: img = img + st
@@ -679,7 +679,7 @@ class Scene:
         # ---- magnetar giant flare: white-violet chromatic flash + double shockwave
         u = t - T_FLARE
         if cur == "mag" and -0.05 < u < 2.0:
-            img += (16.0 * math.exp(-max(u, 0) / 0.10) * ease((u + 0.05) / 0.05) + 1.5 * math.exp(-max(u, 0) / 0.6)) * np.array([1.0, 0.82, 1.25], f32)
+            img += (16.0 * math.exp(-max(u, 0) / 0.07) * ease((u + 0.05) / 0.05) + 0.5 * math.exp(-max(u, 0) / 0.35)) * np.array([1.0, 0.82, 1.25], f32)
             dd = np.sqrt((self.xx - POS[0]) ** 2 + (self.yy - POS[1]) ** 2)
             for k_, (sp, cc) in enumerate(((3000, (1.2, 0.5, 1.6)), (1700, (0.5, 0.9, 1.6)))):
                 R = sp * (max(u, 0) / 2.0) ** 0.55; wdt = 25 + 70 * u
@@ -687,7 +687,7 @@ class Scene:
                     img[..., ch] += np.exp(-((dd - R - off) / wdt) ** 2) * 3.0 * cc[ch] * math.exp(-max(u, 0) / 0.7)
         # ---- pulsar: each pass of the beam across us flashes the whole frame (cyan-white)
         if psr > 0.01:
-            img += (Sc.get("flash", 0.0) * 1.2 * psr) * np.array([0.6, 0.85, 1.2], f32)
+            img += (Sc.get("flash", 0.0) * 0.30 * psr) * np.array([0.6, 0.85, 1.2], f32)
         if T_WO0 < t < T_SUNBACK:
             v = ease((t - T_WO0) / (T_SUNBACK - T_WO0))
             img = img + (30 * v ** 2.5) * np.array([1.0, 0.95, 0.88], f32)

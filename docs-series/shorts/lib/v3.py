@@ -68,12 +68,13 @@ def _measure(path):
 
 
 def finalize(raw, out, I=-14.0, TP=-1.0):
-    """gain to the target loudness + 4x-oversampled peak limiter (true-peak safe), iterated -> 48 kHz 16-bit"""
+    """gain to the target loudness + 4x-oversampled peak limiter, iterated -> 48 kHz 16-bit. The limiter sits 1 dB under TP
+    so the AAC encode still stays under TP."""
     g = 0.0
     for _ in range(6):
         i0, _tp = _measure(raw) if g == 0.0 else (None, None)
         if g == 0.0: g = I - i0
-        af = (f"volume={g:.2f}dB,aresample=192000,alimiter=limit={10 ** ((TP - 0.4) / 20):.4f}:attack=2:release=60:level=false,"
+        af = (f"volume={g:.2f}dB,aresample=192000,alimiter=limit={10 ** ((TP - 1.0) / 20):.4f}:attack=2:release=60:level=false,"
               "aresample=48000")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-af", af, "-c:a", "pcm_s16le", out], check=True)
         i1, tp1 = _measure(out)

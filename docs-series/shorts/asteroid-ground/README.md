@@ -7,12 +7,19 @@ beams, chromatic bloom and shockwave rings, big readouts, strong relighting of t
 is shown at a time, synced to the voice. A T+ counter at the top shows how much time is being compressed. There are no
 disclaimer captions (user rule).
 
-## Narration (96 words, Kokoro am_michael @ 1.05)
-> What if you saw the dinosaur-killer asteroid hit, from a thousand kilometers away? A new star appears. Ten kilometers
-> wide, at twenty kilometers a second. It strikes beyond the horizon. A flash brighter than the Sun. A fireball climbs
-> into space. Minutes later, the ground heaves. Magnitude ten. Molten debris rains back from space. The sky glows
-> red-hot, maybe hot enough to ignite forests. An hour in, the blast wave hits. Then soot blocks the Sun for years.
-> Three quarters of all species vanish. And the asteroid that wiped out the dinosaurs... is why we're here.
+## Narration (REDO v3, 14 Nov: 75 words, storytelling style, ~47.2 s, 9:16 only)
+Voice: Kokoro 0.7 am_michael + 0.3 am_onyx at speed 0.86, one TTS call per phrase, real word timings, v3 voice chain
+(`../lib/v3.py`, see `../REDO_V3.md`). Line keys are `<beat>_<a..d>`; `short.py` groups them back into the beats
+(hook, appr, hit, quake, ejecta, blast, end), so the beat logic below is unchanged; it is re-timed to the new words
+(impact on "behind", second flash pulse on "brighter", ejecta on "molten", fire on "burn", blast on "hits", soot on
+"soot", extinction readout on "three quarters").
+> Imagine standing here... the day the dinosaurs died. A new star appears. Ten kilometers wide. It drops... behind the
+> horizon. Brighter than the Sun. A fireball climbs into space. Minutes later... the ground heaves. Molten rock rains
+> down. The sky glows red-hot... maybe hot enough to burn forests. An hour in... the blast wave hits. Soot blocks the
+> Sun for years. Three quarters of all species... gone. And yet... that asteroid... is why we're here.
+
+The other numbers (1,000 km, 20 km/s, magnitude ~10–11, megatons) now live only in the readouts. The beat table below
+gives the v2 times (39.4 s); v3 times scale with the new narration. The 16:9 mode is not rendered for v3.
 
 ## Beats (`short.py`)
 | t (s) | counter | picture | sound |
@@ -63,6 +70,6 @@ disclaimer captions (user rule).
 - Code: `audio/narration.py`, `audio/gen_voice.py`, `audio/mix.py` (sound + SRT), `short.py` (picture; `info`, stills,
   `patch` modes), `encode.sh` (mux, no `-shortest`), `thumbnail.py`.
 - Shared code: `../lib/` (unchanged).
-- Scratch: `.../scratchpad/series/S13-asteroid/`.
+- Scratch: `.../scratchpad/series/V3-asteroid-ground/`.
 - Outputs: `out/` (git-ignored): `asteroid-ground-short.mp4`, `asteroid-ground-16x9.mp4`, `asteroid-ground.srt`,
   `thumb.jpg`, `thumb-vertical.jpg`.

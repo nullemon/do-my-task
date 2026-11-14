@@ -65,7 +65,7 @@ def render(S, seg_s=5.0, crf=16):
         f1 = min(f0 + step, n); p = os.path.join(seg_dir, f"seg_{k:03d}_{f0}_{f1}.mp4"); parts.append(p)
         if os.path.exists(p) and nframes(p) == f1 - f0: continue
         if sc is None: sc = S.Scene()
-        tmp = p + ".part.mp4"; enc = Encoder(tmp, sc.W, sc.H, S.FPS, crf=crf)
+        tmp = p + ".part.mp4"; enc = Encoder(tmp, sc.L.W, sc.L.H, S.FPS, crf=crf)
         for i in range(f0, f1): enc.write(sc.frame(i / S.FPS))
         enc.close(); os.replace(tmp, p)
         print(f"segment {k} frames {f0}-{f1}/{n}  {time.time() - T0:.0f}s", flush=True)
@@ -87,13 +87,18 @@ def measure(p):
 
 
 def finalize(raw, out, I=-14.0, TP=-1.0):
-    """two-pass loudnorm (lib.audio.loudnorm); if the true peak still exceeds TP, an oversampled limiter at TP-0.9 dB"""
+    """two-pass loudnorm (lib.audio.loudnorm), then (for AAC headroom) an oversampled limiter 2 dB under TP followed by
+    make-up gain back towards I, never pushing the true peak above TP - 1 dB"""
     from .audio import loudnorm
     loudnorm(raw, out, I, TP); li, tp = measure(out)
-    if tp > TP:
+    if tp > TP - 1.0:
         tmp = out + ".lim.wav"; os.replace(out, tmp)
-        lim = 10 ** ((TP - 0.9) / 20)
+        lim = 10 ** ((TP - 2.0) / 20)
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp, "-af", f"aresample=192000,alimiter=limit={lim:.4f}:level=false:attack=1:release=60,"
-                        "aresample=48000", "-c:a", "pcm_s16le", out], check=True); os.remove(tmp)
+                        "aresample=48000", "-c:a", "pcm_f32le", tmp + ".2.wav"], check=True)
+        li, tp = measure(tmp + ".2.wav")
+        g = max(0.0, min(I - li, (TP - 1.0) - tp))
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", tmp + ".2.wav", "-af", f"volume={g:.2f}dB", "-c:a", "pcm_s16le", out], check=True)
+        os.remove(tmp); os.remove(tmp + ".2.wav")
         li, tp = measure(out)
     print(f"final mix {li:.1f} LUFS, {tp:.1f} dBTP")

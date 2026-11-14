@@ -79,5 +79,5 @@ def finalize(raw, out, I=-14.0, TP=-1.0):
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", raw, "-af", af, "-c:a", "pcm_s16le", out], check=True)
         i1, tp1 = _measure(out)
         print(f"  finalize: gain {g:+.2f} dB -> {i1:.2f} LUFS, {tp1:.2f} dBTP", flush=True)
-        if abs(i1 - I) <= 0.2 and tp1 <= TP + 0.05: return
+        if abs(i1 - I) <= 0.1 and tp1 <= TP + 0.05: return
         g += 1.7 * (I - i1)

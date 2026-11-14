@@ -10,6 +10,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.v3_kit import build_voice, finalize
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -54,7 +55,7 @@ def plink(t0, f, gain=0.25):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)             # REDO v3 voice post chain
     seq = [(0.0, "night")] + [(ts, k) for ts, k in S.SWAPS]
     bed = np.zeros((N, 2))
     for i, (ts, k) in enumerate(seq):
@@ -86,7 +87,7 @@ def main():
     mix *= np.clip((S.DUR - tt) / 0.4, 0, 1)[:, None] * np.clip(tt / 0.03, 0, 1)[:, None]
     raw = os.path.join(OUT, "mix_raw.wav")
     sf.write(raw, mix.astype(np.float32), SR, subtype="FLOAT")
-    A.loudnorm(raw, os.path.join(OUT, "mix.wav"), -14.0, -1.0); os.remove(raw)
+    finalize(raw, os.path.join(OUT, "mix.wav")); os.remove(raw)              # v3: loudnorm + true-peak guard
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)
     A.write_srt(os.path.join(HERE, "..", "out", "galaxies-visible.srt"), S.PL, lambda k: pc[k])

@@ -26,7 +26,7 @@ from lib.audio import place
 from skygeo import eq_vec, eq2hor, lens_for, hdir, EQ2GAL
 from mwsky import canvas, WL, HB, PXD
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-star-clusters"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-clusters"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/B_valley.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.15
@@ -152,9 +152,9 @@ class Scene:
         self.hz = fg.horizon
         self.lens = lens_for(True, self.hz)
         L.cap_y = 1000
-        self.caps = Captions(L, WORDS, emphasis={"THOUSAND", "CLUSTER", "PLEIADES", "DOZENS", "SIRIUS", "HYADES", "GIANTS",
-                                                 "OMEGA", "CENTAURI", "10 MILLION", "MILLION", "THOUSANDS", "DARK", "HEART",
-                                                 "MOON", "SUBURBS", "BLUE", "NEVER"})
+        self.caps = Captions(L, WORDS, emphasis={"IMAGINE", "INSIDE", "CLUSTER", "PLEIADES", "BLAZING", "DOZENS", "SIRIUS", "HYADES",
+                                                 "GIANTS", "OMEGA", "CENTAURI", "10 MILLION", "MILLION", "DARK", "HEART",
+                                                 "NEAREST", "BLAZES", "SUBURBS", "BLUE", "NEVER", "QUIET"})
         self.hs = 2                                                            # half-res grid for smooth layers
         self.rays = self.lens.rays(1)
         self.rays_h = self.lens.rays(self.hs)
@@ -531,7 +531,7 @@ class Scene:
 
     def target_ring(self, sky, t, lst):
         """pulsing chromatic target ring on the real Pleiades (M45) while the hook says 'star cluster'"""
-        a = ramp(t, wt("hook_b", "NOW") - 0.1, wt("hook_b", "NOW") + 0.4)
+        a = ramp(t, wt("hook_b", "INSIDE") - 0.1, wt("hook_b", "INSIDE") + 0.4)   # REDO v3 anchor
         if a <= 0: return
         hc = eq2hor(lst) @ eq_vec(*M45); px, py, _ = self.lens.project(hc[None]); px, py = float(px[0]), float(py[0])
         lay = np.zeros_like(sky)
@@ -600,13 +600,9 @@ def run(stills=None):
             t0 = time.time(); save(sc.frame(t), os.path.join(SCR, "stills", f"{tag}_{t:05.2f}.png"))
             print(f"t={t:.2f} {time.time() - t0:.1f}s", flush=True)
         return
-    n = int(round(DUR * FPS))
-    enc = Encoder(os.path.join(SCR, f"video_{tag}.mp4"), sc.L.W, sc.L.H, FPS, crf=17)
-    t0 = time.time()
-    for i in range(n):
-        enc.write(sc.frame(i / FPS))
-        if i % 60 == 0: print(f"{tag} frame {i}/{n}  {time.time() - t0:.0f}s", flush=True)
-    enc.close(); print("done", time.time() - t0, "DUR", DUR)
+    from lib.v3 import render_segments                               # REDO v3: restart-safe segments + concat
+    for k in ("today", "pleiades", "hyades", "omega", "nsc"): sc.get(k)   # fixed load order -> same star phases in every segment
+    render_segments(sc.frame, sc.L.W, sc.L.H, FPS, DUR, os.path.join(SCR, "seg"), os.path.join(SCR, f"video_{tag}.mp4"))
 
 
 def patch(ranges):

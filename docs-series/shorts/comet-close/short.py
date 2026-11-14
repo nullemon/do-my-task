@@ -11,6 +11,7 @@ Usage (one heavy process, under nice):
   /home/user/ttsenv/bin/python short.py vert 1.0,9.5            stills -> SCR/stills/vert_<t>.png
   /home/user/ttsenv/bin/python short.py patch vert 3.9:5.2      re-render only those time ranges
   /home/user/ttsenv/bin/python short.py info
+  /home/user/ttsenv/bin/python short.py seg                     REDO v3: segment render (SCR/segs) -> SCR/video_vert.mp4
 """
 import os, sys, math, time
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [os.path.join(HERE, ".."), HERE, os.path.join(HERE, "audio")]
@@ -24,7 +25,7 @@ from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 from comets import comet_field, nucleus_loupe
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-comet-close"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-comet-close"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A2_park.png"
 # SOURCE px of A2_park.png (941x1672), as measured for ../betelgeuse-tonight: lamp heads + pole bases, lawn plane
 LAMPS_SRC = [(193, 1198, 1325), (666, 1207, 1322), (816, 1113, 1323)]
@@ -57,17 +58,18 @@ def deg_of_km(km): return 2 * math.degrees(math.atan(km / 2 / D_KM))
 
 # ------------------------------------------------------------------------------------------------ timeline
 ORDER = ["moon", "halley", "hb", "neo", "duck", "mcn"]
-T_SW = {k: LN[k]["start"] - 0.06 for k in ORDER[1:]}
+NAMEW = {"halley": "HALLEY'S", "hb": "HALE-BOPP", "neo": "NEOWISE", "duck": "67P", "mcn": "MCNAUGHT"}
+T_SW = {k: wt(k, NAMEW[k]) - 0.10 for k in ORDER[1:]}        # v3: the swap lands on the name, after the "Then..." beat
 T_BACK = LN["end"]["start"] - 0.10
 T_WO0 = T_BACK - 0.80
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_BACK, "moon2")]
 COLLAPSE, BLOOM = 0.42, 0.65
-T_LOUPE_H = (wt("halley", "NUCLEUS") - 0.25, wt("halley", "BUT") + 0.1)
+T_LOUPE_H = (wt("halley", "HEART") - 0.25, wt("halley", "BUT") + 0.1)
 T_LOUPE_D = (T_SW["duck"] + 0.45, T_SW["mcn"] - 0.30)
 OUTBURSTS = [wt("duck", "67P") + 0.55, wt("duck", "SPITTING"), wt("duck", "JETS") + 0.25]
-PULSES = [wt("hook", "COMET"), wt("hook", "MOON"), wt("halley", "COMA"), wt("halley", "15°"), wt("hb", "HALE-BOPP"),
-          wt("hb", "SHADOWS"), wt("neo", "GOLDEN"), wt("neo", "SODIUM"), wt("duck", "JETS"), wt("mcn", "MCNAUGHT"), wt("mcn", "STRIPED"),
-          wt("mcn", "ENTIRE"), wt("end", "SNOWBALLS"), wt("end", "MILLIONS")]
+PULSES = [wt("hook", "COMET"), wt("hook", "MOON"), wt("halley", "GLOW"), wt("halley", "30"), wt("hb", "HALE-BOPP"),
+          wt("hb", "SHADOW"), wt("neo", "GOLDEN"), wt("neo", "SODIUM"), wt("duck", "JETS"), wt("mcn", "MCNAUGHT"), wt("mcn", "STRIPED"),
+          wt("mcn", "ENTIRE"), wt("end", "SNOWBALL"), wt("end", "WIDE")]
 
 
 def obj_at(t):
@@ -198,9 +200,9 @@ class Scene:
             x_, y_ = rs.integers(0, 440, 2); ls[y_, x_] += bbcolor(float(rs.uniform(3500, 15000))) * float(rs.uniform(0.2, 1.0) ** 3) * 2.0
         self.loupe_stars = cv2.GaussianBlur(ls, (0, 0), 0.6)
         self.cache = {}
-        self.caps = Captions(L, WORDS, emphasis={"COMET", "MOON", "HALLEY'S", "POTATO", "15", "GREEN", "COMA", "15°", "SKY", "HALE-BOPP",
-                                                 "GIANT", "60", "SHADOWS", "NEOWISE", "GOLDEN", "SODIUM", "67P", "RUBBER-DUCK", "JETS",
-                                                 "MCNAUGHT", "BRIGHTEST", "STRIPED", "ENTIRE", "SNOWBALLS", "MILLIONS"})
+        self.caps = Captions(L, WORDS, emphasis={"IMAGINE", "COMET", "MOON", "HALLEY'S", "HEART", "POTATO", "GREEN", "GLOW", "30", "MOONS", "HALE-BOPP",
+                                                 "BRIGHT", "SHADOW", "NEOWISE", "GOLDEN", "SODIUM", "67P", "DUCK", "JETS",
+                                                 "MCNAUGHT", "STRIPED", "ENTIRE", "SKY", "GLORY", "SNOWBALL", "WIDE"})
         L.cap_y = 960; L.cap_maxw = 760
 
     def up(self, a): return cv2.resize(a, (self.W, self.H), interpolation=cv2.INTER_LINEAR)
@@ -547,6 +549,8 @@ if __name__ == "__main__":
                       ("halley nucleus", 15.3), ("hb nucleus", 60), ("67P nucleus", 4.3), ("mcn nucleus", 3.2)):
             print(f"{k:16s} {km:>9} km -> {deg_of_km(km):.4f} deg, r = {px_of_km(km):.3f} px")
         sys.exit()
+    if sys.argv[1] == "seg":                                                 # REDO v3: restart-safe segment render
+        from lib.v3_kit import render; render(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "patch":
         patch([tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     st = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else None

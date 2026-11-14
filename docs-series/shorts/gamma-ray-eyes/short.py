@@ -43,11 +43,11 @@ SW = {"ir": LN["ir"]["start"] - 0.14, "radio": LN["radio"]["start"] - 0.14, "mic
 SEQ = [("vis", 0.0), ("ir", SW["ir"]), ("radio", SW["radio"]), ("micro", SW["micro"]), ("gamma", SW["gamma"]), ("vis", SW["vis2"])]
 WIPE = 0.55
 WIPE_END = 0.34
-T_QUIET0, T_QUIET1 = wt("gamma", "SUN"), wt("gamma", "VANISHES", end=True)
-T_CR0, T_HIT = wt("gamma", "COSMIC"), wt("gamma", "MOON")
-T_BLAZE = wt("gamma", "BLAZES")
+T_QUIET0, T_QUIET1 = wt("gamma_b", "SUN"), wt("gamma_b", "VANISHES", end=True)
+T_CR0, T_HIT = wt("gamma_c", "COSMIC"), wt("gamma_c", "MOON")
+T_BLAZE = wt("gamma_d", "BLAZES")
 T_GRB = wt("fermi", "TELESCOPE") + 0.05
-T_FACT0, T_FACT1 = LN["fermi"]["start"] + 0.1, LN["fermi"]["end"] + 0.45
+T_FACT0, T_FACT1 = LN["fermi"]["start"] + 0.1, LN["fermi"]["end"] + 0.90
 
 MODE_COL = {"vis": (255, 246, 225), "ir": (255, 96, 170), "radio": (110, 232, 255), "micro": (255, 196, 96), "gamma": (205, 130, 255)}
 LABEL = {"vis": ("VISIBLE LIGHT", "HUMAN EYES"), "ir": ("INFRARED EYES", "PLANCK · 350 µm DUST GLOW"),
@@ -99,7 +99,7 @@ class Scene:
         self.eln = np.clip((self.hz - yy) / self.hz, 0, 1).astype(f32)
         self.shim = [cv2.resize(fbm2((96, 96), 61 + k, 2.2), (hw, hh), interpolation=cv2.INTER_CUBIC) for k in range(2)]
         self._prep_fg()
-        caps_emph = {"GAMMA", "RAYS", "MOON", "OUTSHINE", "SUN", "INFRARED", "RADIO", "MICROWAVE", "BLAZES", "UNIVERSE", "SLICE", "VANISHES", "FERMI", "OUTSHINES", "DUST", "WARM"}
+        caps_emph = {"GAMMA", "RAYS", "MOON", "OUTSHINE", "SUN", "INFRARED", "RADIO", "MICROWAVE", "BLAZES", "UNIVERSE", "SLICE", "VANISHES", "FERMI", "OUTSHINES", "DUST", "WARM", "IMAGINE", "GALAXY'S", "DIMS", "ROARS", "AFTERGLOW", "COSMIC", "CONFIRMED", "TINY"}
         self.caps = Captions(L, WORDS, emphasis=caps_emph)
         r = np.random.default_rng(7)
         n = 6
@@ -526,6 +526,9 @@ def run(vertical, stills=None):
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == "segs":
+        from lib.v3_redo_q5 import render_segments
+        render_segments(sys.modules[__name__]); sys.exit()
     vert = sys.argv[1] != "wide"
     st = [float(x) for x in sys.argv[2].split(",")] if len(sys.argv) > 2 else None
     run(vert, st)

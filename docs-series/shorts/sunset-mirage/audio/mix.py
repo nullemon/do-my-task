@@ -11,6 +11,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib import v3_redo_q5 as V3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -61,7 +62,7 @@ def blips(t0, t1, rate, seed, gain):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = V3.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     gold = chord(220.0, (0, 4, 7, 11, 14), 0.55, 10)          # A maj9: golden hour
     dusk = chord(174.6, (0, 3, 7, 10, 14), 0.40, 11)          # F min9: after sunset
     t_d = S.T_GF + 0.6

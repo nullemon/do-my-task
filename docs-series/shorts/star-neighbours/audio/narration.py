@@ -3,18 +3,28 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds)."""
 import re
 
-LINES = [
-    ("hook", "What if the brightest stars in our galaxy were our nearest {NEIGHBOUR|neighbor}?", 0.70),
-    ("now", "Tonight, it's Alpha Centauri.", 0.70),
-    ("sir", "Sirius. As bright as Jupiter.", 0.70),
-    ("vega", "Vega. Still just a dot.", 0.70),
-    ("bet", "Betelgeuse. Over a hundred times brighter than Venus.", 0.35),
-    ("bet2", "Now the city casts shadows.", 0.70),
-    ("rig", "Rigel. Almost a full Moon, from one tiny point.", 0.70),
-    ("den", "Deneb. As bright as the full Moon.", 0.70),
-    ("eta", "Eta Carinae. In its {1843|eighteen forty-three} outburst, over a hundred full Moons.", 0.35),
-    ("eta2", "Night turns to twilight.", 0.70),
-    ("end", "Lucky for us, our neighbours are small.", 0.0),
+LINES = [   # REDO v3 storytelling script (74 words)
+    ("hook", "Imagine tonight...", 0.40),
+    ("now", "our nearest {NEIGHBOUR|neighbor}, Alpha Centauri...", 0.40),
+    ("now2", "was swapped for a famous star.", 1.00),
+    ("sir", "First... Sirius.", 0.40),
+    ("sir2", "As bright as Jupiter.", 0.90),
+    ("vega", "Vega.", 0.40),
+    ("vega2", "Still just a dot.", 1.00),
+    ("bet", "Now... Betelgeuse.", 0.40),
+    ("bet2", "Brighter than a hundred Venuses.", 0.50),
+    ("bet3", "The city casts shadows.", 1.00),
+    ("rig", "Rigel.", 0.40),
+    ("rig2", "Almost a full Moon...", 0.40),
+    ("rig3", "from one tiny point.", 0.90),
+    ("den", "Deneb.", 0.40),
+    ("den2", "A whole full Moon.", 1.00),
+    ("eta", "And then... Eta Carinae.", 0.50),
+    ("eta1", "Its great eruption...", 0.60),
+    ("eta2", "Over a hundred full Moons.", 0.50),
+    ("eta3", "Night turns to twilight.", 1.10),
+    ("end", "Lucky for us...", 0.40),
+    ("end2", "our real {NEIGHBOUR|neighbor} is a quiet one.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

@@ -10,7 +10,7 @@ Usage: /home/user/ttsenv/bin/python clusters.py [key ...]"""
 import os, sys, json, math
 import numpy as np
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-star-clusters"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-clusters"
 LY = 3.26156                                   # ly per pc
 V_SIRIUS = -1.46
 V_KEEP = 7.0

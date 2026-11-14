@@ -3,8 +3,8 @@ Gliese) -> SCR/stars.npz. Keeps every star brighter than V = 7.0 (RA, Dec, V mag
 Usage: /home/user/ttsenv/bin/python catalog.py"""
 import csv, os
 import numpy as np
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S9-betelgeuse"
-HYG = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S5-star-dates"   # HYG v4.1 download (shared, read-only)
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-betelgeuse-tonight"
+HYG = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-galaxies-visible"   # HYG v4.1 download (S5-star-dates scratch was deleted) (shared, read-only)
 SRC = os.path.join(HYG, "dl", "hygrepo", "hyg", "CURRENT", "hygdata_v41.csv")
 LY_PER_PC = 3.26156
 

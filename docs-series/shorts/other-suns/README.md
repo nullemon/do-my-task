@@ -6,6 +6,17 @@ light beams, chromatic bloom, diffraction spikes and swap shockwaves. One big or
 to the voice. A bold readout appears for each star: NAME, × SUN'S SIZE, temperature and angular width. There are no
 disclaimer captions (user rule).
 
+## REDO v3 narration (14 Nov, current)
+Storytelling style "C" from `../REDO_V3.md`: 74 words, Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended
+vectors) at speed 0.86, one TTS call per phrase (`audio/narration.py`), 0.4–0.5 s between phrases and 1.0–1.2 s at beat
+changes. Word timings come from `lib/voice.py`'s timed model (wrapped by `lib/voice_v3.py`, or this Short's own
+`audio/gen_voice.py` with the blended style). The v3 post chain (pitch-only rubberband 0.944, EQ, compressor, short echo)
+is applied in `lib/audio_v3.py`; music bed and SFX unchanged and ducked; −14 LUFS / −1 dBTP. Visuals unchanged, re-timed
+to the new word timings. 9:16 only. Scratch: `.../scratchpad/series/V3-other-suns/` (segmented render via `lib/render_v3.py`).
+> Imagine our Sun... replaced by another star. First... Proxima Centauri. A red dwarf. Noon turns to dim red dusk... and Earth freezes. Now... Sirius. Not even twice as wide... but twenty-five times brighter. The oceans boil. Arcturus. An orange giant... covering thirteen degrees of sky. And then... Rigel. A blue supergiant, seventy-nine times wider. Earth... vaporized. Finally... Betelgeuse. So big... it would reach past Mars. We'd be inside the star. Welcome back... little Sun.
+
+The older narration notes below are kept for history; the science and the on-screen readouts are unchanged.
+
 ## Narration (82 words, Kokoro am_michael @ 1.05)
 > What if our Sun was replaced by other stars? Let's start small. Proxima Centauri. A red dwarf, fifteen percent of the
 > Sun's width. Noon turns to dim red dusk, and Earth freezes. Sirius. Not even twice as wide, but twenty-five times

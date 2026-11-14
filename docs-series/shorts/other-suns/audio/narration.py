@@ -4,13 +4,24 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if our Sun was replaced by other stars? Let's start small.", 0.25),
-    ("prox", "Proxima Centauri. A red dwarf, {15%|fifteen percent} of the Sun's width. Noon turns to dim red dusk, and Earth freezes.", 0.25),
-    ("sir", "Sirius. Not even twice as wide, but {25×|twenty-five times} brighter. Oceans boil.", 0.25),
-    ("arc", "Arcturus, an orange giant. {25×|Twenty-five times} wider, covering {13°|thirteen degrees} of sky.", 0.25),
-    ("rig", "Rigel, a blue supergiant, {79×|seventy-nine times} wider. Earth? Vaporized.", 0.25),
-    ("bet", "And Betelgeuse? {700×|Seven hundred times} wider, reaching past Mars. We'd be inside the star.", 0.30),
-    ("end", "Welcome back, Sun.", 0.0),
+    ("hook", "Imagine our Sun...", 0.50),
+    ("hook_2", "replaced by another star.", 1.00),
+    ("prox", "First... Proxima Centauri.", 0.45),
+    ("prox_2", "A red dwarf. Noon turns to dim red dusk...", 0.40),
+    ("prox_3", "and Earth freezes.", 1.00),
+    ("sir", "Now... Sirius.", 0.40),
+    ("sir_2", "Not even twice as wide... but {25×|twenty-five times} brighter.", 0.40),
+    ("sir_3", "The oceans boil.", 1.00),
+    ("arc", "Arcturus. An orange giant...", 0.45),
+    ("arc_2", "covering {13°|thirteen degrees} of sky.", 1.00),
+    ("rig", "And then... Rigel.", 0.40),
+    ("rig_2", "A blue supergiant, {79×|seventy-nine times} wider.", 0.50),
+    ("rig_3", "Earth... vaporized.", 1.00),
+    ("bet", "Finally... Betelgeuse.", 0.40),
+    ("bet_2", "So big... it would reach past Mars.", 0.45),
+    ("bet_3", "We'd be inside the star.", 1.10),
+    ("end", "Welcome back...", 0.35),
+    ("end_2", "little Sun.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

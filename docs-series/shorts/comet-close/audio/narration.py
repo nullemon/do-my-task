@@ -1,23 +1,25 @@
-"""Narration for the Short "What If Comets Passed as Close as the Moon?".
+"""REDO v3 (storytelling, 0.7 am_michael + 0.3 am_onyx @ 0.86). Narration for the Short "What If Comets Passed as Close as the Moon?".
 Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the spoken words (numbers etc.).
 Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if a comet passed as close as the Moon?", 0.70),
-    ("halley", "Halley's Comet.", 0.35),
-    ("halley2", "Its nucleus is a dark potato, just {15|fifteen} kilometres long.", 0.35),
-    ("halley3", "But its green coma would span {15°|fifteen degrees}.", 0.70),
-    ("hb", "Hale-Bopp.", 0.35),
-    ("hb2", "Bright enough to cast shadows.", 0.70),
-    ("neo", "NEOWISE.", 0.35),
-    ("neo2", "A golden tail, tinted by sodium.", 0.70),
-    ("duck", "{67P|Sixty-seven P}, the rubber-duck comet.", 0.35),
-    ("duck2", "Spitting jets.", 0.70),
-    ("mcn", "And {MCNAUGHT|Mac Nawt}.", 0.35),
-    ("mcn2", "A striped fan, filling the entire sky.", 0.70),
-    ("end", "Comets are dirty snowballs, a few kilometres wide...", 0.35),
-    ("end2", "with tails millions of kilometres long.", 0.0),
+    ("hook", "Imagine the Moon...", 0.45),
+    ("hook2", "replaced by a comet.", 1.10),
+    ("halley", "First... Halley's Comet.", 0.45),
+    ("halley2", "Its heart... a dark potato.", 0.45),
+    ("halley3", "But its green glow... {30|thirty} Moons wide.", 1.10),
+    ("hb", "Then... Hale-Bopp.", 0.45),
+    ("hb2", "So bright... you'd cast a shadow.", 1.10),
+    ("neo", "Now... NEOWISE.", 0.45),
+    ("neo2", "A golden tail... tinted by sodium.", 1.10),
+    ("duck", "{67P|Sixty-seven P}.", 0.45),
+    ("duck2", "A rubber duck... spitting jets.", 1.10),
+    ("mcn", "And then... {MCNAUGHT|Mac Nawt}.", 0.45),
+    ("mcn2", "Its striped tail... fills the entire sky.", 1.20),
+    ("end", "All that glory...", 0.45),
+    ("end2", "from a dirty snowball...", 0.40),
+    ("end3", "a few kilometres wide.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")
@@ -42,7 +44,7 @@ def spoken(text):
 
 def pieces(text):
     """subtitle strings aligned 1:1 with caption tokens (numbers kept as digits)"""
-    rep = {"15°": "15 degrees"}
+    rep = {"MCNAUGHT": "McNaught"}
     out = []
     for cap, ws in tokens(text):
         if len(ws) == 1 and cap == ws[0]: out.append(cap)

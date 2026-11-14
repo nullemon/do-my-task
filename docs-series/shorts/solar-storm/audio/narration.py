@@ -1,17 +1,29 @@
-"""Narration for the Short "If the 1859 Solar Storm Hit Today".
+"""REDO v3 storytelling narration. Narration for the Short "If the 1859 Solar Storm Hit Today".
 Markup: {CAPTION|spoken words} shows CAPTION for the whole span of the spoken words. Each line: (key, text, pause_after_s).
 Modern impacts are phrased with "could" (Lloyd's 2013 scenario range), never "would"."""
 import re
 
-LINES = [
-    ("hook", "In {1859|eighteen fifty-nine}, the Sun fired the biggest storm in recorded history. If it hit today...", 0.30),
-    ("flare", "Richard Carrington saw a white flare. {17.6|Seventeen point six} hours later, it hit Earth.", 0.20),
-    ("erupt", "The sky erupted.", 0.25),
-    ("aurora", "Auroras reached the Caribbean. People read newspapers by their light. Telegraphs sparked and shocked operators.", 0.30),
-    ("grid", "Today, it could burn out transformers. Cities could go dark for months.", 0.15),
-    ("nosig", "No phones. No {GPS|G P S}.", 0.35),
-    ("cost", "Damage could reach trillions of dollars. In {2012|twenty twelve}, one this big missed us by about nine days.", 0.40),
-    ("end", "It's only a matter of when.", 0.0),
+LINES = [   # REDO v3 storytelling (0.7 am_michael + 0.3 am_onyx @ 0.86): ~0.4 s between phrases, 0.9-1.0 s at beat changes (fits 50 s)
+    ("hook", "Imagine the Sun...", 0.40),
+    ("hook2", "firing the biggest storm on record.", 1.00),
+    ("hook3", "In {1859|eighteen fifty-nine}... it did.", 1.00),
+    ("flare", "A white flare...", 0.40),
+    ("flare2", "{17.6|Seventeen point six} hours later...", 0.40),
+    ("flare3", "it hit Earth.", 1.00),
+    ("erupt", "The sky... erupted.", 1.00),
+    ("aurora", "Auroras reached the Caribbean.", 0.40),
+    ("aurora2", "People read by their light.", 0.40),
+    ("aurora3", "Telegraphs sparked.", 1.00),
+    ("grid", "Imagine it today.", 0.40),
+    ("grid2", "Transformers could burn out.", 0.40),
+    ("grid3", "Cities... dark for months.", 0.45),
+    ("nosig", "No phones.", 0.40),
+    ("nosig2", "No {GPS|G P S}.", 1.00),
+    ("cost", "Trillions... in damage.", 1.00),
+    ("cost2", "In {2012|twenty twelve}...", 0.40),
+    ("cost3", "one this big... missed us by days.", 1.00),
+    ("end", "It's only a matter...", 0.40),
+    ("end2", "of when.", 0.00),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

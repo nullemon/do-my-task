@@ -8,6 +8,17 @@ breaks into fragments that shear along its orbit, and spreads into a glowing rin
 small Moon, so the Short loops. Big orange one-word captions are synced to the voice. A readout appears at each stage:
 DISTANCE / × TODAY'S SIZE · degrees / TIDES × STRONGER / OCEAN TIDE. There are no disclaimer captions (user rule).
 
+## REDO v3 narration (14 Nov, current)
+Storytelling style "C" from `../REDO_V3.md`: 74 words, Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended
+vectors) at speed 0.86, one TTS call per phrase (`audio/narration.py`), 0.4–0.5 s between phrases and 1.0–1.2 s at beat
+changes. Word timings come from `lib/voice.py`'s timed model (wrapped by `lib/voice_v3.py`, or this Short's own
+`audio/gen_voice.py` with the blended style). The v3 post chain (pitch-only rubberband 0.944, EQ, compressor, short echo)
+is applied in `lib/audio_v3.py`; music bed and SFX unchanged and ducked; −14 LUFS / −1 dBTP. Visuals unchanged, re-timed
+to the new word timings. 9:16 only. Scratch: `.../scratchpad/series/V3-moon-closer/` (segmented render via `lib/render_v3.py`).
+> Imagine the Moon... creeping closer. Here it is today. Now... twice as wide. The tides... seven times stronger. Closer... tides fifty-seven times stronger. The oceans surge inland. And then... the ground shakes. Volcanoes wake. Every crater... in sharp detail. Closer... It fills the sky. Tides... kilometers high. Until... the Roshe limit. Earth's gravity rips it apart... into a ring. In reality... it's drifting away. Three point eight centimeters a year. Saying goodbye... very slowly.
+
+The older narration notes below are kept for history; the science and the on-screen readouts are unchanged.
+
 ## Narration (70 words, Kokoro am_michael @ 0.92, re-voiced 13 Nov)
 The user found the first cut too fast, so it was re-voiced at 0.92. Each sentence is its own line, with ~0.35 s
 between sentences, ~0.7 s at each beat change and 0.85 s after the ring line. The beats were re-timed to the new

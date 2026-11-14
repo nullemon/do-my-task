@@ -1,6 +1,6 @@
 # What If Famous Stars Were Our Nearest Neighbour? (YouTube Short, B7)
 
-The video is 1080×1920 at 30 fps and 38.6 s long, 9:16 only. It uses the batch-2 "swap" format: one locked tripod
+The video is 1080×1920 at 30 fps and 49.5 s long (REDO v3), 9:16 only. It uses the batch-2 "swap" format: one locked tripod
 shot of the user's `C_city.png` at night with the city lights on, under the real southern sky. The sky is HYG v4.1 at
 its true RA/Dec and B−V colours, at latitude 34° S and sidereal time 10.85 h, facing south-east, with the Southern
 Cross and the Pointers over the skyline.
@@ -16,12 +16,17 @@ The city is relit by each new star. The ending is a white-out back to Alpha Cent
 word is shown at a time, and each star gets a bold readout: NAME / MAGNITUDE · × / comparison. There are no
 disclaimer captions.
 
-## Narration (78 words, Kokoro am_michael @ 0.92, real word timings, calm pacing)
-There are pauses of ~0.35 s between sentences and ~0.7 s at each beat change.
-> What if the brightest stars in our galaxy were our nearest neighbour? Tonight, it's Alpha Centauri. Sirius. As
-> bright as Jupiter. Vega. Still just a dot. Betelgeuse. Over a hundred times brighter than Venus. Now the city casts
-> shadows. Rigel. Almost a full Moon, from one tiny point. Deneb. As bright as the full Moon. Eta Carinae. In its
-> 1843 outburst, over a hundred full Moons. Night turns to twilight. Lucky for us, our neighbours are small.
+## Narration (REDO v3, 14 Nov: 75 words, storytelling style, ~49.5 s)
+Voice: Kokoro 0.7 am_michael + 0.3 am_onyx (blended style vectors) at speed 0.86, one TTS call per phrase, real word
+timings (`../lib/v3.py`, wrapping `../lib/voice.py`). Pauses 0.4–0.5 s between phrases, 0.9–1.1 s at each beat change.
+Voice chain: rubberband pitch 0.944 (formants preserved) + EQ + compressor + short echo (see `../REDO_V3.md`).
+> Imagine tonight... our nearest neighbour, Alpha Centauri... was swapped for a famous star. First... Sirius. As bright
+> as Jupiter. Vega. Still just a dot. Now... Betelgeuse. Brighter than a hundred Venuses. The city casts shadows. Rigel.
+> Almost a full Moon... from one tiny point. Deneb. A whole full Moon. And then... Eta Carinae. Its great eruption...
+> Over a hundred full Moons. Night turns to twilight. Lucky for us... our real neighbour is a quiet one.
+
+The 1843 eruption now builds through "its great eruption..." and bursts after the pause, on "over a hundred full Moons"
+(the year stays in the readout). Earlier v2 narration (am_michael @ 0.92, 78 words, 38.6 s) is in git history.
 
 ## The numbers (m = M + 5·log10(d / 10 pc), d = 4.37 ly = 1.340 pc, so the offset is −4.365)
 Check: Alpha Cen A has M = 4.38, which gives m = 0.01. That matches its real V = −0.01.
@@ -128,8 +133,8 @@ The brightness factors in the next table are relative to:
   - The mix is at −14 LUFS / −1 dBTP and also writes `out/star-neighbours.srt`.
 - `catalog.py` (HYG → `SCR/stars.npz`), plus `skygeo.py` and `mwsky.py`, copied from `../star-dates` with the latitude
   set to −34°.
-- `short.py` (picture), `encode.sh` (mux, no `-shortest`) and `thumbnail.py`.
-- Shared code: `../lib/` (unchanged). Scratch: `.../scratchpad/series/B2-star-neighbours/` (HYG csv in `dl/hyg/`).
+- `short.py` (picture; renders in restart-safe 6 s segments, `SCR/seg/`), `encode.sh` (mux, no `-shortest`) and `thumbnail.py`.
+- Shared code: `../lib/` (existing modules unchanged; REDO v3 adds `../lib/v3.py`: voice, voice chain, loudness finalizer, segment render). Scratch: `.../scratchpad/series/V3-star-neighbours/` (HYG csv in `dl/hyg/`).
 - Outputs in `out/` (git-ignored): `star-neighbours-short.mp4`, `star-neighbours.srt`, `thumb-vertical.jpg` and
   `thumb.jpg`.
 

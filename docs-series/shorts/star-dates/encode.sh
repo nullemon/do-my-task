@@ -3,7 +3,7 @@
 # (no -shortest: with a subtitle stream it cuts the file at the last cue)
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S5-star-dates
+SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-dates
 TAG=${1:-vert}
 if [ "$TAG" = vert ]; then OUTF="$HERE/out/star-dates-short.mp4"; else OUTF="$HERE/out/star-dates-16x9.mp4"; fi
 nice -n 10 ffmpeg -v error -y -i "$SCR/video_$TAG.mp4" -i "$SCR/audio/mix.wav" -i "$HERE/out/star-dates.srt" \

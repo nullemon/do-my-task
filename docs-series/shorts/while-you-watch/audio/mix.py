@@ -12,6 +12,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib import v3_redo_q5 as V3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(round(S.NFR / S.FPS * SR)); t = np.arange(N) / SR
@@ -127,7 +128,7 @@ def boom(t0, size, pan, seed):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = V3.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     sc = S.Scene(True)
     bed = pad() + arpeggio() + bass()
     # counter ticks: a quiet clock that gets busier as more counters are running
@@ -159,7 +160,7 @@ def main():
     sw = A.env(N, [(0, 0), (S.T_LIGHT - 0.2, 0), (S.T_LIGHT + 0.8, 1), (S.T_END + 1.5, 0.6), (S.DUR, 0.3)])
     bed += A.drone(N, root=NOTE(46 - 12), seed=75, bright=0.4) * 0.6 * sw[:, None]
     # end: riser into the white-out; the loop's impact sits at t = 0 (the white flash fading in the first frame)
-    bed += A.riser(N, S.T_WO - 1.2, S.DUR, seed=76) * 0.9
+    bed += A.riser(N, S.T_WO - 1.2, N / SR, seed=76) * 0.9
     bed += A.thump(N, 0.0, 0.8)
     bed += A.shimmer(N, 0.0, 1.6, seed=77, gain=0.25) * A.env(N, [(0, 1), (1.6, 0), (S.DUR, 0)])[:, None]
     bed = A.duck(bed, voice, depth=0.45)

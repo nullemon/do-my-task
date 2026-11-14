@@ -3,7 +3,7 @@ Inputs (downloaded once into SCR/dl, see README): Haslam 408 MHz (LAMBDA, NESTED
 and 100 GHz (PR2, nside 128), Fermi-LAT 3FHL event list (>10 GeV, all sky) and the 4FGL-DR4 catalogue (gll_psc_v35).
 Run: PYTHONPATH=SCR/pylib /home/user/ttsenv/bin/python -I prep_maps.py  -> SCR/maps.npz"""
 import os, sys
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S3-gamma-ray-eyes"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-gamma-ray-eyes"
 sys.path.insert(0, os.path.join(SCR, "pylib"))
 import numpy as np, healpy as hp
 from astropy.io import fits

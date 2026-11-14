@@ -19,8 +19,8 @@ import numpy as np, cv2
 from PIL import Image
 from lib.core import f32, srgb_to_lin, lum, fbm2, smooth, bbcolor
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-galaxies-visible"
-DL = os.path.join(SCR, "dl")
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-galaxies-visible"
+DL = os.path.join("/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-galaxies-visible", "dl")          # downloads kept in the B2 scratch
 MOONTEX = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/shorts-common/dl/sss/8k_moon.jpg"
 F_PX = 6000.0
 PXD = F_PX * math.pi / 180.0                     # 104.7 screen px per degree

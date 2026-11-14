@@ -5,15 +5,24 @@ Facts (see README): Ursa Major Moving Group (Merak, Phecda, Megrez, Alioth, Miza
 peak V ~ -3 (computed from its absolute magnitude) vs Sirius -1.46 today."""
 import re
 
-LINES = [
-    ("hook", "The constellations aren't fixed. Watch what happens to the Big Dipper.", 0.25),
-    ("ff", "Every star is moving. Barnard's Star, the fastest, shoots right across the sky.", 0.25),
-    ("dip", "Five Dipper stars travel together, as a family. But Dubhe and Alkaid go their own way. "
-            "In {100,000|a hundred thousand} years, the Dipper is broken.", 0.30),
-    ("orion", "Orion's shoulders drift apart. Stars moving away fade out.", 0.30),
-    ("gj", "And in {1.3|one point three} million years, {GLIESE 710|Gleeza seven ten} skims past the Sun, "
-           "blazing brighter than any star we see today.", 0.35),
-    ("end", "Every constellation you know is temporary.", 0.0),
+LINES = [   # REDO v3 storytelling script (75 words). Keys are <beat>_<a..e>; short.py groups them per beat.
+    ("hook_a", "Imagine the sky... fast-forwarded.", 0.40),
+    ("hook_b", "Watch the Big Dipper.", 1.00),
+    ("ff_a", "Every star... moves.", 0.40),
+    ("ff_b", "Barnard's Star, the fastest...", 0.40),
+    ("ff_c", "shoots across the sky.", 1.00),
+    ("dip_a", "Most Dipper stars travel together... a family.", 0.50),
+    ("dip_b", "But Dubhe and Alkaid...", 0.40),
+    ("dip_c", "go their own way.", 0.60),
+    ("dip_d", "In {100,000|a hundred thousand} years...", 0.40),
+    ("dip_e", "the Dipper is broken.", 1.10),
+    ("orion_a", "Orion's shoulders... drift apart.", 0.50),
+    ("orion_b", "Stars moving away fade.", 1.00),
+    ("gj_a", "In {1.3|one point three} million years...", 0.50),
+    ("gj_b", "{GLIESE 710|Gleeza seven ten}... skims past the Sun.", 0.50),
+    ("gj_c", "Blazing brighter than Sirius.", 1.20),
+    ("end_a", "Every constellation you know...", 0.45),
+    ("end_b", "is temporary.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

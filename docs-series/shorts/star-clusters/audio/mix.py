@@ -10,6 +10,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.v3 import build_voice_v3, finalize
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -43,7 +44,7 @@ def whoosh(t1, dur=0.6, seed=0, gain=1.0):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)   # REDO v3 voice chain
     seq = [(0.0, "today")] + S.SWAPS
     bed = np.zeros((N, 2))
     for i, (ts, k) in enumerate(seq):
@@ -63,7 +64,7 @@ def main():
         bed += sh * A.env(N, [(0, 0), (ts, 0), (ts + 0.05, 1), (ts + 1.6, 0), (S.DUR, 0)])[:, None] * 0.35
         bed += A.ticks(N, ts + 0.3, ts + 1.2, rate=14.0, gain=0.07, accel=1.5)
     # target ring pings on "Now imagine..."
-    bed += A.ticks(N, S.wt("hook_b", "NOW") - 0.05, S.T_SW["ple"] - 0.6, rate=1.1, gain=0.10)
+    bed += A.ticks(N, S.wt("hook_b", "INSIDE") - 0.05, S.T_SW["ple"] - 0.6, rate=1.1, gain=0.10)
     # galactic centre: deep drone under the blaze
     bed += A.drone(N, root=32.7, seed=64, bright=0.3) * 1.0 * A.env(N, [(0, 0), (S.T_SW["nsc"], 0), (S.T_SW["nsc"] + 0.4, 1), (S.T_BACK, 1), (S.T_BACK + 0.1, 0), (S.DUR + 1, 0)])[:, None]
     bed += A.riser(N, S.T_WO0 - 0.3, S.T_BACK, seed=65) * 1.2
@@ -73,7 +74,7 @@ def main():
     mix *= np.clip((S.DUR - tt) / 0.3, 0, 1)[:, None] * np.clip(tt / 0.03, 0, 1)[:, None]
     raw = os.path.join(OUT, "mix_raw.wav")
     sf.write(raw, mix.astype(np.float32), SR, subtype="FLOAT")
-    A.loudnorm(raw, os.path.join(OUT, "mix.wav"), -14.0, -1.0); os.remove(raw)
+    finalize(raw, os.path.join(OUT, "mix.wav")); os.remove(raw)   # REDO v3: -14 LUFS, -1 dBTP
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)
     A.write_srt(os.path.join(HERE, "..", "out", "star-clusters.srt"), S.PL, lambda k: pc[k])

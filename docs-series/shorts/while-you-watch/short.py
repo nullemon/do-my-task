@@ -27,10 +27,10 @@ from lib.audio import place
 from skygeo import eq_vec, eq2hor, Lens, EQ2GAL
 from mwsky import canvas, WL, HB, PXD
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S12-while-you-watch"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-while-you-watch"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/B_valley.png"
 FPS = 30
-LEAD, TAIL = 0.25, 1.15
+LEAD, TAIL = 0.25, 1.35
 AZ0 = 245.0                                            # camera azimuth: WSW, where the November Sun sets at 34 N
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
@@ -56,12 +56,12 @@ AU_S = 499.005             # s      light time Sun -> Earth (1 au / c)
 # ------------------------------------------------------------------------------------------------- timeline
 T_ORB = 0.45                                           # the orbit counter is there from the start (hook)
 T_SUN = wt("sun", "FUSES") - 0.1
-T_DUST = wt("dust", "½ KILO") - 0.15
+T_DUST = wt("dust", "DUST") - 0.15
 T_GAL = wt("gal", "GALAXY") - 0.1
-T_CMB = wt("gal", "COSMOS") - 0.1
+T_CMB = wt("cmb", "COSMOS") - 0.1
 T_STARS = wt("stars", "THOUSANDS") - 0.1
-T_SN = wt("stars", "30") - 0.1
-T_EXPLODE = wt("stars", "EXPLODE")
+T_SN = wt("sn", "30") - 0.1
+T_EXPLODE = wt("sn", "EXPLODE")
 T_LIGHT = wt("light", "SUNLIGHT") - 0.1
 T_END = LN["end"]["start"] - 0.05
 T_WO = DUR - 0.80                                      # white-out ramp into the loop point
@@ -229,7 +229,7 @@ class Scene:
         self.lens = Lens(1080, 1920, AZ0, 56.0, 700.0, self.hz + 10) if vertical else Lens(1920, 1080, AZ0, 52.0, 560.0, self.hz + 10)
         if vertical: L.cap_y = 1010
         else: L.cap_y = 780; L.cap_size = 100
-        self.caps = Captions(L, WORDS, emphasis={"35", "1,000 KM", "MOVING", "30 KM", "600 MILLION", "HYDROGEN", "½ KILO", "DUST",
+        self.caps = Captions(L, WORDS, emphasis={"45", "1,000 KM", "STILL", "SUN", "FUSES", "TONNES", "SECOND", "RAINS", "600 MILLION", "HYDROGEN", "½ KILO", "DUST",
                                                  "GALAXY", "230 KM", "COSMOS", "370", "THOUSANDS", "30", "EXPLODE", "SUNLIGHT",
                                                  "PLAY", "HERE"})
         self.rays = self.lens.rays(1)
@@ -742,6 +742,9 @@ if __name__ == "__main__":
     if sys.argv[1] == "patch":
         rng = sys.argv[3] if len(sys.argv) > 3 else TRANSITIONS
         patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in rng.split(",")]); sys.exit()
+    if sys.argv[1] == "segs":
+        from lib.v3_redo_q5 import render_segments
+        render_segments(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "info":
         print("DUR", DUR, "frames", NFR)
         for l in PL: print(f"{l['key']:6s} {l['start']:6.2f} {l['end']:6.2f}")

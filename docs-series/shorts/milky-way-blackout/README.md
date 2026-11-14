@@ -5,6 +5,17 @@ plate (`C_city.png`, upscaled 941×1672 → 1080×1920) for the whole Short. The
 only camera motion is about 1.4 s of tripod rattle during the earthquake itself. Everything else happens in the sky and
 in the city lights.
 
+## REDO v3 narration (14 Nov, current)
+Storytelling style "C" from `../REDO_V3.md`: 69 words, Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended
+vectors) at speed 0.86, one TTS call per phrase (`audio/narration.py`), 0.4–0.5 s between phrases and 1.0–1.2 s at beat
+changes. Word timings come from `lib/voice.py`'s timed model (wrapped by `lib/voice_v3.py`, or this Short's own
+`audio/gen_voice.py` with the blended style). The v3 post chain (pitch-only rubberband 0.944, EQ, compressor, short echo)
+is applied in `lib/audio_v3.py`; music bed and SFX unchanged and ducked; −14 LUFS / −1 dBTP. Visuals unchanged, re-timed
+to the new word timings. 9:16 only. Scratch: `.../scratchpad/series/V3-milky-way-blackout/` (segmented render via `lib/render_v3.py`).
+> Imagine Los Angeles... January nineteen ninety-four. Before dawn. The Northridge earthquake hits. And the city... goes dark. People step outside... and look up. According to Griffith Observatory, people called about a strange sky. Some reportedly described... a silver cloud. It was the Milky Way. They'd never seen it. Today, nearly eighty percent of North Americans can't see it from home. But it's still there... every night... right above you.
+
+The older narration notes below are kept for history; the science and the on-screen readouts are unchanged.
+
 ## Narration (Kokoro am_michael @ 1.05, real word timings)
 > In 1994, people in Los Angeles reportedly called for help, because of something in the sky. Before dawn, the
 > Northridge earthquake hit. And much of the city went dark. Then they looked up. According to astronomers at Griffith

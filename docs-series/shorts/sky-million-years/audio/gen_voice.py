@@ -1,4 +1,4 @@
-"""Voice: Kokoro am_michael with real word timings. Wraps lib/voice.py (not edited): Kokoro's phonemizer fuses some
+"""Voice (REDO v3): Kokoro 0.7 am_michael + 0.3 am_onyx @ 0.86 (lib.v3), one call per line, real word timings. Wraps lib/voice.py (not edited): Kokoro's phonemizer fuses some
 function-word pairs into one phoneme word ("in the" -> "ɪnðə", "was the" -> "wʌzðə"), which made lib.voice fall back to
 proportional timing. Here such pairs are merged for alignment and the fused span is split by letter count.
 Run: /home/user/ttsenv/bin/python audio/gen_voice.py [speed]"""
@@ -7,7 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path
 import numpy as np, soundfile as sf
 from narration import LINES
 from lib import voice as V
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S10-sky-1myr"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-sky-million-years"
 FUSE2 = {"the", "a", "one", "one?"}
 
 
@@ -68,4 +68,5 @@ def generate(speed, voice="am_michael"):
 
 
 if __name__ == "__main__":
-    generate(float(sys.argv[1]) if len(sys.argv) > 1 else 1.05)
+    from lib.v3 import style, SPEED
+    generate(SPEED, voice=style())

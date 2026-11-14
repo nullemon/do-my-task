@@ -5,14 +5,23 @@ Years = 2026 - distance in light-years (HYG v4.1 / literature; see README). Bete
 import re
 
 LINES = [
-    ("hook", "That star? Its light left in {2017|twenty seventeen}. That one? Probably before Columbus.", 0.30),
-    ("title", "Every star you see is a date.", 0.25),
-    ("list", "Arcturus? {1989|nineteen eighty-nine.} Vega? {2001|two thousand one.}", 0.30),
-    ("deneb", "Deneb? Roughly the Roman Empire.", 0.35),
-    ("m31", "And Andromeda? {2.5|Two and a half} million years ago, before modern humans existed.", 0.40),
-    ("swirl", "The whole sky is a time machine.", 0.45),
-    ("myth", "And no, almost none of them are dead. Stars live millions to billions of years. This light is mostly just centuries old.", 0.40),
-    ("end", "When you look up, you're looking back in time.", 0.0),
+    ("hook", "Imagine... that star.", 0.45),
+    ("hook_2", "Its light left in {2017|twenty seventeen}.", 0.60),
+    ("hook_3", "That one?", 0.40),
+    ("hook_4", "Probably before Columbus.", 1.10),
+    ("title", "Every star you see... is a date.", 1.10),
+    ("list", "Arcturus...", 0.40),
+    ("list_2", "Vega... just decades ago.", 1.00),
+    ("deneb", "Deneb... roughly the Roman Empire.", 1.10),
+    ("m31", "And Andromeda?", 0.50),
+    ("m31_2", "{2.5|Two and a half} million years ago.", 1.20),
+    ("swirl", "The sky... is a time machine.", 1.10),
+    ("myth", "Are they dead?", 0.50),
+    ("myth_2", "Almost none.", 1.00),
+    ("myth_3", "Stars live millions... to billions of years.", 0.45),
+    ("myth_4", "This light is just centuries old.", 1.10),
+    ("end", "When you look up...", 0.45),
+    ("end_2", "you're looking back in time.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

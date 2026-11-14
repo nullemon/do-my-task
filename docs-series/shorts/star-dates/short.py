@@ -28,7 +28,7 @@ from lib.audio import place
 from skygeo import eq_vec, eq2hor, lens_for, hdir, EQ2GAL
 from mwsky import canvas, WL, HB, PXD
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S5-star-dates"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-dates"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/B_valley.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.30
@@ -37,7 +37,10 @@ YEAR_NOW = 2026
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
-LN = {l["key"]: l for l in PL}
+LN = {}                                                 # beats: a beat is all lines whose key is `key` or `key_<n>`
+for _l in PL:
+    _b = LN.setdefault(_l["key"].split("_")[0], dict(key=_l["key"].split("_")[0], start=_l["start"], end=_l["end"], words=[]))
+    _b["end"] = _l["end"]; _b["words"] = _b["words"] + _l["words"]
 def wt(key, cap, n=0):
     ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
 
@@ -70,8 +73,8 @@ CYAN, GOLD, AMBER, ICE, VIOLET, PINK = (0.35, 0.85, 1.0), (1.0, 0.55, 0.15), (1.
 LABELS = [
     ("sirius", 101.287, -16.716, CYAN, "SIRIUS · 8.6 LY", "2017", None, wt("hook", "STAR"), wt("hook", "2017"), LN["title"]["start"] + 1.0),
     ("betel", 88.793, 7.407, GOLD, "BETELGEUSE · ~550 LY", "1400s", None, wt("hook", "ONE"), wt("hook", "BEFORE"), LN["title"]["start"] + 1.0),
-    ("arct", 213.915, 19.182, AMBER, "ARCTURUS · 37 LY", "1989", None, wt("list", "ARCTURUS"), wt("list", "1989"), wt("list", "VEGA") + 0.35),
-    ("vega", 279.235, 38.784, ICE, "VEGA · 25 LY", "2001", None, wt("list", "VEGA"), wt("list", "2001"), LN["deneb"]["start"] + 0.2),
+    ("arct", 213.915, 19.182, AMBER, "ARCTURUS · 37 LY", "1989", None, wt("list", "ARCTURUS"), wt("list", "ARCTURUS") + 0.55, wt("list", "VEGA") + 0.35),
+    ("vega", 279.235, 38.784, ICE, "VEGA · 25 LY", "2001", None, wt("list", "VEGA"), wt("list", "VEGA") + 0.55, LN["deneb"]["start"] + 0.2),
     ("deneb", 310.358, 45.280, VIOLET, "DENEB · ~1,500–2,600 LY", "ROMAN EMPIRE", "ROUGHLY", wt("deneb", "DENEB"), wt("deneb", "ROMAN"), LN["m31"]["start"] + 0.3),
     ("m31", 10.685, 41.269, PINK, "ANDROMEDA GALAXY · 2.5 MILLION LY", "2.5 MILLION", "YEARS AGO · BEFORE MODERN HUMANS", wt("m31", "ANDROMEDA"), wt("m31", "2.5"), T_SWIRL0 + 0.9),
 ]
@@ -194,7 +197,7 @@ class Scene:
         self.mx = int(0.08 * W)                                                # side margin for all labels
         if not vertical: L.cap_size = 104
         self.caps = Captions(L, WORDS, emphasis={"STAR", "2017", "COLUMBUS", "DATE", "1989", "2001", "ROMAN", "EMPIRE", "ANDROMEDA",
-                                                 "2.5", "MILLION", "HUMANS", "TIME", "MACHINE", "DEAD", "BILLIONS", "CENTURIES", "BACK"})
+                                                 "2.5", "MILLION", "HUMANS", "TIME", "MACHINE", "DEAD", "BILLIONS", "CENTURIES", "BACK", "IMAGINE", "NONE", "DECADES", "ARCTURUS", "VEGA", "DENEB"})
         self.rays = self.lens.rays(1)                                          # (H, W, 3) horizon directions per pixel
         alt = np.arcsin(np.clip(self.rays[..., 2], -1, 1))
         self.alt = alt.astype(f32)

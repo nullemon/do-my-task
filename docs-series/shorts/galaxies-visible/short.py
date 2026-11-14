@@ -24,7 +24,7 @@ from lib.audio import place
 from skygeo import eq_vec, EQ2GAL
 from mwsky import canvas, WL, PXD as CPXD, HB
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-galaxies-visible"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-galaxies-visible"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/C_city.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.30
@@ -39,7 +39,8 @@ WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
+    """word time; REDO v3: `key` also covers its continuation lines (hook2.., m31b, end2..)"""
+    ws = [w for l in PL if l["key"].startswith(key) for w in l["words"] if w["cap"] == cap]; return ws[n]["t0"]
 
 
 # ------------------------------------------------------------------------------------------------ scenes
@@ -72,16 +73,16 @@ GAIN = dict(m31=1.0, m33=1.0, lmc=1.0, smc=1.0, m51=1.0, core=0.55)
 
 # ------------------------------------------------------------------------------------------------ timeline
 T_MOONS = wt("hook", "6×") - 0.05
-T_MOONS1 = wt("hook2", "YOU")
+T_MOONS1 = wt("hook", "YOU")
 T_CAN = wt("m31a", "BUT")
-T_SW = dict(m31=wt("m31", "ANDROMEDA") - 0.12, m33=LN["m33"]["start"] - 0.06, mc=LN["mc"]["start"] - 0.06,
-            m51=LN["m51"]["start"] - 0.06, all=LN["end"]["start"] - 0.06)
-T_BACK = wt("end3", "YOUR") - 0.08                       # white-out peak -> plain city night
+T_SW = dict(m31=wt("m31", "ANDROMEDA") - 0.12, m33=wt("m33", "TRIANGULUM") - 0.10, mc=wt("mc", "MAGELLANIC") - 0.10,
+            m51=wt("m51", "WHIRLPOOL") - 0.10, all=LN["end"]["start"] - 0.06)     # v3: swaps land on the names
+T_BACK = wt("end", "YOUR") - 0.08                       # white-out peak -> plain city night
 T_WO0 = T_BACK - 0.75
 T_BIG = wt("end", "BIG")
 COLLAPSE, BLOOM = 0.42, 0.65
 SWAPS = [(T_SW[k], k) for k in ("m31", "m33", "mc", "m51", "all")] + [(T_BACK, "night")]
-PULSES = [wt("m31", "TRILLION"), wt("m33", "SPIRAL"), wt("m33", "THREE"), wt("mc", "20"), wt("mc", "MOONS"), wt("m51", "TINY"),
+PULSES = [wt("m31", "TRILLION"), wt("m33", "SPIRAL"), wt("m33", "FACE-ON"), wt("mc", "20"), wt("mc", "MOONS"), wt("m51", "TINY"),
           wt("m51", "THIRD"), T_BIG]
 
 
@@ -188,8 +189,8 @@ class Scene:
         self.skyfac = (0.35 + 0.65 * sk)[..., None].astype(f32)
         sh = np.zeros_like(a); sh[8:] = a[:-8]
         self.rim = (cv2.GaussianBlur(np.clip(a - sh, 0, 1), (0, 0), 2.5) * a)[..., None].astype(f32)
-        emph = {"6×", "MOON", "ANDROMEDA", "TRILLION", "2.5", "TRIANGULUM", "THREE", "MAGELLANIC", "20", "TARANTULA", "PINK",
-                "WHIRLPOOL", "TINY", "THIRD", "30", "BIG", "THIN", "SENSITIVE", "CAN'T"}
+        emph = {"IMAGINE", "6×", "MOON", "CAN'T", "ANDROMEDA", "TRILLION", "TRIANGULUM", "SPIRAL", "FACE-ON", "MAGELLANIC", "20",
+                "MOONS", "WHIRLPOOL", "TINY", "THIRD", "BIG", "THIN", "SEE"}
         self.caps = Captions(L, WORDS, emphasis=emph)
 
     def up(self, a): return cv2.resize(a, (self.L.W, self.L.H), interpolation=cv2.INTER_LINEAR)
@@ -471,6 +472,8 @@ def run(stills=None):
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == "seg":                                                 # REDO v3: restart-safe segment render
+        from lib.v3_kit import render; render(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "info":
         print("DUR", DUR, "moons", round(T_MOONS, 2), {k: round(v, 2) for k, v in T_SW.items()}, "wo", round(T_WO0, 2), "back", round(T_BACK, 2))
         for k, deg in (("M31", 3.17), ("M33", 1.18), ("LMC", 10.75), ("SMC", 5.33), ("M51", 11.2 / 60), ("Moon", 0.52)):

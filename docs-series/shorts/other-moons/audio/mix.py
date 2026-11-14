@@ -11,6 +11,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib import v3_redo_q5 as V3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -84,7 +85,7 @@ def pluck(t0, f, gain=0.3):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = V3.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     seq = [(0.0, "moon")] + [(ts, "moon" if k == "moon2" else k) for ts, k in S.SWAPS]
     seq.insert(len(seq) - 1, (S.T_ALL, "all"))
     bed = np.zeros((N, 2))
@@ -102,7 +103,7 @@ def main():
         bed += bloom_swell(ts + 0.02, 50 + i, 0.35)
     bed += A.shimmer(N, 0.3, S.T_SW["pho"] - 0.3, seed=61, gain=0.10)                      # moonlight sparkle
     # Phobos: sonar pings with the pointer ring
-    tw = S.wt("pho", "WHERE")
+    tw = S.wt("pho_b", "WHERE")
     for j, tp in enumerate(np.arange(tw, S.T_SW["eur"] - 0.3, 1 / 1.3)):
         bed += ping(tp, 1760.0 if j % 2 == 0 else 2093.0, 0.22, 0.5 + 0.2 * (-1) ** j)
     # Europa: icy crystal shimmer

@@ -27,7 +27,7 @@ from lib.text import Captions, hud_text, word_layer, composite
 from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S8-sunset-mirage"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-sunset-mirage"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/B_valley.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.35
@@ -65,16 +65,16 @@ SQUASH = A_TOP_TOUCH / (2 * SEMI)                      # apparent height / width
 R_TOP_TOUCH = float(refr(A_TOP_TOUCH))
 
 # ------------------------------------------------------------------------------------------------- timeline
-T_TOUCH = wt("hook", "THERE") + 0.15
-T_REVEAL = wt("reveal", "REAL") - 0.08
-T_SET = wt("reveal", "SET")
+T_TOUCH = wt("hook_b", "THERE") + 0.15
+T_REVEAL = wt("reveal_b", "REAL") - 0.08
+T_SET = wt("reveal_b", "SET")
 T_HOW = LN["how"]["start"]
-T_BENDS = wt("how", "BENDS"); T_DENSER = wt("how", "DENSER"); T_CURVES = wt("how", "CURVES"); T_LIFT = wt("how", "LIFTING")
-T_SQ = LN["squash"]["start"]; T_SQW = wt("squash", "SQUASHING"); T_OVAL = wt("squash", "OVAL")
-T_LAST = wt("squash", "LAST"); T_GF = wt("squash", "GREEN")
+T_BENDS = wt("how", "BENDS"); T_DENSER = wt("how_b", "DENSER"); T_CURVES = wt("how_b", "CURVES"); T_LIFT = wt("how_c", "LIFTING")
+T_SQ = LN["squash"]["start"]; T_SQW = wt("squash_b", "SQUASHING"); T_OVAL = wt("squash_b", "OVAL")
+T_LAST = wt("gf", "LAST"); T_GF = wt("gf_b", "GREEN")
 T_BONUS = LN["bonus"]["start"]; T_MIN = wt("bonus", "MINUTES")
-T_MYTH = LN["myth"]["start"]; T_MYTHW = wt("myth", "MYTH")
-T_END = LN["end"]["start"]; T_MIRAGE = wt("end", "MIRAGE")
+T_MYTH = LN["myth"]["start"]; T_MYTHW = wt("myth_b", "MYTH")
+T_END = LN["end"]["start"]; T_MIRAGE = wt("end_b", "MIRAGE")
 T_POP = min(T_MIRAGE + 0.55, DUR - 0.85)               # white-out peak -> the Sun is back at its start position
 
 
@@ -148,7 +148,7 @@ class Scene:
         if vertical: L.cap_y = 1010
         else: L.cap_y = 175; L.cap_size = 104
         self.caps = Captions(L, WORDS, emphasis={"SUN", "REALLY", "REAL", "SET", "BELOW", "RIDGE", "BENDS", "DENSER", "CURVES",
-                                                 "WIDTH", "OVAL", "GREEN", "MINUTES", "LONGER", "8-MINUTE", "MYTH", "MIRAGE"})
+                                                 "WIDTH", "OVAL", "GREEN", "MINUTES", "LONGER", "8-MINUTE", "MYTH", "MIRAGE", "SUNSET", "THERE", "LIGHT", "LIFTING", "SLIVER", "FLASH", "DAYS", "WATCHED"})
         self.ro = fmt_readouts()
         # grids
         hh, hw = H // 2, W // 2
@@ -611,6 +611,9 @@ if __name__ == "__main__":
         for k in ("T_TOUCH", "T_REVEAL", "T_SET", "T_HOW", "T_BENDS", "T_DENSER", "T_LIFT", "T_SQ", "T_OVAL", "T_LAST", "T_GF", "T_BONUS", "T_MIN", "T_MYTH", "T_END", "T_MIRAGE", "T_POP"):
             print(k, round(globals()[k], 2))
         sys.exit()
+    if sys.argv[1] == "segs":
+        from lib.v3_redo_q5 import render_segments
+        render_segments(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "patch":
         patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"

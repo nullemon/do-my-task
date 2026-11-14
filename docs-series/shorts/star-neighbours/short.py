@@ -26,11 +26,11 @@ from lib.audio import place
 from skygeo import eq_vec, eq2hor, Lens, EQ2GAL
 from mwsky import canvas, WL, HB, PXD
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-star-neighbours"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-neighbours"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/C_city.png"
 LAMPS_SRC = [(575, 1496), (703, 1449), (819, 1456), (470, 1386), (237, 1303)]       # street-lamp heads (as in ../solar-storm)
 FPS = 30
-LEAD, TAIL = 0.25, 1.05
+LEAD, TAIL = 0.25, 1.00
 LST0 = 10.85                     # local sidereal time (h): Alpha Centauri 45 deg up in the south-east, Crux above it
 HY = 1430.0                      # true horizon row (behind the far skyline)
 F_LENS = 930.0
@@ -69,13 +69,13 @@ SK = {s["key"]: s for s in STARS}
 T_LABEL = wt("now", "ALPHA") - 0.05
 T_SW = {"sir": wt("sir", "SIRIUS") - 0.10, "vega": wt("vega", "VEGA") - 0.08, "bet": wt("bet", "BETELGEUSE") - 0.08,
         "rig": wt("rig", "RIGEL") - 0.08, "den": wt("den", "DENEB") - 0.08, "eta": wt("eta", "ETA") - 0.08}
-T_ERU0 = wt("eta", "1843") - 0.05                       # the eruption builds ...
-T_ERU = wt("eta", "OUTBURST") - 0.03                    # ... and bursts
-T_TWI = wt("eta2", "NIGHT")                              # the sky goes to twilight
-T_WO0 = wt("eta2", "TWILIGHT") + 0.15                    # white-out builds through "twilight"
+T_ERU0 = wt("eta1", "GREAT") - 0.05                     # the eruption builds through "its great eruption..." ...
+T_ERU = LN["eta2"]["start"] - 0.05                     # ... and bursts after the pause, on "over a hundred full Moons"
+T_TWI = wt("eta3", "NIGHT")                              # the sky goes to twilight
+T_WO0 = wt("eta3", "TWILIGHT") + 0.15                    # white-out builds through "twilight"
 T_BACK = LN["end"]["start"] - 0.02                      # snap back to Alpha Centauri
 SEQ = [(0.0, "ac")] + [(T_SW[k], k) for k in ("sir", "vega", "bet", "rig", "den", "eta")] + [(T_ERU, "eru"), (T_BACK, "ac")]
-T_SHADOW = wt("bet2", "SHADOWS")
+T_SHADOW = wt("bet3", "SHADOWS")
 
 
 def mag_to_E(m):
@@ -307,10 +307,10 @@ class Scene:
         self.fg = fg = Foreground(FG_PATH, L, hz_frac=0.70)
         self.lens = Lens(W, H, AZ0, ALT0, F_LENS, HY)
         L.cap_y = 960
-        self.caps = Captions(L, WORDS, emphasis={"BRIGHTEST", "NEIGHBOUR", "ALPHA", "CENTAURI", "SIRIUS", "JUPITER", "VEGA", "DOT",
-                                                 "BETELGEUSE", "HUNDRED", "VENUS", "SHADOWS", "RIGEL", "BLUE-WHITE", "MOON",
-                                                 "POINT", "DENEB", "ETA", "CARINAE", "MILLION", "1843", "OUTBURST", "MOONS",
-                                                 "TWILIGHT", "LUCKY", "SMALL"})
+        self.caps = Captions(L, WORDS, emphasis={"IMAGINE", "NEIGHBOUR", "ALPHA", "CENTAURI", "FAMOUS", "SIRIUS", "JUPITER", "VEGA", "DOT",
+                                                 "BETELGEUSE", "HUNDRED", "VENUSES", "SHADOWS", "RIGEL", "MOON",
+                                                 "POINT", "DENEB", "WHOLE", "ETA", "CARINAE", "ERUPTION", "MOONS",
+                                                 "TWILIGHT", "LUCKY", "QUIET"})
         self.yy, self.xx = np.mgrid[0:H, 0:W].astype(f32)
         self.a = fg.a[..., None]
         rays = self.lens.rays(1); alt = np.arcsin(np.clip(rays[..., 2], -1, 1)); e = np.clip(alt / (np.pi / 2), 0, 1)
@@ -649,13 +649,8 @@ def run(stills=None):
             t0 = time.time(); save(sc.frame(t), os.path.join(SCR, "stills", f"{tag}_{t:05.2f}.png"))
             print(f"t={t:.2f} {time.time() - t0:.1f}s", flush=True)
         return
-    n = int(round(DUR * FPS))
-    enc = Encoder(os.path.join(SCR, f"video_{tag}.mp4"), sc.W, sc.H, FPS, crf=17)
-    t0 = time.time()
-    for i in range(n):
-        enc.write(sc.frame(i / FPS))
-        if i % 60 == 0: print(f"{tag} frame {i}/{n}  {time.time() - t0:.0f}s", flush=True)
-    enc.close(); print("done", time.time() - t0)
+    from lib.v3 import render_segments                               # REDO v3: restart-safe segments + concat
+    render_segments(sc.frame, sc.W, sc.H, FPS, DUR, os.path.join(SCR, "seg"), os.path.join(SCR, f"video_{tag}.mp4"))
 
 
 def patch(ranges):

@@ -32,7 +32,7 @@ from lib.audio import place
 from skygeo import Lens, view_R, slerp_R, EQ2GAL
 from mwsky import canvas, WL, HB, PXD
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S10-sky-1myr"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-sky-million-years"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A2_park.png"
 LAMPS_SRC = [(193, 1198, 1325), (666, 1207, 1322), (816, 1113, 1323)]   # SOURCE px (as measured for ../gamma-ray-eyes)
 FPS = 30
@@ -42,8 +42,14 @@ T_PERI = 1.29e6                                          # Gliese 710 closest ap
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
-LN = {l["key"]: l for l in PL}
+LN = {}                                                  # REDO v3: lines <beat>_<x> grouped into beats
+for _l in PL:
+    _g = _l["key"].rsplit("_", 1)[0]
+    if _g in LN: LN[_g] = dict(LN[_g], end=_l["end"], words=LN[_g]["words"] + _l["words"])
+    else: LN[_g] = dict(key=_g, start=_l["start"], end=_l["end"], words=list(_l["words"]))
+ALIAS = {"FIVE": "MOST"}                                 # REDO v3 wording ("Most Dipper stars travel together")
 def wt(key, cap, n=0, end=False):
+    cap = ALIAS.get(cap, cap)
     ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t1" if end else "t0"]
 
 # ------------------------------------------------------------------------------------------------- timeline
@@ -193,9 +199,9 @@ class Scene:
             V = [(1330, 690, 12.3 * 15, 56.0, 38.0), (1400, 450, 5.6 * 15, 0.0, 0.0), (1250, 680, 221.0, -1.1, -80.0)]
         self.views = [view_R(self.lens, *v) for v in V]
         self.mx = int(0.07 * W)
-        self.caps = Captions(L, WORDS, emphasis={"FIXED", "BIG", "DIPPER", "MOVING", "BARNARD'S", "FASTEST", "FAMILY", "DUBHE",
+        self.caps = Captions(L, WORDS, emphasis={"IMAGINE", "BIG", "DIPPER", "MOVES", "BARNARD'S", "FASTEST", "FAMILY", "DUBHE",
                                                  "ALKAID", "100,000", "BROKEN", "ORION'S", "APART", "FADE", "1.3", "MILLION",
-                                                 "GLIESE 710", "BLAZING", "TEMPORARY"})
+                                                 "GLIESE 710", "BLAZING", "SIRIUS", "TEMPORARY"})
         self.rays = self.lens.rays(1)
         alt = np.arcsin(np.clip(self.rays[..., 2], -1, 1)).astype(f32)
         e = np.clip(alt / (np.pi / 2), 0, 1)
@@ -695,13 +701,9 @@ def run(vertical, stills=None):
             t0 = time.time(); save(sc.frame(t), os.path.join(SCR, "stills", f"{tag}_{t:05.2f}.png"))
             print(f"t={t:.2f} {time.time() - t0:.1f}s", flush=True)
         return
-    n = int(round(DUR * FPS))
-    enc = Encoder(os.path.join(SCR, f"video_{tag}.mp4"), sc.L.W, sc.L.H, FPS, crf=17)
-    t0 = time.time()
-    for i in range(n):
-        enc.write(sc.frame(i / FPS))
-        if i % 60 == 0: print(f"{tag} frame {i}/{n}  {time.time() - t0:.0f}s", flush=True)
-    enc.close(); print("done", time.time() - t0, "DUR", DUR)
+    assert vertical, "REDO v3: 9:16 only"
+    from lib.v3 import render_segments                               # REDO v3: restart-safe segments + concat
+    render_segments(sc.frame, sc.L.W, sc.L.H, FPS, DUR, os.path.join(SCR, "seg"), os.path.join(SCR, f"video_{tag}.mp4"))
 
 
 def patch(vertical, t_from):

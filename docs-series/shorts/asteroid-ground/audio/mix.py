@@ -13,6 +13,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.v3 import build_voice_v3, finalize
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); t = np.arange(N) / SR
@@ -152,7 +153,7 @@ MET = None
 def main():
     global MET
     MET = S.Scene(True).met
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)   # REDO v3 voice chain
     drone = A.drone(N, root=36.7, seed=4, bright=0.15) * E([(0, 0), (S.T_IMP + 1, 0), (S.T_JOLT, 0.6), (S.T_HITS, 0.8), (S.T_SOOT + 1, 1.0),
                                                               (S.T_WO0, 1.0), (S.T_BACK, 0), (S.DUR, 0)])
     bed = birds() + approach() + quake() * 0.9 + ejecta() + blast() * 0.9 + pad() * 1.8 + drone + ending() * 0.8
@@ -160,7 +161,7 @@ def main():
     mix = voice * 1.0 + bed * 0.75
     mix *= np.clip((S.DUR - t) / 0.30, 0, 1)[:, None] * np.clip(t / 0.05, 0, 1)[:, None]
     sf.write(os.path.join(OUT, "mix_raw.wav"), mix.astype(np.float32), SR, subtype="FLOAT")
-    A.loudnorm(os.path.join(OUT, "mix_raw.wav"), os.path.join(OUT, "mix.wav"), -14.0, -1.0)
+    finalize(os.path.join(OUT, "mix_raw.wav"), os.path.join(OUT, "mix.wav"))   # REDO v3: -14 LUFS, -1 dBTP
     os.remove(os.path.join(OUT, "mix_raw.wav"))
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)

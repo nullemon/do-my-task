@@ -1,16 +1,26 @@
-"""Narration for the Short "What If Betelgeuse Exploded Tonight?" (copied from ../other-suns).
+"""REDO v3 storytelling narration. Narration for the Short "What If Betelgeuse Exploded Tonight?" (copied from ../other-suns).
 Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the spoken words (numbers etc.).
 Each line: (key, text, pause_after_seconds)."""
 import re
 
-LINES = [
-    ("hook", "What if Betelgeuse exploded tonight?", 0.30),
-    ("neut", "First, a silent warning. Neutrinos arrive hours before the light, and detectors sound the alarm.", 0.30),
-    ("boom", "Then Orion's shoulder ignites. One point, as bright as the Moon, casting sharp shadows.", 0.30),
-    ("day", "Next morning, it's still there. Visible in daylight, for weeks.", 0.25),
-    ("fade", "Over months, it fades from blue-white to orange-red. Orion loses its shoulder forever.", 0.25),
-    ("safe", "And we're safe. It's far too distant to hurt us.", 0.30),
-    ("twist", "Its light takes {550|five hundred fifty} years to get here. So it might already have happened. The light just hasn't reached us yet.", 0.0),
+LINES = [   # REDO v3 storytelling (0.7 am_michael + 0.3 am_onyx @ 0.86): ~0.45 s between phrases, 1.0-1.1 s at beat changes
+    ("hook", "Imagine Betelgeuse...", 0.45),
+    ("hook2", "exploding tonight.", 1.10),
+    ("neut", "First... a silent warning.", 0.45),
+    ("neut2", "Neutrinos arrive... hours before the light.", 0.45),
+    ("neut3", "Detectors sound the alarm.", 1.10),
+    ("boom", "And then...", 0.50),
+    ("boom2", "Orion's shoulder ignites.", 0.50),
+    ("boom3", "One point... as bright as the Moon,", 0.40),
+    ("boom4", "casting sharp shadows.", 1.10),
+    ("day", "Next morning...", 0.40),
+    ("day2", "it's still there. In daylight.", 1.00),
+    ("fade", "Over months... it fades away.", 0.45),
+    ("fade2", "Orion loses its shoulder... forever.", 1.10),
+    ("safe", "And we're safe...", 0.40),
+    ("safe2", "it's far too distant.", 1.10),
+    ("twist", "Its light... is {550|five hundred fifty} years old.", 1.00),
+    ("twist2", "So... it might already have happened.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

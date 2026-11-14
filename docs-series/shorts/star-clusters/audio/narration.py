@@ -3,20 +3,24 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds)."""
 import re
 
-LINES = [
-    ("hook", "Our night sky holds a few thousand stars.", 0.35),
-    ("hook_b", "Now imagine living inside a star cluster.", 0.70),
-    ("ple", "The Pleiades.", 0.35),
-    ("ple_b", "A thousand young blue stars, dozens brighter than Sirius.", 0.70),
-    ("hya", "The {HYADES|Hiadeez}.", 0.35),
-    ("hya_b", "Older, with glowing orange giants.", 0.70),
-    ("ome", "Omega Centauri.", 0.35),
-    ("ome_b", "{10 MILLION|Ten million} stars.", 0.35),
-    ("ome_c", "Near its core, thousands outshine Sirius, and night never gets dark.", 0.70),
-    ("nsc", "And the galaxy's heart.", 0.35),
-    ("nsc_b", "A million stars within three light-years.", 0.70),
-    ("end", "We live in the galaxy's quiet suburbs.", 0.35),
-    ("end_b", "That's why our sky is dark.", 0.0),
+LINES = [   # REDO v3 storytelling script (73 words)
+    ("hook", "Imagine your night sky...", 0.40),
+    ("hook_b", "seen from inside a star cluster.", 1.00),
+    ("ple", "First... the Pleiades.", 0.40),
+    ("ple_b", "Young, blue, and blazing.", 0.40),
+    ("ple_c", "Dozens outshine Sirius.", 1.00),
+    ("hya", "The {HYADES|Hiadeez}.", 0.40),
+    ("hya_b", "Older... with glowing orange giants.", 1.00),
+    ("ome", "Now... Omega Centauri.", 0.40),
+    ("ome_b", "{10 MILLION|Ten million} stars.", 0.50),
+    ("ome_c", "Near its core...", 0.40),
+    ("ome_d", "night never gets dark.", 1.10),
+    ("nsc", "And then... the galaxy's heart.", 0.50),
+    ("nsc_b", "A million stars...", 0.40),
+    ("nsc_c", "in the space between us and our nearest star.", 0.50),
+    ("nsc_d", "The whole sky blazes.", 1.10),
+    ("end", "We live... in the quiet suburbs.", 0.45),
+    ("end_b", "That's why our night... is dark.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

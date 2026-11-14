@@ -4,21 +4,22 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if the Moon got closer?", 0.35),
-    ("hook_b", "Much closer?", 0.70),
-    ("today", "Here's the Moon today.", 0.70),
-    ("d200", "{200,000|Two hundred thousand} kilometers: twice as wide.", 0.35),
-    ("d200_b", "Tides, {7×|seven times} stronger.", 0.70),
-    ("d100", "{100,000|A hundred thousand:} {57×|fifty-seven times.}", 0.35),
-    ("d100_b", "Oceans surge inland.", 0.70),
-    ("d50", "{50,000|Fifty thousand.}", 0.35),
-    ("d50_b", "Quakes, volcanoes, and every crater in sharp detail.", 0.70),
-    ("d20", "{20,000|Twenty thousand.}", 0.35),
-    ("d20_b", "Tides kilometers high.", 0.70),
-    ("roche", "{18,000|Eighteen thousand:} the {ROCHE|Roshe} limit.", 0.35),
-    ("roche_b", "Earth's gravity rips the Moon into a ring.", 0.85),
-    ("end", "In reality, it's drifting away.", 0.35),
-    ("end_b", "{3.8 CM|Three point eight centimeters} a year.", 0.0),
+    ("hook", "Imagine the Moon...", 0.50),
+    ("hook_b", "creeping closer.", 1.00),
+    ("today", "Here it is today.", 1.00),
+    ("d200", "Now... twice as wide.", 0.45),
+    ("d200_b", "The tides... {7×|seven times} stronger.", 1.00),
+    ("d100", "Closer... tides {57×|fifty-seven times} stronger.", 0.45),
+    ("d100_b", "The oceans surge inland.", 1.00),
+    ("d50", "And then... the ground shakes.", 0.45),
+    ("d50_b", "Volcanoes wake. Every crater... in sharp detail.", 1.00),
+    ("d20", "Closer...", 0.50),
+    ("d20_b", "It fills the sky. Tides... kilometers high.", 1.00),
+    ("roche", "Until... the {ROCHE|Roshe} limit.", 0.50),
+    ("roche_b", "Earth's gravity rips it apart... into a ring.", 1.10),
+    ("end", "In reality... it's drifting away.", 0.40),
+    ("end_b", "{3.8 CM|Three point eight centimeters} a year.", 0.45),
+    ("end_c", "Saying goodbye... very slowly.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!:]*)|(\S+)")

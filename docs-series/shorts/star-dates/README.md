@@ -4,6 +4,17 @@
 moving sky; see `../lib/README.md`). **Locked camera:** a single tripod frame of the user's valley plate (`B_valley.png`,
 941×1672 upscaled), facing south. Everything happens in the sky.
 
+## REDO v3 narration (14 Nov, current)
+Storytelling style "C" from `../REDO_V3.md`: 73 words, Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended
+vectors) at speed 0.86, one TTS call per phrase (`audio/narration.py`), 0.4–0.5 s between phrases and 1.0–1.2 s at beat
+changes. Word timings come from `lib/voice.py`'s timed model (wrapped by `lib/voice_v3.py`, or this Short's own
+`audio/gen_voice.py` with the blended style). The v3 post chain (pitch-only rubberband 0.944, EQ, compressor, short echo)
+is applied in `lib/audio_v3.py`; music bed and SFX unchanged and ducked; −14 LUFS / −1 dBTP. Visuals unchanged, re-timed
+to the new word timings. 9:16 only. Scratch: `.../scratchpad/series/V3-star-dates/` (segmented render via `lib/render_v3.py`).
+> Imagine... that star. Its light left in twenty seventeen. That one? Probably before Columbus. Every star you see... is a date. Arcturus... Vega... just decades ago. Deneb... roughly the Roman Empire. And Andromeda? Two and a half million years ago. The sky... is a time machine. Are they dead? Almost none. Stars live millions... to billions of years. This light is just centuries old. When you look up... you're looking back in time.
+
+The older narration notes below are kept for history; the science and the on-screen readouts are unchanged.
+
 ## Narration (Kokoro am_michael @ 1.05, real word timings, 83 words)
 > That star? Its light left in 2017. That one? Probably before Columbus. Every star you see is a date.
 > Arcturus? 1989. Vega? 2001. Deneb? Roughly the Roman Empire. And Andromeda? 2.5 million years ago, before modern

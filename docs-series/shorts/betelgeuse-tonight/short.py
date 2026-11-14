@@ -24,7 +24,7 @@ from lib.audio import place
 from skygeo import eq_vec, eq2hor, lens_for, hdir, EQ2GAL
 from mwsky import canvas, WL, HB, PXD
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S9-betelgeuse"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-betelgeuse-tonight"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A2_park.png"
 # SOURCE px of A2_park.png (941x1672) (as measured for ../gamma-ray-eyes): street-lamp heads + pole bases
 LAMPS_SRC = [(193, 1198, 1325), (666, 1207, 1322), (816, 1113, 1323)]
@@ -35,7 +35,7 @@ CAM_H = 1.3
 SH_EL = 19.0            # light elevation used for the shadows (deg, stylised low: long shadows)
 LAMP_EL = 7.0           # the far lamp posts get an even lower one so their thin shadows reach across the lawn
 FPS = 30
-LEAD, TAIL = 0.25, 1.30
+LEAD, TAIL = 0.25, 1.80                  # v3: the light front gets the last beat
 LST0 = 5.55              # local sidereal time (h): Orion just east of the meridian, upright, due south
 YEAR_NOW = 2026
 
@@ -44,7 +44,8 @@ WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0, end=False):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t1" if end else "t0"]
+    """word time; REDO v3: `key` also covers its continuation lines (neut2, boom3, twist2 ...)"""
+    ws = [w for l in PL if l["key"].startswith(key) for w in l["words"] if w["cap"] == cap]; return ws[n]["t1" if end else "t0"]
 
 # ------------------------------------------------------------------------------------------------- timeline
 T_LABEL = wt("hook", "BETELGEUSE") - 0.05
@@ -63,7 +64,7 @@ T_GONE = wt("fade", "SHOULDER")
 T_SAFE = LN["safe"]["start"]
 T_550 = wt("twist", "550")
 T_BACK = wt("twist", "SO") - 0.05                    # pulse back to tonight's sky
-T_FRONT = wt("twist", "THE", 0) - 0.1               # the light front rolls towards us
+T_FRONT = wt("twist", "MIGHT") - 0.1               # the light front rolls towards us
 T_END = DUR
 
 # Orion stick figure (HYG proper names)
@@ -207,9 +208,9 @@ class Scene:
         self.lens = lens_for(vertical, self.hy)
         if vertical: L.cap_y = 1100
         else: L.cap_y = 610; L.cap_size = 100
-        self.caps = Captions(L, WORDS, emphasis={"BETELGEUSE", "TONIGHT", "NEUTRINOS", "ALARM", "IGNITES", "MOON", "SHADOWS",
-                                                 "DAYLIGHT", "WEEKS", "BLUE-WHITE", "ORANGE-RED", "FOREVER", "SAFE", "550",
-                                                 "ALREADY", "HAPPENED", "YET"})
+        self.caps = Captions(L, WORDS, emphasis={"IMAGINE", "BETELGEUSE", "TONIGHT", "WARNING", "NEUTRINOS", "ALARM", "IGNITES", "MOON",
+                                                 "SHADOWS", "DAYLIGHT", "FADES", "SHOULDER", "FOREVER", "SAFE", "DISTANT", "550",
+                                                 "ALREADY", "HAPPENED"})
         self.yy, self.xx = np.mgrid[0:H, 0:W].astype(f32)
         self.a = fg.a[..., None]
         # ---- real sky
@@ -761,6 +762,8 @@ if __name__ == "__main__":
         for vert in (True, False):
             sc = Scene(vert); print("vert" if vert else "wide", "horizon", round(sc.hz), "hy", round(sc.hy), {k: (round(x), round(y)) for k, (x, y) in sc.named.items()})
         sys.exit()
+    if sys.argv[1] == "seg":                                                 # REDO v3: restart-safe segment render (9:16 only)
+        from lib.v3_kit import render; render(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "patch":
         patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"

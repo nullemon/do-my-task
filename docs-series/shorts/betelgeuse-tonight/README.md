@@ -7,12 +7,16 @@ east of the meridian and the vivid Milky Way from `../star-dates`. The look foll
 chromatic flash, shockwave rings, rainbow beams, diffraction spikes, bold readouts, and one big orange word at a time.
 There are no disclaimer captions (user rule).
 
-## Narration (90 words, Kokoro am_michael @ 1.05, real word timings)
-> What if Betelgeuse exploded tonight? First, a silent warning. Neutrinos arrive hours before the light, and detectors
-> sound the alarm. Then Orion's shoulder ignites. One point, as bright as the Moon, casting sharp shadows. Next morning,
-> it's still there. Visible in daylight, for weeks. Over months, it fades from blue-white to orange-red. Orion loses its
-> shoulder forever. And we're safe. It's far too distant to hurt us. Its light takes 550 years to get here. So it might
-> already have happened. The light just hasn't reached us yet.
+## Narration (REDO v3, 14 Nov: storytelling, 71 words, 0.7 am_michael + 0.3 am_onyx (Kokoro) @ 0.86, real word timings, v3 post chain (`../lib/v3_kit.py`); ~0.45 s between phrases, 1.0–1.1 s at beat changes, 49.08 s)
+> Imagine Betelgeuse... / exploding tonight. / First... a silent warning. / Neutrinos arrive... hours before the light. /
+> Detectors sound the alarm. / And then... / Orion's shoulder ignites. / One point... as bright as the Moon, / casting
+> sharp shadows. / Next morning... / it's still there. In daylight. / Over months... it fades away. / Orion loses its
+> shoulder... forever. / And we're safe... / it's far too distant. / Its light... is 550 years old. / So... it might
+> already have happened.
+
+The v3 render is 9:16 only (no 16:9). The light front now rolls out on "might". Scratch for v3:
+`scratchpad/series/V3-betelgeuse-tonight/` (S9 was deleted; `stars.npz` rebuilt by `catalog.py` from the HYG download
+in `B2-galaxies-visible/dl`, `mw_gal.npz` is the same deterministic canvas). The beat table below is from the old cut.
 
 ## Beats (`short.py`; times for the 9:16 cut)
 | t (s) | picture | readout |

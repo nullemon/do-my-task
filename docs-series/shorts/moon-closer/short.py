@@ -25,10 +25,10 @@ from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 from moon import Moon, pole_vec, night_mask
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-moon-closer"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-moon-closer"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/B_valley.png"
 FPS = 30
-LEAD, TAIL = 0.25, 1.00
+LEAD, TAIL = 0.25, 0.90
 F_PX = 4000.0            # the lens for the Moon discs (27 deg vertical FOV)
 F_SKY = 1400.0           # sky gradient / extinction / star field (stylised blue-hour dome)
 D0 = 384400.0
@@ -99,9 +99,9 @@ T_RING = wt("roche_b", "RING")
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_BACK, "end")]
 COLLAPSE, BLOOM = 0.42, 0.65
 PULSES = [wt("hook_b", "CLOSER"), wt("today", "TODAY"), wt("d200", "TWICE"), wt("d200_b", "7×"), wt("d100", "57×"), wt("d100_b", "INLAND"),
-          wt("d50", "50,000"), wt("d50_b", "QUAKES"), wt("d50_b", "DETAIL"), wt("d20_b", "HIGH"), wt("roche", "ROCHE"),
+          wt("d50", "SHAKES"), wt("d50_b", "VOLCANOES"), wt("d50_b", "DETAIL"), wt("d20_b", "HIGH"), wt("roche", "ROCHE"),
           wt("end", "AWAY")]
-QUAKES = [(wt("d50_b", "QUAKES"), 1.0), (wt("d50_b", "VOLCANOES"), 0.8), (wt("d20_b", "TIDES"), 0.9), (wt("d20_b", "HIGH"), 1.0),
+QUAKES = [(wt("d50", "SHAKES"), 1.0), (wt("d50_b", "VOLCANOES"), 0.8), (wt("d20_b", "TIDES"), 0.9), (wt("d20_b", "HIGH"), 1.0),
           (T_CRACK, 1.0), (T_RIP, 1.6), (T_RING, 1.0)]
 
 
@@ -190,7 +190,7 @@ class Scene:
         self._fragments()
         emph = {"MOON", "CLOSER", "SCALE", "200,000", "TWICE", "7×", "100,000", "57×", "INLAND", "50,000", "450×", "QUAKES",
                 "VOLCANOES", "CRATER", "DETAIL", "20,000", "KILOMETERS", "HIGH", "TODAY", "18,000", "ROCHE", "RIPS", "RING",
-                "3.8 CM", "AWAY"}
+                "3.8 CM", "AWAY", "SHAKES", "FILLS", "SKY", "APART", "GOODBYE", "SLOWLY", "IMAGINE"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         L.cap_y = 1040
 

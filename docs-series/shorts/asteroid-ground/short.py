@@ -29,7 +29,7 @@ from lib.text import Captions, hud_text, word_layer, composite
 from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S13-asteroid"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-asteroid-ground"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.05
@@ -39,30 +39,34 @@ IMP_SRC_X_WIDE = 645.0                                # 16:9: right of the (much
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
-LN = {l["key"]: l for l in PL}
+LN = {}                                               # REDO v3: lines <beat>_<x> grouped into beats
+for _l in PL:
+    _g = _l["key"].rsplit("_", 1)[0]
+    if _g in LN: LN[_g] = dict(LN[_g], end=_l["end"], words=LN[_g]["words"] + _l["words"])
+    else: LN[_g] = dict(key=_g, start=_l["start"], end=_l["end"], words=list(_l["words"]))
 def wt(key, cap, n=0):
     ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
 
 
 # ------------------------------------------------------------------------------------------------ timeline
 T_STAR = 0.85                                         # the new star appears
-T_IMP = wt("hit", "BEYOND") - 0.12                    # bolide drops behind the horizon -> flash
+T_IMP = wt("hit", "BEHIND") - 0.12                    # bolide drops behind the horizon -> flash
 T_ENTRY = T_IMP - 4.6                                 # atmospheric entry: plasma ignites
-T_FLASHW = wt("hit", "FLASH")
+T_FLASHW = wt("hit", "BRIGHTER")
 T_Q0 = LN["quake"]["start"]
 T_JOLT = wt("quake", "HEAVES") - 0.05                 # seismic waves arrive
-T_JOLT2 = wt("quake", "TEN") - 0.05
+T_JOLT2 = LN["quake"]["end"] + 0.30
 T_EJ0 = wt("ejecta", "MOLTEN") - 0.25                 # ejecta re-entry begins
 T_RED = wt("ejecta", "SKY")
-T_FIRE = wt("ejecta", "IGNITE") - 0.4
+T_FIRE = wt("ejecta", "BURN") - 0.4
 T_BL0 = LN["blast"]["start"]                          # dust wall appears on the horizon
 T_HITS = wt("blast", "HITS") - 0.05                   # the air blast reaches us
 T_SOOT = wt("blast", "SOOT") - 0.2                    # impact winter
 T_75 = wt("blast", "THREE") - 0.1
 T_WO0 = LN["end"]["start"] - 0.65                     # golden white-out
 T_BACK = LN["end"]["start"] - 0.05                    # sunny park again
-PULSES = [wt("appr", "APPEARS"), wt("appr", "10 KM"), wt("appr", "20 KM/S"), T_FLASHW, wt("hit", "FIREBALL"), T_JOLT2,
-          wt("ejecta", "RED-HOT"), wt("blast", "VANISH"), wt("end", "HERE")]
+PULSES = [wt("appr", "APPEARS"), wt("appr", "10 KM"), T_FLASHW, wt("hit", "FIREBALL"), T_JOLT2,
+          wt("ejecta", "RED-HOT"), wt("blast", "GONE"), wt("end", "HERE")]
 
 
 def lerp(a, b, w): return tuple(x + (y - x) * w for x, y in zip(a, b)) if isinstance(a, tuple) else a + (b - a) * w
@@ -198,8 +202,8 @@ class Scene:
         # dust motes (blast)
         dr = np.random.default_rng(14); n = 500
         self.mote = dict(x=dr.uniform(0, W, n), y=dr.uniform(0.0, 1.0, n) * H, sp=dr.uniform(500, 1600, n), sz=dr.uniform(0.3, 1, n))
-        emph = {"1,000 KM", "10 KM", "20 KM/S", "FLASH", "SUN", "FIREBALL", "SPACE", "HEAVES", "TEN", "RED-HOT",
-                "IGNITE", "BLAST", "YEARS", "VANISH", "HERE", "MOLTEN", "STAR"}
+        emph = {"IMAGINE", "DINOSAURS", "STAR", "10 KM", "HORIZON", "BRIGHTER", "SUN", "FIREBALL", "SPACE", "HEAVES",
+                "MOLTEN", "RED-HOT", "BURN", "BLAST", "YEARS", "GONE", "HERE"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         L.cap_y = 1010 if vertical else 590
 
@@ -721,13 +725,9 @@ def run(vertical, stills=None):
             Image.fromarray((np.clip(im, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(SCR, "stills", f"{tag}_{t:05.2f}.png"))
             print(f"t={t:.2f} {time.time() - t0:.1f}s", flush=True)
         return
-    n = int(round(DUR * FPS))
-    enc = Encoder(os.path.join(SCR, f"video_{tag}.mp4"), sc.L.W, sc.L.H, FPS, crf=16)
-    t0 = time.time()
-    for i in range(n):
-        enc.write(sc.frame(i / FPS))
-        if i % 60 == 0: print(f"{tag} frame {i}/{n}  {time.time() - t0:.0f}s", flush=True)
-    enc.close(); print("done", time.time() - t0)
+    assert vertical, "REDO v3: 9:16 only"
+    from lib.v3 import render_segments                               # REDO v3: restart-safe segments + concat
+    render_segments(sc.frame, sc.L.W, sc.L.H, FPS, DUR, os.path.join(SCR, "seg"), os.path.join(SCR, f"video_{tag}.mp4"), crf=16)
 
 
 def patch(vertical, ranges):

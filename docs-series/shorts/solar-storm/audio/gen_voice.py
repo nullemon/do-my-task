@@ -7,7 +7,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path
 import numpy as np, soundfile as sf
 from narration import LINES
 from lib import voice as V
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S6-solar-storm"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-solar-storm"
 FUSE2 = {"the", "a"}
 
 
@@ -67,5 +67,6 @@ def generate(speed, voice="am_michael"):
     print("speech total", round(sum(m["dur"] + m["pause"] for m in meta), 2))
 
 
-if __name__ == "__main__":
-    generate(float(sys.argv[1]) if len(sys.argv) > 1 else 1.05)
+if __name__ == "__main__":                       # REDO v3: blended style, speed 0.86 (lib/v3_kit.py)
+    from lib.v3_kit import style, SPEED
+    generate(float(sys.argv[1]) if len(sys.argv) > 1 else SPEED, voice=style())

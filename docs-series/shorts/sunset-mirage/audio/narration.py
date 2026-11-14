@@ -3,14 +3,23 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds)."""
 import re
 
-LINES = [
-    ("hook", "This Sun isn't really there.", 0.30),
-    ("reveal", "When it touches the horizon, the real Sun has already set, completely below the ridge.", 0.25),
-    ("how", "Air bends light. Near the ground it's denser, so sunlight curves down to you, lifting the Sun's image by more than its own width.", 0.35),
-    ("squash", "The bottom edge lifts most, squashing the Sun into an oval. Then, on a clear evening, the last sliver can flash green.", 0.85),
-    ("bonus", "Your days are a few minutes longer because of it.", 0.25),
-    ("myth", "And no, it's not the {8-MINUTE|eight-minute} light delay. That's a myth.", 0.30),
-    ("end", "Every sunset you've ever watched... was a mirage.", 0.0),
+LINES = [   # REDO v3 storytelling script: 0.7 am_michael + 0.3 am_onyx @ 0.86
+    ("hook", "What if this sunset...", 0.45),
+    ("hook_b", "isn't really there?", 1.10),
+    ("reveal", "As it touches the ridge...", 0.45),
+    ("reveal_b", "the real Sun has already set.", 1.10),
+    ("how", "Air bends light.", 0.45),
+    ("how_b", "Denser air curves it down to you...", 0.40),
+    ("how_c", "lifting the Sun... more than its own width.", 1.10),
+    ("squash", "The bottom lifts most...", 0.40),
+    ("squash_b", "squashing it into an oval.", 1.00),
+    ("gf", "Then... the last sliver...", 0.40),
+    ("gf_b", "can flash green.", 1.20),
+    ("bonus", "Your days... are minutes longer.", 1.10),
+    ("myth", "And no... it's not the {8-MINUTE|eight-minute} delay.", 0.45),
+    ("myth_b", "That's a myth.", 1.20),
+    ("end", "Every sunset you've ever watched...", 0.50),
+    ("end_b", "was a mirage.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

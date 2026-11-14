@@ -4,18 +4,23 @@ Each line: (key, text, pause_after_seconds)."""
 import re
 
 LINES = [
-    ("hook", "What if Earth had a second Sun?", 0.65),
-    ("acen", "Alpha Centauri: its orange partner outshines hundreds of full Moons.", 0.35),
-    ("acen_2", "Some nights never get dark.", 0.65),
-    ("sir", "Sirius: a blue-white blaze, and a white dwarf.", 0.35),
-    ("sir_2", "A Sun's mass, the size of Earth.", 0.65),
-    ("kep", "{KEPLER-16b|Kepler sixteen B}, a real planet with two suns.", 0.35),
-    ("kep_2", "Double sunset. Double shadows.", 0.65),
-    ("alg", "Algol, the Demon Star.", 0.35),
-    ("alg_2", "Every {2.87|two point eight seven} days, one star eclipses the other.", 0.65),
-    ("wuma", "{W|Double-U} Ursae Majoris. Two stars, touching.", 0.65),
-    ("end", "Nearly half of Sun-like stars have a partner.", 0.35),
-    ("end_2", "Ours is single.", 0.0),
+    ("hook", "Imagine...", 0.50),
+    ("hook_2", "a second Sun.", 1.10),
+    ("acen", "Alpha Centauri.", 0.50),
+    ("acen_2", "Its orange partner outshines hundreds of full Moons.", 0.50),
+    ("acen_3", "Some nights... never get dark.", 1.10),
+    ("sir", "Now... Sirius.", 0.50),
+    ("sir_2", "A blue-white blaze... and a white dwarf.", 0.45),
+    ("sir_3", "A Sun's mass... the size of Earth.", 1.10),
+    ("kep", "And then... {KEPLER-16b|Kepler sixteen B}.", 0.50),
+    ("kep_2", "Double sunset... double shadows.", 1.10),
+    ("alg", "Algol... the Demon Star.", 0.45),
+    ("alg_2", "Every three days... one star eclipses the other.", 1.10),
+    ("wuma", "{W|Double-U} Ursae Majoris.", 0.45),
+    ("wuma_2", "Two stars... touching.", 1.10),
+    ("end", "Nearly half of Sun-like stars have a partner.", 0.50),
+    ("end_2", "Ours...", 0.45),
+    ("end_3", "is alone.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

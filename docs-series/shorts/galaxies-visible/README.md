@@ -7,11 +7,14 @@ Each galaxy gets a readout: NAME / × MOON'S SIZE / DISTANCE / STARS. A real ful
 the same scale. The ending is a white-out back to the plain city sky, so the Short loops. There are no disclaimer
 captions (user rule).
 
-## Narration (74 words, Kokoro am_michael @ 0.92, about 0.35 s pauses between sentences and 0.7 s at beat changes, −14.0 LUFS)
-> There's a galaxy in our sky six times wider than the Moon. You just can't see it. But what if your eyes could?
-> Andromeda. A trillion stars. Triangulum. A face-on spiral, almost three million light-years out. The Magellanic Clouds.
-> The large one spans twenty full Moons. The Whirlpool: tiny, a third of the Moon. They're all up there right now, this
-> big. Their light is just spread too thin. Your eyes aren't sensitive enough.
+## Narration (REDO v3, 14 Nov: storytelling, 74 words, 0.7 am_michael + 0.3 am_onyx (Kokoro) @ 0.86, real word timings, v3 post chain (`../lib/v3_kit.py`); ~0.45 s between phrases, 1.0–1.1 s at beat changes)
+> Imagine a galaxy... / six times wider than the Moon. / It's up there right now. / You just can't see it. / But
+> what if... your eyes could? / Andromeda. / A trillion stars. / Then... Triangulum. / A whole spiral... seen face-on. /
+> Now... the Magellanic Clouds. / The large one... twenty full Moons wide. / And the Whirlpool... / tiny... a third of
+> the Moon. / They're all up there... / this big. / Their light is just spread too thin... / for your eyes to see.
+
+45.97 s. Swaps land on each name. Scratch for v3: `scratchpad/series/V3-galaxies-visible/` (stars/sprites/mw copied
+from the surviving B2 scratch; HYG and image downloads stay in `B2-galaxies-visible/dl`).
 
 The distances, star counts and Tarantula are given in the on-screen readouts and the picture, which keeps the voice calm.
 

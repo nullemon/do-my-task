@@ -9,6 +9,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.audio_v3 import build_voice as build_voice_v3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -49,7 +50,7 @@ def bloom_swell(t0, seed, gain=0.4):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     sw = S.SWAPS
     seq = [(0.0, "sun")] + [(ts, "sun" if k == "sun2" else k) for ts, k in sw]
     bed = np.zeros((N, 2))

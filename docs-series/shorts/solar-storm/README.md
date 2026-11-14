@@ -4,12 +4,16 @@
 `../lib/README.md`). **Locked camera:** one tripod frame of the user's city plate (`C_city.png`) for the whole Short.
 All the action is in the sky and the city lights.
 
-## Narration (90 words, Kokoro am_michael @ 1.05, real word timings)
-> In 1859, the Sun fired the biggest storm in recorded history. If it hit today… Richard Carrington saw a white flare.
-> 17.6 hours later, it hit Earth. The sky erupted. Auroras reached the Caribbean. People read newspapers by their
-> light. Telegraphs sparked and shocked operators. Today, it could burn out transformers. Cities could go dark for
-> months. No phones. No GPS. Damage could reach trillions of dollars. In 2012, one this big missed us by about nine
-> days. It's only a matter of when.
+## Narration (REDO v3, 14 Nov: storytelling, 75 words, 0.7 am_michael + 0.3 am_onyx (Kokoro) @ 0.86, real word timings, v3 post chain (`../lib/v3_kit.py`); ~0.4 s between phrases, 1.0 s at beat changes, 50.0 s)
+> Imagine the Sun... / firing the biggest storm on record. / In 1859... it did. / A white flare... / Seventeen point
+> six hours later... / it hit Earth. / The sky... erupted. / Auroras reached the Caribbean. / People read by their
+> light. / Telegraphs sparked. / Imagine it today. / Transformers could burn out. / Cities... dark for months. / No
+> phones. / No GPS. / Trillions... in damage. / In 2012... / one this big... missed us by days. / It's only a matter... /
+> of when.
+
+The v3 render is 9:16 only (no 16:9). "Trillions... in damage" sits inside the "Imagine it today" scenario and the label
+still says "LLOYD'S ESTIMATE". Scratch for v3: `scratchpad/series/V3-solar-storm/` (the old S6 scratch was deleted).
+The beat table below is from the old 38.5 s cut; v3 times follow the new word timings.
 
 ## Beats
 | t (s) | picture / sound |

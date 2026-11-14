@@ -10,7 +10,7 @@ import numpy as np, cv2
 from lib.core import f32
 from scipy.ndimage import gaussian_filter
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S3-gamma-ray-eyes"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-gamma-ray-eyes"
 
 
 def _stretch(x, lo_p, hi_p):

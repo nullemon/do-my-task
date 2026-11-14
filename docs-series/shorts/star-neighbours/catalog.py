@@ -3,7 +3,7 @@ Gliese) -> SCR/stars.npz. Keeps every star brighter than V = 7.0 (RA, Dec, V mag
 Usage: /home/user/ttsenv/bin/python catalog.py"""
 import csv, os
 import numpy as np
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-star-neighbours"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-neighbours"
 SRC = os.path.join(SCR, "dl", "hyg", "hygdata_v41.csv")
 LY_PER_PC = 3.26156
 

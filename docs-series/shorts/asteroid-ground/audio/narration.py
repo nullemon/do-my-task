@@ -3,14 +3,25 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds). The global-firestorm idea is hedged ("maybe")."""
 import re
 
-LINES = [
-    ("hook", "What if you saw the dinosaur-killer asteroid hit, from {1,000 KM|a thousand kilometers} away?", 0.20),
-    ("appr", "A new star appears. {10 KM|Ten kilometers} wide, at {20 KM/S|twenty kilometers a second}.", 0.20),
-    ("hit", "It strikes beyond the horizon. A flash brighter than the Sun. A fireball climbs into space.", 0.25),
-    ("quake", "Minutes later, the ground heaves. Magnitude ten.", 0.20),
-    ("ejecta", "Molten debris rains back from space. The sky glows red-hot, maybe hot enough to ignite forests.", 0.25),
-    ("blast", "An hour in, the blast wave hits. Then soot blocks the Sun for years. Three quarters of all species vanish.", 0.45),
-    ("end", "And the asteroid that wiped out the dinosaurs... is why we're here.", 0.0),
+LINES = [   # REDO v3 storytelling script (75 words). Keys are <beat>_<a..d>; short.py groups them per beat.
+    ("hook_a", "Imagine standing here...", 0.40),
+    ("hook_b", "the day the dinosaurs died.", 1.00),
+    ("appr_a", "A new star appears.", 0.50),
+    ("appr_b", "{10 KM|Ten kilometers} wide.", 1.00),
+    ("hit_a", "It drops... behind the horizon.", 0.50),
+    ("hit_b", "Brighter than the Sun.", 0.40),
+    ("hit_c", "A fireball climbs into space.", 1.00),
+    ("quake_a", "Minutes later...", 0.40),
+    ("quake_b", "the ground heaves.", 1.00),
+    ("ejecta_a", "Molten rock rains down.", 0.50),
+    ("ejecta_b", "The sky glows red-hot...", 0.40),
+    ("ejecta_c", "maybe hot enough to burn forests.", 1.00),
+    ("blast_a", "An hour in...", 0.40),
+    ("blast_b", "the blast wave hits.", 1.00),
+    ("blast_c", "Soot blocks the Sun for years.", 0.50),
+    ("blast_d", "Three quarters of all species... gone.", 1.20),
+    ("end_a", "And yet...", 0.45),
+    ("end_b", "that asteroid... is why we're here.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!:]*)|(\S+)")

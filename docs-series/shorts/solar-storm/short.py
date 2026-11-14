@@ -27,23 +27,25 @@ from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 from aurora import Aurora
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S6-solar-storm"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-solar-storm"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/C_city.png"
 # street-lamp heads in SOURCE px of C_city.png (941x1672) (same as S2)
 LAMPS_SRC = [(575, 1496), (703, 1449), (819, 1456), (470, 1386), (237, 1303)]
 # a few lights that survive the blackout (battery / emergency lights), SOURCE px (from S2)
 SURVIVE_SRC = [(547, 1592), (33, 1418), (264, 1404), (690, 1338)]
 FPS = 30
-LEAD, TAIL = 0.25, 2.0
+LEAD, TAIL = 0.25, 1.0                          # v3: 50 s cap
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
+    """word time; REDO v3: `key` also covers its continuation lines (hook2, aurora3, cost3 ...)"""
+    ws = [w for l in PL if l["key"].startswith(key) for w in l["words"] if w["cap"] == cap]; return ws[n]["t0"]
+def lend(key): return max(l["end"] for l in PL if l["key"].startswith(key))     # end of a beat (all its lines)
 
-T_FIRE = wt("hook", "FIRED") - 0.05            # the flare flashes from below the horizon
+T_FIRE = wt("hook", "FIRING") - 0.05            # the flare flashes from below the horizon
 T_FLARE2 = wt("flare", "FLARE") - 0.05         # Carrington's white flare (second pulse)
 T_CNT0, T_CNT1 = wt("flare", "17.6") - 0.1, wt("flare", "EARTH") + 0.2   # 17.6 h counter
 T_HIT = wt("flare", "HIT")                     # shock front sweeps the sky
@@ -213,9 +215,9 @@ class Scene:
         self.stars = StarSky()
         V = (0.53 * W, 0.20 * H) if vertical else (0.56 * W, 0.10 * H)
         self.aur = Aurora(W, H, self.hz, self.f, V)
-        self.caps = Captions(self.L, WORDS, emphasis={"1859", "SUN", "STORM", "TODAY", "FLARE", "17.6", "EARTH", "ERUPTED",
+        self.caps = Captions(self.L, WORDS, emphasis={"IMAGINE", "FIRING", "1859", "SUN", "STORM", "TODAY", "FLARE", "17.6", "EARTH", "ERUPTED",
                                                        "CARIBBEAN", "SPARKED", "DARK", "MONTHS", "GPS", "PHONES",
-                                                       "TRILLIONS", "2012", "NINE", "WHEN"})
+                                                       "TRILLIONS", "2012", "MISSED", "DAYS", "WHEN"})
         yy, xx = np.mgrid[0:H, 0:W].astype(f32)
         self.xx, self.yy = xx, yy
         el = np.clip((self.hz - yy) / self.hz, 0, 1)
@@ -416,9 +418,9 @@ class Scene:
         a0 = LN["aurora"]["start"]
         for txt, s0, s1, col in (("AURORAS IN THE CARIBBEAN", a0, wt("aurora", "PEOPLE") - 0.05, (120, 255, 170)),
                                  ("NEWSPAPERS READ BY AURORA LIGHT", wt("aurora", "PEOPLE"), wt("aurora", "TELEGRAPHS") - 0.05, (255, 140, 170)),
-                                 ("TELEGRAPHS SPARKED", wt("aurora", "TELEGRAPHS"), LN["aurora"]["end"] + 0.3, (170, 230, 255))):
+                                 ("TELEGRAPHS SPARKED", wt("aurora", "TELEGRAPHS"), lend("aurora") + 0.3, (170, 230, 255))):
             lab(txt, by, win(s0, s1, 0.18), col, int(big * (0.62 if V else 0.6) * min(1.0, 24 / len(txt))), "Black", 0.05, disp=True)
-        lab("1859", ly, win(a0, LN["aurora"]["end"] + 0.3) * 0.9, (230, 236, 250), fs, "Bold")
+        lab("1859", ly, win(a0, lend("aurora") + 0.3) * 0.9, (230, 236, 250), fs, "Bold")
         g0 = LN["grid"]["start"]
         lab("TODAY", ly, win(g0, LN["nosig"]["start"]), (255, 214, 160), fs, "Bold")
         lab("POWER GRID", by - big * 0.45, win(T_TRANS, LN["nosig"]["start"]), (235, 240, 250), int(fs * 0.9), "Bold")
@@ -438,7 +440,7 @@ class Scene:
         lab("CARRINGTON-CLASS STORM, US COST", ly, a, (230, 236, 250), fs, "Bold")
         lab("$0.6–2.6 TRILLION", by, a, (255, 205, 90), int(big * 0.9), "Black", 0.03, disp=True)
         lab("LLOYD'S ESTIMATE (2013)", by + big * 0.75, a * 0.85, (210, 220, 235), int(fs * 0.8))
-        a = win(T_2012 - 0.1, LN["cost"]["end"] + 0.35)
+        a = win(T_2012 - 0.1, lend("cost") + 0.35)
         lab("23 JULY 2012", ly, a, (230, 236, 250), fs, "Bold")
         lab("MISSED BY ~9 DAYS", by, a, (255, 120, 90), int(big * 0.8), "Black", 0.03, disp=True)
         self.caps.draw(out, t)
@@ -482,6 +484,8 @@ def patch(vertical, ranges):
 
 
 if __name__ == "__main__":
+    if sys.argv[1] == "seg":                                                 # REDO v3: restart-safe segment render (9:16 only)
+        from lib.v3_kit import render; render(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "patch":
         patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"

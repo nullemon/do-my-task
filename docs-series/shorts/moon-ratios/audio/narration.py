@@ -1,22 +1,28 @@
 """Narration for the Short "What If Our Moon Was as Big as Other Moons Are to Their Planets?".
 Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the spoken words (numbers etc.).
-Each line: (key, text, pause_after_seconds). Voice: am_michael @ 0.92; ~0.35 s between sentences, ~0.7 s at beats."""
+Each line: (key, text, pause_after_seconds). Voice (REDO v3): 0.7 am_michael + 0.3 am_onyx @ 0.86; 0.45-0.5 s between phrases, 1.0-1.2 s at beats."""
 import re
 
 LINES = [
-    ("hook", "Our Moon is huge compared to Earth.", 0.35),
-    ("hook_b", "But what if it matched other moons?", 0.70),
-    ("moon", "Today, it's {27%|twenty-seven percent} of Earth's width.", 0.70),
-    ("pho", "Match Phobos and Mars: {42 KM|forty-two kilometers.}", 0.35),
-    ("pho_b", "Barely visible.", 0.70),
-    ("gan", "Ganymede and Jupiter: a tiny dot.", 0.70),
-    ("tit", "Titan and Saturn: a little orange spark.", 0.70),
-    ("tri", "Triton and Neptune: still {5×|five times} smaller.", 0.70),
-    ("cha", "But {CHARON|Sharon} is half as wide as Pluto.", 0.35),
-    ("cha_b", "Nearly twice our Moon.", 0.35),
-    ("cha_c", "A double world.", 0.70),
-    ("end", "Pluto's a dwarf planet.", 0.35),
-    ("end_b", "Of all the planets, ours has the biggest moon for its size.", 0.0),
+    ("hook", "Imagine our Moon...", 0.50),
+    ("hook_b", "sized like other moons... to their planets.", 1.10),
+    ("moon", "Today, it's over a quarter of Earth's width.", 1.10),
+    ("pho", "First... Phobos.", 0.45),
+    ("pho_b", "{42 KM|Forty-two kilometers.}", 0.45),
+    ("pho_c", "Barely visible.", 1.10),
+    ("gan", "Ganymede...", 0.45),
+    ("gan_b", "a tiny dot.", 1.00),
+    ("tit", "Titan...", 0.45),
+    ("tit_b", "a little orange spark.", 1.00),
+    ("tri", "Triton...", 0.45),
+    ("tri_b", "still {5×|five times} smaller.", 1.20),
+    ("cha", "And then... {CHARON|Sharon}.", 0.50),
+    ("cha_b", "Half as wide as Pluto.", 0.45),
+    ("cha_c", "Our Moon... nearly twice as big.", 0.50),
+    ("cha_d", "A double world.", 1.20),
+    ("end", "But Pluto's a dwarf planet...", 0.50),
+    ("end_b", "Of all the real planets...", 0.45),
+    ("end_c", "ours has the biggest moon for its size.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!:]*)|(\S+)")
@@ -41,7 +47,7 @@ def spoken(text):
 
 def pieces(text):
     """subtitle strings aligned 1:1 with caption tokens (numbers kept as digits)"""
-    rep = {"27%": "27 percent", "CHARON": "Charon", "42 KM": "42 kilometers", "5×": "five times"}
+    rep = {"CHARON": "Charon", "42 KM": "42 kilometers", "5×": "five times"}
     out = []
     for cap, ws in tokens(text):
         if len(ws) == 1 and cap == ws[0]: out.append(cap)

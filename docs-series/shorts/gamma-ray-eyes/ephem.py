@@ -3,7 +3,7 @@ time (astropy; no network: bundled IERS tables). Run once: writes SCR/ephem.npz 
   search : PYTHONPATH=SCR/pylib python -I ephem.py search      (scan dates for a good composition)
   write  : PYTHONPATH=SCR/pylib python -I ephem.py write       (per-frame tables for the chosen moment)"""
 import os, sys
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S3-gamma-ray-eyes"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-gamma-ray-eyes"
 sys.path.insert(0, os.path.join(SCR, "pylib"))
 import numpy as np
 import warnings; warnings.filterwarnings("ignore")
@@ -62,7 +62,7 @@ def search():
     for b in best[:25]: print(b)
 
 
-def write(dur=40.0, fps=30):
+def write(dur=55.0, fps=30):
     n = int(dur * fps) + 2
     ts = Time(T0) + (np.arange(n) / fps * SPEED) * u.s
     M = enu_to_gal(ts)

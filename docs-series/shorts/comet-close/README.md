@@ -12,11 +12,14 @@ Files: `short.py` (scene and timeline), `comets.py` (comet renderer and nucleus 
 mix), `encode.sh vert`, `thumbnail.py`. Scratch is in `scratchpad/series/B2-comet-close/`.
 Outputs are in `out/`: `comet-close-short.mp4`, `comet-close.srt`, `thumb-vertical.jpg` and `thumb.jpg`.
 
-## Narration (74 words, Kokoro am_michael @ 0.92, real word timings; ~0.35 s between sentences, ~0.7 s at beat changes)
-> What if a comet passed as close as the Moon? / Halley's Comet. Its nucleus is a dark potato, just 15 kilometres long.
-> But its green coma would span 15 degrees. / Hale-Bopp. Bright enough to cast shadows. / NEOWISE. A golden tail,
-> tinted by sodium. / 67P, the rubber-duck comet. Spitting jets. / And McNaught. A striped fan, filling the entire sky. /
-> Comets are dirty snowballs, a few kilometres wide... with tails millions of kilometres long.
+## Narration (REDO v3, 14 Nov: storytelling, 67 words, 0.7 am_michael + 0.3 am_onyx (Kokoro) @ 0.86, real word timings, v3 post chain (`../lib/v3_kit.py`); ~0.45 s between phrases, 1.1–1.2 s at beat changes)
+> Imagine the Moon... / replaced by a comet. / First... Halley's Comet. / Its heart... a dark potato. / But its green
+> glow... thirty Moons wide. / Then... Hale-Bopp. / So bright... you'd cast a shadow. / Now... NEOWISE. / A golden
+> tail... tinted by sodium. / Sixty-seven P. / A rubber duck... spitting jets. / And then... McNaught. / Its striped
+> tail... fills the entire sky. / All that glory... / from a dirty snowball... / a few kilometres wide.
+
+Each swap now lands on the comet's name (after the "Then..." beat). Thirty Moons = Halley's 14.8° coma / 0.52°.
+45.13 s. Scratch for v3: `scratchpad/series/V3-comet-close/`.
 
 ## Geometry (the plate's lens, f = 1148 px, horizon at y = 1501)
 | object | true size | at 384,400 km | on screen |

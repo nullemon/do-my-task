@@ -2,7 +2,7 @@
 # Mux picture + sound + soft subtitles -> out/star-neighbours-short.mp4 (9:16 only; no -shortest: it truncates with subtitles)
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-star-neighbours
+SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-star-neighbours
 OUTF="$HERE/out/star-neighbours-short.mp4"
 nice -n 10 ffmpeg -v error -y -i "$SCR/video_vert.mp4" -i "$SCR/audio/mix.wav" -i "$HERE/out/star-neighbours.srt" \
   -map 0:v -map 1:a -map 2:s -c:v copy -c:a aac -b:a 256k -c:s mov_text -metadata:s:s:0 language=eng \

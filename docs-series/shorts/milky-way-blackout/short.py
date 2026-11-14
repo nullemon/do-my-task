@@ -20,7 +20,7 @@ from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 from mw import milky_way
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S2-milky-way-blackout"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-milky-way-blackout"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/C_city.png"
 # street-lamp heads in SOURCE px of C_city.png (941x1672), found by eye on a 2x crop
 LAMPS_SRC = [(575, 1496), (703, 1449), (819, 1456), (470, 1386), (237, 1303)]
@@ -32,11 +32,14 @@ LEAD, TAIL = 0.25, 1.45
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
-LN = {l["key"]: l for l in PL}
+LN = {}                                                 # beats: a beat is all lines whose key is `key` or `key_<n>`
+for _l in PL:
+    _b = LN.setdefault(_l["key"].split("_")[0], dict(key=_l["key"].split("_")[0], start=_l["start"], end=_l["end"], words=[]))
+    _b["end"] = _l["end"]; _b["words"] = _b["words"] + _l["words"]
 def wt(key, cap, n=0):
     ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
 
-T_HIT = wt("quake", "HIT")                 # the jolt lands on "hit"
+T_HIT = wt("quake", "HITS")                 # the jolt lands on "hit"
 T_SHAKE0, T_SHAKE1 = T_HIT - 0.12, T_HIT + 1.25
 T_OFF0 = T_HIT + 0.55                      # first wave of windows dies
 T_OFF1 = wt("dark", "DARK") + 0.15         # last wave
@@ -200,7 +203,7 @@ class Scene:
         self.cam = SkyCam(W, H, self.hz, self.f)
         self.city = City(self.fg, self.L)
         self.stars = StarSky()
-        self.caps = Captions(self.L, WORDS, emphasis={"1994", "SKY", "HIT", "DARK", "UP", "MILKY", "WAY", "NEVER", "80%", "YOU", "CLOUD"})
+        self.caps = Captions(self.L, WORDS, emphasis={"1994", "SKY", "HITS", "DARK", "UP", "MILKY", "WAY", "NEVER", "80%", "YOU", "CLOUD", "IMAGINE", "STILL"})
         # Milky Way placement: core low in the gap between the towers, band rising to the upper right
         if vertical:
             self.mw = dict(cx=2073, cy=704, rot=4.0); self.mw_core, self.mw_ang, self.mw_s = (450.0, 1240.0), 60.0, 1.55

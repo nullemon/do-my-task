@@ -5,14 +5,20 @@ hard to verify in detail, so no call counts are claimed."""
 import re
 
 LINES = [
-    ("hook", "In {1994|nineteen ninety-four}, people in Los Angeles reportedly called for help, because of something in the sky.", 0.30),
-    ("quake", "Before dawn, the Northridge earthquake hit.", 0.70),
-    ("dark", "And much of the city went dark.", 1.30),
-    ("look", "Then they looked up.", 2.00),
-    ("cloud", "According to astronomers at Griffith Observatory, people called about the strange sky. Some reportedly described a silver cloud.", 0.35),
-    ("twist", "It was the Milky Way. They'd never seen it.", 0.45),
-    ("fact", "Today, nearly {80%|eighty percent} of North Americans can't see it from home.", 0.55),
-    ("end", "It's still there. Every night. Right above you.", 0.0),
+    ("hook", "Imagine Los Angeles...", 0.45),
+    ("hook_2", "January {1994|nineteen ninety-four}. Before dawn.", 1.00),
+    ("quake", "The Northridge earthquake hits.", 0.60),
+    ("dark", "And the city... goes dark.", 1.20),
+    ("look", "People step outside...", 0.40),
+    ("look_2", "and look up.", 1.80),
+    ("cloud", "According to Griffith Observatory, people called about a strange sky.", 0.45),
+    ("cloud_2", "Some reportedly described... a silver cloud.", 1.10),
+    ("twist", "It was the Milky Way.", 0.60),
+    ("twist_2", "They'd never seen it.", 1.10),
+    ("fact", "Today, nearly {80%|eighty percent} of North Americans can't see it from home.", 1.00),
+    ("end", "But it's still there...", 0.45),
+    ("end_2", "every night...", 0.40),
+    ("end_3", "right above you.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

@@ -8,6 +8,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.audio_v3 import build_voice as build_voice_v3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); t = np.arange(N) / SR
@@ -134,7 +135,7 @@ def pad():
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     hum, traffic = city_bed()
     tr_e = A.env(N, [(0, 1), (S.T_HIT, 1), (S.T_OFF1, 0.5), (S.T_DRAIN0 + 0.6, 0), (S.T_RET0 + 0.6, 0), (S.DUR, 0.7)])
     bed = (power_hum(hum) + traffic * tr_e[:, None] + quake() * 0.9 + buzz_and_pops() + crickets() + wind() + pad() * 1.7

@@ -14,6 +14,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib import v3_redo_q5 as V3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); t = np.arange(N) / SR
@@ -169,7 +170,7 @@ def kick():
 
 def main():
     sc = S.Scene(True)
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = V3.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     fx = np.zeros((N, 2))
     for k in ("ir", "radio", "micro", "gamma"):
         fx += whoosh(S.SW[k] - 0.12, 0.75, gain=1.0) + A.thump(N, S.SW[k] + 0.22, 0.30)

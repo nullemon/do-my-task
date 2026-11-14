@@ -3,16 +3,27 @@ Markup: {CAPTION|spoken words} shows CAPTION on screen for the whole span of the
 Each line: (key, text, pause_after_seconds)."""
 import re
 
-LINES = [
-    ("hook", "What if other moons replaced our Moon? Same distance, true size.", 0.20),
-    ("moon", "Here's our Moon, for scale.", 0.25),
-    ("pho", "Mars's moon Phobos. Where did it go? That speck. You'd barely see it.", 0.25),
-    ("eur", "Europa. Slightly smaller, a cracked ball of ice.", 0.20),
-    ("io", "Io. A little bigger, and covered in erupting volcanoes.", 0.20),
-    ("tit", "Titan. {1.5×|One and a half times} wider, wrapped in thick orange haze.", 0.20),
-    ("gan", "Ganymede. The biggest moon in the solar system, even wider than Mercury.", 0.30),
-    ("all", "Now imagine all of them at once.", 1.60),
-    ("end", "Still, compared to its planet, ours is the biggest moon of any planet.", 0.0),
+LINES = [   # REDO v3 storytelling script: 0.7 am_michael + 0.3 am_onyx @ 0.86
+    ("hook", "Imagine our Moon...", 0.50),
+    ("hook_b", "swapped for other moons.", 0.45),
+    ("hook_c", "Same distance... true size.", 1.00),
+    ("moon", "Here's ours, for scale.", 1.00),
+    ("pho", "First... Mars's moon, Phobos.", 0.50),
+    ("pho_b", "Where did it go?", 0.50),
+    ("pho_c", "That tiny speck.", 1.00),
+    ("eur", "Europa...", 0.40),
+    ("eur_b", "a cracked ball of ice.", 1.00),
+    ("io", "Io...", 0.40),
+    ("io_b", "covered in erupting volcanoes.", 1.00),
+    ("tit", "Titan...", 0.40),
+    ("tit_b", "{1.5×|one and a half times} wider... wrapped in haze.", 1.00),
+    ("gan", "Then... Ganymede.", 0.45),
+    ("gan_b", "The biggest moon in the solar system...", 0.40),
+    ("gan_c", "wider than Mercury.", 1.00),
+    ("all", "Now... all of them, at once.", 1.40),
+    ("end", "And yet...", 0.50),
+    ("end_b", "compared to its planet...", 0.45),
+    ("end_c", "ours beats them all.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

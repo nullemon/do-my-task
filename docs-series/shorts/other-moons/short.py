@@ -24,7 +24,7 @@ from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 from moons import Body, pole_vec, small_moon, SUN
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S14-other-moons"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-other-moons"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A2_park.png"
 MT = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/shorts-common/dl/moons"
 FPS = 30
@@ -90,14 +90,14 @@ T_SW = {"pho": wt("pho", "PHOBOS") - 0.10, "eur": LN["eur"]["start"] - 0.06, "io
 T_ALL = LN["all"]["start"] - 0.06
 T_BACK = LN["end"]["start"] - 0.08                  # white-out peak -> our lone Moon is back
 T_WO0 = T_BACK - 0.70
-T_SPECK = wt("pho", "SPECK")
+T_SPECK = wt("pho_c", "SPECK")
 SWAPS = [(T_SW[k], k) for k in ("pho", "eur", "io", "tit", "gan")] + [(T_BACK, "moon2")]
 COLLAPSE, BLOOM = 0.42, 0.65
 # the finale: the others pop in one by one around Ganymede (order, then 0.17 s apart)
 POP_ORDER = ["moon", "eur", "io", "tri", "cal", "tit", "pho"]
 T_POP = {k: T_ALL + 0.10 + 0.17 * i for i, k in enumerate(POP_ORDER)}
-PULSES = [wt("hook", "MOONS"), wt("moon", "SCALE"), T_SPECK, wt("eur", "ICE"), wt("io", "VOLCANOES"), wt("tit", "HAZE"),
-          wt("gan", "BIGGEST"), wt("gan", "MERCURY"), wt("all", "ONCE"), wt("end", "BIGGEST")]
+PULSES = [wt("hook_b", "MOONS"), wt("moon", "SCALE"), T_SPECK, wt("eur_b", "ICE"), wt("io_b", "VOLCANOES"), wt("tit_b", "HAZE"),
+          wt("gan_b", "BIGGEST"), wt("gan_c", "MERCURY"), wt("all", "ONCE"), wt("end_c", "BEATS")]
 
 
 def body_at(t):
@@ -244,7 +244,7 @@ class Scene:
                        which=(pr.uniform(0, 1, n) < 0.72).astype(int))
         # glints on the ice of Europa / sparkles
         emph = {"MOONS", "MOON", "PHOBOS", "SPECK", "BARELY", "EUROPA", "ICE", "IO", "VOLCANOES", "TITAN", "1.5×", "HAZE",
-                "GANYMEDE", "BIGGEST", "MERCURY", "ALL", "ONCE", "PLANET"}
+                "GANYMEDE", "BIGGEST", "MERCURY", "ALL", "ONCE", "PLANET", "IMAGINE", "BEATS", "DISTANCE", "SIZE", "WIDER", "WHERE"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         L.cap_y = 1010 if vertical else 600
 
@@ -463,7 +463,7 @@ class Scene:
         allu = ramp(t, T_ALL, T_ALL + 0.3) if cur == "gan" else 0.0
         if cur == "pho":
             self.speck(img, cx, cy, t, I_mul)
-            pa = ramp(t, wt("pho", "WHERE") - 0.1, wt("pho", "WHERE") + 0.25) * (1 - col_u)
+            pa = ramp(t, wt("pho_b", "WHERE") - 0.1, wt("pho_b", "WHERE") + 0.25) * (1 - col_u)
             self.pointer(img, cx, cy, t, pa * (1 + 0.6 * math.exp(-((t - T_SPECK) / 0.25) ** 2)))
         else:
             bd = self.body[cur]
@@ -611,6 +611,9 @@ if __name__ == "__main__":
         for b in BODIES + EXTRA:
             if b["key"] != "all": print(b["key"], round(b["Rp"], 2), "px", round(ang_deg(b["R"]), 4), "deg", round(b["R"] / R_MOON, 4), "x Moon")
         print({k: round(v, 2) for k, v in T_SW.items()}, "all", round(T_ALL, 2), "back", round(T_BACK, 2)); sys.exit()
+    if sys.argv[1] == "segs":
+        from lib.v3_redo_q5 import render_segments
+        render_segments(sys.modules[__name__]); sys.exit()
     if sys.argv[1] == "patch":
         patch(sys.argv[2] != "wide", [tuple(float(v) for v in r.split(":")) for r in sys.argv[3].split(",")]); sys.exit()
     vert = sys.argv[1] != "wide"

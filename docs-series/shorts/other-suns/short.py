@@ -19,11 +19,11 @@ from lib.text import Captions, hud_text, word_layer, composite
 from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S4-other-suns"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-other-suns"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 LAMPS = [(630, 1185, 1336), (845, 1095, 1342)]       # lamp (head x, head y, pole base y) in SOURCE px
 FPS = 30
-LEAD, TAIL = 0.25, 1.30
+LEAD, TAIL = 0.25, 0.90
 F_PX = 960.0                                          # 90 deg vertical FOV on 1920 px (same px scale in 16:9)
 RSUN_AU = 0.00465047                                  # R_sun / 1 au
 
@@ -32,7 +32,9 @@ WORDS = [w for l in PL for w in l["words"]]
 DUR = round(PL[-1]["end"] + TAIL, 2)
 LN = {l["key"]: l for l in PL}
 def wt(key, cap, n=0):
-    ws = [w for w in LN[key]["words"] if w["cap"] == cap]; return ws[n]["t0"]
+    """time of the n-th caption word `cap` within a beat (all lines whose key is `key` or starts with `key_`)"""
+    ws = [w for l in PL if l["key"] == key or l["key"].startswith(key + "_") for w in l["words"] if w["cap"] == cap]
+    return ws[n]["t0"]
 
 
 def rad_px(R):
@@ -83,15 +85,15 @@ T_SW = {k: LN[k]["start"] - 0.06 for k in ("prox", "sir", "arc", "rig", "bet")} 
 COLLAPSE, BLOOM = 0.42, 0.65
 T_FREEZE = wt("prox", "FREEZES") - 0.4
 T_BOIL = wt("sir", "OCEANS")
-T_VAPOR = wt("rig", "EARTH", 0) + 0.1
+T_VAPOR = wt("rig", "VAPORIZED") - 0.15
 T_BET0 = T_SW["bet"]
 T_INSIDE = wt("bet", "WE'D") - 0.15                 # disc has swallowed the whole sky
 T_SUNBACK = LN["end"]["start"] - 0.10               # white-out peak -> our Sun is back
 T_WO0 = T_SUNBACK - 0.85
 ORDER = ["sun", "prox", "sir", "arc", "rig", "bet"]
 SWAPS = [(T_SW[k], k) for k in ORDER[1:]] + [(T_SUNBACK, "sun2")]
-PULSES = [wt("hook", "REPLACED"), wt("prox", "15%"), wt("sir", "25×"), wt("arc", "25×"), wt("arc", "13°"), wt("rig", "79×"),
-          wt("rig", "VAPORIZED"), wt("bet", "700×"), wt("bet", "MARS"), wt("end", "SUN")]
+PULSES = [wt("hook", "REPLACED"), wt("prox", "DWARF"), wt("sir", "25×"), wt("arc", "GIANT"), wt("arc", "13°"), wt("rig", "79×"),
+          wt("rig", "VAPORIZED"), wt("bet", "MARS"), wt("bet", "INSIDE"), wt("end", "SUN")]
 
 
 def star_at(t):
@@ -219,7 +221,7 @@ class Scene:
         er = np.random.default_rng(9); n = 420
         self.emb = dict(x=er.uniform(0, W, n), y0=er.uniform(0, 1, n), sp=er.uniform(0.07, 0.22, n), ph=er.uniform(0, 6.28, n),
                         sz=er.uniform(0.3, 1.0, n) ** 2, wob=er.uniform(5, 30, n))
-        emph = {"15%", "25×", "13°", "79×", "700×", "VAPORIZED", "INSIDE", "FREEZES", "BOIL", "SMALL", "STAR", "SUN"}
+        emph = {"15%", "25×", "13°", "79×", "700×", "VAPORIZED", "INSIDE", "FREEZES", "BOIL", "SMALL", "STAR", "SUN", "IMAGINE", "REPLACED", "DWARF", "GIANT", "MARS", "EARTH"}
         self.caps = Captions(L, WORDS, emphasis=emph)
         if vertical: L.cap_y = 1010
         else: L.cap_y = 590

@@ -11,6 +11,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib import v3_redo_q5 as V3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -71,7 +72,7 @@ def ping(t0, f=1760.0, gain=0.12, pan=0.6):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = V3.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     seq = [(0.0, "moon")] + list(S.SWAPS)
     bed = np.zeros((N, 2))
     for i, (ts, k) in enumerate(seq):
@@ -91,7 +92,7 @@ def main():
     for k in S.SMALL:                                                   # sonar pings on the pointer rings
         t0 = S.T_SW[k] + 0.3
         bed += ping(t0, {"pho": 2093.0, "gan": 1760.0, "tit": 1568.0, "tri": 1975.5}[k], 0.10)
-    bed += ping(S.wt("pho_b", "BARELY"), 2637.0, 0.07, 0.4)
+    bed += ping(S.wt("pho_c", "BARELY"), 2637.0, 0.07, 0.4)
     bed += A.shimmer(N, 0.3, S.T_SW["pho"] - 0.3, seed=61, gain=0.10)        # moonlight sparkle
     # Charon: a long riser into the moonrise, a big hit, then "double world"
     bed += A.riser(N, S.T_SW["cha"] - 1.6, S.T_SW["cha"], seed=66) * 0.7

@@ -14,6 +14,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.v3 import build_voice_v3, finalize
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(round(S.DUR * SR)); t = np.arange(N) / SR
@@ -162,7 +163,7 @@ def rewind_sweep(t0, t1, g=0.5):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)   # REDO v3 voice chain
     fx = np.zeros((N, 2))
     # hook: Big Dipper lights up
     fx += chime(S.T_DIP_LBL, 81, 0.9, 0.4) + chime(S.T_DIP_LBL + 0.12, 88, 0.6, 0.6) + whoosh(S.T_DIP_LBL - 0.2, 0.6, 0.12, 2000, 9000)
@@ -200,13 +201,7 @@ def main():
     mix *= np.clip((S.DUR - t) / 0.15, 0, 1)[:, None] * np.clip(t / 0.03, 0, 1)[:, None]
     raw = os.path.join(OUT, "mix_raw.wav")
     sf.write(raw, mix.astype(np.float32), SR, subtype="FLOAT")
-    A.loudnorm(raw, os.path.join(OUT, "mix.wav"), -14.0, -1.0); os.remove(raw)
-    import subprocess                                       # loudnorm can leave ~-0.7 dBTP: oversampled limiter to <= -1.4
-    lim = os.path.join(OUT, "mix_l.wav")
-    subprocess.run(["nice", "-n", "10", "ffmpeg", "-v", "error", "-y", "-i", os.path.join(OUT, "mix.wav"), "-af",
-                    "aresample=192000,alimiter=limit=0.84:attack=1:release=50:level=false,aresample=48000",
-                    "-c:a", "pcm_f32le", lim], check=True)
-    os.replace(lim, os.path.join(OUT, "mix.wav"))
+    finalize(raw, os.path.join(OUT, "mix.wav")); os.remove(raw)   # REDO v3: -14 LUFS, -1 dBTP (oversampled limiter)
     pc = {k: pieces(txt) for k, txt, _ in LINES}
     os.makedirs(os.path.join(HERE, "..", "out"), exist_ok=True)
     A.write_srt(os.path.join(HERE, "..", "out", "sky-million-years.srt"), S.PL, lambda k: pc[k], max_words=8)

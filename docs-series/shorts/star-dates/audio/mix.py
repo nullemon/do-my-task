@@ -9,6 +9,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.audio_v3 import build_voice as build_voice_v3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); t = np.arange(N) / SR
@@ -112,7 +113,7 @@ def sky_wind():
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     fx = np.zeros((N, 2))
     fx += A.shimmer(N, 0.05, S.T_DUSK1 + 0.8, seed=3, gain=0.10)                    # stars switching on
     fx += A.riser(N, 0.0, 0.5, seed=4) * 0.0

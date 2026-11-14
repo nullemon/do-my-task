@@ -27,7 +27,7 @@ from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 from moons import Body, pole_vec, SUN
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-moon-ratios"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-moon-ratios"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 MT = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/shorts-common/dl/moons"
 CHARON_TEX = os.path.join(SCR, "dl", "charon", "spayly.jpg")
@@ -97,16 +97,16 @@ SMALL = ("pho", "gan", "tit", "tri")
 # ------------------------------------------------------------------------------------------------ timeline
 T_SW = {"pho": LN["pho"]["start"] - 0.06, "gan": LN["gan"]["start"] - 0.06, "tit": LN["tit"]["start"] - 0.06,
         "tri": LN["tri"]["start"] - 0.06, "cha": wt("cha", "CHARON") - 0.12}
-T_BACK = wt("end_b", "OURS") - 0.12               # white-out peak -> today's Moon is back
+T_BACK = wt("end_c", "OURS") - 0.12               # white-out peak -> today's Moon is back
 T_WO0 = T_BACK - 0.70
 T_RISE = 2.6                                     # the Charon-ratio Moon rises over the park
-T_GHOST_C = wt("cha_b", "NEARLY") - 0.1          # ghost of today's Moon inside the big one
-T_DOUBLE = wt("cha_c", "DOUBLE")
+T_GHOST_C = wt("cha_c", "NEARLY") - 0.1          # ghost of today's Moon inside the big one
+T_DOUBLE = wt("cha_d", "DOUBLE")
 SWAPS = [(T_SW[k], k) for k in ("pho", "gan", "tit", "tri", "cha")] + [(T_BACK, "end")]
 COLLAPSE, BLOOM = 0.42, 0.65
-PULSES = [wt("hook", "HUGE"), wt("hook_b", "MOONS"), wt("moon", "27%"), wt("pho", "42 KM"), wt("pho_b", "BARELY"),
-          wt("gan", "DOT"), wt("tit", "SPARK"), wt("tri", "5×"), wt("cha", "HALF"), wt("cha_b", "TWICE"), T_DOUBLE,
-          wt("end", "DWARF"), wt("end_b", "BIGGEST")]
+PULSES = [wt("hook", "MOON"), wt("hook_b", "MOONS"), wt("moon", "QUARTER"), wt("pho_b", "42 KM"), wt("pho_c", "BARELY"),
+          wt("gan_b", "DOT"), wt("tit_b", "SPARK"), wt("tri_b", "5×"), wt("cha_b", "HALF"), wt("cha_c", "TWICE"), T_DOUBLE,
+          wt("end", "DWARF"), wt("end_c", "BIGGEST")]
 LOUPE_C, LOUPE_R = (835.0, 255.0), 150
 
 
@@ -248,7 +248,7 @@ class Scene:
         self.mist = np.clip(fbm2((512, 512), 41, 2.6) * 0.5 + 0.45, 0, 1).astype(f32)
         yyf2, xxf2 = np.mgrid[0:H, 0:W].astype(f32); self.xx, self.yy = xxf2, yyf2
         self.fa = np.where(fg.a > 0.9, 1.0, fg.a)[..., None].astype(f32)
-        emph = {"HUGE", "EARTH", "MOONS", "27%", "PHOBOS", "MARS", "42 KM", "BARELY", "VISIBLE", "GANYMEDE", "JUPITER", "TINY",
+        emph = {"IMAGINE", "QUARTER", "EARTH'S", "MOONS", "PLANETS", "PHOBOS", "MARS", "42 KM", "BARELY", "VISIBLE", "GANYMEDE", "JUPITER", "TINY",
                 "DOT", "TITAN", "SATURN", "ORANGE", "SPARK", "TRITON", "NEPTUNE", "5×", "SMALLER", "CHARON", "HALF", "PLUTO",
                 "TWICE", "DOUBLE", "WORLD", "DWARF", "BIGGEST", "SIZE", "OURS"}
         self.caps = Captions(L, WORDS, emphasis=emph)
@@ -465,7 +465,7 @@ class Scene:
             self.ghost(img, cx, cy, t, 0.55 * ga)
             pc = np.array([0.35, 1.0, 0.85], f32) * 0.6 + np.array(S["glow"], f32) * 0.4
             pa = ramp(t, t0 + 0.15, t0 + 0.45) * (1 - col_u)
-            if cur == "pho": pa *= 1 + 0.6 * math.exp(-((t - wt("pho_b", "BARELY")) / 0.25) ** 2)
+            if cur == "pho": pa *= 1 + 0.6 * math.exp(-((t - wt("pho_c", "BARELY")) / 0.25) ** 2)
             self.pointer(img, cx, cy, Rp, t, pa, pc)
         la = (ramp(t, T_SW["pho"] + 0.5, T_SW["pho"] + 0.9) if cur in SMALL else 0.0) * (1 - ramp(t, T_SW["cha"] - 0.35, T_SW["cha"] - 0.05))
         if la > 0.01:

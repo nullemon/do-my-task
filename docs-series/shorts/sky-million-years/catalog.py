@@ -13,8 +13,8 @@ Overrides (HYG placeholders / pre-Gaia values):
 Usage: /home/user/ttsenv/bin/python catalog.py   -> SCR/moving.npz"""
 import csv, os, math
 import numpy as np
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S10-sky-1myr"
-SRC = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S5-star-dates/dl/hygrepo/hyg/CURRENT/hygdata_v41.csv"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-sky-million-years"
+SRC = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-sky-million-years/dl/hyg/hygdata_v41.csv"
 KMS = 1.0 / 977792.2          # 1 km/s in pc/yr
 TMAX = 1.35e6
 

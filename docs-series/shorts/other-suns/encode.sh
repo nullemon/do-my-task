@@ -3,7 +3,7 @@
 # (no -shortest: it truncates when subtitles are muxed; the mix is exactly DUR long)
 set -e
 HERE="$(cd "$(dirname "$0")" && pwd)"
-SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/S4-other-suns
+SCR=/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-other-suns
 TAG=${1:-vert}
 case "$TAG" in
   vert) OUTF="$HERE/out/other-suns-short.mp4" ;;

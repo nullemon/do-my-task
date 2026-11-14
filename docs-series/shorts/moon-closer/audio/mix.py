@@ -11,6 +11,7 @@ import numpy as np, soundfile as sf
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
+from lib.audio_v3 import build_voice as build_voice_v3
 
 OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = A.SR; N = int(S.DUR * SR); tt = np.arange(N) / SR
@@ -73,7 +74,7 @@ def crackle(t0, t1, rate0, rate1, seed, gain=0.3):
 
 
 def main():
-    voice = A.build_voice(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
+    voice = build_voice_v3(S.PL, os.path.join(S.SCR, "vo"), N, OUT)
     seq = [(0.0, "today")] + list(S.SWAPS)
     bed = np.zeros((N, 2))
     for i, (ts, k) in enumerate(seq):

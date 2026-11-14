@@ -24,7 +24,7 @@ from lib.text import Captions, hud_text, word_layer, composite
 from lib.post import bloom, tonemap, finish, Encoder
 from lib.audio import place
 
-SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B2-second-sun"
+SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/V3-second-sun"
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A2_park.png"
 # SOURCE px of A2_park.png (941x1672), as measured for ../betelgeuse-tonight: lamp heads + pole bases, lawn plane
 LAMPS_SRC = [(193, 1198, 1325), (666, 1207, 1322), (816, 1113, 1323)]
@@ -60,7 +60,7 @@ A0, A1 = T_SW["alg"], T_SW["wuma"]
 T_ECL0 = wt("alg", "EVERY") + 0.3; T_ECLM = wt("alg", "ECLIPSES") + 0.35
 W0 = T_SW["wuma"]
 PULSES = [wt("hook", "SECOND"), wt("acen", "HUNDREDS"), wt("acen", "DARK"), wt("sir", "BLAZE"), wt("sir", "DWARF"), wt("sir", "EARTH"),
-          T_DSUN, T_DSHAD, wt("alg", "DEMON"), wt("alg", "2.87"), wt("wuma", "TOUCHING"), wt("end", "SINGLE")]
+          T_DSUN, T_DSHAD, wt("alg", "DEMON"), wt("alg", "THREE"), wt("wuma", "TOUCHING"), wt("end", "ALONE")]
 
 
 def star_at(t):
@@ -380,7 +380,7 @@ class Scene:
         self.shcache = {}
         self.caps = Captions(L, WORDS, emphasis={"SECOND", "SUN", "HUNDREDS", "DARK", "BLAZE", "DWARF", "EARTH", "KEPLER-16b",
                                                  "SUNSET", "SHADOWS", "DEMON", "2.87", "ECLIPSES", "OTHER", "TOUCHING",
-                                                 "PARTNER", "SINGLE"})
+                                                 "PARTNER", "SINGLE", "IMAGINE", "THREE", "ALONE"})
         L.cap_y = 880
 
     def up(self, a): return cv2.resize(a, (self.W, self.H), interpolation=cv2.INTER_LINEAR)

@@ -7,6 +7,17 @@ grade. The park is relit by every star separately, so there are coloured double 
 readout (SYSTEM / STAR A + STAR B / one fact) and one big orange word at a time at ~46 % height. A white-out returns
 to the opening Sun, so the Short loops. There are no disclaimer captions (user rule).
 
+## REDO v3 narration (14 Nov, current)
+Storytelling style "C" from `../REDO_V3.md`: 73 words, Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended
+vectors) at speed 0.86, one TTS call per phrase (`audio/narration.py`), 0.4–0.5 s between phrases and 1.0–1.2 s at beat
+changes. Word timings come from `lib/voice.py`'s timed model (wrapped by `lib/voice_v3.py`, or this Short's own
+`audio/gen_voice.py` with the blended style). The v3 post chain (pitch-only rubberband 0.944, EQ, compressor, short echo)
+is applied in `lib/audio_v3.py`; music bed and SFX unchanged and ducked; −14 LUFS / −1 dBTP. Visuals unchanged, re-timed
+to the new word timings. 9:16 only. Scratch: `.../scratchpad/series/V3-second-sun/` (segmented render via `lib/render_v3.py`).
+> Imagine... a second Sun. Alpha Centauri. Its orange partner outshines hundreds of full Moons. Some nights... never get dark. Now... Sirius. A blue-white blaze... and a white dwarf. A Sun's mass... the size of Earth. And then... Kepler sixteen B. Double sunset... double shadows. Algol... the Demon Star. Every three days... one star eclipses the other. Double-U Ursae Majoris. Two stars... touching. Nearly half of Sun-like stars have a partner. Ours... is alone.
+
+The older narration notes below are kept for history; the science and the on-screen readouts are unchanged.
+
 ## Narration (re-voiced 13 Nov: Kokoro am_michael @ 0.92, ~0.35 s between sentences, ~0.65 s at beat changes)
 77 words as written (82 spoken, counting "Kepler sixteen B", "two point eight seven", "Double-U"):
 > What if Earth had a second Sun? Alpha Centauri: its orange partner outshines hundreds of full Moons. Some nights

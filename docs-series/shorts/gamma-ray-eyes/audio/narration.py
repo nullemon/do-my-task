@@ -5,14 +5,23 @@ Fact check (NASA Goddard / Fermi release, 15 Aug 2019): above ~31 MeV the Moon i
 gives the energy cut."""
 import re
 
-LINES = [
-    ("hook", "If your eyes could see gamma rays, the Moon would outshine the Sun.", 0.55),
-    ("ir", "Infrared eyes. Anything warm glows, and the Milky Way's dust shines.", 0.45),
-    ("radio", "Radio eyes. The Sun is just a modest disc, but the Milky Way blazes across the sky.", 0.45),
-    ("micro", "Microwave eyes. The whole sky glows with light from the birth of the universe.", 0.55),
-    ("gamma", "Gamma ray eyes. The quiet Sun nearly vanishes. But cosmic rays slam into the Moon, and it blazes.", 0.30),
-    ("fermi", "NASA's Fermi telescope found the Moon outshines the Sun in gamma rays.", 0.60),
-    ("end", "Your eyes only see a tiny slice of the sky.", 0.0),
+LINES = [   # REDO v3 storytelling script: 0.7 am_michael + 0.3 am_onyx @ 0.86
+    ("hook", "Imagine your eyes saw gamma rays.", 0.50),
+    ("hook_b", "The Moon would outshine the Sun.", 1.10),
+    ("ir", "First... infrared eyes.", 0.45),
+    ("ir_b", "Warm things glow... even the galaxy's dust.", 1.10),
+    ("radio", "Radio eyes.", 0.45),
+    ("radio_b", "The Sun dims...", 0.40),
+    ("radio_c", "but the Milky Way roars.", 1.10),
+    ("micro", "Microwave eyes.", 0.45),
+    ("micro_b", "The whole sky glows... with the Big Bang's afterglow.", 1.20),
+    ("gamma", "And then... gamma rays.", 0.50),
+    ("gamma_b", "The quiet Sun... nearly vanishes.", 0.50),
+    ("gamma_c", "Cosmic rays slam into the Moon...", 0.45),
+    ("gamma_d", "and it blazes.", 1.10),
+    ("fermi", "NASA's Fermi telescope confirmed it.", 1.10),
+    ("end", "Your eyes...", 0.45),
+    ("end_b", "see a tiny slice of the sky.", 0.0),
 ]
 
 TOK = re.compile(r"\{([^|}]*)\|([^}]*)\}([.,?!]*)|(\S+)")

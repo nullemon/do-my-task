@@ -7,12 +7,19 @@ glowing counter that also reads out "N YEARS PER SECOND". Stars leave motion tra
 rubber bands and snap. At the end a rainbow rewind sends everything back to 2026, and the last frame matches the first,
 so the Short loops. Captions are one big orange word at a time. There are no disclaimer captions (user rule).
 
-## Narration (87 words, Kokoro am_michael @ 1.05, real word timings)
-> The constellations aren't fixed. Watch what happens to the Big Dipper. Every star is moving. Barnard's Star, the
-> fastest, shoots right across the sky. Five Dipper stars travel together, as a family. But Dubhe and Alkaid go their
-> own way. In 100,000 years, the Dipper is broken. Orion's shoulders drift apart. Stars moving away fade out. And in
-> 1.3 million years, Gliese 710 skims past the Sun, blazing brighter than any star we see today. Every constellation
-> you know is temporary.
+## Narration (REDO v3, 14 Nov: 75 words, storytelling style, ~47.6 s, 9:16 only)
+Voice: Kokoro 0.7 am_michael + 0.3 am_onyx at speed 0.86 (`../lib/v3.py`), one TTS call per phrase, real word timings
+via this Short's own fused-word aligner (`audio/gen_voice.py`), v3 voice chain (see `../REDO_V3.md`). Line keys are
+`<beat>_<a..e>`; `short.py` groups them back into the beats (hook, ff, dip, orion, gj, end), so every visual anchor
+keeps its word ("Five" became "Most": `ALIAS` in `short.py`; the readout still says 5 STARS).
+> Imagine the sky... fast-forwarded. Watch the Big Dipper. Every star... moves. Barnard's Star, the fastest... shoots
+> across the sky. Most Dipper stars travel together... a family. But Dubhe and Alkaid... go their own way. In a hundred
+> thousand years... the Dipper is broken. Orion's shoulders... drift apart. Stars moving away fade. In one point three
+> million years... Gliese 710... skims past the Sun. Blazing brighter than Sirius. Every constellation you know... is
+> temporary.
+
+"Blazing brighter than Sirius": Gliese 710 peaks at V ≈ −3 (readout MAG −2.9) vs Sirius −1.46 today (and Sirius itself
+never gets brighter than −1.74, see the catalogue table). The beat table below gives the v2 times (36.47 s).
 
 ## Beats (`short.py`)
 | t (s) | year | picture |
@@ -88,7 +95,7 @@ so the Short loops. Captions are one big orange word at a time. There are no dis
   - a reverse-tape rewind and a bright hit on the loop point
   - −14 LUFS, true peak limited to ≤ −1.4 dBTP
   - writes `out/sky-million-years.srt`
-- Shared code: `../lib/` (unchanged). Scratch: `.../scratchpad/series/S10-sky-1myr/`.
+- Shared code: `../lib/` (unchanged). Scratch: `.../scratchpad/series/V3-sky-million-years/`.
 - Outputs (`out/`, git-ignored): `sky-million-years-short.mp4`, `sky-million-years-16x9.mp4`, `sky-million-years.srt`,
   `thumb.jpg`, `thumb-vertical.jpg`.
 

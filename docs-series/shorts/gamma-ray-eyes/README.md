@@ -1,15 +1,32 @@
 # If Your Eyes Saw Gamma Rays, the Moon Would Outshine the Sun (YouTube Short)
 
-This Short is 1080×1920 at 30 fps and runs 38.48 s. There is also a 16:9 recomposition at 1920×1080. The look follows the lead's VFX direction in `../lib/README.md`: a huge, saturated sky that is always moving.
+This Short is 1080×1920 at 30 fps and runs 46.15 s (REDO v3, 9:16 only; the older 16:9 cut is not re-rendered). The look follows the lead's VFX direction in `../lib/README.md`: a huge, saturated sky that is always moving.
 
 It uses a locked camera: one tripod frame of the park plate `A2_park.png` (941×1672, upscaled to 1080×1920) for the whole Short. Only the sky and the grade change. The sky switches "eyes": visible → infrared → radio → microwave → gamma rays → visible. The last switch loops back to the first frame. Each switch is a diagonal wipe with a rainbow edge, plus a stereo whoosh and a thump.
 
-## Narration (Kokoro am_michael @ 1.05, real word timings, 95 words)
-> If your eyes could see gamma rays, the Moon would outshine the Sun. Infrared eyes. Anything warm glows, and the Milky
-> Way's dust shines. Radio eyes. The Sun is just a modest disc, but the Milky Way blazes across the sky. Microwave eyes.
-> The whole sky glows with light from the birth of the universe. Gamma ray eyes. The quiet Sun nearly vanishes. But
-> cosmic rays slam into the Moon, and it blazes. NASA's Fermi telescope found the Moon outshines the Sun in gamma rays.
-> Your eyes only see a tiny slice of the sky.
+## Narration (REDO v3, 14 Nov: storytelling style, 75 words, 9:16 only, 46.15 s)
+Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended vectors) @ 0.86, one TTS call per phrase, 0.4–0.5 s between
+phrases and 1.0–1.2 s at each beat change. Voice post chain (pitch-only, timings stay valid): rubberband pitch 0.944 with
+formants preserved, HPF 60 Hz, EQ, gentle compressor, short echo (`lib/v3_redo_q5.py`). The beats, swaps, readouts and
+captions are re-timed to the new word timings. −14 LUFS / −1 dBTP. Scratch: `.../scratchpad/series/V3-<name>/`.
+Render: `short.py segs` (restart-safe segments) → `audio/mix.py` → `encode.sh vert`.
+
+> Imagine your eyes saw gamma rays.  
+> The Moon would outshine the Sun.  
+> First... infrared eyes.  
+> Warm things glow... even the galaxy's dust.  
+> Radio eyes.  
+> The Sun dims...  
+> but the Milky Way roars.  
+> Microwave eyes.  
+> The whole sky glows... with the Big Bang's afterglow.  
+> And then... gamma rays.  
+> The quiet Sun... nearly vanishes.  
+> Cosmic rays slam into the Moon...  
+> and it blazes.  
+> NASA's Fermi telescope confirmed it.  
+> Your eyes...  
+> see a tiny slice of the sky.
 
 ## Beats
 | t (s) | mode | picture |
@@ -61,6 +78,6 @@ It uses a locked camera: one tripod frame of the park plate `A2_park.png` (941×
 - `audio/mix.py`: sound design, −14 LUFS / −1 dBTP, and the SRT.
 - `prep_maps.py`, `ephem.py`, `skymaps.py`: data and geometry.
 - `short.py`: picture. `encode.sh`: mux; it uses no `-shortest`. `thumbnail.py`.
-- Shared code comes from `../lib/` (read-only). Scratch is `.../scratchpad/series/S3-gamma-ray-eyes/`. Outputs go to `out/` (git-ignored).
+- Shared code comes from `../lib/` (read-only). Scratch is `.../scratchpad/series/V3-gamma-ray-eyes/` (maps refetched 14 Nov: Haslam and Planck via media.githubusercontent.com LFS, sha256 matching the LFS pointers; Fermi files via raw.githubusercontent.com from gammapy-data master; healpy 1.20.1 + astropy 8.0.2 in SCR/pylib; ephem.npz written for 55 s). Outputs go to `out/` (git-ignored).
 
 Pipeline: `prep_maps.py` → `ephem.py write` → `audio/gen_voice.py` → `audio/mix.py` → `short.py vert` → `encode.sh vert` → `thumbnail.py vert` → `short.py wide` → `encode.sh wide` → `thumbnail.py wide`. Run the Python scripts with `/home/user/ttsenv/bin/python`. For `prep_maps.py` and `ephem.py`, also put `SCR/pylib` on the path.

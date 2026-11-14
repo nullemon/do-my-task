@@ -1,19 +1,33 @@
 # Everything That Happens in Space While You Watch This Short (YouTube Short)
 
-The vertical cut is 1080×1920 at 30 fps and **37.97 s** long (1,139 frames). There is also a 16:9 recomposition at
-1920×1080. It is one **locked** tripod shot of the user's valley plate (`B_valley.png`, 941×1672, upscaled), facing WSW
+The vertical cut is 1080×1920 at 30 fps and **46.1 s** long (1,383 frames; REDO v3, 9:16 only; the older 16:9 recomposition at
+1920×1080 is not re-rendered). It is one **locked** tripod shot of the user's valley plate (`B_valley.png`, 941×1672, upscaled), facing WSW
 from 34° N on a November evening. The scene moves from golden hour into dusk, and the sky fills with effects as the live
 counters stack up. One big orange word is shown at a time, synced to the voice. There are no disclaimer captions (user
 rule); the on-screen text is factual readouts only.
 
-## Narration (101 words, Kokoro am_michael @ 1.05, −14 LUFS / −1 dBTP)
-> In the next 35 seconds, you'll travel over a thousand kilometers. Without moving. Earth carries you around the Sun at
-> thirty kilometers a second. The Sun fuses six hundred million tons of hydrogen. Every second. About half a kilo of
-> space dust lands on Earth each second. The solar system circles the galaxy at two hundred thirty a second, and
-> crosses the cosmos at three hundred seventy. Across the universe, thousands of stars are born each second, and about
-> thirty explode. The sunlight on your face left the Sun before you pressed play. And you watched it all from right here.
+## Narration (REDO v3, 14 Nov: storytelling style, 75 words, 9:16 only, 46.1 s)
+Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended vectors) @ 0.86, one TTS call per phrase, 0.4–0.5 s between
+phrases and 1.0–1.2 s at each beat change. Voice post chain (pitch-only, timings stay valid): rubberband pitch 0.944 with
+formants preserved, HPF 60 Hz, EQ, gentle compressor, short echo (`lib/v3_redo_q5.py`). The beats, swaps, readouts and
+captions are re-timed to the new word timings. −14 LUFS / −1 dBTP. Scratch: `.../scratchpad/series/V3-<name>/`.
+Render: `short.py segs` (restart-safe segments) → `audio/mix.py` → `encode.sh vert`.
 
-The spoken word is "tons", but the caption and subtitles say "TONNES" / "tonnes", because the rate is in metric tonnes.
+> Imagine sitting still...  
+> for the next forty-five seconds.  
+> You'd still fly a thousand kilometers...  
+> around the Sun.  
+> Meanwhile... the Sun fuses six hundred million tons of hydrogen.  
+> Every second.  
+> Space dust rains down.  
+> Our solar system races around the galaxy...  
+> and across the cosmos.  
+> Thousands of stars are born...  
+> and about thirty explode... every second.  
+> The sunlight on your face...  
+> left the Sun before you pressed play.  
+> And you saw it all...  
+> from right here.
 
 ## Live counters: value = rate × t
 `t` is the frame time from the first frame (frame *i* shows `t = i/30`). Each counter is computed from its rate every
@@ -33,7 +47,7 @@ last frame, the first frame starts from the same white with every counter at zer
 | Supernovae (observable universe) | ~30/s (rounded to 10, ≈) | ≈ 1,050 | ≈ 1,140 |
 | Sunlight that left the Sun at 0:00 | c = 299,792.458 km/s; trip = 499.0 s | 10.5 M km · 7 % | 11.4 M km · 8 % |
 
-The hook ("in the next 35 seconds… over a thousand kilometers") is checked by the orbit row: 29.78 × 35 = 1,042 km.
+The v3 hook ("Imagine sitting still... for the next 45 seconds. You'd still fly a thousand kilometers... around the Sun.") is checked by the orbit row: 29.78 × 45 = 1,340 km (1,000 km is passed at 33.6 s; the Short runs 46.1 s, last frame 46.07 s: 1,371 km). The table above is from the old 38 s cut; the rates are unchanged.
 
 ## Sources and arithmetic
 - **Earth's orbital speed:** 29.78 km/s mean (NASA GSFC Earth Fact Sheet). It ranges from 29.29 km/s at aphelion to
@@ -114,7 +128,7 @@ Every new card brings a coloured flash and a chromatic shockwave, and the camera
   `out/while-you-watch.srt`.
 - `short.py` (picture; `info`, stills), `skygeo.py` and `mwsky.py` (copied from `../star-dates/`, unchanged),
   `encode.sh` (mux, no `-shortest`), `thumbnail.py`.
-- Shared code: `../lib/` (read-only). Scratch: `.../scratchpad/series/S12-while-you-watch/`.
+- Shared code: `../lib/` (read-only). Scratch: `.../scratchpad/series/V3-while-you-watch/` (`stars.npz` rebuilt from HYG v4.1 with `../star-dates/catalog.py` logic; `mw_gal.npz` regenerated).
 - Outputs: `out/` (git-ignored): `while-you-watch-short.mp4`, `while-you-watch-16x9.mp4`, `while-you-watch.srt`,
   `thumb.jpg`, `thumb-vertical.jpg`.
 

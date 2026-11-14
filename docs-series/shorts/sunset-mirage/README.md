@@ -1,17 +1,34 @@
 # When You See the Sun Touch the Horizon, It's Already Gone (YouTube Short)
 
-The vertical cut is 1080×1920 at 30 fps and **35.74 s** long (1,072 frames). There is also a 16:9 recomposition at
-1920×1080. It is one **locked** tripod shot of the user's valley plate (`B_valley.png`, 941×1672, upscaled) at sunset.
+The vertical cut is 1080×1920 at 30 fps and **43.93 s** long (REDO v3, 9:16 only; the older 16:9 recomposition at
+1920×1080 is not re-rendered). It is one **locked** tripod shot of the user's valley plate (`B_valley.png`, 941×1672, upscaled) at sunset.
 The VFX follow the reference look: rainbow beams, chromatic bloom, flashes with chromatic shockwaves, a hologram X-ray
 cutaway, glowing ray paths, and a big green flash. One big orange word is shown at a time, synced to the voice. The
 on-screen text is factual readouts only; there are no disclaimer captions (user rule).
 
-## Narration (95 words, Kokoro am_michael @ 1.05, −14 LUFS / −1 dBTP)
-> This Sun isn't really there. When it touches the horizon, the real Sun has already set, completely below the ridge.
-> Air bends light. Near the ground it's denser, so sunlight curves down to you, lifting the Sun's image by more than its
-> own width. The bottom edge lifts most, squashing the Sun into an oval. Then, on a clear evening, the last sliver can
-> flash green. Your days are a few minutes longer because of it. And no, it's not the eight-minute light delay. That's
-> a myth. Every sunset you've ever watched... was a mirage.
+## Narration (REDO v3, 14 Nov: storytelling style, 75 words, 9:16 only, 43.93 s)
+Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended vectors) @ 0.86, one TTS call per phrase, 0.4–0.5 s between
+phrases and 1.0–1.2 s at each beat change. Voice post chain (pitch-only, timings stay valid): rubberband pitch 0.944 with
+formants preserved, HPF 60 Hz, EQ, gentle compressor, short echo (`lib/v3_redo_q5.py`). The beats, swaps, readouts and
+captions are re-timed to the new word timings. −14 LUFS / −1 dBTP. Scratch: `.../scratchpad/series/V3-<name>/`.
+Render: `short.py segs` (restart-safe segments) → `audio/mix.py` → `encode.sh vert`.
+
+> What if this sunset...  
+> isn't really there?  
+> As it touches the ridge...  
+> the real Sun has already set.  
+> Air bends light.  
+> Denser air curves it down to you...  
+> lifting the Sun... more than its own width.  
+> The bottom lifts most...  
+> squashing it into an oval.  
+> Then... the last sliver...  
+> can flash green.  
+> Your days... are minutes longer.  
+> And no... it's not the eight-minute delay.  
+> That's a myth.  
+> Every sunset you've ever watched...  
+> was a mirage.
 
 ## How the Sun is drawn (`short.py`)
 The visible Sun is rendered **through a refraction model**, not as a hand-squashed ellipse:
@@ -88,7 +105,7 @@ The visible Sun is rendered **through a refraction model**, not as a hand-squash
   loop. The mix is ducked under the voice, loudnormed to −14 LUFS / −1 dBTP, and the script writes
   `out/sunset-mirage.srt`.
 - `short.py` (picture; `info`, stills, `patch`), `encode.sh` (mux, no `-shortest`), `thumbnail.py`.
-- Shared code: `../lib/` (read-only). Scratch: `.../scratchpad/series/S8-sunset-mirage/`.
+- Shared code: `../lib/` (read-only). Scratch: `.../scratchpad/series/V3-sunset-mirage/`.
 - Outputs: `out/` (git-ignored): `sunset-mirage-short.mp4`, `sunset-mirage-16x9.mp4`, `sunset-mirage.srt`,
   `thumb.jpg`, `thumb-vertical.jpg`.
 

@@ -1,6 +1,6 @@
 # What If Our Moon Was as Big as Other Moons Are to Their Planets? (YouTube Short, 9:16 only)
 
-The video is 1080×1920 at 30 fps and 39.0 s long. It uses the BATCH2 "swap" format, like `other-moons/` and
+The video is 1080×1920 at 30 fps and 48.71 s long (REDO v3 voice, 14 Nov). It uses the BATCH2 "swap" format, like `other-moons/` and
 `moon-closer/`: one locked tripod shot of the user's `A_park.png` (transparent sky), from dusk into night. Our Moon is
 re-sized so that its diameter has the same ratio to Earth's that a famous moon has to its own planet. It stays at its
 real distance (384,400 km), is drawn at its true angular size, and wears that moon's map.
@@ -15,15 +15,32 @@ size of today's Moon, and a rainbow-rimmed zoom loupe ("ZOOM ×72" and so on). T
 Each moon has a readout: RATIO OF X TO PLANET / ratio / OUR MOON WOULD BE N KM / ×TODAY'S SIZE · angle. Big orange
 one-word captions are synced to the voice. There are no disclaimer captions.
 
-## Narration (80 words, Kokoro am_michael @ 0.92)
-Each sentence is its own line, with ~0.35 s between sentences and ~0.7 s at each beat change.
-> Our Moon is huge compared to Earth. But what if it matched other moons? Today, it's twenty-seven percent of Earth's
-> width. Match Phobos and Mars: forty-two kilometers. Barely visible. Ganymede and Jupiter: a tiny dot. Titan and
-> Saturn: a little orange spark. Triton and Neptune: still five times smaller. But Charon is half as wide as Pluto.
-> Nearly twice our Moon. A double world. Pluto's a dwarf planet. Of all the planets, ours has the biggest moon for its size.
+## Narration (REDO v3, 14 Nov: storytelling style, 73 words, 9:16 only, 48.71 s)
+Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended vectors) @ 0.86, one TTS call per phrase, 0.4–0.5 s between
+phrases and 1.0–1.2 s at each beat change. Voice post chain (pitch-only, timings stay valid): rubberband pitch 0.944 with
+formants preserved, HPF 60 Hz, EQ, gentle compressor, short echo (`lib/v3_redo_q5.py`). The beats, swaps, readouts and
+captions are re-timed to the new word timings. −14 LUFS / −1 dBTP. Scratch: `.../scratchpad/series/V3-<name>/`.
+Render: `short.py segs` (restart-safe segments) → `audio/mix.py` → `encode.sh vert`.
 
-"Charon" is spoken as "Sharon", the New Horizons team's usage, because Kokoro reads "Charon" as "Charren". The caption
-and the SRT still say CHARON.
+> Imagine our Moon...  
+> sized like other moons... to their planets.  
+> Today, it's over a quarter of Earth's width.  
+> First... Phobos.  
+> Forty-two kilometers.  
+> Barely visible.  
+> Ganymede...  
+> a tiny dot.  
+> Titan...  
+> a little orange spark.  
+> Triton...  
+> still five times smaller.  
+> And then... Sharon.  
+> Half as wide as Pluto.  
+> Our Moon... nearly twice as big.  
+> A double world.  
+> But Pluto's a dwarf planet...  
+> Of all the real planets...  
+> ours has the biggest moon for its size.
 
 ## Numbers (`short.py info`)
 Mean radii come from the NASA/JPL fact sheets, and every ratio uses mean diameters on both sides.
@@ -79,5 +96,5 @@ Checks against the brief:
 - **Code:** `audio/narration.py`, `audio/gen_voice.py`, `audio/mix.py` (sound + SRT), `moons.py` (copied from
   `../other-moons/moons.py`), `short.py` (`info`, stills and `patch` modes), `encode.sh` (mux without `-shortest`),
   `thumbnail.py`.
-- **Scratch:** `.../scratchpad/series/B2-moon-ratios/`.
+- **Scratch:** `.../scratchpad/series/V3-moon-ratios/` (maps copied from `B2-moon-ratios/dl/`).
 - **Outputs** (`out/`, git-ignored): `moon-ratios-short.mp4`, `moon-ratios.srt`, `thumb-vertical.jpg`, `thumb.jpg`.

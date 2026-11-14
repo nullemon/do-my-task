@@ -1,6 +1,6 @@
 # What If Other Moons Replaced Our Moon? (YouTube Short)
 
-The vertical cut is 1080×1920 at 30 fps and 36.77 s long. There is also a 16:9 recomposition at 1920×1080. The Short
+The vertical cut is 1080×1920 at 30 fps and 49.93 s long (REDO v3, 9:16 only; the older 16:9 cut is not re-rendered). The Short
 uses the format of `other-suns/` and `planets-as-moon/`: one locked tripod shot of the user's `A2_park.png`
 (transparent sky), here at blue hour. The sky swaps from our Moon to one moon after another, each placed at the Moon's
 distance. Every swap has a flash, a chromatic shockwave and coloured moonlight beams, and the park is relit in each
@@ -8,12 +8,33 @@ moon's tint (the lamps come up when the sky goes dark for Phobos). One big orang
 the voice. A readout appears for each moon: NAME, × MOON'S SIZE and the angular width in degrees. There are no
 disclaimer captions (user rule).
 
-## Narration (90 words, Kokoro am_michael @ 1.05)
-> What if other moons replaced our Moon? Same distance, true size. Here's our Moon, for scale. Mars's moon Phobos.
-> Where did it go? That speck. You'd barely see it. Europa. Slightly smaller, a cracked ball of ice. Io. A little
-> bigger, and covered in erupting volcanoes. Titan. One and a half times wider, wrapped in thick orange haze. Ganymede.
-> The biggest moon in the solar system, even wider than Mercury. Now imagine all of them at once. Still, compared to
-> its planet, ours is the biggest moon of any planet.
+## Narration (REDO v3, 14 Nov: storytelling style, 75 words, 9:16 only, 49.93 s)
+Kokoro voice style 0.7 × am_michael + 0.3 × am_onyx (blended vectors) @ 0.86, one TTS call per phrase, 0.4–0.5 s between
+phrases and 1.0–1.2 s at each beat change. Voice post chain (pitch-only, timings stay valid): rubberband pitch 0.944 with
+formants preserved, HPF 60 Hz, EQ, gentle compressor, short echo (`lib/v3_redo_q5.py`). The beats, swaps, readouts and
+captions are re-timed to the new word timings. −14 LUFS / −1 dBTP. Scratch: `.../scratchpad/series/V3-<name>/`.
+Render: `short.py segs` (restart-safe segments) → `audio/mix.py` → `encode.sh vert`.
+
+> Imagine our Moon...  
+> swapped for other moons.  
+> Same distance... true size.  
+> Here's ours, for scale.  
+> First... Mars's moon, Phobos.  
+> Where did it go?  
+> That tiny speck.  
+> Europa...  
+> a cracked ball of ice.  
+> Io...  
+> covered in erupting volcanoes.  
+> Titan...  
+> one and a half times wider... wrapped in haze.  
+> Then... Ganymede.  
+> The biggest moon in the solar system...  
+> wider than Mercury.  
+> Now... all of them, at once.  
+> And yet...  
+> compared to its planet...  
+> ours beats them all.
 
 ## Beats (`short.py`)
 Every moon is placed at d = 384,400 km and drawn at its true angular size, θ = 2·asin(R/d). The lens is a long
@@ -69,6 +90,6 @@ Short loops.
 - Code: `audio/narration.py`, `audio/gen_voice.py`, `audio/mix.py` (sound + SRT), `moons.py` (lit sphere renderer),
   `short.py` (picture; `info`, stills and `patch` modes), `encode.sh` (mux, no `-shortest`), `thumbnail.py`.
 - Shared code: `../lib/` (unchanged).
-- Scratch: `.../scratchpad/series/S14-other-moons/`.
+- Scratch: `.../scratchpad/series/V3-other-moons/`.
 - Outputs: `out/` (git-ignored): `other-moons-short.mp4`, `other-moons-16x9.mp4`, `other-moons.srt`, `thumb.jpg`,
   `thumb-vertical.jpg`.

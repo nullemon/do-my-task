@@ -1,6 +1,6 @@
 # What If We Lived Inside a Star Cluster? (YouTube Short, 9:16 only)
 
-1080×1920, 30 fps, 37.2 s. BATCH2 "swap" format: one locked tripod shot of the user's `B_valley.png` at night, under a
+1080×1920, 30 fps, 46.1 s (REDO v3). BATCH2 "swap" format: one locked tripod shot of the user's `B_valley.png` at night, under a
 deep blue/violet sky that is never pitch black. The sky swaps from today's real sky to the sky seen from inside four star
 clusters. Each swap has a tinted flash and a chromatic shockwave that starts at the new cluster's core and reveals the new
 sky inside the ring, plus coloured light beams from the core. The valley is relit by the combined starlight: cold blue
@@ -9,16 +9,18 @@ readout appears for each sky: NAME / STARS · DISTANCE / STARS BRIGHTER THAN SIR
 white-out at the end returns to today's quiet sky (sidereal time is re-based, so the last frame matches the first and the
 Short loops). Big orange one-word captions. No disclaimer captions (user rule).
 
-## Narration (72 words, Kokoro am_michael @ 0.92, calm delivery, real word timings)
-Pauses are about 0.35 s between sentences and about 0.7 s at each beat change (one LINES entry per sentence). Each swap
-lands in the 0.7 s pause just before the cluster's name.
-> Our night sky holds a few thousand stars. Now imagine living inside a star cluster. The Pleiades. A thousand young blue
-> stars, dozens brighter than Sirius. The Hyades. Older, with glowing orange giants. Omega Centauri. Ten million stars.
-> Near its core, thousands outshine Sirius, and night never gets dark. And the galaxy's heart. A million stars within
-> three light-years. We live in the galaxy's quiet suburbs. That's why our sky is dark.
+## Narration (REDO v3, 14 Nov: 73 words, storytelling style, ~46.1 s)
+Voice: Kokoro 0.7 am_michael + 0.3 am_onyx at speed 0.86, one TTS call per phrase, real word timings, v3 voice chain
+(`../lib/v3.py`, see `../REDO_V3.md`). Pauses 0.4–0.5 s between phrases, 1.0–1.1 s at each beat change; each swap still
+lands just before the line that names the cluster.
+> Imagine your night sky... seen from inside a star cluster. First... the Pleiades. Young, blue, and blazing. Dozens
+> outshine Sirius. The Hyades. Older... with glowing orange giants. Now... Omega Centauri. Ten million stars. Near its
+> core... night never gets dark. And then... the galaxy's heart. A million stars... in the space between us and our
+> nearest star. The whole sky blazes. We live... in the quiet suburbs. That's why our night... is dark.
 
-"Hyades" is spoken via the respelling "Hiadeez", because Kokoro read it as "HY-aydz". An earlier 88-word cut at speed 1.05
-was dropped after user feedback that it sounded rushed.
+"Hyades" is still spoken via the respelling "Hiadeez". "A million stars in the space between us and our nearest star":
+~1.5 million stars lie within 1 pc (3.3 ly) of the centre, closer than Alpha Centauri is to us (4.37 ly). "The whole sky
+blazes": the summed starlight is ≈ 20 full Moons (table below). The earlier v2 narration (am_michael @ 1.05) is in git.
 
 ## How the skies are made (`clusters.py`)
 - **Today:** the real sky from HYG v4.1 (`catalog.py`, the same source as star-dates). It contains 5,019 stars with V < 6.0
@@ -79,7 +81,7 @@ Wolf-Rayet/O stars about 1 pc away, about as bright as the full Moon at −12.7)
 - `catalog.py` (HYG → `SCR/stars.npz`), `clusters.py` (population synthesis → `SCR/cl_*.npz`, `SCR/stats.json`),
   `skygeo.py`, `mwsky.py` (copied from star-dates), `short.py` (picture; `info`, stills, `patch`), `encode.sh` (mux, no
   `-shortest`), `thumbnail.py`, `audio/narration.py`, `audio/gen_voice.py`, `audio/mix.py` (sound + SRT, −14 LUFS).
-- Shared code: `../lib/` (unchanged). Scratch: `.../scratchpad/series/B2-star-clusters/`. Outputs (git-ignored) in `out/`:
+- Shared code: `../lib/` (unchanged). Scratch: `.../scratchpad/series/V3-star-clusters/`. Outputs (git-ignored) in `out/`:
   `star-clusters-short.mp4`, `star-clusters.srt`, `thumb-vertical.jpg`, `thumb.jpg`.
 
 Pipeline: `catalog.py` → `clusters.py` → `audio/gen_voice.py` → `audio/mix.py` → `short.py vert` → `encode.sh` →

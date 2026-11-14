@@ -39,3 +39,5 @@ Keep all visuals, fixes and readouts. Re-time the beats, swaps, captions and rea
 
 ## Note from the moon-ratios redo
 AAC can overshoot true peak on loud swap transients. Low-pass at 17 kHz (or add an alimiter at -1.5 dBTP) before AAC, and measure the true peak on the FINAL mp4.
+
+## v3 redo complete (14 Nov): all 18 delivered to Gofile https://gofile.io/d/xpiUozuT as v3-<name>-short.mp4

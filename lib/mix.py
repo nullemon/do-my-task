@@ -52,7 +52,7 @@ def main(code):
     j = json.loads(r[r.rfind("{"):r.rfind("}") + 1])
     ln = (f"loudnorm=I=-14:TP=-1.5:LRA=11:measured_I={j['input_i']}:measured_TP={j['input_tp']}:measured_LRA={j['input_lra']}:"
           f"measured_thresh={j['input_thresh']}:offset={j['target_offset']}:linear=true")
-    subprocess.run([FF, "-loglevel", "error", "-y", "-i", raw, "-af", ln + ",aresample=48000", "-c:a", "aac", "-b:a", "192k", os.path.join(W, "mix.m4a")], check=True)
+    subprocess.run([FF, "-loglevel", "error", "-y", "-i", raw, "-af", ln + ",aresample=192000,alimiter=limit=0.80:level=false:attack=2:release=60,aresample=48000", "-c:a", "aac", "-b:a", "192k", os.path.join(W, "mix.m4a")], check=True)
     print(f"mix done: {D:.1f}s  (input {j['input_i']} LUFS -> -14)")
 
 if __name__ == "__main__": main(sys.argv[1])

@@ -62,8 +62,8 @@ EV = [
          l3=f"MAGNITUDE {SC.fmt(SC.KN['m'])} · FADES IN DAYS · MAKES GOLD"),
     dict(key="grb", name="GAMMA-RAY BURST", m=SC.GRB["m"], T=9000.0, l2="GRB 080319B · 7.5 BILLION LIGHT-YEARS",
          l3="MAGNITUDE 5.3 · BARELY VISIBLE FOR ~30 SECONDS"),
-    dict(key="mag", name="MAGNETAR FLARE", m=None, T=20000.0, l2="SGR 1806-20 · ~30,000 LIGHT-YEARS",
-         l3="0.2 S OF GAMMA RAYS · INVISIBLE TO THE EYE"),
+    dict(key="mag", name="MAGNETAR FLARE · SGR 1806-20", m=None, T=20000.0, l2="~28,000 LIGHT-YEARS · 0.2 S OF GAMMA RAYS",
+         l3="INVISIBLE TO THE EYE · SHOWN IN FALSE COLOUR"),
     dict(key="qso", name="QUASAR 3C 273", m=SC.QSO["m"], T=12000.0, l2="2.4 BILLION LIGHT-YEARS AWAY",
          l3="MAGNITUDE 12.9 · TELESCOPE ONLY"),
     dict(key="qgc", name="3C 273 AT OUR CORE", m=SC.QGC["m"], T=12000.0, l2="26,000 LIGHT-YEARS AWAY",
@@ -114,11 +114,11 @@ def cur_state(t):
     m, T = light_curve(k, u)
     gam = 0.0
     if k == "mag":                                  # 0.2 s spike, then a fast-fading pulsating tail (8 s period, compressed)
-        gam = math.exp(-max(u - 0.05, 0) / 0.22) * ease(u / 0.05) + 0.10 * math.exp(-u / 2.5) * (0.5 + 0.5 * math.cos(u * 4.0))
+        gam = math.exp(-max(u - 0.05, 0) / 0.15) * ease(u / 0.05) + 0.10 * math.exp(-u / 2.5) * (0.5 + 0.5 * math.cos(u * 4.0))
     imp = ramp(t, nxt - 0.30, nxt) if (nxt < 1e8 and m is not None) else 0.0
     bloom_k = 1 + (1.6 * math.exp(-u / 0.30) if i > 0 and k != "none" else 0.0)
     q = q_of(m); E = mag_to_E(m)
-    if gam > 0: E = max(E, 0.95 * gam); q = max(q, 0.75 * gam)
+    if gam > 0: E = max(E, 0.50 * gam); q = max(q, 0.42 * gam)       # capped: the scene stays readable through the pulse
     I = (1 - 0.85 * imp) * bloom_k * (0.0 if m is None and gam <= 0 else 1.0)
     att = ramp(u, 0.0, 0.35) if i > 0 else 1.0
     if i > 0 and gam <= 0:
@@ -536,7 +536,7 @@ class Scene:
             uu = t - ts
             if -0.05 < uu < 1.8:
                 ck = star_col(SK[k]["T"])
-                big = {"qgc": 1.6, "none": 0.6, "grb": 0.35, "qso": 0.35, "mag": 1.3}.get(k, 1.0)
+                big = {"qgc": 1.6, "none": 0.6, "grb": 0.35, "qso": 0.35, "mag": 0.40}.get(k, 1.0)
                 fl = math.exp(-max(uu, 0) / 0.10) * ease((uu + 0.05) / 0.05)
                 fc = GAMMA * 0.9 + 0.1 if k == "mag" else ck * 0.5 + 0.5
                 img += (fl * big * (np.exp(-self.d / 220) * 3.0 + 0.25))[..., None] * fc
@@ -613,7 +613,7 @@ class Scene:
         self.marker(out, t)
         for j, (ts, k) in enumerate(SEQ[:-1]):
             s = SK[k]; t1 = SEQ[j + 1][0] - 0.12
-            t0 = (0.4 if k == "none" else ts + 0.25)
+            t0 = (0.4 if k == "none" else ts + (0.0 if k == "mag" else 0.25))
             col = tuple(int(v) for v in np.clip(lin_to_srgb(np.clip(star_col(s["T"], 1.8) / max(star_col(s["T"], 1.8).max(), 1e-3), 0, 1)) * 255, 60, 255))
             col = {"none": (225, 235, 255), "kn": (255, 190, 140), "mag": (225, 150, 255), "qso": (190, 215, 255), "qgc": (190, 215, 255)}.get(k, col)
             if k == "qgc": t1 = T_WO0 + 0.2

@@ -11,7 +11,7 @@ T = 37.0
 WHITE = (250, 250, 250)
 LINES_V = [("THE SKY FROM", WHITE, 110, 1000, 540, 1180), ("OTHER", ORANGE, 190, 1020, 540, 1340), ("MOONS", ORANGE, 190, 1020, 540, 1520)]
 CROP_Y = 330
-LINES_W = [("THE SKY FROM", WHITE, 50, 560, 300, 400), ("OTHER MOONS", ORANGE, 80, 580, 300, 490)]
+LINES_W = [("THE SKY FROM", WHITE, 56, 560, 760, 430), ("OTHER MOONS", ORANGE, 88, 600, 760, 520)]
 OUT = os.path.join(HERE, "out"); os.makedirs(OUT, exist_ok=True)
 sc = V.Scene(True)
 sc.overlay = lambda *a, **k: None                       # no captions / readouts

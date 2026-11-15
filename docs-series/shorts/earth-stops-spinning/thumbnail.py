@@ -10,8 +10,8 @@ from lib.text import word_layer, composite, ORANGE
 T = 24.5
 WHITE = (250, 250, 250)
 LINES_V = [("WHAT IF EARTH", WHITE, 110, 1000, 540, 1180), ("STOPPED", ORANGE, 190, 1020, 540, 1340), ("SPINNING?", ORANGE, 190, 1020, 540, 1520)]
-CROP_Y = 330
-LINES_W = [("WHAT IF EARTH", WHITE, 50, 560, 300, 400), ("STOPPED SPINNING?", ORANGE, 80, 580, 300, 490)]
+CROP_Y = 480
+LINES_W = [("WHAT IF EARTH", WHITE, 56, 560, 330, 210), ("STOPPED SPINNING?", ORANGE, 84, 600, 330, 300)]
 OUT = os.path.join(HERE, "out"); os.makedirs(OUT, exist_ok=True)
 sc = V.Scene(True)
 sc.overlay = lambda *a, **k: None                       # no captions / readouts

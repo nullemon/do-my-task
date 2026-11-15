@@ -26,6 +26,6 @@ v = base.copy()
 for w, col, size, x, y in (("IF YOU COULD SEE", WHITE, 110, 540, 240), ("DARK", ORANGE, 260, 540, 960), ("MATTER", ORANGE, 230, 540, 1190)):
     rgba, _ = word_layer(w, size, 1020, fill=col); composite(v, rgba, x, y, 1.0)
 save(v, os.path.join(OUT, "thumb-vertical.jpg"))
-h = base[300:300 + 608].copy()
-rgba, _ = word_layer("SEE DARK MATTER", 110, 1040, fill=ORANGE); composite(h, rgba, 540, 300, 1.0)
+h = base[1000:1000 + 608].copy()
+rgba, _ = word_layer("SEE DARK MATTER", 110, 1040, fill=ORANGE); composite(h, rgba, 540, 150, 1.0)
 save(h, os.path.join(OUT, "thumb.jpg"), (1280, 720))

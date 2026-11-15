@@ -173,17 +173,6 @@
   "is_the_real_dog": false
  },
  {
-  "key": "tm_10_396_war_dogs",
-  "type": "archive",
-  "title": "tm-10-396-war-dogs-1943",
-  "shows": "Scanned 1943 Army technical manual TM 10-396 'War Dogs' (pages and diagrams for B-roll)",
-  "license": "Public Domain Mark 1.0",
-  "author": "US War Department",
-  "date": "1943",
-  "is_the_real_dog": false,
-  "note": "A text item (scans), not film"
- },
- {
   "key": "film_licata_invasion",
   "type": "archive",
   "title": "NPC-1498b",
@@ -247,40 +236,12 @@
   "note": "Use only as generic 'war dogs' B-roll with a neutral caption"
  },
  {
-  "key": "nara_casablanca_film",
-  "type": "nara",
-  "title": "https://catalog.archives.gov/id/16856",
-  "shows": "NARA master record of the Casablanca Conference Signal Corps film",
-  "license": "Public domain (US government work)",
-  "author": "US Army Signal Corps",
-  "date": "1943",
-  "is_the_real_dog": false
- },
- {
   "key": "vid_war_dogs_1942",
   "type": "archive",
   "title": "war_dogs",
   "shows": "1942 U.S. Army film 'War Dogs': training dogs for the Army",
   "license": "Public domain (U.S. government / pre-1929 film)",
   "author": "Internet Archive (public domain film)",
-  "is_the_real_dog": false
- },
- {
-  "key": "vid_fb35_war_dogs",
-  "type": "archive",
-  "title": "FB-35",
-  "shows": "War Dept Film Bulletin 35 (1942): war dogs",
-  "license": "Public domain (U.S. government / pre-1929 film)",
-  "author": "Internet Archive (public domain film)",
-  "is_the_real_dog": false
- },
- {
-  "key": "vid_licata_landing",
-  "type": "archive",
-  "title": "NPC-953",
-  "shows": "Invasion convoy and landing at Licata, Sicily, July 1943",
-  "license": "Public domain (U.S. government / pre-1929 film)",
-  "author": "National Archives / Internet Archive · NPC-953",
   "is_the_real_dog": false
  },
  {

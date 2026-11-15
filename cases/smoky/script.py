@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 from shots import *
 NA = "National Archives / Internet Archive · public domain"
 def c(k, a, b, cr, crop=None, focus=(0.5, 0.5)): return F(k, a, b, credit=cr, crop=crop, focus=focus)
-TC = dict(x0=0, y0=0, x1=532, y1=236)            # crop burned-in timecode
+TC = dict(x0=0, y0=0, x1=532, y1=220)            # crop burned-in timecode
 def cl(a, b): return c("film_convoy_lingayen", a, b, "U.S. Navy film, Lingayen Gulf 1945 · " + NA, TC)
 def la(a, b): return c("film_lingayen_action", a, b, "U.S. Navy film, Lingayen Gulf 1945 · " + NA, TC)
 def li(a, b): return c("film_lingayen_invasion", a, b, "U.S. Navy film, Lingayen Gulf landing 1945 · " + NA, TC)
@@ -26,12 +26,12 @@ VIS = {
  "map_ng": MAP("pin", pin="Nadzab", center="Nadzab", towns=[("Nadzab", "NEW GUINEA", "r")], label="EARLY 1944 · SOUTH PACIFIC", zoom=1.2),
  "ng1": FULL(ng(444.0, 450.0), pops=[CHIP("NEW GUINEA · 1944 FILM", 0.3)]),
  "yorkie1": FULL(yk("vid_yorkie_fastily_2", 0.0, 7.0), pops=[CHIP(NOTS, 0.3, color="dark")]),
- "wynne1": FULL(ae(120.0, 127.0), pops=[CHIP("U.S. ARMY AIR FORCES · NEW GUINEA", 0.3)]),
- "wynne2": SPLIT(nz(282.0, 289.0), ST, chip1="NEW GUINEA · 1943", chip2="SMOKY ON A 2023 STAMP"),
+ "wynne1": FULL(nz(385.0, 391.0), pops=[CHIP("U.S. ARMY AIR FORCES · NEW GUINEA", 0.3)]),
+ "wynne2": SPLIT(ae(311.0 + 7, 325.0), ST, chip1="NEW GUINEA · 1943", chip2="SMOKY ON A 2023 STAMP"),
  "helmet1": FULL(yk("vid_yorkie_dog_bed", 0.0, 9.0), pops=[CHIP(NOTS, 0.3, color="dark")]),
  "lost1": FULL(ng(385.0, 391.0)),
  "bris1": FULL(P("ward_milne_bay", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[CHIP("AN ARMY HOSPITAL WARD, 1944", 0.3)]),
- "pdsa1": FULL(la(102.0, 108.0), pops=[STAMP("2011", 0.3)]),
+ "pdsa1": FULL(sc(337.0, 343.0), pops=[STAMP("2011", 0.3)]),
  "ch2": dict(media=ae(24.0, 30.0)),
  "raid1": FULL(nz(436.0, 442.0), pops=[STAMP("12 MISSIONS", 0.3)]),
  "raid2": FULL(nz(488.0, 494.0)),
@@ -59,7 +59,7 @@ VIS = {
  "home1": FULL(yk("vid_yorkie_fastily_1", 14.0, 22.0), pops=[CHIP(NOTS, 0.3, color="dark")]),
  "home2": FULL(P("memorial_lakewood", focus=(0.5, 0.45), z=(1.08, 1.0)), pops=[PIN("CLEVELAND, OHIO", 0.3)]),
  "vets1": FULL(lh(212.0, 219.0)),
- "board": BOARD([(ST, "SMOKY"), (nz(282.0, 282.1), "NEW GUINEA"), (li(90.0, 90.1), "LINGAYEN"), (P("memorial_lakewood"), "CLEVELAND")],
+ "board": BOARD([(ST, "SMOKY"), (nz(385.0, 385.1), "NEW GUINEA"), (li(90.0, 90.1), "LINGAYEN"), (P("memorial_lakewood"), "CLEVELAND")],
                 notes=[("4 LB", "HERO"), ("70 FT", "OF PIPE"), ("150", "AIR RAIDS")]),
  "death1": FULL(cl(223.0, 230.0), pops=[STAMP("FEBRUARY 1957", 0.3)]),
  "statue1": FULL(P("memorial_lakewood", focus=(0.5, 0.35), z=(1.0, 1.12)), pops=[CHIP("SMOKY MEMORIAL · 2005", 0.3)]),

@@ -100,6 +100,19 @@ def tone_photo(im, tone):
         return ImageOps.colorize(g, (22, 18, 14), (250, 238, 214), mid=(150, 128, 100))
     im = ImageEnhance.Color(im).enhance(1.12); return ImageEnhance.Contrast(im).enhance(1.05)
 
+def media_still(m):
+    """a single still image for any media (photo file, or one frame of a video at t_in), cropped and toned"""
+    if m["m"] == "photo":
+        im = Image.open(CFG.PH[m["key"]]["file"]).convert("RGB")
+        if m.get("crop"): im = im.crop(tuple(m["crop"]))
+        return tone_photo(im, m.get("tone"))
+    path = CFG.SRC[m["src"]]; sw, sh = probe_wh(path); c = m.get("crop") or {}
+    x0, y0, x1, y1 = c.get("x0", 0), c.get("y0", 0), min(sw, c.get("x1", sw)), min(sh, c.get("y1", sh))
+    b = subprocess.run([FF, "-v", "error", "-ss", f"{m['t_in']:.2f}", "-i", path, "-frames:v", "1", "-vf", f"crop={x1-x0}:{y1-y0}:{x0}:{y0}",
+                        "-f", "image2pipe", "-vcodec", "png", "-"], capture_output=True).stdout
+    import io
+    return Image.open(io.BytesIO(b)).convert("RGB")
+
 class PhotoSrc:
     def __init__(self, m, bw, bh):
         ph = CFG.PH[m["key"]]
@@ -322,8 +335,9 @@ def title_overlay(canvas, o, gt):
     ov = ov.filter(ImageFilter.GaussianBlur(30)); od = ImageDraw.Draw(ov)
     sc = 0.9 + 0.1 * eout(lt / 0.6); f1 = font(PF, int(s1 * sc))
     tw = tlen(od, CFG.TITLE_BIG, f1); od.text((W / 2 - tw / 2, cy), CFG.TITLE_BIG, font=f1, fill=WHITE + (int(255 * a),))
-    f2 = font(MXB, 46 if FMT == "V" else 48)
-    ws = [tlen(od, c, f2) for c in CFG.TITLE_SMALL]; sp = 12; x = W / 2 - (sum(ws) + sp * (len(ws) - 1)) / 2
+    f2 = font(MXB, 46 if FMT == "V" else 48); sp = 12
+    while sum(tlen(od, c, f2) for c in CFG.TITLE_SMALL) + sp * (len(CFG.TITLE_SMALL) - 1) > W * 0.9: f2 = font(MXB, f2.size - 2); sp = max(4, sp - 1)
+    ws = [tlen(od, c, f2) for c in CFG.TITLE_SMALL]; x = W / 2 - (sum(ws) + sp * (len(ws) - 1)) / 2
     for c, cw in zip(CFG.TITLE_SMALL, ws): od.text((x, cy + s1 * 1.22), c, font=f2, fill=GOLD + (int(255 * a),)); x += cw + sp
     lw = 300 * eout((lt - 0.2) / 0.8); od.rectangle([W / 2 - lw, cy + s1 * 1.22 + 74, W / 2 + lw, cy + s1 * 1.22 + 80], fill=RED + (int(255 * a),))
     canvas.paste(ov, (0, 0), ov)
@@ -406,8 +420,7 @@ class Full(Shot):
             if pt < 0: continue
             if p["p"] == "polaroid":
                 if i not in self.pol:
-                    m = p["media"]; ph = CFG.PH[m["key"]]; im = tone_photo(Image.open(ph["file"]).convert("RGB"), m.get("tone"))
-                    if m.get("crop"): im = im.crop(m["crop"])
+                    m = p["media"]; im = media_still(m)
                     tilt = p["tilt"] if p["tilt"] is not None else random.Random(i * 7 + len(p["caption"])).uniform(-6, 6)
                     self.pol[i] = polaroid(im, p["caption"], int(bw * (0.40 if FMT == "V" else 0.24)), tilt)
                 pol = self.pol[i]; sc = back(pt / 0.35)
@@ -491,8 +504,7 @@ class Board(Shot):
         for i, (m, cap) in enumerate(sh["items"]):
             r, c = divmod(i, cols)
             cx = BW * (c + 0.5) / cols + rng.uniform(-30, 30); cy = BH * (r + 0.45) / (rows + (0.6 if nn else 0)) + rng.uniform(-25, 25)
-            ph = CFG.PH[m["key"]]; im = tone_photo(Image.open(ph["file"]).convert("RGB"), m.get("tone"))
-            if m.get("crop"): im = im.crop(m["crop"])
+            im = media_still(m)
             tgt = pw / (pw * 0.92)
             im = ImageOps.fit(im, (pw, int(pw * 0.86)), centering=m.get("focus", (0.5, 0.45)))
             pol = polaroid(im, cap, pw, rng.uniform(-5, 5))
@@ -711,7 +723,7 @@ class BgCard(Shot):
             return can, None, None
         if L == "stat":
             big = sh["big"]
-            if re.fullmatch(r"~?[\d,]+\+?", big):
+            if re.fullmatch(r"~?[\d,]+\+?", big) and not re.fullmatch(r"1[5-9]\d\d|20\d\d", big):   # years are not counted up
                 num = int(re.sub(r"\D", "", big)); v = int(num * eout(lt / 1.5))
                 s = ("~" if big.startswith("~") else "") + f"{v:,}" + ("+" if big.endswith("+") else "")
             else: s = big

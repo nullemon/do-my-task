@@ -218,7 +218,7 @@
   "key": "film_casablanca_conference_2",
   "type": "archive",
   "title": "111-adc-3053",
-  "shows": "Signal Corps footage of the Casablanca Conference, 14–26 Jan 1943",
+  "shows": "Signal Corps footage of the Casablanca Conference, 14\u201326 Jan 1943",
   "license": "Public domain (US Army Signal Corps, NARA 16856)",
   "author": "US Army Signal Corps",
   "date": "1943",
@@ -236,21 +236,12 @@
   "note": "Use only as generic 'war dogs' B-roll with a neutral caption"
  },
  {
-  "key": "vid_war_dogs_1942",
-  "type": "archive",
-  "title": "war_dogs",
-  "shows": "1942 U.S. Army film 'War Dogs': training dogs for the Army",
-  "license": "Public domain (U.S. government / pre-1929 film)",
-  "author": "Internet Archive (public domain film)",
-  "is_the_real_dog": false
- },
- {
   "key": "vid_sicily_invasion",
   "type": "archive",
   "title": "NPC-2020",
   "shows": "Allied invasion of Sicily, 1943",
   "license": "Public domain (U.S. government / pre-1929 film)",
-  "author": "National Archives / Internet Archive · NPC-2020",
+  "author": "National Archives / Internet Archive \u00b7 NPC-2020",
   "is_the_real_dog": false
  },
  {
@@ -259,7 +250,7 @@
   "title": "NPC-15678",
   "shows": "Invasion of Gela, Sicily, 1943",
   "license": "Public domain (U.S. government / pre-1929 film)",
-  "author": "National Archives / Internet Archive · NPC-15678",
+  "author": "National Archives / Internet Archive \u00b7 NPC-15678",
   "is_the_real_dog": false
  },
  {
@@ -268,7 +259,7 @@
   "title": "NPC-11081",
   "shows": "Marine war dog patrol, Iwo Jima 1945 (not Chips)",
   "license": "Public domain (U.S. government / pre-1929 film)",
-  "author": "National Archives / Internet Archive · NPC-11081",
+  "author": "National Archives / Internet Archive \u00b7 NPC-11081",
   "is_the_real_dog": false
  }
 ]

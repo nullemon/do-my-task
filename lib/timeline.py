@@ -51,8 +51,8 @@ def build(cfg, scr):
             ends = [b for w, a, b in words if re.search(r"[.!?…,]$", w)][:-1]
             for k in range(1, n):
                 sh = vis[k]
-                if isinstance(sh, dict) and sh.get("at"):
-                    cand = find_word(words, sh["at"], bounds[-1] + 0.5) - 0.12
+                if isinstance(sh, dict) and isinstance(sh.get("start"), str):   # optional: shot starts at a spoken word
+                    cand = find_word(words, sh["start"], bounds[-1] + 0.5) - 0.12
                 else:
                     target = t + total * k / n
                     cand = min(ends, key=lambda e: abs(e - target)) + 0.12 if ends else target

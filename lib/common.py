@@ -18,6 +18,15 @@ def load_case(code):
     cfg = importlib.import_module("cfg"); scr = importlib.import_module("script")
     cfg.DIR = d; cfg.WORK = os.path.join(d, "work"); os.makedirs(cfg.WORK, exist_ok=True)
     cfg.PH = load_photos(d)
+    fm = os.path.join(d, "footage", "manifest.csv")
+    if not hasattr(cfg, "SRC"): cfg.SRC = {}
+    if not hasattr(cfg, "SRC_CREDIT"): cfg.SRC_CREDIT = {}
+    if os.path.exists(fm):
+        for r in csv.DictReader(open(fm, encoding="utf-8")):
+            cfg.SRC.setdefault(r["key"], os.path.join(d, r["file"]))
+            cfg.SRC_CREDIT.setdefault(r["key"], r["credit"])
+    for k, v in list(cfg.SRC.items()):
+        if not os.path.isabs(v): cfg.SRC[k] = os.path.join(d, v)
     return cfg, scr
 
 def load_photos(d):
@@ -29,9 +38,10 @@ def load_photos(d):
         for r in csv.DictReader(open(p, encoding="utf-8")):
             f = r["file"] if os.path.isabs(r["file"]) else os.path.join(d, r["file"])
             lic = r.get("lic", "")
-            artist = r.get("artist", "").replace("Unknown authorUnknown author", "Unknown author")
+            artist = r.get("artist", "").replace("Unknown authorUnknown author", "Unknown author").strip()
+            if artist.lower().startswith("unknown") or artist.lower() in ("anonymous", ""): artist = ""
             src = r.get("source", "Wikimedia Commons")
-            credit = r.get("credit") or (f"{src} · {artist} · {lic}" if artist and "nknown" not in artist else f"{src} · {lic}")
+            credit = r.get("credit") or (f"{src} · {artist} · {lic}" if artist else f"{src} · {lic}")
             out[r["key"]] = dict(file=f, credit=credit, lic=lic, page=r.get("page", ""), title=r.get("title", ""))
     return out
 

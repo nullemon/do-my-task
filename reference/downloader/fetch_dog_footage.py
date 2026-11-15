@@ -213,6 +213,47 @@ STORIES = {
     commons=["Patron (dog)", "Patron dog Ukraine"],
     web=["Patron dog Ukraine", "Patron Jack Russell mine sniffing", "Patron dog Zelensky medal", "Patron dog Mykhailo Iliev", "пес Патрон"],
     loc=[]),
+ 11: dict(slug="11_rin_tin_tin", kw=["rin tin tin", "rin-tin-tin", "lee duncan"], subs=["en"], max_dur=2400,
+    yt=[("Rin Tin Tin real story Lee Duncan", ["rin tin tin", "rin-tin-tin"]),
+        ("Rin Tin Tin silent film clip 1920s", ["rin tin tin", "rin-tin-tin"]),
+        ("Rin Tin Tin Susan Orlean interview", ["rin tin tin"]),
+        ("Rin Tin Tin Hollywood Walk of Fame", ["rin tin tin"])],
+    stock=["german shepherd puppy", "german shepherd running", "old film projector", "hollywood sign", "vintage cinema"],
+    commons=["Rin Tin Tin", "Lee Duncan Rin Tin Tin"], web=["Rin Tin Tin Lee Duncan photo", "Rin Tin Tin 1920s publicity photo"], loc=["Rin-Tin-Tin"]),
+ 12: dict(slug="12_smoky_yorkie", kw=["smoky", "yorkie", "wynne"], subs=["en"], max_dur=1800,
+    yt=[("Smoky Yorkie war dog Bill Wynne", ["smoky"]), ("Smoky the war dog culvert Lingayen", ["smoky"]),
+        ("Bill Wynne Smoky interview", ["smoky", "wynne"]), ("Smoky memorial Cleveland Lakewood dog", ["smoky"])],
+    stock=["yorkshire terrier", "jungle rain", "airfield ww2", "hospital ward vintage"],
+    commons=["Smoky (dog)", "Smoky Yorkshire terrier war dog"], web=["Smoky Yorkie Bill Wynne photo", "Smoky war dog helmet"], loc=[]),
+ 13: dict(slug="13_judy_pow_dog", kw=["judy", "pointer", "frank williams", "prisoner of war"], subs=["en"], max_dur=1800,
+    yt=[("Judy the dog prisoner of war Frank Williams", ["judy"]), ("Judy pointer Dickin Medal POW", ["judy"]),
+        ("HMS Grasshopper Judy dog", ["judy"])],
+    stock=["english pointer dog", "jungle", "warship sea", "tropical rain"],
+    commons=["Judy (dog)", "HMS Grasshopper 1939", "HMS Gnat"], web=["Judy POW dog Frank Williams photo"], loc=[]),
+ 14: dict(slug="14_chips_war_dog", kw=["chips", "war dog", "sicily"], subs=["en"], max_dur=1800,
+    yt=[("Chips WW2 war dog Sicily Silver Star", ["chips"]), ("Chips dog Dickin Medal 2018", ["chips"]),
+        ("WWII war dogs training footage", ["dog"])],
+    stock=["german shepherd husky mix", "sicily beach", "soldier dog"],
+    commons=["Chips (dog)", "Dogs for Defense WWII"], web=["Chips war dog 1943 photo"], loc=["war dog 1943"]),
+ 15: dict(slug="15_owney_postal_dog", kw=["owney", "postal", "mail"], subs=["en"], max_dur=1800,
+    yt=[("Owney the postal dog Smithsonian", ["owney"]), ("Owney dog railway mail service", ["owney"])],
+    stock=["steam train", "old letters", "post office vintage", "terrier dog"],
+    commons=["Owney (dog)", "Railway Mail Service"], web=["Owney postal dog photo"], loc=["Owney dog", "railway mail service car"]),
+ 16: dict(slug="16_greyfriars_bobby", kw=["bobby", "greyfriars"], subs=["en"], max_dur=1800,
+    yt=[("Greyfriars Bobby true story", ["bobby", "greyfriars"]), ("Greyfriars Bobby statue Edinburgh", ["bobby", "greyfriars"]),
+        ("Greyfriars Kirkyard tour Bobby", ["greyfriars"])],
+    stock=["skye terrier", "edinburgh old town", "graveyard fog", "rain cobblestones"],
+    commons=["Greyfriars Bobby", "Greyfriars Kirkyard"], web=["Greyfriars Bobby 1867 photo"], loc=[]),
+ 17: dict(slug="17_bretagne_911_dog", kw=["bretagne", "9/11", "ground zero", "search dog"], subs=["en"], max_dur=1200,
+    yt=[("Bretagne last 9/11 search dog", ["bretagne"]), ("Bretagne 9/11 dog honor guard 2016", ["bretagne"]),
+        ("Bretagne Denise Corliss", ["bretagne", "corliss"]), ("9/11 search and rescue dogs Ground Zero", ["dog"])],
+    stock=["golden retriever", "american flag", "firefighters", "new york skyline"],
+    commons=["Bretagne (dog)", "Search and rescue dogs World Trade Center"], web=["Bretagne 9/11 dog Denise Corliss"], loc=[]),
+ 18: dict(slug="18_lucca_marine_dog", kw=["lucca", "marine", "dickin"], subs=["en"], max_dur=1200,
+    yt=[("Lucca Marine dog Dickin Medal", ["lucca"]), ("Lucca USMC dog Chris Willingham", ["lucca"]),
+        ("Lucca dog Juan Rodriguez IED", ["lucca"])],
+    stock=["german shepherd", "afghanistan desert", "military dog", "three legged dog"],
+    commons=["Lucca (dog)"], web=["Lucca marine dog Dickin medal photo"], loc=[]),
 }
 
 PREFERRED = ["abc news", "abc10", "abc7", "abc 7", "9 news", "9news", "7news", "10 news", "sbs", "cbs", "nbc",
@@ -824,7 +865,7 @@ def zip_story(st):
 # ================================================================ main
 def parse_selection(s):
     s = (s or "").strip().lower()
-    if not s: return [1, 2, 3, 4, 5, 6]
+    if not s: return list(range(7, 19))
     if s == "all": return list(STORIES)
     sel = []
     for part in re.split(r"[,\s]+", s):
@@ -846,7 +887,7 @@ def main():
     else:
         print("\n  Stories:")
         for i, st in STORIES.items(): print(f"   {i:2d}. {st['slug'][3:]}")
-        try: ans = input("\n  Which stories? [Enter = 1-6, 'all' = 1-10, or e.g. 7-10]: ")
+        try: ans = input("\n  Which stories? [Enter = 7-18 (all new stories), 'all', or e.g. 8,11-13]: ")
         except EOFError: ans = ""
         sel = parse_selection(ans)
     log("Selected stories:", sel)

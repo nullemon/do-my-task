@@ -122,7 +122,7 @@ def planet_state(t, cur, t0):
     """-> (cx, cy, R px, kind) of the planet; kind in none / dot / speck / disc"""
     if cur in ("night", "hook", "odds"): return None
     if cur == "nep":
-        return (690.0, 330.0 + 6 * (t - t0), 0.0, "dot")
+        return (640.0, 560.0 + 6 * (t - t0), 0.0, "dot")
     if cur == "mars":
         return (470.0 + 9 * (t - t0), 560.0 - 3 * (t - t0), R_MARS_PX, "speck")
     if cur == "moon":
@@ -270,7 +270,7 @@ class Scene:
                        np.clip((0.5 - lat / np.pi) * 512, 0, 511).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         s = MO.SUN.astype(f32); n = np.stack([u, v, z], -1)
         night = smooth(0.05, -0.25, n @ s)
-        th = (mu ** 0.45 * gm * night * inside)[..., None] * np.array([1.0, 0.16, 0.04], f32) * 0.055 * red
+        th = (mu ** 0.45 * gm * night * inside)[..., None] * np.array([1.0, 0.13, 0.03], f32) * 0.022 * red
         # lightning
         lt = np.zeros(u.shape, f32)
         for e in self.lightning:
@@ -297,20 +297,23 @@ class Scene:
         pad = int(R * 0.08) + 6
         x0, x1 = max(0, int(cx - R - pad)), min(W, int(cx + R + pad)); y0, y1 = max(0, int(cy - R - pad)), min(H, int(cy + R + pad))
         if x1 <= x0 or y1 <= y0: return
-        sub = st[y0:y1, x0:x1]
-        c = (cx - x0, cy - y0); rmax = R + pad
-        nr, na = int(rmax), 2048
-        pol = cv2.warpPolar(sub, (nr, na), c, rmax, cv2.WARP_POLAR_LINEAR)
-        band = pol[:, max(int(R * 0.90), 0):int(R)].sum(1)                                     # stars behind the limb
-        band = cv2.GaussianBlur(band[:, None, :].repeat(1, 1).reshape(na, 1, 3), (1, 0), sigmaX=1, sigmaY=6).reshape(na, 3)
-        ang = np.linspace(0, 2 * np.pi, na, endpoint=False)
+        sub = np.ascontiguousarray(st[y0:y1, x0:x1])
+        na, nb = 2048, 24
+        ang = np.linspace(0, 2 * np.pi, na, endpoint=False).astype(f32)
+        rr = np.linspace(R * 0.90, R, nb).astype(f32)
+        mx = (cx - x0 + rr[None, :] * np.cos(ang)[:, None]).astype(f32); my = (cy - y0 + rr[None, :] * np.sin(ang)[:, None]).astype(f32)
+        pol = cv2.remap(sub, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
+        band = pol.sum(1) * (R * 0.10 / nb) * (2 * np.pi * R / na)                         # stars behind the limb, per angle bin
+        band = cv2.GaussianBlur(band[:, None, :], (0, 0), sigmaX=0.1, sigmaY=4).reshape(na, 3)
         flick = (0.65 + 0.35 * np.sin(ang * 37 + t * 5.0) * np.sin(ang * 13 - t * 3.1)).astype(f32)
-        ring = np.zeros_like(pol)
-        r_idx = np.arange(nr, dtype=f32)
-        prof = np.exp(-((r_idx - R - 1.2) / 1.1) ** 2) * (r_idx > R - 1)
-        ring += (band * flick[:, None])[:, None, :] * prof[None, :, None] * 0.55
-        back = cv2.warpPolar(ring, (x1 - x0, y1 - y0), c, rmax, cv2.WARP_POLAR_LINEAR | cv2.WARP_INVERSE_MAP)
-        img[y0:y1, x0:x1] += back * I
+        val = (band * flick[:, None]).astype(f32)
+        yy, xx = np.mgrid[y0:y1, x0:x1].astype(f32)
+        dx_, dy_ = xx + 0.5 - cx, yy + 0.5 - cy
+        d = np.sqrt(dx_ * dx_ + dy_ * dy_)
+        ai = ((np.arctan2(dy_, dx_) % (2 * np.pi)) / (2 * np.pi) * na).astype(f32)
+        v = cv2.remap(val[:, None, :].repeat(2, 1), np.zeros_like(ai), ai, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        prof = np.exp(-((d - R - 1.2) / 1.1) ** 2) * (d > R - 1)
+        img[y0:y1, x0:x1] += v * (prof * 0.55)[..., None] * I
 
     def aurora(self, img, cx, cy, R, t, amt):
         """auroral ovals round both magnetic poles (green O / red H-alpha tints), seen near the limb"""
@@ -327,7 +330,7 @@ class Scene:
                 curtain = np.exp(-((rr - 1.05) / 0.35) ** 2) * 0.25
                 g = (ring + curtain)
                 col = np.array([0.30, 1.0, 0.55], f32) * 0.7 + np.array([1.0, 0.25, 0.55], f32) * 0.3
-                return g[..., None] * col * amt * 0.30
+                return g[..., None] * col * amt * 0.20
             splat(img, px, py, R * 0.6, fn)
 
     def shock(self, img, cx, cy, u, col, size=1.0, decay=0.55):
@@ -414,7 +417,7 @@ class Scene:
         sg = lerp(A["stars"], B["stars"], w)
         st = self.stars.render(self.cam, t, gain=1.0, twinkle=1.4, plate_gain=0.10, star_gain=1.0, cx=1500, cy=700, rot=-8.0) * sg * 0.9
         # the target star of the Neptune beat (and the end): blinks out as the dark planet covers it
-        st_t = (690.0, 330.0 + 6 * (T_BLINK + 0.08 - T_SW["nep"]))
+        st_t = (640.0, 560.0 + 6 * (T_BLINK + 0.08 - T_SW["nep"]))
         st_I = 1.0
         if cur == "nep": st_I = 1 - ramp(t, T_BLINK + 0.02, T_BLINK + 0.12) * (1 - ramp(t, T_BLINK + 1.0, T_BLINK + 1.1))
         if cur == "odds" and t > T_END_BLINK - 0.3: st_I = 1 - ramp(t, T_END_BLINK + 0.05, T_END_BLINK + 0.15) * (1 - ramp(t, T_END_BLINK + 0.9, T_END_BLINK + 1.0))

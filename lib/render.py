@@ -141,11 +141,25 @@ class PhotoSrc:
         self.map = lambda u, v: ((u * self.sw * sc - x0) * k, (v * self.sh * sc - y0) * k)
         return img
 
+_ac = {}
+def autocrop(path, t, sw, sh):
+    """detect black bars (pillar/letterbox) around this moment; returns crop dict or {}"""
+    k = (path, round(t, 1))
+    if k in _ac: return _ac[k]
+    r = subprocess.run([FF, "-v", "info", "-ss", f"{max(0, t):.2f}", "-t", "2.5", "-i", path, "-vf", "cropdetect=limit=24:round=2:reset=0", "-an", "-f", "null", "-"],
+                       capture_output=True, text=True).stderr
+    m = re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", r); out = {}
+    if m:
+        w, h, x, y = map(int, m[-1])
+        if w > sw * 0.4 and h > sh * 0.4 and (w < sw - 8 or h < sh - 8):
+            out = dict(x0=x + 4, y0=y + 4, x1=x + w - 4, y1=y + h - 4)
+    _ac[k] = out; return out
+
 class VideoSrc:
     def __init__(self, m, bw, bh, dur):
         path = CFG.SRC[m["src"]]
         sw, sh = probe_wh(path)
-        c = m.get("crop") or {}
+        c = m.get("crop") or autocrop(path, m["t_in"], sw, sh)
         x0, y0, x1, y1 = c.get("x0", 0), c.get("y0", 0), min(sw, c.get("x1", sw)), min(sh, c.get("y1", sh))
         cw, ch = (x1 - x0) // 2 * 2, (y1 - y0) // 2 * 2
         z1 = max(m["z"]); s = max(bw / cw, bh / ch) * z1

@@ -2,7 +2,81 @@
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lib"))
 from shots import *
-VIS = {}
+NA = "National Archives / Internet Archive · public domain"
+def c(k, a, b, cr, crop=None, focus=(0.5, 0.5)): return F(k, a, b, credit=cr, crop=crop, focus=focus)
+def pt(a, b): return c("vid_bird_dogs_pointers_1940", a, b, "'Bird Dogs' (1940) · Internet Archive · public domain")
+def yz(a, b): return c("vid_panay_yangtze_1937", a, b, "Universal Newsreel 1937 · Yangtze River gunboats · public domain")
+def kg(a, b): return c("vid_hms_kgv_1945", a, b, "Royal Navy warship 1945 · " + NA, crop=dict(x0=0, y0=0, x1=532, y1=226))
+def al(a, b): return c("vid_hms_algonquin", a, b, "Warship at sea 1944 · " + NA)
+def sg(a, b): return c("vid_japan_conquers_singapore_1942", a, b, "Singapore 1942 newsreel · Internet Archive · public domain")
+def se(a, b): return c("vid_japan_conquers_se_asia", a, b, "Southeast Asia 1942 newsreel · Internet Archive · public domain")
+def kr(a, b): return c("vid_kampar_river", a, b, "Kampar River, Sumatra · Wikimedia Commons · CC BY-SA")
+def ps(a, b): return c("vid_padang_surrender_1945", a, b, "Japanese surrender, Padang, Sumatra 1945 · public domain")
+def rp(a, b): return c("vid_released_pows_japan_1945", a, b, "Released prisoners of war 1945 · " + NA)
+def rs(a, b): return c("vid_reoccupation_singapore_1945", a, b, "Reoccupation of Singapore 1945 · " + NA)
+def su(a, b): return c("vid_sumatra_1944", a, b, "Sumatra 1944 · " + NA)
+def ss(a, b): return c("vid_surrender_singapore_1945", a, b, "Singapore 1945 · " + NA)
+def fb(a, b): return c("vid_freed_pows_bangkok_1946", a, b, "Freed prisoners 1946 · Dutch newsreel · Open Beelden · CC BY-SA")
+NOTJ = "AN ENGLISH POINTER LIKE JUDY (NOT JUDY)"
+JD = P("judy_on_deck", focus=(0.6, 0.6))
+VIS = {
+ "hook1": FULL(P("judy_on_deck", focus=(0.6, 0.62), z=(1.0, 1.1)), punch=True, pops=[CIRCLE(0.62, 0.62, 0.22, 0.6)]),
+ "hook2": FULL(rp(90.0, 96.0), punch=True),
+ "hook3": FULL(yz(460.0, 466.0), punch=True, pops=[STAMP("POW 81A", 0.3)]),
+ "hook4": FULL(kr(9.0, 15.0), punch=True),
+ "hook5": FULL(pt(165.0, 171.0), pops=[CHIP(NOTJ, 0.2, color="dark")]),
+ "title": FULL(P("judy_on_deck", focus=(0.6, 0.6), z=(1.08, 1.0))),
+ "ch1": dict(media=yz(591.0, 596.0)),
+ "born1": MAP("pin", pin="Shanghai", center="Shanghai", towns=[("Shanghai", "SHANGHAI", "r")], label="FEBRUARY 1936 · CHINA", zoom=1.2),
+ "born2": FULL(pt(99.0, 106.0), pops=[CHIP(NOTJ, 0.3, color="dark")]),
+ "gnat1": FULL(yz(985.0, 992.0), pops=[CHIP("THE YANGTZE RIVER · 1937 FILM", 0.3)]),
+ "gnat2": SPLIT(yz(328.0, 335.0), P("hms_gnat_1927", focus=(0.5, 0.5)), chip1="YANGTZE GUNBOAT CREWS · 1937", chip2="HMS GNAT"),
+ "gnat3": FULL(pt(231.0, 238.0), pops=[CHIP(NOTJ, 0.3, color="dark")]),
+ "gnat4": FULL(pt(297.0, 304.0)),
+ "warn1": FULL(yz(197.0, 204.0)),
+ "ch2": dict(media=su(236.0, 241.0)),
+ "grass1": SPLIT(su(21.0, 28.0), P("hms_grasshopper", focus=(0.5, 0.5)), chip1="FEBRUARY 1942", chip2="HMS GRASSHOPPER"),
+ "map1": MAP("route", pts=["Singapore", "Singkep", "Padang", "Medan"], towns=[("Singapore", "SINGAPORE", "r"), ("Padang", "PADANG", "l"), ("Medan", "MEDAN", "l")],
+             label="1942 · SHIPWRECKED", center="Singkep", zoom=1.4, note="Route shown is approximate"),
+ "bomb1": FULL(sg(30.0, 36.0), pops=[STAMP("FEBRUARY 14, 1942", 0.2)]),
+ "bomb2": FULL(su(279.0, 285.0)),
+ "island1": FULL(su(407.0, 414.0)),
+ "island2": FULL(pt(430.0, 437.0), pops=[CHIP("SHE DUG · AND FOUND WATER", 0.3)]),
+ "trek1": FULL(kr(27.0, 34.0), pops=[CHIP("SUMATRA", 0.3)]),
+ "trek2": FULL(kr(63.0, 70.0)),
+ "trek3": FULL(sg(89.0, 96.0), pops=[STAMP("MARCH 18, 1942", 0.3)]),
+ "ch3": dict(media=kr(118.0, 124.0)),
+ "frank1": FULL(c("vid_medan_1943", 58.0, 65.0, "Medan, Sumatra 1943 · Internet Archive · public domain"), pops=[PIN("MEDAN, SUMATRA", 0.3)]),
+ "frank2": FULL(rp(18.0, 25.0)),
+ "frank3": FREEZE(P("judy_on_deck", focus=(0.6, 0.6), z=(1.0, 1.04)), at="@survivor", circle=(0.62, 0.62, 0.2), label="THAT'S JUDY", speaker="Frank Williams · The National Archives", chip="HIS WORDS"),
+ "pow1": STAT("81A", "PRISONER OF WAR NUMBER", fb(127.0, 133.0), sub="Gloegoer camp, Medan"),
+ "pow2": FULL(rp(54.0, 60.0)),
+ "pow3": STAT("ONE", "DOG EVER OFFICIALLY A POW", rp(233.0, 239.0), sub="in the whole of World War Two"),
+ "ch4": dict(media=al(289.0, 294.0)),
+ "ship1": FULL(rp(197.0, 204.0), pops=[STAMP("JUNE 1944", 0.3)]),
+ "ship2": FULL(al(481.0, 488.0), pops=[CHIP("HIDDEN IN A RICE SACK", 0.3)]),
+ "torp1": FULL(al(225.0, 232.0)),
+ "torp2": FULL(kg(6.0, 13.0)),
+ "swim1": FULL(rs(349.0, 356.0), pops=[CHIP("\"A LOT OF PEOPLE OWE THEIR LIVES TO JUDY\"", 0.4)]),
+ "reunion1": FULL(fb(25.0, 31.0)),
+ "reunion2": FULL(P("judy_on_deck", focus=(0.6, 0.6), z=(1.1, 1.0)), pops=[CHIP("REUNITED", 0.3)]),
+ "ch5": dict(media=fb(42.0, 48.0)),
+ "rail1": FULL(kr(81.0, 88.0), pops=[CHIP("THE SUMATRAN JUNGLE", 0.3)]),
+ "rail2": FULL(kr(136.0, 143.0)),
+ "free1": FULL(ps(3.0, 7.5), pops=[STAMP("AUGUST 1945", 0.3), CHIP("JAPANESE SURRENDER · PADANG, SUMATRA", 0.6)]),
+ "free2": FULL(ss(467.0, 474.0)),
+ "medal1": FULL(rs(23.0, 30.0), pops=[STAMP("MAY 1946", 0.3), POL(P("dickin_medal_simple", tone="none"), "THE DICKIN MEDAL", "@Dickin", pos="br")]),
+ "medal2": FULL(ss(192.0, 199.0)),
+ "myth1": STAT("MYTH", "SHE DIED IN 1960", pt(562.0 + 30, 600.0)),
+ "fact1": STAT("FACT", "FEBRUARY 1950", pt(628.0, 635.0), sub="Her grave confirms it"),
+ "board": BOARD([(JD, "JUDY"), (yz(460.0, 460.1), "THE YANGTZE"), (kr(9.0, 9.1), "SUMATRA"), (P("dickin_medal_simple", tone="none"), "DICKIN MEDAL")],
+                notes=[("81A", "POW NUMBER"), ("2", "SHIPWRECKS"), ("1946", "MEDAL")]),
+ "grave1": FULL(P("judy_grave", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[CHIP("JUDY'S MEMORIAL · BUILT BY FRANK", 0.3)]),
+ "grave2": FULL(fb(144.0, 150.0)),
+ "closing": FULL(P("judy_on_deck", focus=(0.6, 0.62), z=(1.0, 1.12))),
+ "cta0": CTA(0, su(150.0, 157.0)),
+ "cta1": CTA(1, su(322.0, 329.0)),
+}
 
 SEG = [
  dict(kind="narr", text="In the Second World War, thousands of men were registered as prisoners of war. Only one dog ever was.",
@@ -79,3 +153,5 @@ def resolve():
     for s in SEG:
         if "vis" in s: s["vis"] = [VIS[v] if isinstance(v, str) else v for v in s["vis"]]
         if isinstance(s.get("bg"), str): s["bg"] = VIS[s["bg"]].get("media", VIS[s["bg"]])
+
+resolve()

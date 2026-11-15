@@ -42,6 +42,8 @@ if T.get("sub"):
     f = font(MB, 40)
     while d.textlength(T["sub"], font=f) > W * 0.47: f = font(MB, f.size - 2)
     d.text((46, yy + 18), T["sub"], font=f, fill="white", stroke_width=6, stroke_fill=INK)
+if T.get("note"):
+    f = font(MXB, 20); d.text((W - d.textlength(T["note"], font=f) - 16, H - 34), T["note"], font=f, fill="white", stroke_width=3, stroke_fill=INK)
 can.save(os.path.join(out, f"{cfg.DOG} - YouTube Thumbnail 16x9.jpg"), quality=93)
 
 # ---- Shorts 1080x1920: face fills the top 55 %, headline centered below
@@ -64,5 +66,7 @@ if T.get("sub"):
     f = font(MB, 52)
     while d.textlength(T["sub"], font=f) > W * 0.9: f = font(MB, f.size - 2)
     d.text((W / 2 - d.textlength(T["sub"], font=f) / 2, yy + 26), T["sub"], font=f, fill="white", stroke_width=6, stroke_fill=INK)
+if T.get("note"):
+    f = font(MXB, 26); d.text((W - d.textlength(T["note"], font=f) - 20, 20), T["note"], font=f, fill="white", stroke_width=3, stroke_fill=INK)
 can.save(os.path.join(out, f"{cfg.DOG} - Shorts Thumbnail 9x16.jpg"), quality=93)
 print("thumbnails written to", out)

@@ -31,7 +31,8 @@ def years(t):
 def to_phonemes(k, text, pron):
     """phonemize the narration, but drop in exact IPA for names: PRON values written as /ipa/ are used as-is,
     other values are phonemized as a respelling.  "Ueno's" -> IPA + z."""
-    t = years(text).replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
+    t = re.sub(r"\b9/11\b", "nine eleven", text)
+    t = years(t).replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
     keys = sorted(pron, key=len, reverse=True)
     if not keys: return k.tokenizer.phonemize(t, "en-us")
     rx = re.compile(r"(?<!\w)(" + "|".join(re.escape(x) for x in keys) + r")('s)?(?!\w)")
@@ -51,7 +52,8 @@ def to_phonemes(k, text, pron):
     return " ".join(x for x in out if x).replace(" ,", ",").replace(" .", ".").replace(" ?", "?").replace(" !", "!")
 
 def spoken(text, pron):
-    t = years(text).replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
+    t = re.sub(r"\b9/11\b", "nine eleven", text)
+    t = years(t).replace("…", ",").replace("...", ",").replace("—", ", ").replace("–", " to ")
     for k, v in sorted(pron.items(), key=lambda kv: -len(kv[0])):
         t = re.sub(r"(?<!\w)" + re.escape(k) + r"(?!\w)", v, t)
     return t

@@ -16,5 +16,5 @@ MAPFILE = "map_judy.json"
 HILITE = ("Indonesia", "Malaysia", "China")
 TIMELINE = [("1936", "BORN"), ("1942", "SHIPWRECK"), ("1942", "81A"), ("1945", "FREE"), ("1946", "MEDAL")]
 CTA_Q = "Would YOUR dog stay by your side through anything?"
-THUMB = dict(photo="judy_on_deck", crop=None, face=(0.5, 0.4), lines=["PRISONER", "OF WAR", "81A"], yellow={2},
+THUMB = dict(photo="judy_on_deck", crop=None, face=(0.6, 0.55), lines=["PRISONER", "OF WAR", "81A"], yellow={2},
              sub="THE ONLY DOG EVER REGISTERED", c1=(100, 25, 25), c2=(30, 8, 8), sepia=True)

@@ -15,5 +15,5 @@ MAPFILE = "map_smoky.json"
 HILITE = ("Papua New Guinea", "Philippines", "Australia")
 TIMELINE = [("1944", "FOUND"), ("1944", "HOSPITALS"), ("1945", "THE PIPE"), ("1957", ""), ("2005", "STATUE")]
 CTA_Q = "What's the bravest thing YOUR small dog has ever done?"
-THUMB = dict(photo="stamp_phlpost", crop=None, face=(0.5, 0.4), lines=["4 POUNDS", "70 FEET OF", "DARKNESS"], yellow={0},
+THUMB = dict(photo="thumb_yorkie", crop=(300, 0, 854, 480), face=(0.62, 0.3), note="ILLUSTRATIVE: A YORKIE LIKE SMOKY", lines=["4 POUNDS", "70 FEET OF", "DARKNESS"], yellow={0},
              sub="THE TINY HERO OF WWII", c1=(40, 80, 50), c2=(10, 30, 15), sepia=False)

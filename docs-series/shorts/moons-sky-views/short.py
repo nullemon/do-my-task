@@ -67,7 +67,7 @@ PULSES = [wt("hook", "MOON"), wt("hook_b", "UP"), wt("eur_b", "JUPITER"), wt("eu
 # sky zen/hor (linear), stars, beach light: gain, tint (planet-shine colour), flat (shadow flattening), ambient
 LOOK = {
     "home": dict(zen=(0.012, 0.075, 0.42), hor=(0.30, 0.50, 0.85), stars=0.0, gain=1.0, tint=(1.0, 0.98, 0.95), flat=0.0,
-                 amb=(0.03, 0.05, 0.09), beams="rainbow", bI=0.35, expo=1.0),
+                 amb=(0.03, 0.05, 0.09), beams="rainbow", bI=0.06, expo=1.0),
     "eur": dict(zen=(0.004, 0.006, 0.026), hor=(0.030, 0.028, 0.050), stars=1.0, gain=0.22, tint=(1.0, 0.80, 0.60), flat=0.55,
                 amb=(0.012, 0.010, 0.012), beams=[(1.0, 0.70, 0.35), (1.0, 0.45, 0.20), (1.0, 0.88, 0.60), (0.95, 0.35, 0.30)], bI=0.55, expo=1.05),
     "tit": dict(zen=(0.11, 0.055, 0.012), hor=(0.36, 0.19, 0.05), stars=0.0, gain=0.16, tint=(1.0, 0.55, 0.20), flat=0.8,
@@ -217,7 +217,7 @@ class Scene:
         vis = 1.0
         if cur == "tit": vis = ramp(t, T_RISE + 0.3, T_THERE + 0.1)
         I = (1.0 + 0.25 * (pulse - 1)) * vis
-        if key == "moon": I *= 0.35                                                 # a daytime Moon, washed by blue sky
+        if key == "moon": I *= 0.6                                                 # a daytime Moon, washed by blue sky
         if I > 0.01 and sc > 0.01:
             self.bodies[key].render(img, cx, cy, t, I=I, scale=sc, sun=SUNDIR[key])
             if cur == "tit" and vis < 1:                                           # still partly veiled by the thinning haze

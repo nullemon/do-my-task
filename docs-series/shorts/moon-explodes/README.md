@@ -1,6 +1,6 @@
 # What If the Moon Exploded? (YouTube Short, batch 4)
 
-The Short is vertical only: 1080×1920 at 30 fps, 43.5 s. It is one locked tripod shot of the user's
+The Short is vertical only: 1080×1920 at 30 fps, 43.54 s (measured on the final mp4: −14.4 LUFS, −2.0 dBTP, AAC 192k). It is one locked tripod shot of the user's
 `03_calm_lake_wooden_pier.png` at night, made in the BATCH4 swap format. Every beat swaps in with a tinted flash and a
 chromatic shockwave, and the pier and shore are relit for the new sky. Readouts sit at the top and big orange one-word
 captions sit on the pier. There is no disclaimer small print, the sky stays deep blue (never black), and a white-out

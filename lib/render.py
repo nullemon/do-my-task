@@ -655,7 +655,8 @@ class MapShot(Shot):
             d.line(seg, fill=(90, 60, 10, 255), width=16, joint="curve"); d.line(seg, fill=GOLD + (255,), width=8, joint="curve")
             hx, hy = seg[-1]; d.ellipse([hx - 15, hy - 15, hx + 15, hy + 15], fill=GOLD, outline=INK, width=4)
             cx, cy = seg[-1]
-            fx = fx * 0.6 + cx * 0.4; fy = fy * 0.6 + cy * 0.4
+            if FMT == "V": fx = fx * 0.15 + cx * 0.85; fy = fy * 0.5 + cy * 0.5     # narrow frame: follow the moving head
+            else: fx = fx * 0.6 + cx * 0.4; fy = fy * 0.6 + cy * 0.4
         for k, lab, side in sh.get("towns", []):
             x, y = self.tp(k); d.ellipse([x - 11, y - 11, x + 11, y + 11], fill=RED, outline=WHITE, width=3)
             f = font(MXB, 40 if FMT == "V" else 36); tw = tlen(d, lab, f)

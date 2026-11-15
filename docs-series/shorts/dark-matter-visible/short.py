@@ -78,10 +78,10 @@ SC = {
                    beams=[(0.85, 0.4, 1.0), (0.55, 0.35, 1.0), (1.0, 0.55, 0.9), (0.6, 0.5, 1.0)], bI=0.22, expo=1.05),
     "web": dict(name="THE COSMIC WEB", tc=(170, 175, 255), l=["THREADS 100s OF MILLIONS OF LY LONG", "~85% OF ALL MATTER IS DARK", "GALAXIES GROW WHERE THREADS MEET"],
                 dm=dict(halo=0.55, clumps=0.45, web=1.0, stream=0), lc=(0.55, 0.50, 1.0), I=0.55,
-                beams=[(0.5, 0.55, 1.0), (0.8, 0.45, 1.0), (0.4, 0.75, 1.0), (0.95, 0.6, 1.0)], bI=0.25, expo=1.0),
+                beams=[(0.5, 0.55, 1.0), (0.8, 0.45, 1.0), (0.4, 0.75, 1.0), (0.95, 0.6, 1.0)], bI=0.12, expo=1.0),
     "stream": dict(name="THE DARK MATTER WIND", tc=(215, 170, 255), l=["~230 KM/S, BLOWING FROM CYGNUS", "~1 PROTON-MASS IN EVERY 3 CM³", "IF WIMPS: ~1 BILLION A SECOND THROUGH YOU"],
                    dm=dict(halo=0.55, clumps=0.35, web=0.40, stream=1.0), lc=(0.70, 0.48, 1.0), I=0.55,
-                   beams=[(0.75, 0.45, 1.0), (0.5, 0.6, 1.0), (1.0, 0.7, 1.0), (0.6, 0.35, 1.0)], bI=0.25, expo=1.0),
+                   beams=[(0.75, 0.45, 1.0), (0.5, 0.6, 1.0), (1.0, 0.7, 1.0), (0.6, 0.35, 1.0)], bI=0.12, expo=1.0),
 }
 C_HALO = (np.array([0.50, 0.20, 1.00], f32), np.array([0.85, 0.70, 1.00], f32), np.array([0.30, 0.75, 1.00], f32))   # violet core, lavender-white centre, cyan outer veil / edge
 HALO_EDGE = 42.0                          # deg from the GC: the soft edge of the dense inner halo (stylised, README)
@@ -239,7 +239,7 @@ class Scene:
 
     def canv(self, key, l, b):
         c = self.dm[key]; Hc, Wc = c.shape
-        return cv2.remap(c, ((Wc / 2 + l * Wc / 360.0) % Wc).astype(f32), (Hc / 2 - b * Hc / 180.0).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        return cv2.remap(c, ((Wc / 2 + l * Wc / 360.0) % Wc).astype(f32), np.clip(Hc / 2 - b * Hc / 180.0, 0, Hc - 1).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
     def dm_layer(self, dmw, t, lst, l, b, Mg):
         """linear radiance (half res) of the dark-matter layers with amounts dmw"""
@@ -252,10 +252,10 @@ class Scene:
             edge = HALO_EDGE + 3.0 * (wisp - 1.0)
             inner = smooth(edge + 6, edge - 6, psi)
             rim = np.exp(-((psi - edge) / 5.0) ** 2) * np.clip(wv, 0.3, 1.6)
-            outer = (J ** 0.5) * wv * 0.012
-            core = inner * (J ** 0.75) * wv * 0.020
+            outer = (J ** 0.5) * wv * 0.014
+            core = inner * (J ** 0.8) * wv * 0.13
             col_core = C_HALO[0] * (1 - np.clip(J / 10, 0, 1))[..., None] + C_HALO[1] * np.clip(J / 10, 0, 1)[..., None]
-            out += (outer[..., None] * C_HALO[2] + core[..., None] * col_core + (rim * 0.045)[..., None] * C_HALO[2]) * dmw["halo"]
+            out += (outer[..., None] * C_HALO[2] + core[..., None] * col_core + (rim * 0.22)[..., None] * C_HALO[2]) * dmw["halo"]
         if dmw["clumps"] > 0:
             c = self.canv("clumps", l, b)
             m = np.clip(c / 1.2, 0, 1)[..., None]
@@ -267,7 +267,7 @@ class Scene:
             mn = np.clip(wn / 4.0, 0, 1)[..., None]
             near = wn[..., None] * (C_WEB[0] * (1 - mn) + C_WEB[2] * mn)
             far = wf[..., None] * C_WEB[1] * 0.55
-            out += (near + far) * 0.040 * (0.94 + 0.06 * math.sin(t * 1.3)) * dmw["web"]
+            out += (near + far) * 0.085 * (0.94 + 0.06 * math.sin(t * 1.3)) * dmw["web"]
         if dmw["stream"] > 0:
             out += self.wind(t, lst) * dmw["stream"]
         return out

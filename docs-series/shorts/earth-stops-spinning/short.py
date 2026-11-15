@@ -23,6 +23,7 @@ from lib.swapfx_b4 import Beams, FX, readout, back_out, lerp
 
 SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/B4-earth-stops-spinning"
 BG = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/06_farm_field_barn.png"
+GLB = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/dl_globe/package/example/img"
 THX = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/series/shorts-common/dl/threex.planets/images"
 FPS = 30
 LEAD, TAIL = 0.25, 1.30
@@ -30,7 +31,7 @@ F_SKY = 1300.0
 R_SUN = F_SKY * math.tan(math.radians(0.533 / 2))          # 6.0 px
 SUN_DAY = (790.0, 470.0)
 SUN_FROZEN = (760.0, 560.0)
-GLOBE = (700.0, 650.0); R_GLOBE = 240.0
+GLOBE = (690.0, 625.0); R_GLOBE = 210.0
 MUSIC_KEY = "D"
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
@@ -61,7 +62,7 @@ LOOK = {
                 night=0.0, beams="rainbow", bI=0.55, expo=1.0, dust=0.0, bleach=0.0),
     "stop": dict(zen=(0.17, 0.10, 0.045), hor=(0.62, 0.40, 0.19), gain=0.55, tint=(1.0, 0.80, 0.56), flat=0.35, amb=(0.07, 0.05, 0.03),
                  night=0.0, beams=[(1.0, 0.6, 0.25), (1.0, 0.8, 0.45), (0.9, 0.45, 0.2)], bI=0.25, expo=1.0, dust=1.0, bleach=0.0),
-    "slow": dict(zen=(0.035, 0.12, 0.46), hor=(0.62, 0.68, 0.82), gain=1.30, tint=(1.0, 0.95, 0.84), flat=0.0, amb=(0.05, 0.06, 0.08),
+    "slow": dict(zen=(0.26, 0.22, 0.20), hor=(1.0, 0.68, 0.36), gain=1.40, tint=(1.0, 0.84, 0.60), flat=0.0, amb=(0.07, 0.05, 0.03),
                  night=0.0, beams=[(1.0, 0.95, 0.7), (1.0, 0.7, 0.3), (0.7, 0.9, 1.0), (1.0, 0.85, 0.5)], bI=0.9, expo=0.92, dust=0.0, bleach=1.0),
     "night": dict(zen=(0.004, 0.011, 0.050), hor=(0.020, 0.038, 0.095), gain=0.0, tint=(1, 1, 1), flat=1.0, amb=(0, 0, 0),
                   night=1.0, beams=[(0.2, 1.0, 0.5), (0.3, 0.6, 1.0), (0.8, 0.2, 0.7)], bI=0.18, expo=1.1, dust=0.0, bleach=0.0),
@@ -84,6 +85,12 @@ def scene_at(t):
         if t >= ts: cur, t0 = k, ts
     nxt = [ts for ts, k in SWAPS if ts > t]
     return cur, t0, (nxt[0] if nxt else 1e9)
+
+
+def sun_path(u):
+    """the Sun's apparent arc as the spin winds down (u 0 -> 1): it climbs from low in the east and stops high"""
+    ang = math.radians(-48) * (1 - u) ** 1.6
+    return SUN_FROZEN[0] + 560 * math.sin(ang), SUN_FROZEN[1] + 560 * (1 - math.cos(ang)) * 1.5
 
 
 def load_lin(path, size=None):
@@ -138,55 +145,61 @@ class Scene:
 
     # -------------------------------------------------------------------------------------------- the globe
     def prep_globe(self):
-        self.g_alb = load_lin(os.path.join(THX, "earthmap1k.jpg"), (1024, 512))
-        spec = np.asarray(Image.open(os.path.join(THX, "earthspec1k.jpg")).convert("L"), f32) / 255.0
-        self.g_ocean = cv2.resize(spec, (1024, 512), interpolation=cv2.INTER_AREA)
-        lat = (0.5 - (np.arange(512) + 0.5) / 512) * 180.0
-        n = cv2.resize(fbm2((64, 128), 81, 2.4), (1024, 512), interpolation=cv2.INTER_CUBIC)
+        """Blue Marble (NASA, via three-globe) + its water mask; 2x supersampled sphere with a soft atmosphere rim"""
+        TW, TH = 2048, 1024
+        self.g_alb = load_lin(os.path.join(GLB, "earth-blue-marble.jpg"), (TW, TH))
+        wm = np.asarray(Image.open(os.path.join(GLB, "earth-water.png")).convert("L"), f32) / 255.0
+        self.g_ocean = np.clip(cv2.resize(wm, (TW, TH), interpolation=cv2.INTER_CUBIC), 0, 1)
+        lat = (0.5 - (np.arange(TH) + 0.5) / TH) * 180.0
+        n = cv2.resize(fbm2((128, 256), 81, 2.4), (TW, TH), interpolation=cv2.INTER_CUBIC)
+        nf = cv2.resize(fbm2((512, 1024), 82, 1.6), (TW, TH), interpolation=cv2.INTER_CUBIC)
         # no spin -> no equatorial bulge for the water: two polar oceans, one equatorial belt of land (Fraczek 2010, ESRI)
         edge = 38.0 + 6.0 * n
-        self.g_new = smooth(-2.0, 2.0, np.abs(lat)[:, None] - edge).astype(f32)
-        land = self.g_alb * (1 - self.g_ocean[..., None])
-        seabed = np.array([0.20, 0.13, 0.07], f32) * (0.75 + 0.3 * n[..., None])
-        self.g_seabed = seabed.astype(f32)
-        self.g_water = np.array([0.015, 0.06, 0.20], f32)
-        self.g_ice = smooth(70, 80, np.abs(lat))[:, None].astype(f32)
+        self.g_new = smooth(-1.5, 1.5, np.abs(lat)[:, None] - edge).astype(f32)
+        self.g_seabed = (np.array([0.22, 0.15, 0.085], f32) * (0.8 + 0.18 * n[..., None] + 0.10 * nf[..., None])).astype(f32)
+        self.g_water = np.array([0.010, 0.045, 0.16], f32)
+        self.g_tw, self.g_th = TW, TH
         pad = int(R_GLOBE * 1.25); self.gpad = pad
-        ys, xs = np.mgrid[-pad:pad, -pad:pad].astype(f32) + 0.5
+        ys, xs = np.mgrid[-pad:pad:0.5, -pad:pad:0.5].astype(f32) + 0.25
         self.g_dx, self.g_dy = xs, ys
 
     def globe(self, img, t, I, m, scale):
         R = R_GLOBE * scale
         if R < 2: return
-        cx, cy = GLOBE; pad = self.gpad
-        u = self.g_dx / R; v = self.g_dy / R; rr = u * u + v * v
-        inside = rr < 1
+        cx, cy = GLOBE; pad = self.gpad; TW, TH = self.g_tw, self.g_th
+        u = self.g_dx / R; v = self.g_dy / R; rr = u * u + v * v; r1 = np.sqrt(rr)
         z = np.sqrt(np.clip(1 - rr, 0, 1))
-        tilt = math.radians(20)                                            # axis tipped towards the viewer a little
+        tilt = math.radians(20)                                            # north pole tipped towards the viewer
         yy_ = -v * math.cos(tilt) + z * math.sin(tilt); zz = v * math.sin(tilt) + z * math.cos(tilt)
-        lat = np.arcsin(np.clip(yy_, -1, 1)); lon = np.arctan2(u, zz) + 0.08 * t - 0.6
-        mx = ((lon / (2 * np.pi) + 0.5) % 1.0 * 1024).astype(f32); my = np.clip((0.5 - lat / np.pi) * 512 - 0.5, 0, 511).astype(f32)
+        lat = np.arcsin(np.clip(yy_, -1, 1)); lon = np.arctan2(u, zz) + 0.06 * t - 0.4
+        mx = ((lon / (2 * np.pi) + 0.5) % 1.0 * TW).astype(f32); my = np.clip((0.5 - lat / np.pi) * TH - 0.5, 0, TH - 1).astype(f32)
         alb = cv2.remap(self.g_alb, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         oc = cv2.remap(self.g_ocean, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         nw = cv2.remap(self.g_new, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         sb = cv2.remap(self.g_seabed, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        # the water front moves from the old oceans to the poles: drained sea floor first, then the polar seas fill
+        # the water front moves from the old oceans to the poles: the sea floor drains first, then the polar seas fill
         drain = oc * (1 - nw) * ease(m * 1.4)
         fill = nw * (1 - oc) * ease(m * 1.4 - 0.4)
-        water = np.clip(oc - drain + fill, 0, 1)
-        land = np.where(oc[..., None] > 0.5, sb, alb)
-        col = land * (1 - water[..., None]) + self.g_water * water[..., None]
-        col = col + (np.array([0.10, 0.18, 0.28], f32) * (water * (1 - oc))[..., None]) * 0.3   # fresh shallow seas, a bit lighter
-        L_ = np.array([-0.75, -0.25, 0.62]); L_ /= np.linalg.norm(L_)
+        water = np.clip(oc - drain + fill, 0, 1)[..., None]
+        land = alb * (1 - oc[..., None]) + sb * oc[..., None]
+        wcol = alb * oc[..., None] + self.g_water * (1 - oc[..., None])            # keep the real ocean colour where it was
+        col = land * (1 - water) + wcol * water
+        L_ = np.array([-0.70, -0.30, 0.65]); L_ /= np.linalg.norm(L_)
         ndl = u * L_[0] + v * L_[1] + z * L_[2]
-        lit = smooth(-0.08, 0.25, ndl) * np.clip(ndl + 0.1, 0, 1) ** 0.7
-        disc = np.clip((1 - np.sqrt(rr)) * R + 0.5, 0, 1)
-        rad = col * (lit * 1.4 + 0.02)[..., None]
-        rim = np.exp(-np.abs(np.sqrt(rr) - 1) * R / 5.0) * smooth(-0.3, 0.5, ndl) * 0.35
-        rad = rad * disc[..., None] + rim[..., None] * np.array([0.35, 0.6, 1.0], f32)
+        lit = smooth(-0.10, 0.22, ndl) * np.clip(ndl + 0.08, 0, 1) ** 0.6
+        disc = np.clip((1 - r1) * R * 2 + 0.5, 0, 1)
+        rad = col * (lit * 1.5 + 0.015)[..., None]
+        sunside = smooth(-0.35, 0.45, (u * L_[0] + v * L_[1]) / (r1 + 1e-6) * 0.8 + 0.2)
+        limb = (1 - z) ** 3 * sunside * (r1 < 1)                                 # blue limb haze inside the disc
+        halo = np.exp(-np.maximum(r1 - 1, 0) * R / 9.0) * (r1 >= 1) * sunside       # thin glowing shell outside
+        atm = np.array([0.30, 0.55, 1.0], f32)
+        rad = rad * disc[..., None] + (limb * 0.45 * disc + halo * 0.55)[..., None] * atm
+        cov = disc
+        sz = (2 * pad, 2 * pad)
+        rad = cv2.resize(rad, sz, interpolation=cv2.INTER_AREA); cov = cv2.resize(cov, sz, interpolation=cv2.INTER_AREA)
         y0, x0 = int(cy) - pad, int(cx) - pad
         reg = img[y0:y0 + 2 * pad, x0:x0 + 2 * pad]
-        img[y0:y0 + 2 * pad, x0:x0 + 2 * pad] = reg * (1 - disc[..., None]) + rad * I
+        img[y0:y0 + 2 * pad, x0:x0 + 2 * pad] = reg * (1 - cov[..., None]) + rad * I
 
     # -------------------------------------------------------------------------------------------- pieces
     def params(self, t):
@@ -201,11 +214,11 @@ class Scene:
         P["beamsA"], P["beamsB"], P["bw"] = A["beams"], B["beams"], w
         return P, cur, t0, t1
 
-    def sun(self, img, x, y, I):
+    def sun(self, img, x, y, I, glow=1.0):
         r = R_SUN
         def fn(d, dx, dy):
             disc = smooth(r + 0.7, r - 0.7, d) * (1 - 0.5 * (1 - np.sqrt(np.clip(1 - (d / r) ** 2, 0, 1))))
-            g = np.exp(-d / 6) * 6 + np.exp(-d / 30) * 1.2 + np.exp(-d / 120) * 0.25
+            g = (np.exp(-d / 6) * 6 + np.exp(-d / 30) * 1.2 + np.exp(-d / 120) * 0.25) * glow
             return (disc * 60 + g * (d > r - 1))[..., None] * np.array([1.0, 0.93, 0.80], f32) * I
         splat(img, x, y, 420, fn)
 
@@ -237,6 +250,16 @@ class Scene:
         bl = cv2.filter2D(fgc, -1, ker)
         mm = (np.clip(self.m_field + self.m_oak * 0.6, 0, 1) * min(s, 1.0) * 0.8)[..., None]
         return fgc * (1 - mm) + bl * mm, a
+
+    def wilt(self, fgc, a, t, k):
+        """the long day bakes the farm: the wheat heads droop, heat shimmer low over the field"""
+        yf = np.clip((self.yy - 1300) / 620, 0, 1)
+        dy = self.m_field * k * 30 * np.sin(np.pi * yf) ** 0.8
+        sh = smooth(1150, 1250, self.yy) * smooth(1450, 1320, self.yy) * 1.6 * k
+        dx = sh * np.sin(self.yy * 0.21 + t * 11.0) + self.m_field * k * 6 * np.sin(self.xx * 0.02)
+        mx = self.xx - dx; my = self.yy - dy
+        return cv2.remap(fgc, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT), \
+            cv2.remap(a, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
     def dust(self, t, s):
         """horizontally streaming dust sheets + flying debris, in front of everything (full res mask)"""
@@ -270,8 +293,7 @@ class Scene:
         if cur in ("day", "day2", "slow") or (cur == "stop" and t < t0 + 0.6):
             if cur == "slow":
                 u = ease(min(max((t - t0) / (T_FREEZE + 0.2 - t0), 0), 1))     # sweeps up fast, slows, stops on "freezes"
-                ang = math.radians(-40) * (1 - u) ** 2
-                sx = SUN_FROZEN[0] + 520 * math.sin(ang); sy = SUN_FROZEN[1] + 520 * (1 - math.cos(ang)) * 1.4
+                sx, sy = sun_path(u)
             else: sx, sy = SUN_DAY
             self.sun_xy = (sx, sy)
             dd = np.sqrt((self.hx - sx) ** 2 + (self.hy - sy) ** 2)
@@ -290,16 +312,22 @@ class Scene:
         if cur == "sea":
             m = ramp(t, T_DRAIN, T_DRAIN1)
             self.globe(img, t, 1.0 * (1 + 0.15 * (pulse - 1)), m, sc * (1 - 0.95 * ease(col_u)))
-        if cur == "slow":                                       # heat haze: a faint shimmer low over the field
-            pass
+        if cur == "slow":                                       # time-lapse ghosts of the Sun's arc, stalling to a stop
+            u = ease(min(max((t - t0) / (T_FREEZE + 0.2 - t0), 0), 1))
+            fade = 0.35 + 0.65 * (1 - ramp(t, T_FREEZE + 0.6, T_FREEZE + 2.5))
+            for j in range(16):
+                uj = (j / 16) ** 0.55
+                if uj >= u - 0.02: break
+                gx, gy = sun_path(uj)
+                self.sun(img, gx, gy, 0.16 * (0.35 + 0.65 * j / 16) * fade, glow=0.6)
         # ---- foreground
         light = 1.0 + 0.08 * (pulse - 1) - 0.2 * col_u
         base = fg.rgb * (1 - P["flat"]) + fg.flat * P["flat"]
         day = base * np.array(P["tint"], f32) * P["gain"] + fg.flat * np.array(P["amb"], f32)
         if P["bleach"] > 0:                                     # sun-baked, bleached wheat
             yv = lum(day)[..., None]
-            k = (P["bleach"] * self.wheat * ramp(t, T_SW["slow"] + 0.5, T_SW["slow"] + 3.5))[..., None]
-            day = day * (1 - 0.6 * k) + (yv * np.array([1.25, 1.08, 0.82], f32)) * 0.6 * k
+            k = (P["bleach"] * self.wheat * ramp(t, T_SW["slow"] + 0.5, T_SW["slow"] + 4.5))[..., None]
+            day = day * (1 - 0.7 * k) + (yv * np.array([1.05, 0.78, 0.45], f32)) * 0.7 * k      # baked, browning wheat
         day = day + (self.rim * 0.08 * P["gain"])[..., None]
         fgc = day * (1 - nI)
         if nI > 0:
@@ -311,6 +339,8 @@ class Scene:
         fgc = fgc * light + self.up(bm) * 0.04 * fg.a[..., None]
         a = self.a_hard
         if sw > 0.01: fgc, a = self.wind_warp(fgc, a, t, sw)
+        wl = P["bleach"] * ramp(t, T_SW["slow"] + 0.8, T_SW["night"] - 0.5) if cur == "slow" else 0.0
+        if wl > 0.01: fgc, a = self.wilt(fgc, a, t, wl)
         a = a[..., None]
         img = img * (1 - a) + fgc * a
         if sw > 0.01:
@@ -349,6 +379,9 @@ class Scene:
         if cur == "day2": a = ramp(t, T_BACK + 0.6, T_BACK + 0.9)
         if T_WO0 < t < T_BACK: a = 0.0
         name, l2, l3, tc = RO[key]
+        if cur == "slow" and t > T_FREEZE + 0.3:                 # the day counter: the Sun stays put
+            n = 1 + int(179 * ramp(t, T_FREEZE + 0.3, T_SW["night"] - 0.6) ** 1.3)
+            l2, l3 = f"DAY {n} · SUN STILL HERE", "1 DAY = 1 YEAR · IT WOULD RISE IN THE WEST"
         readout(out, self.L, a, name, l2, l3, tc)
         self.caps.draw(out, t)
 

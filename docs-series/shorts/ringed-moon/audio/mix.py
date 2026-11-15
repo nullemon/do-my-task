@@ -18,14 +18,8 @@ SR = MC.SR
 
 
 def _fastconv(a, v, mode="full"):
-    """np.convolve for the long box filter in mix_clean.mix (same result, FFT-based: the direct one takes ~10 min)"""
     from scipy.signal import fftconvolve
     return fftconvolve(a, v, mode=mode)
-
-
-import types
-MC.np = types.SimpleNamespace(**{k: getattr(np, k) for k in dir(np) if not k.startswith("__")})
-MC.np.convolve = _fastconv
 
 
 def lufs(x):
@@ -45,9 +39,8 @@ def dry_voice(N):
 
 def main():
     N = int(round(S.DUR * SR))
-    # mix_clean's whoosh is scaled to the voice PEAK (-15 dB), so with it the gated bed measured only ~12 dB under the
-    # full mix (fails the >= 20 dB rule). It is optional: WHOOSH=1 puts it back. Default: pad only.
-    swaps = [ts for ts, _ in S.SWAPS] if os.environ.get("WHOOSH") == "1" else []
+    # the module's gentle whoosh at each swap (now -26 dB re the voice peak); WHOOSH=0 leaves it out
+    swaps = [ts for ts, _ in S.SWAPS] if os.environ.get("WHOOSH", "1") == "1" else []
     v = MC.clean_voice(dry_voice(N))
     y = MC.mix(v, S.DUR, swaps=swaps, key=KEY)
     sf.write(os.path.join(OUT, "mix.wav"), y.astype(np.float32), SR, subtype="FLOAT")
@@ -62,7 +55,7 @@ def main():
     wh = np.zeros(N)
     if swaps:
         w = MC._ff(MC._whoosh(N, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000"); w = w.mean(1) if w.ndim > 1 else w
-        wh = w[:N] / (np.abs(w).max() + 1e-9) * (np.abs(vv).max() * 10 ** (-15 / 20))
+        wh = w[:N] / (np.abs(w).max() + 1e-9) * (np.abs(vv).max() * 10 ** (-26 / 20))
     Lf, Lb = lufs(np.stack([vv + pad + wh] * 2, 1)), lufs(np.stack([pad + wh] * 2, 1))
     msg = f"bed (voice muted) {Lb - Lf:+.1f} dB vs full mix  (full {Lf:.1f}, bed {Lb:.1f} LUFS pre-norm)"
     open(os.path.join(OUT, "bedcheck.txt"), "w").write(msg + "\n"); print(msg)

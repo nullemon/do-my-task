@@ -51,12 +51,13 @@ def bed_check(voice, dur_s, swaps, key):
     v = v / (np.sqrt(np.mean(v[np.abs(v) > 1e-4] ** 2)) + 1e-9) * 0.1
     pad = MC._ff(MC._pad(n, key), "lowpass=f=1800,highpass=f=80"); pad = pad.mean(1) if pad.ndim > 1 else pad
     pad = pad[:n] / (np.sqrt(np.mean(pad ** 2)) + 1e-9) * 0.1 * 10 ** (-26 / 20)
-    env = np.convolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
+    from scipy.signal import fftconvolve
+    env = fftconvolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
     pad *= 10 ** (-8 * np.clip(env * 4, 0, 1) / 20)
     wh = np.zeros(n)
     if swaps:
         w = MC._ff(MC._whoosh(n, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000"); w = w.mean(1) if w.ndim > 1 else w
-        wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-15 / 20))
+        wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-26 / 20))   # as mix_clean (15 Nov update)
     full = np.stack([v + pad + wh, v + pad * 0.96 + wh], 1); bed = np.stack([pad + wh, pad * 0.96 + wh], 1)
     If, _ = lufs(full); Ib, _ = lufs(bed)
     return If, Ib, If - Ib

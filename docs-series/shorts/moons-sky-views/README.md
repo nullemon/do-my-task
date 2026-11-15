@@ -45,7 +45,7 @@ Kokoro, style 0.7 × am_michael + 0.3 × am_onyx, speed 0.86, one TTS call per p
 
 ## Sound (BATCH4 clean rules)
 The sound is `lib.mix_clean.clean_voice` plus `lib.mix_clean.mix` (pad and gentle swap whoosh) and nothing else. The bed
-alone is **24.8 dB** under the full mix.
+alone is **24.8 dB** under the full mix. Final mp4: −14.3 LUFS, −1.7 dBTP (AAC 192k).
 
 ## Liberties (not captioned)
 - The tropical beach (palms, sea, hut) stands in for each moon's surface; only the sky, light and reflection change.

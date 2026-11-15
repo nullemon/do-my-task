@@ -33,7 +33,7 @@ Nothing else is added: no wind sound, despite the storm on screen.
 
 Levels are measured on the stems mix() builds, before its final loudnorm, and saved to `SCR/audio/levels.json`:
 - the bed (pad + whoosh, voice muted) is −41.8 LUFS against −17.4 LUFS for the full mix, so it sits **24.6 dB below**;
-- the final mp4 is listed under "Final file".
+- the final mp4 measures −14.4 LUFS integrated with a −2.0 dBTP true peak (AAC 192k).
 
 ## Science
 - **Rotation speed:** Earth's equator moves at 465 m/s = 1,674 km/h, so "over sixteen hundred". A farm at 40° N moves

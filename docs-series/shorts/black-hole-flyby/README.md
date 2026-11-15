@@ -56,7 +56,7 @@ Kokoro, style 0.7 × am_michael + 0.3 × am_onyx, speed 0.86, one TTS call per p
 
 ## Sound (BATCH4 clean rules)
 The sound is `lib.mix_clean.clean_voice` plus `lib.mix_clean.mix` (pad and gentle swap whoosh) and nothing else. The bed
-alone is **23.7 dB** under the full mix (stems before the final loudnorm).
+alone is **23.7 dB** under the full mix (stems before the final loudnorm). Final mp4: −14.2 LUFS, −1.9 dBTP (AAC 192k).
 
 ## Liberties (not captioned)
 - **The black shadow is drawn at 0.2 θE so it reads.** At true scale it is ~0.001 θE (≈0.2″), sub-pixel even in the

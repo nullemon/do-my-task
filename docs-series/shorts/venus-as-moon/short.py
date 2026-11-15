@@ -4,7 +4,7 @@ the yard is relit for the new light source, readouts at the top, big orange one-
   our Moon (0.52 deg) -> Venus at the Moon's distance (1.80 deg): a thin crescent (already brighter than a full Moon)
   -> half (~20x) -> full (~70x: the night lit like dusk; crisp shadows of the fence, shed and trampoline reach towards us)
   -> "under those clouds": 465 C, 92 bar; tides 66x -> white-out -> our Moon again (loops)
-Lens: telephoto, f = 6,000 px for the discs (true angular sizes, true ratio 3.48); the yard keeps its own wide lens.
+Lens: telephoto, f = 9,000 px for the discs (true angular sizes, true ratio 3.48); the yard keeps its own wide lens.
 Venus is a procedural cloud deck (no Venus map in shorts-common): creamy, low-contrast zonal bands and streaks, thick
 limb haze and a lit atmospheric rim, slowly super-rotating.
 Usage (one heavy process, under nice):  /home/user/ttsenv/bin/python short.py info | stills 1.0,9.5 | segs
@@ -27,10 +27,10 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/08_suburban_backyard.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.40
-F_TELE = 6000.0
+F_TELE = 9000.0
 F_YARD = 771.0                    # the photo's own lens (~70 deg wide) for the shadow geometry
 HZ_EYE = 1590.0                   # eye-level horizon in the yard photo (just under the fence top)
-EL_LIGHT = math.radians(15.0)     # elevation used for the cast shadows
+EL_LIGHT = math.radians(35.0)     # elevation used for the cast shadows
 AZ_LIGHT = math.radians(-6.0)     # light slightly left of straight ahead
 F_SKY = 1400.0
 VX, VY = 540.0, 720.0
@@ -128,7 +128,7 @@ def venus_tex():
     sh = cv2.GaussianBlur(n1, (0, 0), sigmaX=6, sigmaY=3); sh /= sh.std() + 1e-6
     bands = np.sin(np.radians(lat) * 9 + 0.8 * sh) * np.cos(np.radians(lat)) ** 0.5
     y_arm = np.exp(-((lat - 0.35 * np.abs(lon + 30) * np.sign(lat + 1e-3) * 0.6) / 9) ** 2) * np.exp(-((lon + 30) / 80) ** 2)
-    g = 1 + 0.035 * bands + 0.03 * st + 0.015 * sh - 0.05 * y_arm
+    g = 1 + 0.07 * bands + 0.05 * st + 0.025 * sh - 0.10 * y_arm
     g = g * (1 - 0.06 * (np.abs(lat) / 90) ** 3) + 0.03 * np.exp(-((np.abs(lat) - 62) / 6) ** 2)  # bright polar collars
     col = np.clip(g, 0.8, 1.15)[..., None] * np.array([0.98, 0.92, 0.78])
     Image.fromarray((np.clip(col * 0.86, 0, 1) * 255).astype(np.uint8)).save(p)
@@ -153,11 +153,12 @@ class Scene:
         self.night = (np.array([0.006, 0.012, 0.045], f32) * (0.8 + 0.2 * np.exp(-e / 25))[..., None]
                       + np.array([0.020, 0.018, 0.030], f32) * np.exp(-e / 7)[..., None]).astype(f32)      # + suburban light dome
         k = np.exp(-e / 22)[..., None]
-        self.dusk = (np.array([0.020, 0.050, 0.17], f32) * (1 - k) + np.array([0.10, 0.12, 0.22], f32) * k).astype(f32)
+        self.dusk = (np.array([0.012, 0.045, 0.22], f32) * (1 - k) + np.array([0.10, 0.10, 0.24], f32) * k
+                     + np.array([0.14, 0.06, 0.04], f32) * np.exp(-e / 4)[..., None]).astype(f32)
         yy2, xx2 = np.mgrid[0:H, 0:W].astype(f32); self.xx, self.yy = xx2, yy2
         MO.set_sun(sun_vec(4.0))
         self.moon = Body("moon", "8k_moon.jpg", RP_MOON, pole_vec(-12, 4), model="rock", surf=1.15, detail=0.0, prep=prep_norm)
-        self.ven = Body("ven", venus_tex(), RP_VEN, pole_vec(-8, 6), model="giant", k=0.80, surf=1.15 * P_GEO_VEN / P_GEO_MOON * 0.55,
+        self.ven = Body("ven", venus_tex(), RP_VEN, pole_vec(-8, 6), model="giant", k=0.80, surf=1.7,
                         haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9)
         # ---- yard: lights / window, base, albedo, rim (as andromeda-collision)
         a = fg.a; rgb = fg.rgb; f = fg.flat; y = lum(f)[..., None]
@@ -179,7 +180,7 @@ class Scene:
 
     # -------------------------------------------------------------------------------------------- cast shadows
     def _shadows(self):
-        """lawn mask + shadow mask for a light ahead of us (elevation 15 deg, slightly left): every caster pixel (fence,
+        """lawn mask + shadow mask for a light ahead of us (elevation 35 deg, slightly left): every caster pixel (fence,
         shed, plants, trampoline mat / frame / poles; the net mesh at 25 %) is lifted off its ground point and thrown
         along the ground towards the camera with the yard photo's perspective"""
         p = os.path.join(SCR, "shadow.npz")
@@ -280,7 +281,7 @@ class Scene:
         shad = self.shadow * smooth(0.0, 0.25, key) if True else 0
         direct = (self.lawn * (1 - 0.93 * shad))[..., None] * gcol * key * 0.9
         ambient = self.alb * (np.array([0.45, 0.55, 0.85], f32) * amb * 0.5)
-        yard = self.base + ambient + self.alb * direct + self.rim * gcol * key * 0.9
+        yard = self.base + ambient + self.alb * direct + self.rim * gcol * key * 0.2
         yard = yard + self.lights + self.lglow
         a = self.fg.a[..., None]
         img = img * (1 - a) + yard * a + self.lglow * (1 - a) * 0.5

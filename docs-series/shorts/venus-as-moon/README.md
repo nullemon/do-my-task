@@ -24,7 +24,7 @@ brightness relative to the Moon follows the geometric albedos (0.69 vs 0.12), so
 
 **Shadows:** a per-pixel ground projection with the yard photo's own perspective (f ≈ 771 px, eye-level horizon at
 y = 1590). Each caster pixel is lifted off its ground line by its height and thrown along the ground away from the light
-(elevation 15°, azimuth 6° left), then projected back. The penumbra is narrow because a 1.8° source gives ~3 cm of blur
+(elevation 35°, azimuth 6° left), then projected back. The penumbra is narrow because a 1.8° source gives ~3 cm of blur
 per metre. The shadows only fall on the lawn (a green mask that excludes the patio, pot and chair).
 
 ## Narration (75 words)
@@ -53,8 +53,8 @@ Voice: Kokoro 0.7 × am_michael + 0.3 × am_onyx at speed 0.86, one TTS call per
   would be 172,600 km from Earth's centre, outside Earth, and the orbit would take ~20.4 days instead of 27.3.
 
 ## Liberties (not captioned, per the user rule)
-- The discs use a telephoto scale (f = 6,000 px) over a wide-angle yard. The relative sizes are exact.
-- The shadow geometry assumes the light at 15° elevation (the telephoto framing compresses where the disc appears).
+- The discs use a telephoto scale (f = 9,000 px) over a wide-angle yard. The relative sizes are exact.
+- The shadow geometry assumes the light at 35° elevation (the telephoto framing compresses where the disc appears).
 - The screen brightness of the sky and yard is compressed (6×–69× cannot be shown linearly on a phone screen). The string
   lights stay on.
 - Phases change at the swaps. A real phase cycle would take ~20 days.

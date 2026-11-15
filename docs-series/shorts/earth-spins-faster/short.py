@@ -15,7 +15,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [os.path.join(
 import lib.core  # noqa: F401
 import numpy as np, cv2
 from PIL import Image
-from lib.core import f32, Layout, ramp, smooth, ease, fbm2, kf, bbcolor, splat
+from lib.core import f32, Layout, ramp, smooth, ease, fbm2, kf, bbcolor, splat, lum
 from lib.foreground import Foreground
 from lib.sky import sun_disc, lens_flare
 from lib.text import Captions, hud_text, word_layer, composite
@@ -62,7 +62,7 @@ STAGES = {
     "h12": dict(T=12 * 3600, P=10.0, name="12-HOUR DAY", l2="EQUATOR: 3,340 KM/H", l3="WEIGHT AT THE EQUATOR −1.4%",
                 tc=(255, 205, 130), wind=0.15, fl=(1.0, 0.85, 0.55)),
     "h6": dict(T=6 * 3600, P=5.0, name="6-HOUR DAY", l2="EQUATOR: 6,680 KM/H", l3="BULGE ~340 KM · WEIGHT −5.5%",
-               tc=(150, 215, 255), wind=0.40, fl=(0.6, 0.85, 1.0)),
+               tc=(150, 215, 255), wind=0.55, fl=(0.6, 0.85, 1.0)),
     "h2": dict(T=2 * 3600, P=1.8, name="2-HOUR DAY", l2="EQUATOR: 20,000 KM/H", l3="WEIGHT AT THE EQUATOR −50%",
                tc=(255, 160, 90), wind=0.80, fl=(1.0, 0.65, 0.35)),
     "brk": dict(T=T_BREAK, P=1.25, name="84-MINUTE DAY", l2="EQUATOR: 28,500 KM/H = ORBITAL SPEED", l3="WEIGHT AT THE EQUATOR: ZERO",
@@ -164,6 +164,13 @@ class Scene:
         self.gx, self.gy = xs[pick].astype(f32), ys[pick].astype(f32)
         sh = np.zeros_like(a); sh[8:] = a[:-8]
         self.rim = cv2.GaussianBlur(np.clip(a - sh, 0, 1), (0, 0), 3.0) * a
+        # dune relief from the photo (luminance as a height proxy): its slopes give sweeping shadows as the Sun moves
+        Y = lum(fg.rgb); hgt = cv2.GaussianBlur(Y, (0, 0), 6.0) - cv2.GaussianBlur(Y, (0, 0), 40.0)
+        self.rgx = (cv2.Sobel(hgt, cv2.CV_32F, 1, 0, ksize=5) * a * (yy2 > 1150)).astype(f32)
+        self.rgy = (cv2.Sobel(hgt, cv2.CV_32F, 0, 1, ksize=5) * a * (yy2 > 1150)).astype(f32)
+        sc_ = np.percentile(np.abs(self.rgx[yy2 > 1250]), 95) + 1e-6; self.rgx /= sc_; self.rgy /= sc_
+        self.night_fg = cv2.GaussianBlur(fg.night(0.10), (0, 0), 1.4)       # clean, soft starlit dunes
+        self.cirrus = [fbm2((256, 1024), 71, 2.4), fbm2((256, 1024), 72, 2.0)]
         self.caps = Captions(L, WORDS, emphasis={"EARTH", "FASTER", "24 HOURS", "12 HOURS", "RACES", "SUN", "6 HOURS", "OCEANS", "RUSH",
                                                   "EQUATOR", "2 HOURS", "FLICKER", "NIGHT", "WINDS", "HOWL", "BULGES", "84 MINUTES",
                                                   "NOTHING", "APART", "RIGHT"})
@@ -234,6 +241,27 @@ class Scene:
         acc = acc * ext.mean() if False else acc
         img += (cv2.GaussianBlur(acc, (0, 0), 0.6) * 1.3 + cv2.GaussianBlur(acc, (0, 0), 2.5) * 0.5) * (1 - D_now) ** 2
 
+    def clouds(self, img, t, D, tw, sv):
+        """thin cirrus wisps racing across the sky; they speed up (and smear) as the spin and the winds grow"""
+        om = _omega(t); spd = float(smooth(2 * math.pi / 12.0, 2 * math.pi / 1.5, om))
+        if t >= T_BACK: spd = 0.0
+        amt = 0.25 + 0.75 * spd
+        if not hasattr(self, "_cx"):
+            self._cx = self.xx[:int(HZ)]; self._cy = self.yy[:int(HZ)]
+        xs, ys = self._cx, self._cy
+        e = np.maximum((HZ - ys) / F_PX, 0.02)
+        off = self._coff = getattr(self, "_coff", 0.0)
+        u = ((xs - 540) / (e * F_PX) * 60 / (1 + 4 * spd) + t * (6 + 900 * spd ** 1.3)) % 1024
+        v = (np.log(e) * 80 + 0.0) % 256
+        n1, n2 = self.cirrus
+        c = cv2.remap(n1, u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        c2 = cv2.remap(n2, ((u * 2.1) % 1024).astype(f32), ((v * 1.7) % 256).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        dens = np.clip(0.55 * c + 0.30 * c2 - 0.35, 0, 1) * smooth(0.02, 0.18, e) * (1 - smooth(0.6, 0.9, e)) * amt
+        if spd > 0.05: dens = cv2.blur(dens, (int(3 + 40 * spd), 1))          # motion smear
+        col = (np.array([1.0, 0.98, 0.95], f32) * 0.9 * D + np.array([1.0, 0.45, 0.25], f32) * tw * 1.1
+               + np.array([0.02, 0.03, 0.06], f32) * (1 - D))
+        img[:int(HZ)] = img[:int(HZ)] * (1 - dens[..., None] * 0.45) + dens[..., None] * col * 0.7
+
     def sun_arc(self, img, t, D_now):
         """the racing Sun leaves a glowing golden arc (a long exposure of its path) once the days get short"""
         om = _omega(t)
@@ -251,8 +279,8 @@ class Scene:
             if not (ok[k] and ok[k + 1]): continue
             a = (1 - k / K) ** 1.5
             p0 = tuple(int(c * 4) for c in pts[k]); p1 = tuple(int(c * 4) for c in pts[k + 1])
-            cv2.line(acc, p0, p1, (6.0 * a, 4.2 * a, 1.6 * a), 3, lineType=cv2.LINE_8, shift=2)
-        img += (cv2.GaussianBlur(acc, (0, 0), 1.2) + cv2.GaussianBlur(acc, (0, 0), 8) * 0.6 + cv2.GaussianBlur(acc, (0, 0), 30) * 0.4) * amt
+            cv2.line(acc, p0, p1, (6.0 * a, 4.2 * a, 1.6 * a), 7, lineType=cv2.LINE_8, shift=2)
+        img += (cv2.GaussianBlur(acc, (0, 0), 1.5) + cv2.GaussianBlur(acc, (0, 0), 10) * 1.0 + cv2.GaussianBlur(acc, (0, 0), 40) * 0.8) * amt
 
     def sun(self, img, t, pulse):
         """the Sun at its true 0.53 deg; motion-blurred along its path over a half-frame shutter"""
@@ -275,8 +303,12 @@ class Scene:
         fg = self.fg
         day = fg.rgb * (0.55 + 0.75 * smooth(-2, 30, es))
         warm = fg.rgb * np.array([1.0, 0.62, 0.38], f32) * 0.55
-        night = fg.night(0.075)
+        night = self.night_fg
         out = night * (1 - D) + day * D + warm * tw * 0.5
+        # sweeping dune shadows: relief shading towards the Sun's screen direction, strongest with a low Sun
+        sx_ = float(sv @ RIGHT); low = float(smooth(35, 3, es)) * D
+        shade = np.clip(1 + 0.55 * low * (self.rgx * sx_ * 1.0 + self.rgy * 0.35), 0.35, 1.6)
+        out = out * shade[..., None]
         side = 0.5 + 0.5 * float(sv[0] * RIGHT[0] + sv[1] * RIGHT[1])      # crest rim light from the Sun's side
         out += (self.rim * (0.25 * D + 0.4 * tw))[..., None] * np.array([1.0, 0.75, 0.45], f32) * side
         return out
@@ -291,7 +323,7 @@ class Scene:
         b = cv2.remap(n2, (u * 2.3) % 512, (v * 1.7) % 256, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         dens = np.clip(0.55 * a + 0.35 * b - 0.15, 0, 1.2) * smooth(1080, 1260, ys) * (1 - 0.6 * smooth(1450, 1900, ys)) * wind * 0.45
         col = np.array([0.95, 0.62, 0.32], f32) * (0.05 + 0.85 * D) + np.array([1.0, 0.45, 0.15], f32) * tw * 0.4
-        img[y0:] = img[y0:] * (1 - dens[..., None] * 0.6) + dens[..., None] * col
+        img[y0:] = img[y0:] * (1 - dens[..., None] * 0.6 * (0.1 + 0.9 * D)) + dens[..., None] * col
 
     def grains(self, img, t, D, tw):
         """the breakup limit: at the equator nothing holds the sand down any more -- grains drift up off the dunes"""
@@ -305,7 +337,7 @@ class Scene:
         a = smooth(0, 0.4, age) * (1 - smooth(5.5, 7.5, age)) * (0.5 + 0.8 * G_SEED[:, 3])
         sel = (age > 0) & (x > 0) & (x < W - 1) & (y > 0) & (y < H - 1)
         x, y, a = x[sel], y[sel], a[sel]
-        col = (np.array([1.0, 0.78, 0.5], f32) * (0.25 + 1.4 * D + 0.6 * tw))
+        col = (np.array([1.0, 0.78, 0.5], f32) * (0.05 + 1.4 * D + 0.6 * tw))
         acc = np.zeros((H + 1, W + 1), f32)
         x0 = x.astype(int); y0 = y.astype(int); fx = x - x0; fy = y - y0
         for dy, dx, wg in ((0, 0, (1 - fx) * (1 - fy)), (0, 1, fx * (1 - fy)), (1, 0, (1 - fx) * fy), (1, 1, fx * fy)):
@@ -332,6 +364,7 @@ class Scene:
         sv = sun_vec(t)
         sky, D, tw, es = self.sky(t, sv)
         img = self.up(sky)
+        self.clouds(img, t, D, tw, sv)
         self.trails(t, D, img)
         self.sun_arc(img, t, D)
         self.sun(img, t, 1.0)

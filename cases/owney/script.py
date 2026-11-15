@@ -17,7 +17,7 @@ SEG = [
  dict(kind="narr", text="This is the true story of Owney.",
       vis=[FULL(P("owney_portrait_1895", focus=(0.5, 0.35), z=(1.05, 1.0)))], title=True, gap=0.8),
 
- dict(kind="chapter", n=1, text="The Post Office Dog", bg=P("albany_post_office_1915", focus=(0.5, 0.5))),
+ dict(kind="chapter", n=1, text="The Post Office Dog", bg=lo("loc_collecting_mail", 26.0, 32.0)),
  dict(kind="narr", text="In 1888, a small terrier mix turned up at the post office in Albany, New York. He probably came with a clerk who later moved away. But the dog stayed.",
       vis=[SPLIT(lo("loc_loading_mail_car", 40.0, 48.0, credit=LOC + " · Loading mail car, 1903"), P("albany_post_office_1915", focus=(0.5, 0.5)), chip1="THE MAIL · 1900s FILM", chip2="ALBANY POST OFFICE"),
            FULL(lo("loc_collecting_mail", 17.0, 23.0, credit=LOC + " · Collecting mail, U.S.P.O., 1903"), pops=[CHIP("REAL 1903 POST OFFICE FILM", 0.3)])]),

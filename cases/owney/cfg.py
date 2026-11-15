@@ -15,5 +15,5 @@ MAPFILE = "map_world.json"
 HILITE = ()
 TIMELINE = [("1888", "ALBANY"), ("1895", "WORLD TRIP"), ("1897", "TOLEDO"), ("1911", "SMITHSONIAN"), ("2011", "STAMP")]
 CTA_Q = "Where would YOUR dog travel if they could go anywhere?"
-THUMB = dict(photo="owney_portrait", crop=None, face=(0.5, 0.3), lines=["AROUND", "THE WORLD", "BY MAIL"], yellow={2},
+THUMB = dict(photo="owney_portrait", crop=(140, 420, 1180, 1500), face=(0.45, 0.35), lines=["AROUND", "THE WORLD", "BY MAIL"], yellow={2},
              sub="140,000+ MILES BY MAIL TRAIN", c1=(30, 60, 120), c2=(10, 20, 50), sepia=True)

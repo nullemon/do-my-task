@@ -132,7 +132,7 @@
  {
   "key": "tag_woodburys_lunch",
   "type": "commons",
-  "title": "Token for a 25 cent lunch at Woodbury’s in Boston, Massachusetts, on April 27, 1892, from the National Postal Museum - NPM-0 052985 207e.jpg",
+  "title": "Token for a 25 cent lunch at Woodbury\u2019s in Boston, Massachusetts, on April 27, 1892, from the National Postal Museum - NPM-0 052985 207e.jpg",
   "shows": "A lunch token given to Owney in Boston, April 27, 1892",
   "license": "Public domain",
   "author": "Unknown maker; photo by National Postal Museum",
@@ -263,6 +263,96 @@
   "shows": "Mail in Motion (1956 railway post office promo)",
   "license": "Public domain (U.S. government / pre-1929 film)",
   "author": "Internet Archive (public domain film)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_loading_mail_car",
+  "type": "archive",
+  "title": "loc-film-00564550-loading-mail-car-u-s-p-o",
+  "shows": "Loading mail car, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Loading mail car, U.S.P.O. (1903)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_throwing_mail_bags",
+  "type": "archive",
+  "title": "loc-film-00564573-throwing-mail-into-bags-u-s-p-o",
+  "shows": "Throwing mail into bags, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Throwing mail into bags, U.S.P.O. (1903)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_train_mailbag",
+  "type": "archive",
+  "title": "loc-film-00564551-train-taking-up-mail-bag-u-s-p-o",
+  "shows": "Train taking up mail bag, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Train taking up mail bag, U.S.P.O. (1903)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_routing_mail",
+  "type": "archive",
+  "title": "loc-film-00564567-routing-mail-u-s-p-o",
+  "shows": "Routing mail, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Routing mail, U.S.P.O. (1903)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_wagons_loading",
+  "type": "archive",
+  "title": "loc-film-00564538-wagons-loading-mail-u-s-p-o",
+  "shows": "Wagons loading mail, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Wagons loading mail, U.S.P.O. (1903)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_collecting_mail",
+  "type": "archive",
+  "title": "loc-film-00564547-collecting-mail-u-s-p-o",
+  "shows": "Collecting mail, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Collecting mail, U.S.P.O. (1903)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_overland_express",
+  "type": "archive",
+  "title": "loc-film-00694263-overland-express-arriving-at-helena-mont",
+  "shows": "Overland Express arriving at Helena, Mont. (1897)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Overland Express arriving at Helena, Mont. (1897)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_philadelphia_express",
+  "type": "archive",
+  "title": "loc-film-00694280-philadelphia-express-jersey-central-railway",
+  "shows": "Philadelphia Express, Jersey Central Railway (1897)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Philadelphia Express, Jersey Central Railway (1897)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_pilot_boats_ny",
+  "type": "archive",
+  "title": "loc-film-00694407-pilot-boats-in-new-york-harbor",
+  "shows": "Pilot boats in New York harbor (1899)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Pilot boats in New York harbor (1899)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "loc_mail_coach_ford",
+  "type": "archive",
+  "title": "loc-film-00564564-old-mail-coach-at-ford-u-s-p-o",
+  "shows": "Old mail coach at ford, U.S.P.O. (1903)",
+  "license": "Public domain",
+  "author": "Library of Congress Paper Print Collection \u00b7 Old mail coach at ford, U.S.P.O. (1903)",
   "is_the_real_dog": false
  }
 ]

@@ -1,5 +1,5 @@
 @echo off
-REM ==== Dog story footage fetcher - double-click me ====
+REM ==== ONE-CLICK: download footage for ALL remaining dog stories (Hachiko, Capitan, Patron, Smoky, Judy, Greyfriars Bobby, Bretagne, Lucca) ====
 REM Re-launch inside "cmd /k" so the window NEVER closes on its own
 if /i not "%~1"=="__KEEP__" (
     cmd /k ""%~f0" __KEEP__ %*"
@@ -7,7 +7,7 @@ if /i not "%~1"=="__KEEP__" (
 )
 setlocal EnableExtensions
 chcp 65001 >nul
-title Dog Story Footage Fetcher
+title Dog Story Footage Fetcher - ALL REMAINING STORIES
 cd /d "%~dp0"
 set "LOG=%~dp0fetch_log.txt"
 set "PYTHONUTF8=1"
@@ -17,6 +17,7 @@ set "SSLKEYLOGFILE="
 
 REM story selection passed on the command line (optional), e.g.  FETCH_DOG_FOOTAGE.bat 7-10
 set "SEL=%~2 %~3 %~4 %~5"
+if "%~2"=="" set "SEL=7,8,10,12,13,16,17,18"
 
 echo.>>"%LOG%"
 echo ==================== %DATE% %TIME% ====================>>"%LOG%"

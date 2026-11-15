@@ -41,7 +41,7 @@ VIS = {
  "memorial2": FULL(mu(552.0, 558.0)),
  "ch4": dict(media=lw(30.0, 35.0)),
  "myth1": STAT("MYTH", "THE VIRAL GROUND ZERO PHOTOS", P("navy_tired_dog", focus=(0.5, 0.5))),
- "fact1": FREEZE(P("navy_rescue_dog_carried", focus=(0.5, 0.5), z=(1.0, 1.04)), at="@other", circle=(0.5, 0.45, 0.18), label="NOT BRETAGNE", chip="A DIFFERENT DOG"),
+ "fact1": FREEZE(P("navy_rescue_dog_carried", focus=(0.5, 0.5), z=(1.0, 1.04)), at="@other", circle=(0.5, 0.45, 0.18), label="NOT BRETAGNE", chip="NOT BRETAGNE · A DIFFERENT DOG"),
  "myth2": STAT("FACT", "TEXAS TASK FORCE ONE", wa(73.0, 80.0)),
  "ch5": dict(media=gs(30.0, 34.0)),
  "bday1": FULL(lw(18.0, 25.0)),

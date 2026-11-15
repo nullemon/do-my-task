@@ -5,7 +5,7 @@ Run: /home/user/ttsenv/bin/python audio/mix.py  -> SCR/audio/mix.wav, SCR/audio/
 import os, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path.join(HERE, ".."), os.path.join(HERE, "..", "..")]
 import numpy as np, soundfile as sf
-from scipy.signal import resample_poly
+from scipy.signal import resample_poly, fftconvolve
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
@@ -27,15 +27,16 @@ def dry_voice(N):
 
 
 def stems(voice, dur_s, swaps, key):
-    """the exact voice / bed stems of mix_clean.mix before its loudnorm (copied arithmetic, for the bed check only)"""
+    """the exact voice / bed stems of mix_clean.mix (15 Nov update: fftconvolve ducking, whoosh -26 dB) before its loudnorm
+    (copied arithmetic, for the bed check only)"""
     n = int(round(dur_s * SR)); v = np.zeros(n); v[: min(n, len(voice))] = voice[:n]
     v = v / (np.sqrt(np.mean(v[np.abs(v) > 1e-4] ** 2)) + 1e-9) * 0.1
     pad = MC._ff(MC._pad(n, key), "lowpass=f=1800,highpass=f=80"); pad = pad.mean(1) if pad.ndim > 1 else pad
     pad = pad[:n] / (np.sqrt(np.mean(pad ** 2)) + 1e-9) * 0.1 * 10 ** (-26 / 20)
-    env = np.convolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
+    env = fftconvolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
     pad *= 10 ** (-8 * np.clip(env * 4, 0, 1) / 20)
     w = MC._ff(MC._whoosh(n, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000"); w = w.mean(1) if w.ndim > 1 else w
-    wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-15 / 20))
+    wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-26 / 20))
     return np.stack([v, v], 1), np.stack([pad + wh, pad * 0.96 + wh], 1)
 
 

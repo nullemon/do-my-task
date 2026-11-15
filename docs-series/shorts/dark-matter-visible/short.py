@@ -83,9 +83,10 @@ SC = {
                    dm=dict(halo=0.55, clumps=0.35, web=0.40, stream=1.0), lc=(0.70, 0.48, 1.0), I=0.55,
                    beams=[(0.75, 0.45, 1.0), (0.5, 0.6, 1.0), (1.0, 0.7, 1.0), (0.6, 0.35, 1.0)], bI=0.25, expo=1.0),
 }
-C_HALO = (np.array([0.42, 0.16, 1.00], f32), np.array([0.82, 0.58, 1.00], f32))       # violet -> lavender in the bright parts
+C_HALO = (np.array([0.50, 0.20, 1.00], f32), np.array([0.85, 0.70, 1.00], f32), np.array([0.30, 0.75, 1.00], f32))   # violet core, lavender-white centre, cyan outer veil / edge
+HALO_EDGE = 42.0                          # deg from the GC: the soft edge of the dense inner halo (stylised, README)
 C_CLUMP = (np.array([0.62, 0.22, 1.00], f32), np.array([0.95, 0.80, 1.00], f32))
-C_WEB = (np.array([0.55, 0.30, 1.00], f32), np.array([0.40, 0.62, 1.00], f32), np.array([0.95, 0.85, 1.00], f32))
+C_WEB = (np.array([0.62, 0.36, 1.00], f32), np.array([0.32, 0.62, 1.00], f32), np.array([0.98, 0.90, 1.00], f32))   # near violet, far cyan-blue, knots white
 
 
 def lerp(a, b, w): return a + (b - a) * w
@@ -130,13 +131,14 @@ class Scene:
         self.above_h = cv2.resize(self.above[..., 0], (W // 2, H // 2), interpolation=cv2.INTER_AREA)[..., None]
         self.nz = cv2.resize(fbm2((96, 96), 61, 3.0), (W, H), interpolation=cv2.INTER_CUBIC)
         k = np.exp(-e / 0.30)[..., None]
-        zen, hor = np.array((0.007, 0.010, 0.050), f32), np.array((0.026, 0.040, 0.150), f32)
-        n = zen * (1 - k) + hor * k + np.exp(-((e - 0.45) / 0.22) ** 2)[..., None] * zen * np.array([0.6, 0.15, 0.4], f32)
+        zen, hor = np.array((0.0035, 0.0055, 0.024), f32), np.array((0.012, 0.022, 0.075), f32)
+        n = zen * (1 - k) + hor * k
         self.night = (n * (1 + 0.06 * self.nz)[..., None]).astype(f32)
         # ---- data
-        self.mw = canvas(os.path.join(SCR, "mw_gal.npz"))
+        mw = canvas(os.path.join(SCR, "mw_gal.npz")); y = lum(mw)[..., None]
+        self.mw = (y + (mw - y) * 0.55) * np.array([0.92, 0.97, 1.08], f32)          # a neutral, star-white band (no violet)
         dm = np.load(os.path.join(SCR, "dm.npz"))
-        self.dm = {k: dm[k].astype(f32) for k in ("halo", "clumps", "web")}
+        self.dm = {k: dm[k].astype(f32) for k in ("J", "wisp", "clumps", "webN", "webF")}
         z = np.load(os.path.join(SCR, "stars.npz")); keep = z["mag"] < 6.5
         self.ph_rng = np.random.default_rng(3)
         self.stars = self.mkset(eq_vec(z["ra"][keep], z["dec"][keep]), z["mag"][keep],
@@ -155,7 +157,8 @@ class Scene:
         apex = EQ2GAL.T @ np.array([0.0, 1.0, 0.0])                          # l = 90, b = 0 (towards Cygnus)
         self.apex = apex / np.linalg.norm(apex)
         npart = 2600
-        self.pp = r.uniform(-1, 1, (npart, 3)); self.pv = -self.apex[None] * 0.55 + r.normal(size=(npart, 3)) * 0.36
+        self.pp = r.uniform(-1, 1, (npart, 3)); self.pv = -self.apex[None] * 0.60 + r.normal(size=(npart, 3)) * 0.05
+        sw = np.cross(self.apex, [0.0, 0.0, 1.0]); self.swirl = sw / np.linalg.norm(sw)           # gentle common curl
         self.pb = r.uniform(0.5, 1.0, npart); self.pc = r.uniform(0, 1, npart)
         # ---- summit: night base, lit albedo, rim; sky-facing factor; glint points
         a = fg.a; self.a = a[..., None]
@@ -242,23 +245,29 @@ class Scene:
         """linear radiance (half res) of the dark-matter layers with amounts dmw"""
         out = np.zeros(self.hx.shape + (3,), f32)
         if dmw["halo"] > 0:
-            h = self.canv("halo", l, b)
-            wisp = 0.78 + 0.30 * self.flow(t, 0.30, 7.0, 2.5, 0) + 0.12 * self.flow(t, 0.75, -11.0, 4.0, 1)     # slowly flowing volume
-            v = h ** 1.35 * np.clip(wisp, 0.4, 1.5) * 0.055
-            m = np.clip(h / 4.0, 0, 1)[..., None]
-            out += v[..., None] * (C_HALO[0] * (1 - m) + C_HALO[1] * m) * dmw["halo"]
+            J = self.canv("J", l, b); wisp = self.canv("wisp", l, b)
+            fl = np.clip(0.80 + 0.28 * self.flow(t, 0.30, 7.0, 2.5, 0) + 0.12 * self.flow(t, 0.75, -11.0, 4.0, 1), 0.45, 1.5)   # slow flow
+            wv = wisp * fl
+            psi = np.degrees(np.arccos(np.clip(np.cos(np.radians(b)) * np.cos(np.radians(l)), -1, 1)))      # angle from the GC
+            edge = HALO_EDGE + 3.0 * (wisp - 1.0)
+            inner = smooth(edge + 6, edge - 6, psi)
+            rim = np.exp(-((psi - edge) / 5.0) ** 2) * np.clip(wv, 0.3, 1.6)
+            outer = (J ** 0.5) * wv * 0.012
+            core = inner * (J ** 0.75) * wv * 0.020
+            col_core = C_HALO[0] * (1 - np.clip(J / 10, 0, 1))[..., None] + C_HALO[1] * np.clip(J / 10, 0, 1)[..., None]
+            out += (outer[..., None] * C_HALO[2] + core[..., None] * col_core + (rim * 0.045)[..., None] * C_HALO[2]) * dmw["halo"]
         if dmw["clumps"] > 0:
             c = self.canv("clumps", l, b)
             m = np.clip(c / 1.2, 0, 1)[..., None]
-            lay = c[..., None] * (C_CLUMP[0] * (1 - m) + C_CLUMP[1] * m) * 0.16
+            lay = cv2.GaussianBlur(c, (0, 0), 2.0)[..., None] * (C_CLUMP[0] * (1 - m) + C_CLUMP[1] * m) * 0.18
             lay += self.drift_clumps(t, lst, Mg)
             out += lay * dmw["clumps"]
         if dmw["web"] > 0:
-            wv = self.canv("web", l, b)
-            hue = np.clip(0.5 + 0.5 * self.flow(t, 0.15, 3.0, 1.0, 1), 0, 1)[..., None]
-            col = C_WEB[0] * (1 - hue) + C_WEB[1] * hue
-            m = np.clip(wv / 3.0, 0, 1)[..., None]
-            out += wv[..., None] * (col * (1 - m) + C_WEB[2] * m) * 0.060 * (0.92 + 0.08 * math.sin(t * 1.3)) * dmw["web"]
+            wn = self.canv("webN", l, b); wf = self.canv("webF", l, b)
+            mn = np.clip(wn / 4.0, 0, 1)[..., None]
+            near = wn[..., None] * (C_WEB[0] * (1 - mn) + C_WEB[2] * mn)
+            far = wf[..., None] * C_WEB[1] * 0.55
+            out += (near + far) * 0.040 * (0.94 + 0.06 * math.sin(t * 1.3)) * dmw["web"]
         if dmw["stream"] > 0:
             out += self.wind(t, lst) * dmw["stream"]
         return out
@@ -273,36 +282,39 @@ class Scene:
         for i in range(len(g)):
             if not ok[i] or h[i, 2] < -0.05: continue
             xs, ys = x[i] / 2, y[i] / 2
-            Rp = c["sz"][i] * math.pi / 180 * FL / 2 * 1.4                    # half-res px (stereographic ~ f / unit at centre)
+            Rp = c["sz"][i] * math.pi / 180 * FL / 2 * 2.0                    # half-res px (stereographic ~ f / unit at centre)
             if xs < -6 * Rp or xs > self.hx.shape[1] + 6 * Rp or ys < -6 * Rp or ys > self.hx.shape[0] + 6 * Rp: continue
             gn = c["gain"][i] * (1 + 0.15 * math.sin(t * 0.9 + c["ph"][i]))
             def f(d, dx, dy, Rp=Rp, gn=gn):
-                p = 1.0 / (1 + (d / Rp) ** 2) * np.exp(-d / (2.2 * Rp))
+                p = 0.8 / (1 + (d / Rp) ** 2) * np.exp(-d / (3.2 * Rp)) + 0.35 * np.exp(-(d / (0.6 * Rp)) ** 2)
                 m = np.clip(p * 1.6, 0, 1)[..., None]
                 return (p * gn * 0.30)[..., None] * (C_CLUMP[0] * (1 - m) + C_CLUMP[1] * m)
-            splat(lay, xs, ys, int(6 * Rp) + 4, f)
+            splat(lay, xs, ys, int(8 * Rp) + 4, f)
         return lay
 
     def wind(self, t, lst):
-        """particles in a periodic box moving at us from Cygnus; streaks (motion blur over 1/12 s), brighter when close"""
+        """particles in a periodic box flowing at us from Cygnus with a gentle common curl; each streak is a 4-point
+        polyline over the last 1/10 s (slightly curved), with a soft glow; brighter when close"""
         Hh, Wh = self.hx.shape
-        lay = np.zeros((Hh, Wh), f32); lay2 = np.zeros((Hh, Wh), f32)
-        M = self.M(lst)
-        res = []
-        for dt in (0.0, 0.085):
-            p = (self.pp + self.pv * (t - dt) * 0.45 + 1) % 2 - 1
+        lay = np.zeros((Hh, Wh), f32)
+        M = self.M(lst); pts = []
+        for dt in (0.0, 0.033, 0.066, 0.10):
+            tt = t - dt
+            p = self.pp + self.pv * tt * 0.45 + self.swirl[None] * 0.10 * np.sin(tt * 1.1 + self.pc[:, None] * 6.28)
+            p = (p + 1) % 2 - 1
             r = np.linalg.norm(p, axis=1) + 1e-6
             h = (p / r[:, None]) @ M.T
-            x, y, ok = self.lens.project(h); res.append((x / 2, y / 2, ok & (h[:, 2] > -0.05), r))
-        (x1, y1, ok1, r1), (x0, y0, ok0, r0) = res
-        good = ok1 & ok0 & (np.hypot(x1 - x0, y1 - y0) < 260) & (r1 > 0.04) & (np.abs(r1 - r0) < 0.5)
-        br = self.pb * np.clip(0.05 / (r1 ** 2 + 0.006), 0.15, 6.0)
+            x, y, ok = self.lens.project(h); pts.append((x / 2, y / 2, ok & (h[:, 2] > -0.05), r))
+        r0 = pts[0][3]
+        good = np.all([q[2] for q in pts], 0) & (r0 > 0.05) & (np.abs(pts[0][3] - pts[-1][3]) < 0.3)
+        good &= np.hypot(pts[0][0] - pts[-1][0], pts[0][1] - pts[-1][1]) < 220
+        br = self.pb * np.clip(0.05 / (r0 ** 2 + 0.006), 0.15, 6.0)
         for i in np.flatnonzero(good):
-            tgt = lay if self.pc[i] < 0.6 else lay2
-            cv2.line(tgt, (int(x0[i] * 4), int(y0[i] * 4)), (int(x1[i] * 4), int(y1[i] * 4)), float(br[i]), 1, cv2.LINE_AA, shift=2)
-        lay = cv2.GaussianBlur(lay, (0, 0), 0.6) + cv2.GaussianBlur(lay, (0, 0), 3.0) * 0.6
-        lay2 = cv2.GaussianBlur(lay2, (0, 0), 0.6) + cv2.GaussianBlur(lay2, (0, 0), 3.0) * 0.6
-        return (lay[..., None] * np.array([0.80, 0.45, 1.00], f32) + lay2[..., None] * np.array([0.55, 0.65, 1.00], f32)) * 2.2
+            poly = np.array([[int(q[0][i] * 4), int(q[1][i] * 4)] for q in pts], np.int32)
+            cv2.polylines(lay, [poly], False, float(br[i]), 1, cv2.LINE_AA, shift=2)
+        lay = cv2.GaussianBlur(lay, (0, 0), 0.7) + cv2.GaussianBlur(lay, (0, 0), 2.5) * 0.7 + cv2.GaussianBlur(lay, (0, 0), 8.0) * 0.5
+        hue = np.clip(0.5 + 0.5 * self.flow(t, 0.2, 4.0, -3.0, 0), 0, 1)[..., None]
+        return lay[..., None] * (np.array([0.78, 0.48, 1.00], f32) * (1 - hue) + np.array([0.45, 0.78, 1.00], f32) * hue) * 2.0
 
     # -------------------------------------------------------------------------------------------- light rays
     def rays_fx(self, t, P, Q, w, cx, cy, I):

@@ -63,7 +63,7 @@ ST = {
                  rings=True, tip=26.7, roll=-24, phase=6, pa=20, E=2.6, sky=1.5, fl=(1.0, 0.9, 0.7),
                  beams=[(1.0, 0.85, 0.55), (0.75, 0.80, 1.0), (1.0, 0.70, 0.45), (0.9, 0.9, 1.0)]),
     "shad": dict(name="RING SHADOW", l2="SUNLIGHT FROM THE SIDE", l3="A DARK BAND ACROSS THE DISC", tc=(205, 220, 255), rings=True,
-                 tip=26.7, roll=-24, phase=float(os.environ.get('SHP', 22)), pa=float(os.environ.get('SHA', -66)), E=2.0, sky=1.35, fl=(0.8, 0.85, 1.0),
+                 tip=float(os.environ.get("SHT", 10)), roll=-24, phase=float(os.environ.get("SHP", 18)), pa=float(os.environ.get("SHA", -66)), E=2.0, sky=1.35, fl=(0.8, 0.85, 1.0),
                  beams=[(0.55, 0.65, 1.0), (0.85, 0.70, 1.0), (0.45, 0.85, 1.0)]),
     "edge": dict(name="EDGE-ON", l2="1.2° LONG · ONLY METRES THICK", l3="SATURN'S RINGS DO THIS EVERY ~15 YEARS", tc=(235, 240, 255),
                  rings=True, tip=0.35, roll=-24, phase=12, pa=-55, E=1.0, sky=1.0, fl=(0.85, 0.9, 1.0),

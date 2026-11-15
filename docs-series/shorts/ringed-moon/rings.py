@@ -84,7 +84,7 @@ class Body:
             yv = col.mean(1, keepdims=True); col = yv * np.array([1.0, 1.0, 1.02], f32) * 0.88 + col * 0.12   # ringed Moon: icy white-grey
             al = np.clip(r[:, 3] * 1.05, 0, 0.97)
             self.ring_tex = (col.astype(f32), al.astype(f32))
-            k = 61; self.shadow_al = np.convolve(np.pad(al, k), np.ones(2 * k + 1) / (2 * k + 1), "same")[k:-k].astype(f32)  # penumbra
+            k = 31; self.shadow_al = np.convolve(np.pad(al, k), np.ones(2 * k + 1) / (2 * k + 1), "same")[k:-k].astype(f32)  # penumbra
             self.r_in = RING_KM0 / 60268.0; self.r_out = (RING_KM0 + 8192 * RING_KMPX) / 60268.0
         elif rings == "uranus":
             rr = np.linspace(1.55, 2.05, 4096)
@@ -183,7 +183,7 @@ class Body:
                     a = np.interp(i, np.arange(n_), self.shadow_al).astype(f32) * edge
                 else:
                     _, a = self.ring_sample(rho)
-                col = col * (1 - 0.80 * a * (ts > 0))[..., None]
+                col = col * (1 - 0.88 * a * (ts > 0))[..., None]
             cov = cov0
             rad = col * cov[..., None] * self.surf
         # rings (in front of the globe where t_ring < t_globe; behind it hidden)

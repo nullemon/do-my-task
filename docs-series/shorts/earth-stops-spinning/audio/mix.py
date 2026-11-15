@@ -5,7 +5,7 @@ Run: /home/user/ttsenv/bin/python audio/mix.py"""
 import os, sys, re, subprocess, json
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path[:0] = [HERE, os.path.join(HERE, ".."), os.path.join(HERE, "..", "..")]
 import numpy as np, soundfile as sf
-from scipy.signal import resample_poly
+from scipy.signal import resample_poly, fftconvolve
 import short as S
 from narration import LINES, pieces
 from lib import audio as A
@@ -16,16 +16,6 @@ OUT = os.path.join(S.SCR, "audio"); os.makedirs(OUT, exist_ok=True)
 SR = MC.SR
 KEY = getattr(S, "MUSIC_KEY", "D")
 
-
-def _fastconv(a, v, mode="full"):
-    """same result as np.convolve for mix_clean's long box filter, FFT-based (the direct one takes ~10 min)"""
-    from scipy.signal import fftconvolve
-    return fftconvolve(a, v, mode=mode)
-
-
-import types
-MC.np = types.SimpleNamespace(**{k: getattr(np, k) for k in dir(np) if not k.startswith("__")})
-MC.np.convolve = _fastconv
 
 
 def lufs(x):
@@ -50,12 +40,12 @@ def bed_stems(voice, dur, swaps):
     v = v / (np.sqrt(np.mean(v[np.abs(v) > 1e-4] ** 2)) + 1e-9) * 0.1
     pad = MC._ff(MC._pad(n, KEY), "lowpass=f=1800,highpass=f=80"); pad = pad.mean(1) if pad.ndim > 1 else pad
     pad = pad[:n] / (np.sqrt(np.mean(pad ** 2)) + 1e-9) * 0.1 * 10 ** (-26 / 20)
-    env = _fastconv((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
+    env = fftconvolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
     pad *= 10 ** (-8 * np.clip(env * 4, 0, 1) / 20)
     wh = np.zeros(n)
     if swaps:
         w = MC._ff(MC._whoosh(n, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000"); w = w.mean(1) if w.ndim > 1 else w
-        wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-15 / 20))
+        wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-26 / 20))
     full = np.stack([v + pad + wh, v + pad * 0.96 + wh], 1); bed = np.stack([pad + wh, pad * 0.96 + wh], 1)
     return full, bed, v, wh
 
@@ -63,9 +53,7 @@ def bed_stems(voice, dur, swaps):
 def main():
     N = int(round(S.DUR * SR))
     voice = MC.clean_voice(dry_track(N))
-    # mix_clean's whoosh is scaled to the voice PEAK (-15 dB); with it the gated bed measured only ~10 dB under the
-    # full mix, which fails the BATCH4 rule (bed >= 20 dB under the mix). So the swaps go without the whoosh: pad only.
-    swaps = list(S.SWAP_TIMES) if os.environ.get("WHOOSH") == "1" else []
+    swaps = list(S.SWAP_TIMES)                     # mix_clean's gentle whoosh (-26 dB re the voice peak) at each swap
     out = MC.mix(voice, S.DUR, swaps=swaps, key=KEY)
     sf.write(os.path.join(OUT, "mix.wav"), out.astype(np.float32), SR, subtype="FLOAT")
     full, bed, v, wh = bed_stems(voice, S.DUR, swaps)

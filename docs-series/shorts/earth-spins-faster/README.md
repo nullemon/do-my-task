@@ -1,6 +1,6 @@
 # What If Earth Spun Faster? (YouTube Short, batch 4)
 
-The Short is vertical only: 1080×1920 at 30 fps, ~43.3 s. It is one locked tripod shot of the user's `01_desert.png`,
+The Short is vertical only: 1080×1920 at 30 fps, 43.33 s (measured on the final mp4: −14.3 LUFS, −2.0 dBTP, AAC 192k). It is one locked tripod shot of the user's `01_desert.png`,
 made in the BATCH4 swap format. Each spin-up swaps in with a tinted flash and a chromatic shockwave, and the dunes are
 relit by the racing day–night cycle. Readouts sit at the top and big orange one-word captions sit on the dunes. There is
 no disclaimer small print, the night sky stays deep blue, and a white-out returns to the 24-hour day so the Short loops
@@ -15,10 +15,10 @@ no disclaimer small print, the night sky stays deep blue, and a white-out return
 5. **84 min (the breakup limit):** at the equator, sand grains drift up off the dunes. "Earth would start to fly apart."
 6. White-out, then the calm 24-hour morning.
 
-**The sky is real spherical astronomy.** The camera stands on the equator, looking ESE (azimuth 118°), in December. The
+**The sky is real spherical astronomy.** The camera stands on the equator, looking SE (azimuth 135°), in December. The
 Sun (declination −23.44°) and ~2,600 stars are placed by hour angle for latitude 0 and projected through the lens
 (f = 1,100 px, ~83° vertical field). The Sun's path, its sunrise point (azimuth 113.5°) and the star-trail curvature
-(around the south celestial pole, off-frame right on the horizon) are therefore true. The sky colour (day / twilight /
+(around the south celestial pole, off-frame right on the horizon, so the trails are arcs) are therefore true. The sky colour (day / twilight /
 night) follows the Sun's instantaneous elevation. The star trails are a fixed ~2.6 s "exposure", weighted by how dark
 the sky was at each instant.
 
@@ -32,7 +32,9 @@ phrases and 1.1–1.2 s before reveals.
 
 ## Sound (BATCH4 clean rules)
 `lib/mix_clean` only, through `lib/b4_kit.make_mix`: `clean_voice` (no pitch, no echo), then `mix` with the soft pad
-and the module's gentle whoosh at each swap. Nothing else is added. The bed-vs-mix measurement is in the delivery note.
+and the module's gentle whoosh at each swap. Nothing else is added.
+**Bed vs mix:** the pad + whoosh bed alone (voice muted) is **23.0 dB** under the full mix (−40.6 vs −17.6 LUFS, before the
+shared normaliser).
 
 ## Science (`short.py info`)
 - **Breakup limit:** the day length at which the centrifugal acceleration at the equator equals gravity:
@@ -62,6 +64,8 @@ and the module's gentle whoosh at each swap. Nothing else is added. The bed-vs-m
   24-hour stage calm and the 84-minute flicker below ~1 Hz.
 - The sky is instantaneous, but the star trails are a 2.6 s exposure (the classic long-exposure look). During the calm
   opening, the stars are shown as points.
+- Cirrus wisps race and smear across the sky as the spin grows, and the dunes get relief shading that sweeps with the Sun
+  (from the photo's own luminance relief). Both are art direction.
 - Sand floating up shows the "weightless at the equator" beat. The air would of course also be moving violently.
 
 ## Files

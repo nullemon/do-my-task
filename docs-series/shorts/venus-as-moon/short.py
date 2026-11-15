@@ -125,10 +125,10 @@ def venus_tex():
     lat = np.linspace(90, -90, h)[:, None] * np.ones((1, w)); lon = np.linspace(-180, 180, w)[None, :] * np.ones((h, 1))
     n1 = fbm2((h, w), 501, 2.6); n2 = fbm2((h, w), 502, 1.9)
     st = cv2.GaussianBlur(n2, (0, 0), sigmaX=22, sigmaY=1.6); st /= st.std() + 1e-6           # zonal streaks
-    sh = cv2.GaussianBlur(n1, (0, 0), sigmaX=6, sigmaY=3); sh /= sh.std() + 1e-6
+    sh = cv2.GaussianBlur(n1, (0, 0), sigmaX=4, sigmaY=3); sh /= sh.std() + 1e-6
     bands = np.sin(np.radians(lat) * 9 + 0.8 * sh) * np.cos(np.radians(lat)) ** 0.5
     y_arm = np.exp(-((lat - 0.35 * np.abs(lon + 30) * np.sign(lat + 1e-3) * 0.6) / 9) ** 2) * np.exp(-((lon + 30) / 80) ** 2)
-    g = 1 + 0.07 * bands + 0.05 * st + 0.025 * sh - 0.10 * y_arm
+    g = 1 + 0.06 * bands + 0.025 * st + 0.035 * sh - 0.09 * y_arm
     g = g * (1 - 0.06 * (np.abs(lat) / 90) ** 3) + 0.03 * np.exp(-((np.abs(lat) - 62) / 6) ** 2)  # bright polar collars
     col = np.clip(g, 0.8, 1.15)[..., None] * np.array([0.98, 0.92, 0.78])
     Image.fromarray((np.clip(col * 0.86, 0, 1) * 255).astype(np.uint8)).save(p)
@@ -159,7 +159,7 @@ class Scene:
         MO.set_sun(sun_vec(4.0))
         self.moon = Body("moon", "8k_moon.jpg", RP_MOON, pole_vec(-12, 4), model="rock", surf=1.15, detail=0.0, prep=prep_norm)
         self.ven = Body("ven", venus_tex(), RP_VEN, pole_vec(-8, 6), model="giant", k=0.80, surf=1.7,
-                        haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9)
+                        haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9, night=0.003)
         # ---- yard: lights / window, base, albedo, rim (as andromeda-collision)
         a = fg.a; rgb = fg.rgb; f = fg.flat; y = lum(f)[..., None]
         mxc = rgb.max(2); warm = rgb[..., 0] - rgb[..., 2]
@@ -192,7 +192,7 @@ class Scene:
         lawn = ((g > r * 1.08) & (g > b * 1.15) & (yy > 1738) & (a > 0.9)).astype(np.uint8)
         patio = np.zeros((H, W), np.uint8)
         cv2.fillPoly(patio, [np.array([(890, 1740), (1080, 1740), (1080, 1919), (790, 1919)], np.int32)], 1)
-        lawn = cv2.morphologyEx(lawn * (1 - patio), cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+        lawn = cv2.morphologyEx(lawn * (1 - patio), cv2.MORPH_CLOSE, np.ones((41, 41), np.uint8)) * (1 - patio) * (a > 0.9)
         lawn = cv2.GaussianBlur(lawn.astype(f32), (0, 0), 1.0)
         # casters and their ground lines
         tramp = (xx > 70) & (xx < 370) & (yy > 1550) & (yy < 1810)

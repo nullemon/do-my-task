@@ -1,4 +1,6 @@
-"""Lit moon discs for "What If Earth Had More Moons?" -- copied from ../other-moons/moons.py (unchanged there); here the
+"""Copied from ../more-moons/moons.py for "What If Venus Were Our Moon?"; only change: Body(night=...) sets the faint
+night-side level of the "giant" model (Venus's dark side is kept near black).
+Lit moon discs for "What If Earth Had More Moons?" -- copied from ../other-moons/moons.py (unchanged there); here the
 Sun direction is settable (set_sun) so every moon is lit near opposition (moons rising at dusk opposite the set Sun).
 Originally copied from ../planets-as-moon/planets.py; adds `prep` (per-body albedo-map preparation: colourising grayscale USGS
 mosaics, Titan's haze) and `tex` may be an absolute path (USGS/NASA moon mosaics via the stellata LFS mirror).
@@ -59,9 +61,11 @@ def pole_vec(roll_deg, tip_deg):
 
 class Body:
     def __init__(self, key, tex, Rp, pole, q=1.0, spin=0.0, lon0=0.0, model="giant", k=0.85, surf=1.0, haze=(0, 0, 0),
-                 rim=(0, 0, 0), rings=None, winds=0.0, detail=0.05, ss=2, tint=(1, 1, 1), sat=1.0, gamma=1.0, seed=1, prep=None):
+                 rim=(0, 0, 0), rings=None, winds=0.0, detail=0.05, ss=2, tint=(1, 1, 1), sat=1.0, gamma=1.0, seed=1, prep=None,
+                 night=0.035):
         self.key, self.Rp, self.q, self.spin, self.lon0 = key, Rp, q, spin, lon0
         self.model, self.k, self.surf, self.winds, self.ss = model, k, surf, winds, ss
+        self.night = night
         self.haze, self.rim = np.array(haze, f32), np.array(rim, f32)
         self.M = frame_of(pole); self.rings = rings
         # texture filtered to the on-screen scale (2 px of map per rendered px at the disc centre at most)
@@ -160,7 +164,7 @@ class Body:
             else:                                                           # Minnaert limb darkening, soft terminator
                 m0 = np.clip(mu0 + 0.04, 0, 1) / 1.04
                 f = (m0 ** self.k) * np.maximum(mu, 0.05) ** (self.k - 1) * smooth(-0.12, 0.20, mu0)
-                f = f + 0.035 * (1 - smooth(-0.1, 0.15, mu0)) * mu ** 0.5          # faint night side (sky / ring-shine)
+                f = f + self.night * (1 - smooth(-0.1, 0.15, mu0)) * mu ** 0.5     # faint night side (sky / ring-shine)
             col = alb * f[..., None]
             # atmospheric limb haze (lit side) for the giants
             if self.haze.any():

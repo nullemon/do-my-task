@@ -1,6 +1,6 @@
 # What If a Rogue Planet Passed Earth? (YouTube Short, batch 3)
 
-The cut is vertical only: 1080×1920 at 30 fps. It is one locked tripod shot of the user's `04_city_street_at_night.png`:
+The cut is vertical only: 1080×1920 at 30 fps, 45.0 s (measured on the final mp4: −14.0 LUFS, −1.5 dBTP). It is one locked tripod shot of the user's `04_city_street_at_night.png`:
 a skyscraper canyon with neon and a wet street, with the sky a narrow strip up the middle. The film uses the swap format.
 
 A dark, Jupiter-mass rogue planet (no star) approaches over the city. It is drawn at its **true angular size** for the

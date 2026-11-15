@@ -1,6 +1,6 @@
 # What If Earth Had More Moons? (YouTube Short, batch 3)
 
-The cut is vertical only: 1080×1920 at 30 fps and about 47.8 s long. It is one locked tripod shot of the user's
+The cut is vertical only: 1080×1920 at 30 fps, 47.84 s (measured on the final mp4: −14.0 LUFS, −2.2 dBTP). It is one locked tripod shot of the user's
 `03_calm_lake_wooden_pier.png` (transparent sky, upscaled from 941×1672), going from dusk into night. It uses the swap
 format of `other-moons/` and `planets-as-moon/`. The sky swaps between moon sets: our Moon, then two Moons, a Mars-style
 set, a Jupiter-style set, a Saturn-style swarm, and all of them at once. A white-out then returns to our Moon at dusk,

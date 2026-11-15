@@ -1,6 +1,6 @@
 # What If Venus Were Our Moon? (YouTube Short, batch 4)
 
-The Short is vertical only: 1080×1920 at 30 fps, ~42.5 s. It is one locked tripod shot of the user's
+The Short is vertical only: 1080×1920 at 30 fps, 42.50 s (measured on the final mp4: −14.2 LUFS, −1.9 dBTP, AAC 192k). It is one locked tripod shot of the user's
 `08_suburban_backyard.png` at night, with the string lights and the house window glowing. It is made in the BATCH4 swap
 format: each beat swaps in with a tinted flash and a chromatic shockwave, and the yard is relit for the new light
 source. Readouts sit at the top and big orange one-word captions sit below the disc. There is no disclaimer small print,
@@ -20,7 +20,9 @@ the sky stays deep blue, and a white-out returns to our Moon so the Short loops.
 It is a creamy white-yellow with very low contrast, with zonal bands, sheared streaks, faint polar collars and a very
 subtle dark "Y". It is rendered with `moons.Body` (copied from `../more-moons/`) as a "giant" with Minnaert limb darkening,
 a thick limb haze and a lit atmospheric rim (prominent around the crescent). The clouds super-rotate slowly. Its surface
-brightness relative to the Moon follows the geometric albedos (0.69 vs 0.12), so it reads as blazing white.
+brightness relative to the Moon follows the geometric albedos (0.69 vs 0.12), so it reads as blazing white. Our own sky (the twilight glow and the aureole scattered in our air) is composited *in
+front of* the disc, and only the stars behind it are hidden. The unlit side therefore melts into the sky, apart from a
+very faint earthshine (a full Earth would light Venus's night side, just as earthshine lights the Moon's).
 
 **Shadows:** a per-pixel ground projection with the yard photo's own perspective (f ≈ 771 px, eye-level horizon at
 y = 1590). Each caster pixel is lifted off its ground line by its height and thrown along the ground away from the light
@@ -37,6 +39,8 @@ Voice: Kokoro 0.7 × am_michael + 0.3 × am_onyx at speed 0.86, one TTS call per
 ## Sound (BATCH4 clean rules)
 `lib/mix_clean` only (`clean_voice`, then `mix` with the soft pad and the gentle whoosh at each swap), through
 `lib/b4_kit.make_mix`. Nothing else is added.
+**Bed vs mix:** the pad + whoosh bed alone (voice muted) is **24.4 dB** under the full mix (−41.8 vs −17.4 LUFS, before the
+shared normaliser).
 
 ## Science (`short.py info` prints all of it)
 - **Size:** 2·atan(6,051.8 / 384,400) = **1.80°** (verified), against the Moon's 0.52°: **3.48×** wider and 12× the area.

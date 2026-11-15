@@ -62,7 +62,8 @@ captions follow the voice. The end goes through a white-out back to our plain Mo
   `mix(voice, DUR, swaps=[5 swap times], key="D")`, which adds the soft pad and the gentle whoosh at the swaps.
   Nothing else is added.
 - **Bed check:** with the voice muted, the bed is **−25.1 dB** under the full mix (`SCR/audio/bedcheck.txt`).
-- **Encode:** AAC 192k (`encode.sh`). The loudness and true peak are measured on the final mp4.
+- **Encode:** AAC 192k (`encode.sh`). Measured on the final mp4: **−14.2 LUFS, −1.9 dBTP**. The video is 44.15 s
+  long (1,324 frames).
 
 ## Files
 `short.py` (picture), `rings.py`, `science.py`, `audio/narration.py`, `audio/gen_voice.py`, `audio/mix.py`,

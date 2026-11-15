@@ -443,7 +443,8 @@ class Scene:
         img += h[..., None] * cw
         img += (np.exp(-d / r3) * (0.01 + 0.10 * q ** 2) * I)[..., None] * c
         flat = img.reshape(-1, 3)
-        Ls = (110 + 75 * max(-st["m"], 0)) * min(I, 1.8) ** 0.5
+        mm = st["m"] if st["m"] is not None else -12.0 * st["gam"]
+        Ls = (110 + 75 * max(-mm, 0)) * min(I, 1.8) ** 0.5
         amp = (0.35 + 3.0 * q) * I
         for s in self.spikes:
             L = Ls * (1.0 if s["long"] else 0.42) * pul

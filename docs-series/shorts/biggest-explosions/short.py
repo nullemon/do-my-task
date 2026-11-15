@@ -435,6 +435,7 @@ class Scene:
         q, I = st["q"], st["I"]
         if I <= 0.01: return
         c = star_col(st["T"]); cw = c * 0.45 + 0.55
+        if st["gam"] > 0: c = GAMMA; cw = GAMMA * 0.8 + 0.2                 # false-colour gamma flash
         pul = 1 + 0.05 * math.sin(t * 3.1) + 0.03 * math.sin(t * 8.7) + 0.04 * math.sin(t * 17.3) * (1 - q)
         d = self.d
         core = 2.5 + 60 * q ** 1.3
@@ -537,7 +538,8 @@ class Scene:
                 ck = star_col(SK[k]["T"])
                 big = {"qgc": 1.6, "none": 0.6, "grb": 0.35, "qso": 0.35, "mag": 1.3}.get(k, 1.0)
                 fl = math.exp(-max(uu, 0) / 0.10) * ease((uu + 0.05) / 0.05)
-                img += (fl * big * (np.exp(-self.d / 220) * 3.0 + 0.25))[..., None] * (ck * 0.5 + 0.5)
+                fc = GAMMA * 0.9 + 0.1 if k == "mag" else ck * 0.5 + 0.5
+                img += (fl * big * (np.exp(-self.d / 220) * 3.0 + 0.25))[..., None] * fc
                 if k == "mag": ck = GAMMA
                 ring = self.shockwave(t, ts, 2700 if k == "qgc" else 2400, 1.6, 2.2 * big)
                 if ring is not None: img += cv2.resize(ring * (ck * 0.35 + 0.65), (W, H), interpolation=cv2.INTER_LINEAR)

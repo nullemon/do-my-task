@@ -40,7 +40,7 @@ def dry_voice(N):
 def main():
     N = int(round(S.DUR * SR))
     # the module's gentle whoosh at each swap (now -26 dB re the voice peak); WHOOSH=0 leaves it out
-    swaps = [ts for ts, _ in S.SWAPS] if os.environ.get("WHOOSH", "1") == "1" else []
+    swaps = [ts for ts, _ in S.SEQ[1:]] if os.environ.get("WHOOSH", "1") == "1" else []
     v = MC.clean_voice(dry_voice(N))
     y = MC.mix(v, S.DUR, swaps=swaps, key=KEY)
     sf.write(os.path.join(OUT, "mix.wav"), y.astype(np.float32), SR, subtype="FLOAT")

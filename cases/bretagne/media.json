@@ -258,5 +258,85 @@
   "author": "Jocelyn Augustino/FEMA",
   "date": "2005",
   "is_the_real_dog": false
+ },
+ {
+  "key": "vid_bush_ground_zero_wh",
+  "type": "commons",
+  "title": "U.S. President George W. Bush's bullhorn address at Ground Zero in New York City on 14 September 2001.webm",
+  "shows": "VIDEO 2m01s: 14 Sept 2001 at Ground Zero - rescue workers, firefighters and rubble pile during the search phase when Bretagne was there (non-graphic).",
+  "license": "Public domain (White House Communications Agency)",
+  "author": "White House Communications Agency",
+  "date": "2001",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_ground_zero_murray_west_nara",
+  "type": "commons",
+  "title": "Arrivals, Departures and OTRs Tape -1 - Trip to New York- Tour of Murray Street and West Street - NARA - 6171391.ogv",
+  "shows": "VIDEO 2m18s: NARA/Bush Library raw tape, 14 Sept 2001, Murray & West Streets - responders and wreckage at the WTC site (raw, natural sound).",
+  "license": "Public domain (U.S. government work)",
+  "author": "George W. Bush Presidential Library / NARA",
+  "date": "2001",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_fema_usar_k9_broll_maui",
+  "type": "archive",
+  "title": "yt_PQCjLkCRe6I",
+  "shows": "VIDEO 9:33 FEMA b-roll (Aug 2023): FEMA USAR canine teams searching burned Lahaina - handlers with dogs in debris ~3:27-6:30, dog being cared for 2:27-3:00, task force walking 9:30. No narration. Best modern USAR-dog footage (not WTC).",
+  "license": "Public domain (FEMA, U.S. government work)",
+  "author": "FEMA",
+  "date": "2023",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_reading_with_dogs",
+  "type": "commons",
+  "title": "Reading with Dogs 1080p no graphics (955320).webm",
+  "shows": "VIDEO 53s, 1080p, clean (no graphics): children reading books to service dogs at a library (Ramstein AB, 2025) - illustrates Bretagne's later reading-assistance work.",
+  "license": "Public domain (U.S. Air Force / DVIDS)",
+  "author": "Staff Sgt. Joseph Knoch, U.S. Air Force",
+  "date": "2025",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_golden_swimming",
+  "type": "commons",
+  "title": "Golden retriever swimming the doggy paddle.webm",
+  "shows": "VIDEO 34s, 1080p: golden retriever swimming (breed stand-in; Bretagne swam for exercise in old age).",
+  "license": "CC BY 3.0",
+  "author": "Golden Woofs",
+  "date": "2013",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_golden_puppy",
+  "type": "commons",
+  "title": "Puppy playing.webm",
+  "shows": "VIDEO 49s: golden-coloured puppy playing indoors - possible stand-in for Bretagne's puppyhood (breed not confirmed - check).",
+  "license": "CC BY-SA 3.0",
+  "author": "Subhashish Panigrahi",
+  "date": "2013",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_fema_usar_k9_la_wildfire",
+  "type": "archive",
+  "title": "yt_W-HqxL1T900",
+  "shows": "VIDEO 1:13 FEMA (Jan 2025): USAR K9 teams in LA wildfire ruins - dogs searching rubble 0:25-1:06, incl. a golden/yellow retriever-type dog working debris ~0:55 and greeting handler ~1:06; handler talks to camera 0:01 and 1:13 (use cutaways).",
+  "license": "Public domain (FEMA, U.S. government work)",
+  "author": "FEMA",
+  "date": "2025",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_fema_usar_maui_wa_tf1",
+  "type": "archive",
+  "title": "yt_aU7FZlM4O9U",
+  "shows": "VIDEO 1:41 FEMA (Aug 2023): Washington Task Force 1 canine teams searching Lahaina - dogs on rubble 0:30-1:14 and 1:30; short interviews 0:21 and 1:20; FEMA end card 1:41 (trim).",
+  "license": "Public domain (FEMA, U.S. government work)",
+  "author": "FEMA",
+  "date": "2023",
+  "is_the_real_dog": false
  }
 ]

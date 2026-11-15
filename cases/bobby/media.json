@@ -248,5 +248,125 @@
   "author": "Kim Traynor",
   "date": "2007",
   "is_the_real_dog": false
+ },
+ {
+  "key": "vid_scotland_1950_edinburgh_princes_st",
+  "type": "archive",
+  "title": "111-adc-10244",
+  "shows": "FILM ~11 min (1950, B&W): Scotland travelogue. Edinburgh section ~5:15-6:45 - Princes Street with Scott Monument and trams (5:27), Old Town/Royal Mile tenements (5:57), Holyrood/castle with mounted soldier (6:27), a small dog gravestone at ~6:57 (likely Edinburgh Castle dog cemetery - check). Also Highland crofts 0:57-3:30, St Andrews golf 4:57, Burns cottage 7:27. Skip end (10:45 politician speech).",
+  "license": "Public domain (U.S. government work, National Archives) - 1950 British film footage held by NARA (111-ADC-10244)",
+  "author": "National Archives / Internet Archive",
+  "date": "1950",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_scotland_1950_holyrood_pipers",
+  "type": "archive",
+  "title": "111-adc-10402",
+  "shows": "FILM ~11 min (1950): pipe band marching past Holyroodhouse, Edinburgh at ~3:27; Edinburgh documentary festival poster 2:57; Scottish river scenery 1:57-2:30. Rest is industry/shops - ignore.",
+  "license": "Public domain (U.S. government work, National Archives)",
+  "author": "National Archives / Internet Archive",
+  "date": "1950",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_royal_mile",
+  "type": "commons",
+  "title": "The Royal Mile, Edinburgh.webm",
+  "shows": "VIDEO 14s, 1080p: the Royal Mile, Old Town - Bobby's neighbourhood today.",
+  "license": "CC BY-SA 3.0",
+  "author": "Stinglehammer",
+  "date": "2018",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_mercat_cross_royal_mile",
+  "type": "commons",
+  "title": "The Mercat Cross and Royal Mile, Edinburgh.webm",
+  "shows": "VIDEO 12s, 1080p: Mercat Cross and the Royal Mile (High Street).",
+  "license": "CC BY-SA 4.0",
+  "author": "Stinglehammer",
+  "date": "2023",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_piper_castlehill",
+  "type": "commons",
+  "title": "Piper on Castlehill, Edinburgh.webm",
+  "shows": "VIDEO 18s, 1080p: bagpiper on Castlehill at top of the Royal Mile - atmospheric Old Town shot.",
+  "license": "CC BY-SA 4.0",
+  "author": "Stinglehammer",
+  "date": "2023",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_bagpiper_high_court",
+  "type": "commons",
+  "title": "A Bagpiper playing besides High Court of Justiciary, Edinburgh.webm",
+  "shows": "VIDEO 29s: bagpiper beside the High Court on the Royal Mile (close to George IV Bridge/Greyfriars).",
+  "license": "CC BY-SA 4.0",
+  "author": "Subhashish Panigrahi",
+  "date": "2016",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_castle_gun_salute",
+  "type": "commons",
+  "title": "21-gun salute on top of Edinburgh Castle.webm",
+  "shows": "VIDEO 35s, 1080p: guns firing from Edinburgh Castle - illustrates the One O'Clock Gun legend (Bobby said to leave the kirkyard for his meal at the gun).",
+  "license": "CC BY 2.0",
+  "author": "Caitlin Bonnar",
+  "date": "2015",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_edinburgh_aerial",
+  "type": "commons",
+  "title": "Edinburgh Aerial.webm",
+  "shows": "VIDEO 1m30s, 1080p drone over Edinburgh city centre and Old Town.",
+  "license": "CC BY-SA 4.0",
+  "author": "Danieljksn",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_craigmillar_panorama",
+  "type": "commons",
+  "title": "Panoramic video of Edinburgh, Scotland from the top of Craigmillar Castle.webm",
+  "shows": "VIDEO 22s: panorama of Edinburgh skyline with Castle and Arthur's Seat.",
+  "license": "CC0",
+  "author": "Dcameron814",
+  "date": "2024",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_edinburgh_castle_4k",
+  "type": "commons",
+  "title": "Edinburgh Castle ,Scotland.webm",
+  "shows": "VIDEO 6m25s, 4K: Edinburgh Castle and esplanade, walk-around b-roll (YouTube CC; may carry small channel title cards - trim).",
+  "license": "CC BY 3.0",
+  "author": "Le Monde en Vidéo",
+  "date": "2016",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_edinburgh_city_tour_4k",
+  "type": "commons",
+  "title": "Edinburgh city tour, Scotland.webm",
+  "shows": "VIDEO 13m09s, 4K: city tour b-roll incl. Old Town streets, Royal Mile, closes; long source for Old Town atmosphere (scrub for Greyfriars/Candlemaker Row shots).",
+  "license": "CC BY 3.0",
+  "author": "Le Monde en Vidéo",
+  "date": "2016",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_walking_edinburgh_4k",
+  "type": "commons",
+  "title": "Walking in EDINBURGH - Scotland (UK) - 4K 60fps (UHD).webm",
+  "shows": "VIDEO 67 min walking tour (1080p on Commons) through Old Town on an autumn day - plentiful street-level b-roll; may pass Greyfriars/Bobby statue (scrub).",
+  "license": "CC BY 3.0",
+  "author": "POPtravel",
+  "date": "2020",
+  "is_the_real_dog": false
  }
 ]

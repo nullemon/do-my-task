@@ -199,5 +199,105 @@
   "author": "US Navy / National Archives",
   "date": "1944",
   "is_the_real_dog": false
+ },
+ {
+  "key": "vid_nadzab_paratroop_drop_1943",
+  "type": "archive",
+  "title": "111-adc-306",
+  "shows": "FILM 8:32 (Aug-Sept 1943): 'Air War in the Pacific' - B-25/B-24 raids on Wewak, New Guinea; C-47s and the 5 Sept 1943 Markham Valley paratroop drop that captured Nadzab (~7:00-8:30, C-47 take-off, men jumping, parachutes over the valley). Nadzab = where Smoky was found.",
+  "license": "Public domain (U.S. government work, National Archives)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1943",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_new_guinea_air_evac_1944",
+  "type": "archive",
+  "title": "111-adc-1684",
+  "shows": "FILM 8 min (1944): C-47 transports at Ward's airdrome near Port Moresby, ambulances and jeeps meeting planes, stretcher cases loaded - New Guinea airfield and field-medical context (no gore on contact sheet; title card at 2:57).",
+  "license": "Public domain (U.S. government work, National Archives)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_signal_corps_wire_1944",
+  "type": "archive",
+  "title": "YourJobInTheSignalCorps",
+  "shows": "FILM 10:12 (1944, MISC-928 'Your Job in the Signal Corps'): soldiers laying field wire through jungle ~3:15-4:15 and 8:15-8:45 (Pacific), switchboards and radio operators 4:45-6:00. Skip intro talking head 1:15-2:00.",
+  "license": "Public domain (U.S. Army training film)",
+  "author": "U.S. Army Signal Corps / Internet Archive",
+  "date": "1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_leyte_hospital_pows_1945",
+  "type": "archive",
+  "title": "111-adc-3381",
+  "shows": "FILM 10 min (Feb 1945): rescued Army nurses at 126th General Hospital, Leyte (1:00-3:00); C-47s and ambulances at Tacloban airstrip, freed POWs helped from planes (3:27-6:45) - Philippines hospital/airstrip context for Smoky's hospital visits. AVOID 7:15-10:00 (Manila street fighting, a body visible ~8:27).",
+  "license": "Public domain (U.S. government work, National Archives)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_mag24_lingayen_1945",
+  "type": "commons",
+  "title": "Today in History - MAG-24 Lands in Philippines January 11, 1945.webm",
+  "shows": "VIDEO 1m45s: archival film of Marine Aircraft Group 24 landing on the south shore of Lingayen Gulf, Luzon, 11 Jan 1945, and building airstrip operations - matches Smoky's Lingayen airfield (may contain DVIDS title text - trim).",
+  "license": "Public domain (U.S. Marine Corps / DVIDS)",
+  "author": "Sgt. Laura Gauna, 1st Marine Aircraft Wing",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_yorkie_stairs",
+  "type": "commons",
+  "title": "Yorkshire Terrier - MVI 2394.webm",
+  "shows": "VIDEO 5s, 720p: Yorkshire terrier trotting downstairs (breed stand-in for Smoky).",
+  "license": "CC BY-SA 4.0",
+  "author": "Captain-tucker",
+  "date": "2012",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_yorkie_dog_bed",
+  "type": "commons",
+  "title": "Yorkie Dance.webm",
+  "shows": "VIDEO 17s, 1080p: elderly Yorkshire terrier in a dog bed.",
+  "license": "CC BY-SA 4.0",
+  "author": "Blight55",
+  "date": "2019",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_yorkie_fastily_1",
+  "type": "commons",
+  "title": "Yorkshire Terrier 1 2013-09-13.ogv",
+  "shows": "VIDEO 23s, 1080p: Yorkshire terrier close-up.",
+  "license": "CC BY-SA 3.0",
+  "author": "FASTILY",
+  "date": "2013",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_yorkie_fastily_2",
+  "type": "commons",
+  "title": "Yorkshire Terrier Dog 1 2013-09-15.ogv",
+  "shows": "VIDEO 16s, 1080p: Yorkshire terrier.",
+  "license": "CC BY-SA 3.0",
+  "author": "FASTILY",
+  "date": "2013",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_yorkie_fastily_3",
+  "type": "commons",
+  "title": "Yorkshire Terrier Dog 2 2013-09-15.ogv",
+  "shows": "VIDEO 11s, 1080p: Yorkshire terrier.",
+  "license": "CC BY-SA 3.0",
+  "author": "FASTILY",
+  "date": "2013",
+  "is_the_real_dog": false
  }
 ]

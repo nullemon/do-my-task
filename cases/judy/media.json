@@ -215,5 +215,155 @@
   "license": "Public domain (U.S. government / pre-1929 film)",
   "author": "National Archives / Internet Archive · 111-adc-1438",
   "is_the_real_dog": false
+ },
+ {
+  "key": "vid_panay_yangtze_1937",
+  "type": "archive",
+  "title": "1937-12-12_Bombing_of_USS_Panay",
+  "shows": "NEWSREEL 22 min (Universal, 1937): river gunboats on the Yangtze, Nanking - closest available film of the 1930s Yangtze gunboat world Judy lived in (HMS Ladybird/Bee were also attacked that day). Good: 1:00-12:00 river, gunboat decks, crew with binoculars; 14:00-16:00 burning/settling gunboat. AVOID 17:00-20:30 (wounded men).",
+  "license": "Public domain (Universal Newsreel, PD per Internet Archive)",
+  "author": "Universal Newsreel / Internet Archive",
+  "date": "1937",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_japan_conquers_singapore_1942",
+  "type": "archive",
+  "title": "NPC-9208",
+  "shows": "FILM 9:53 (captured Japanese newsreel, Feb 1942): Singapore under attack, smoke over the city, Japanese troops advancing, tanks - the fall of Singapore when Judy's ship fled. Soft quality; battle but no gore seen on contact sheet.",
+  "license": "Public domain (captured enemy film, U.S. National Archives)",
+  "author": "National Archives (NPC 9208) / Internet Archive",
+  "date": "1942",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_fall_of_singapore_nippon_news",
+  "type": "commons",
+  "title": "Fall of Singapore, Nippon News No 90.webm",
+  "shows": "VIDEO 2m38s: Japanese Nippon News No. 90 - Yamashita-Percival surrender meeting, Feb 1942.",
+  "license": "Public domain",
+  "author": "Nippon Eigasha (Nippon News)",
+  "date": "1942",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_japan_conquers_se_asia",
+  "type": "commons",
+  "title": "Japan verovert Zuidoost-Azië.webm",
+  "shows": "VIDEO 8m54s: Japanese propaganda compilation of the conquest of Southeast Asia 1941-42 (Malaya/Singapore/Java) - use troop and ship shots.",
+  "license": "Public domain",
+  "author": "Nippon Eigasha Djawa / Beeld en Geluid",
+  "date": "1942",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_medan_1943",
+  "type": "commons",
+  "title": "Perdjoempaan kaoem moeslim Soematera Baroe.webm",
+  "shows": "VIDEO 6m25s: Japanese-occupied Sumatra 1943 - gathering at the great mosque of Medan; street and crowd shots of Sumatra during the occupation (Judy's POW years).",
+  "license": "Public domain",
+  "author": "Nippon Eigasha",
+  "date": "1943",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_sumatra_1925_usda",
+  "type": "commons",
+  "title": "Agricultural Explorations in Ceylon, Sumatra, and Java 1925-1926.webm",
+  "shows": "VIDEO 21 min silent (USDA): 1920s Sumatra and Java - jungle, plantations, rivers, villages; period landscape for Sumatra/Pekanbaru jungle (scrub for Sumatra section).",
+  "license": "Public domain (U.S. government work)",
+  "author": "United States Department of Agriculture",
+  "date": "1926",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_belawan_1929",
+  "type": "commons",
+  "title": "Gouverneur-generaal De Graeff komt per kruiser Zeven Provincieen aan in Belawan.webm",
+  "shows": "VIDEO 2m01s: Dutch cruiser arriving at Belawan, port of Medan, Sumatra, 1929 - period Sumatra harbour/river.",
+  "license": "Public domain",
+  "author": "Willy Mullens / Haghefilm",
+  "date": "1929",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_kampar_river",
+  "type": "commons",
+  "title": "Boating through the Kampar River.webm",
+  "shows": "VIDEO 3m01s, 1080p: boat journey on the Kampar River, Riau, Sumatra - the jungle river country around Pekanbaru where the railway was built.",
+  "license": "CC BY 4.0",
+  "author": "Lelly Marliana and Joaquim Baeta",
+  "date": "2016",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_padang_surrender_1945",
+  "type": "commons",
+  "title": "Japanese 25th Army Surrender in Padang, Sumatra.webm",
+  "shows": "VIDEO 54s: Japanese 25th Army surrender in Padang 1945 - end of the war for Sumatra POWs including the Pekanbaru railway prisoners (Judy's liberation).",
+  "license": "Public domain",
+  "author": "Unknown (1945 newsreel)",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_freed_pows_bangkok_1946",
+  "type": "commons",
+  "title": "BIJ ONZE BEVRIJDE LANDGENOTEN IN BANGKOK-PGM4011873.webm",
+  "shows": "VIDEO 2m49s Polygoon newsreel: freed Dutch ex-POWs recovering at a camp near Bangkok, exercising; shots of the Burma railway and memorials - non-graphic liberation/recovery mood.",
+  "license": "Public domain",
+  "author": "Polygoon Hollands Nieuws / Beeld en Geluid",
+  "date": "1946",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_surrender_singapore_1945",
+  "type": "archive",
+  "title": "111-adc-9897",
+  "shows": "FILM 9 min (Sept 1945): Japanese surrender signing for Singapore aboard ship, Royal Navy cruiser 2:57, British officers ashore 5:57, liberated Singapore streets with cheering crowds 7:27-8:57.",
+  "license": "Public domain (U.S. government work, National Archives)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_reoccupation_singapore_1945",
+  "type": "archive",
+  "title": "111-adc-5261",
+  "shows": "FILM 7:44 (5 Sept 1945): aerial views over Singapore city 0:57-2:27, troops climbing down nets into landing craft, transports and warships in Singapore roads - Allied return to Singapore.",
+  "license": "Public domain (U.S. government work, National Archives)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_released_pows_japan_1945",
+  "type": "archive",
+  "title": "ReleasedUSPrisonersOfWar",
+  "shows": "FILM 6:05 silent (31 Aug 1945): released Allied POWs gathering at Yokohama dock, trucks of freed men - liberation context (non-graphic, low contrast).",
+  "license": "Public domain (U.S. Army Air Forces film CS-4554)",
+  "author": "USAAF / National Archives / Internet Archive",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_palembang_1946",
+  "type": "commons",
+  "title": "Nieuws uit Indonesië, landing van Nederlandse troepen in Palembang Weeknummer 46-52 - Open Beelden - 16906.ogv",
+  "shows": "VIDEO 1m16s (320px, small): Dutch troopship on the Musi river, Palembang, Sumatra 1946 - post-war Sumatra river scenes.",
+  "license": "CC BY-SA 3.0 nl",
+  "author": "Polygoon / Nederlands Instituut voor Beeld en Geluid",
+  "date": "1946",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_bird_dogs_pointers_1940",
+  "type": "archive",
+  "title": "BirdDogs1940",
+  "shows": "FILM 10:19 (c.1940): 'Champion Bird Dogs: Pointer, Irish Setter, English Setter and Spaniels' - pointers working and holding point in fields; best pointer shots ~10:30-11:00 (two liver-and-white pointers on point), field work 6:00-8:30. Great stand-in for Judy's breed.",
+  "license": "Public domain (Prelinger Archives)",
+  "author": "Prelinger Archives / Internet Archive",
+  "date": "1940",
+  "is_the_real_dog": false
  }
 ]

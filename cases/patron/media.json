@@ -288,5 +288,155 @@
   "author": "Valerygyujhhgu",
   "date": "2023",
   "is_the_real_dog": false
+ },
+ {
+  "key": "vid_trudeau_zelensky_meeting_0508",
+  "type": "commons",
+  "title": "Президент України Володимир Зеленський зустрівся з Премʼєр-міністром Канади Джастіном Трюдо.webm",
+  "shows": "VIDEO 2m19s, 8 May 2022 Kyiv: Zelensky meets Trudeau - the same event/press appearance at which Patron and handler Mykhailo Iliev were decorated. Patron likely appears in the award segment (could not frame-check; scrub before use).",
+  "license": "CC BY 3.0",
+  "author": "Ukrinform TV",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_trudeau_irpin_0508",
+  "type": "commons",
+  "title": "Прем'єр Канади Трюдо відвідав Ірпінь.webm",
+  "shows": "VIDEO 2m08s, 8 May 2022: Trudeau visits war-damaged Irpin, Kyiv Oblast, same day as Patron's award. Context b-roll of ruined streets (check for distressing shots).",
+  "license": "CC BY 3.0",
+  "author": "Ukrinform TV",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_eod_chernihiv_20mar",
+  "type": "commons",
+  "title": "Explosive ordnance disposal in Chernihiv, 20 March 2022.webm",
+  "shows": "VIDEO 40s: SES pyrotechnic team clearing ordnance in Chernihiv during the siege - Patron's own unit/city.",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_eod_chernihiv_24mar",
+  "type": "commons",
+  "title": "Explosive ordnance disposal in Chernihiv, 24 March 2022.webm",
+  "shows": "VIDEO 30s (640px): SES sappers disposing explosive objects in shelled Chernihiv.",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_bomb_disposal_chernihiv_9mar",
+  "type": "commons",
+  "title": "Disposal of Russian bombs in Chernihiv, 9 March 2022 (1).webm",
+  "shows": "VIDEO 36s: SES sappers remove an unexploded FAB-500 aerial bomb in Chernihiv's private sector during the siege.",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_bomb_disposal_chernihiv_21apr",
+  "type": "commons",
+  "title": "Disposal of Russian bombs in Chernihiv, 21 April 2022.webm",
+  "shows": "VIDEO 1m36s: first part shows bombed Chernihiv stadium, then SES removes FAB-500/FAB-250 bombs from the city.",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_rockets_chernihiv_beach",
+  "type": "commons",
+  "title": "Rockets from Uragan multiple rocket launcher on Chernihiv beach.webm",
+  "shows": "VIDEO 30s, 10 Apr 2022: SES sappers recover Uragan rockets from Chernihiv city beach and the Desna river.",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_shestovytsia_sappers",
+  "type": "commons",
+  "title": "Shestovytsia after battle, 19 April 2022.webm",
+  "shows": "VIDEO 1m03s: SES sappers clearing unexploded ammunition in Shestovytsia village, Chernihiv Oblast, and teaching locals mine safety (matches existing Shestovytsia photos).",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_nova_basan_demining",
+  "type": "commons",
+  "title": "Розмінування території поблизу села Нова Басань на Чернігівщині.webm",
+  "shows": "VIDEO 4m15s, 22 Apr 2022: demining of fields near Nova Basan, Chernihiv region - sapper teams in the countryside, long usable b-roll.",
+  "license": "CC BY 3.0",
+  "author": "Ukrinform TV",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_demining_kyiv_region_ukrinform",
+  "type": "commons",
+  "title": "Розмінування колишніх позицій військ рашистів.webm",
+  "shows": "VIDEO 1m52s, 22 Apr 2022: SES sappers demining former Russian positions in Kyiv region (interview with SES regional head in places - use the field shots).",
+  "license": "CC BY 3.0",
+  "author": "Ukrinform TV",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_eod_kyiv_oblast_14apr",
+  "type": "commons",
+  "title": "Explosive ordnance disposal in Kyiv Oblast, 14 April 2022.webm",
+  "shows": "VIDEO 1m14s: 20 SES demining teams clearing ~500 explosive objects in Bucha, Brovary and Boryspil districts.",
+  "license": "CC BY 4.0",
+  "author": "State Emergency Service of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_eod_kyiv_march_compilation",
+  "type": "commons",
+  "title": "Explosive ordnance disposal in Kyiv and Kyiv Oblast, March 2022.webm",
+  "shows": "VIDEO 6m31s: police + SES sappers clearing missiles, bombs, shells and grenades across Kyiv region in March 2022 - long source of sapper b-roll (skip any detonation if unwanted).",
+  "license": "CC BY 4.0",
+  "author": "Ministry of Internal Affairs of Ukraine",
+  "date": "2022",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_chernihiv_station_drone",
+  "type": "commons",
+  "title": "Залізничний вокзал з висоти БПЛА.webm",
+  "shows": "VIDEO 13s, 1080p drone shot of Chernihiv railway station (pre-war, 2019) - peaceful establishing shot of Patron's home city.",
+  "license": "CC BY-SA 4.0",
+  "author": "Andrew Matus",
+  "date": "2019",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_chernihiv_mazepa_house",
+  "type": "commons",
+  "title": "Mazepa House Chernihiv 6 april 2024.webm",
+  "shows": "VIDEO 47s, 1080p: historic Mazepa House (Lyzohub house), Chernihiv - city establishing shot.",
+  "license": "CC BY-SA 4.0",
+  "author": "Nomad0212",
+  "date": "2024",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_kyiv_st_andrews_drone",
+  "type": "commons",
+  "title": "Drone Grand Tour - St Andrew's Church, Kiev.webm",
+  "shows": "VIDEO 1m07s, 1080p aerial of St Andrew's Church and Kyiv skyline (2017) - Kyiv establishing shot.",
+  "license": "CC BY 3.0",
+  "author": "Drone Grand Tour",
+  "date": "2017",
+  "is_the_real_dog": false
  }
 ]

@@ -29,7 +29,7 @@ FPS = 30
 LEAD, TAIL = 0.25, 1.30
 F_PX = 1150.0                     # the plate's lens (as in rogue-planet): ~80 deg vertical
 YH = 1366.0                       # eye level (the street's vanishing point)
-INS = (560.0, 655.0); RI = 178; IM = 34   # telescope inset: centre, radius (px)
+INS = (560.0, 665.0); RI = 205; IM = 34   # telescope inset: centre, radius (px)
 MUSIC_KEY = "A"
 RS_KM, AU_KM = 2.9533 * 10.0, 1.495978707e8
 
@@ -68,9 +68,14 @@ def theta_E(t):
     return math.degrees(math.sqrt(2 * RS_KM / (dist_au(t) * AU_KM))) * 60
 
 
+FOVN = 1.75                      # inset field radius in Einstein radii: the ring sits at 57 % of the inset radius
+SHADOW = 0.20                     # drawn shadow radius (theta_E units); a liberty, see README
+PATH_V = 0.55                     # the hole's motion across the background (theta_E per second, time-compressed)
+
+
 def fov(t):
-    """inset field radius (arcmin): keeps the ring readable, zooming out as it grows"""
-    return max(2.7 * theta_E(t), 1.6)
+    """inset field radius (arcmin)"""
+    return FOVN * theta_E(t)
 
 
 # ------------------------------------------------------------------------------------------------ looks
@@ -125,23 +130,23 @@ class Scene:
         Y = lum(fg.rgb)
         gloss = np.clip(cv2.GaussianBlur(Y, (0, 0), 3) * 6, 0.2, 1.0)
         self.wet = (smooth(YH + 20, YH + 90, self.yy) * gloss * a).astype(f32)
-        # ---- the telescope inset: lens table + a star field in arcmin (source plane)
+        # ---- the telescope inset: lens table + a dense star field in units of the Einstein angle (source plane)
         self.lx, self.ly = lensmap.table()
         r = np.random.default_rng(21)
-        n = 36000
-        self.sp = np.stack([r.uniform(-25, 70, n), r.uniform(-30, 30, n)], 1).astype(f32)
-        self.sf = (0.12 * r.uniform(0, 1, n) ** (-1 / 1.25)).clip(0, 25).astype(f32)
-        T = np.clip(r.lognormal(np.log(5200), 0.35, n), 3000, 20000)
-        self.sc = np.stack([bbcolor(x) for x in T]).astype(f32) * 0.6 + 0.4
-        self.tree = cKDTree(self.sp)
-        tt = np.linspace(0, DUR + 1, 2000); rate = np.array([0.20 * fov(x) for x in tt])
+        n = 50000                                                           # ~110 stars per theta_E^2 (a rich Milky Way field)
+        self.sp = np.stack([r.uniform(-4, 36, n), r.uniform(-5.5, 5.5, n)], 1).astype(f32)
+        self.sf = (0.11 * r.uniform(0, 1, n) ** (-1 / 1.1)).clip(0, 30).astype(f32)
+        T = np.clip(r.lognormal(np.log(5600), 0.40, n), 3000, 22000)
+        self.sc = np.stack([bbcolor(x) for x in T]).astype(f32) * 0.55 + 0.45
+        tt = np.linspace(0, DUR + 1, 2000); rate = np.array([PATH_V for x in tt])
         self.path_t = tt; self.path_x = np.concatenate([[0], np.cumsum(rate[1:] * np.diff(tt))]).astype(f32)
         # a bright star placed so the hole slides right over it on "BEND": a full Einstein ring
         px = float(np.interp(T_BEND + 0.15, tt, self.path_x))
-        self.sp = np.vstack([self.sp, [[px, 0.03 * theta_E(T_BEND)]]]).astype(f32)
-        self.sf = np.append(self.sf, 30.0).astype(f32); self.sc = np.vstack([self.sc, [[1.0, 0.95, 1.0]]]).astype(f32)
+        self.sp = np.vstack([self.sp, [[px, 0.025]]]).astype(f32)
+        self.sf = np.append(self.sf, 40.0).astype(f32); self.sc = np.vstack([self.sc, [[1.0, 0.95, 1.0]]]).astype(f32)
         self.tree = cKDTree(self.sp)
         self.glow_tex = cv2.resize(fbm2((64, 64), 23, 2.2), (512, 512), interpolation=cv2.INTER_CUBIC)
+        self.swirl_tex = cv2.GaussianBlur(fbm2((256, 256), 24, 1.8), (0, 0), 1.2)
         g = np.mgrid[-RI - IM:RI + IM, -RI - IM:RI + IM].astype(f32) + 0.5
         self.iy, self.ix = g[0], g[1]
         self.ir = np.sqrt(self.ix ** 2 + self.iy ** 2)
@@ -166,28 +171,37 @@ class Scene:
 
     # -------------------------------------------------------------------------------------------- the inset
     def inset(self, t, I, scale, acc):
-        """telescope view centred on the hole: inverse ray shooting through the traced lens table, analytic star sources"""
-        thE = theta_E(t); F = fov(t); k = F / (RI * scale + 1e-6)                     # arcmin per inset px
-        thx, thy = self.ix * k, self.iy * k
+        """telescope view centred on the hole, in units of theta_E: inverse ray shooting through the traced lens table
+        (lensmap.py <- ../black-hole-suns/lens.py), analytic star sources (KD-tree), lensed Milky Way glow"""
+        k = FOVN / (RI * scale + 1e-6)                                                # theta_E per inset px
         th = self.ir * k + 1e-6
-        y = np.interp(th / thE, self.lx, self.ly) * thE                               # signed source radius (arcmin)
-        bx = thx / th * y; by = thy / th * y
+        y = np.interp(th, self.lx, self.ly)                                           # signed source radius (theta_E)
+        bx = self.ix * k / th * y; by = self.iy * k / th * y
         p0 = float(np.interp(t, self.path_t, self.path_x))
-        src = np.stack([bx.ravel() + p0, by.ravel() + 0.2 * math.sin(t * 0.05)], 1)
-        sig = max(0.85 * k, 0.012)                                                    # seeing: ~0.85 px in the image
+        src = np.stack([bx.ravel() + p0, by.ravel() + 0.15 * math.sin(t * 0.07)], 1)
+        sig = max(0.9 * k, 0.004)                                                     # seeing: ~0.9 px in the image
         d, idx = self.tree.query(src, k=4, distance_upper_bound=4 * sig)
         ok = np.isfinite(d)
         idx = np.where(ok, idx, 0); w = np.exp(-0.5 * (np.where(ok, d, 9e9) / sig) ** 2) * ok
         img = np.einsum("nk,nkc->nc", w * self.sf[idx], self.sc[idx]).reshape(self.ix.shape + (3,)).astype(f32)
-        # faint unresolved Milky Way glow behind (also lensed): makes the ring read as a ring
-        gx = ((bx + p0) * 6 % 512).astype(f32); gy = ((by + 40) * 6 % 512).astype(f32)
+        gx = ((bx + p0) * 40 % 512).astype(f32); gy = ((by + 9) * 40 % 512).astype(f32)
         gl = cv2.remap(self.glow_tex, gx, gy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        img += (0.004 + 0.006 * np.clip(gl, -1, 3))[..., None] * np.array([0.55, 0.60, 1.0], f32)
-        img += np.array([0.002, 0.0025, 0.006], f32)
-        # accretion glow: a hot point at the hole (solar-wind gas), with a soft halo
+        img += (0.010 + 0.008 * np.clip(gl, -1, 3))[..., None] * np.array([0.60, 0.62, 1.0], f32)
+        rn = th
+        # accretion: captured solar-wind gas swirling in (orange inside, violet outside); Bondi radius ~0.09 AU ~ 2 theta_E
         if acc > 0:
-            img += ((np.exp(-self.ir / 2.2) * 30 + np.exp(-self.ir / 8) * 1.2 + np.exp(-self.ir / 35) * 0.06) * acc)[..., None] \
-                * np.array([1.0, 0.80, 0.62], f32)
+            ang = np.arctan2(self.iy, self.ix)
+            u = ((ang / (2 * np.pi) * 256 * 2 + 70 * np.log(rn + 0.05) - t * 26) % 256).astype(f32)
+            v = ((40 * np.log(rn + 0.05) + t * 3) % 256).astype(f32)
+            sw = cv2.remap(self.swirl_tex, u, v, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+            env = np.exp(-np.maximum(rn - SHADOW, 0) / 0.32) * smooth(SHADOW * 0.95, SHADOW * 1.25, rn)
+            arms = np.clip(0.55 + 0.45 * sw, 0, 2) ** 2
+            cmix = smooth(0.25, 0.75, rn)[..., None]
+            col = np.array([1.0, 0.52, 0.18], f32) * (1 - cmix) + np.array([0.62, 0.30, 1.0], f32) * cmix
+            img += (env * arms * 0.9 * acc)[..., None] * col
+        # the shadow (drawn ~0.2 theta_E so it reads; true size ~0.001 theta_E) with a thin photon ring
+        img *= smooth(SHADOW * 0.93, SHADOW * 1.02, rn)[..., None]
+        img += (np.exp(-np.abs(rn - SHADOW * 1.03) / 0.008) * 0.9)[..., None] * np.array([1.0, 0.85, 0.75], f32) * (0.4 + 0.6 * min(acc, 1.0) + 0.3)
         return img * I
 
     def place_inset(self, img, t, I, scale, acc, tint):

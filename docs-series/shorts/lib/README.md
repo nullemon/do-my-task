@@ -32,3 +32,6 @@ What they want: a HUGE sky effect filling the upper half of the frame, always mo
 
 ## User rule (11 Nov): voice
 Keep Kokoro **am_michael** (as in all videos so far: speed 0.94 for documentaries, 1.05 for Shorts). User tried am_fenrir and other open models (Chatterbox, Zonos, StyleTTS2, F5, XTTS v2, Dia, Piper) and chose to stay with am_michael.
+
+## USER RULE (15 Nov): mix
+Voice first. Music very soft and calm (about -30 LUFS under the voice, ducked further during speech). SFX sparse and subtle (≥12 dB under the voice). No loud beds, rumbles, booms or risers.

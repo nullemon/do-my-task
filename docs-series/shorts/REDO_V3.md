@@ -41,3 +41,10 @@ Keep all visuals, fixes and readouts. Re-time the beats, swaps, captions and rea
 AAC can overshoot true peak on loud swap transients. Low-pass at 17 kHz (or add an alimiter at -1.5 dBTP) before AAC, and measure the true peak on the FINAL mp4.
 
 ## v3 redo complete (14 Nov): all 18 delivered to Gofile https://gofile.io/d/xpiUozuT as v3-<name>-short.mp4
+
+## USER RULE (15 Nov): background sound and effects were far too loud
+"the background sound and effects is too much... you cant even hear the voice". From now on the VOICE dominates:
+- Music bed: very soft, about -30 to -28 LUFS under the voice, simple and calm (no busy arpeggios or risers). Sidechain-duck a further 6–8 dB while speech plays.
+- SFX: few and subtle. At most a soft whoosh on each swap, peaking at least 12 dB below the voice. No constant rumbles, crackles or shimmer beds. No big booms; keep any impact short and quiet.
+- Voice: the clear centre of the mix. Its peaks should sit 12–15 dB above everything else; check this by listening to 3 moments.
+- Overall: −14 LUFS with the voice carrying most of the loudness.

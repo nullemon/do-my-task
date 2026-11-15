@@ -1,0 +1,203 @@
+[
+ {
+  "key": "stamp_phlpost",
+  "type": "commons",
+  "title": "2023 Historic dogs of the Philippines stamp (Smoky).jpg",
+  "shows": "2023 Philippine postage stamp sheet 'Historic Dogs of the Philippines' depicting Smoky (illustration, small 211x267 px)",
+  "license": "Public domain (per Commons; Philippine government work, Sec. 176 IP Code: commercial reuse of govt works may need PHLPost approval)",
+  "author": "PHLPost",
+  "date": "2023",
+  "is_the_real_dog": true,
+  "note": "Artwork of Smoky, not a photo. Low resolution."
+ },
+ {
+  "key": "memorial_lakewood",
+  "type": "commons",
+  "title": "20191102-DSC 0013.jpg",
+  "shows": "Bronze Smoky memorial (dog in GI helmet on books) in Rocky River Reservation, Cleveland Metroparks, Lakewood, Ohio",
+  "license": "CC BY-SA 4.0 (photo). CAUTION: 2005 sculpture by Susan Bahary is copyrighted; US has no freedom of panorama for sculpture",
+  "author": "Aphillcsa",
+  "date": "2019",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "nadzab_airfield",
+  "type": "commons",
+  "title": "Nadzab Airfield - New Guinea.jpg",
+  "shows": "Nadzab airfield, New Guinea, where Wynne was stationed in 1944",
+  "license": "Public domain",
+  "author": "United States Army Air Forces",
+  "date": "1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "nadzab_c47s",
+  "type": "commons",
+  "title": "RG18-AG-3883.jpg",
+  "shows": "USAAF C-47 transports parked at Nadzab airfield, New Guinea",
+  "license": "Public domain",
+  "author": "US Army Air Forces (NARA RG18)",
+  "date": "1943-1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "nadzab_briefing",
+  "type": "commons",
+  "title": "RG18-AG--3887.tif",
+  "shows": "Aircrew briefing room in the Nadzab area, New Guinea",
+  "license": "Public domain",
+  "author": "US Army Air Forces (NARA RG18)",
+  "date": "1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "tent_hospital",
+  "type": "commons",
+  "title": "In the Station Hospital in a Tent on Cape Gloucester - DPLA - 0d303c2a73d6471de6f815dc062e65e0.jpg",
+  "shows": "Army nurse and ward staff in a tent station hospital (Cape Gloucester, New Britain) - illustrates the kind of tent ward Smoky visited",
+  "license": "Public domain",
+  "author": "US Army Signal Corps",
+  "date": "c. 1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "ward_milne_bay",
+  "type": "commons",
+  "title": "Surgical ward treatment at the 268th Station Hospital... (5546316741).jpg",
+  "shows": "Nurses caring for a patient in a surgical ward, 268th Station Hospital, Milne Bay, New Guinea",
+  "license": "No known copyright restrictions (US National Archives)",
+  "author": "US National Archives / US Army",
+  "date": "1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "f5_lightning",
+  "type": "commons",
+  "title": "4th Reconnaissance Squadron F-5 Lightning 1945.jpg",
+  "shows": "F-5 Lightning photo-reconnaissance plane (the type flown by photo recon squadrons like Wynne's 26th); this one is in Antigua, not the Pacific",
+  "license": "Public domain",
+  "author": "United States Army Air Forces",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "warships_lingayen",
+  "type": "commons",
+  "title": "US warships entering Lingayen Gulf 1945.jpg",
+  "shows": "USS Pennsylvania leading battleships and cruisers into Lingayen Gulf",
+  "license": "Public domain",
+  "author": "US Navy (80-G-59525)",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "landing_barges",
+  "type": "commons",
+  "title": "Coast Guard landing barges at Lingayen Gulf.jpg",
+  "shows": "Coast Guard landing barges carrying the first assault wave across Lingayen Gulf, 9 Jan 1945",
+  "license": "Public domain",
+  "author": "US Coast Guard / US military",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "lst469_beach",
+  "type": "commons",
+  "title": "USS LST-469 during the Lingayen Gulf invasion in January 1945.jpg",
+  "shows": "Vehicles and supplies unloading on the beach at Lingayen Gulf, Luzon",
+  "license": "Public domain",
+  "author": "US Navy (photographed from USS Feland)",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "lst22",
+  "type": "commons",
+  "title": "LST-22 Lingayen Gulf 1945.jpeg",
+  "shows": "Landing ship LST-22 at Lingayen Gulf",
+  "license": "Public domain",
+  "author": "US Navy",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "map_lingayen_assault",
+  "type": "commons",
+  "title": "The Lingayen Assault 9-11 January 1945 - Map.jpg",
+  "shows": "US Army map of the Lingayen Gulf landing beaches and beachhead, 9-11 Jan 1945",
+  "license": "Public domain",
+  "author": "Robert Ross Smith, US Army Center of Military History",
+  "date": "1963",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "map_lingayen_plan",
+  "type": "commons",
+  "title": "Lingayen gulf 1945.jpg",
+  "shows": "Landing plan map for Lingayen Gulf",
+  "license": "Public domain",
+  "author": "US Army",
+  "date": "1944",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "airstrip_engineers",
+  "type": "commons",
+  "title": "SC 268330 US engineers resurfacing airstrip Cebu April 1945.jpg",
+  "shows": "US Army engineers resurfacing an airstrip in the Philippines (Lahug, Cebu, NOT Lingayen) - generic airstrip-building B-roll",
+  "license": "Public domain",
+  "author": "Tec 5 Arend, US Army Signal Corps",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "okinawa_typhoon",
+  "type": "commons",
+  "title": "Okinawa, Ryukyu Islands after typhoon. Entire Katchin Hanto area.jpg",
+  "shows": "Typhoon damage on Okinawa, Oct 1945 (Smoky reportedly survived a typhoon on Okinawa)",
+  "license": "Public domain",
+  "author": "US Navy",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_lingayen_invasion",
+  "type": "archive",
+  "title": "NPC-4938",
+  "shows": "Film: 'Philippine Invasion, Lingayen Gulf, January 1945' (US Navy combat footage)",
+  "license": "Public domain (PD Mark, NARA)",
+  "author": "US Navy / National Archives",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_convoy_lingayen",
+  "type": "archive",
+  "title": "NPC-7063",
+  "shows": "Film: 'Bombardment of Luzon; Convoy Underway to Lingayen Gulf, 01/09/1945'",
+  "license": "Public domain (PD Mark, NARA)",
+  "author": "US Navy / National Archives",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_lingayen_action",
+  "type": "archive",
+  "title": "NPC-7053",
+  "shows": "Film: 'Action in Lingayen Gulf, 01/10/1945' (may include kamikaze/ship damage; screen for graphic content)",
+  "license": "Public domain (PD Mark, NARA)",
+  "author": "US Navy / National Archives",
+  "date": "1945",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_new_guinea_1944",
+  "type": "archive",
+  "title": "NPC-4182",
+  "shows": "Film: 'Troops Advancing in Italy & Invasion, New Guinea, 1944' (use New Guinea segment only)",
+  "license": "Public domain (PD Mark, NARA)",
+  "author": "US Navy / National Archives",
+  "date": "1944",
+  "is_the_real_dog": false
+ }
+]

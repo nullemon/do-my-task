@@ -1,0 +1,73 @@
+# Lucca: script + visual plan.  Facts and sources: research.md   (no injury imagery; blast described in one plain sentence)
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lib"))
+from shots import *
+NL = "A Marine working dog (not Lucca)"
+
+SEG = [
+ dict(kind="narr", text="More than four hundred missions in Iraq and Afghanistan. And on the patrols she led, not one person was lost.",
+      vis=[FULL(P("retire_waits_command_033", focus=(0.5, 0.4), z=(1.0, 1.10)), punch=True),
+           FULL(P("dvids_retire_flag_617345", focus=(0.5, 0.45), z=(1.0, 1.08)), punch=True)], gap=0.3),
+ dict(kind="narr", text="She walked in front of everyone else, so they wouldn't have to. Then came her last patrol.",
+      vis=[FULL(P("afg_coot_field_patrol", focus=(0.5, 0.5), z=(1.0, 1.1), credit=NL + " · U.S. Marine Corps · Public domain"), pops=[CHIP("HELMAND · 2012", 0.3)]),
+           FULL(P("retire_rodriguez_kneel_143", focus=(0.5, 0.45), z=(1.06, 1.0)), pops=[STAMP("MARCH 23, 2012", 0.3)])], gap=0.3),
+ dict(kind="narr", text="This is the true story of Lucca.",
+      vis=[FULL(P("dvids_dickin_2535912", focus=(0.5, 0.4), z=(1.0, 1.08)))], title=True, gap=0.8),
+
+ dict(kind="chapter", n=1, text="The Search Dog", bg=P("retire_shade_119", focus=(0.5, 0.5))),
+ dict(kind="narr", text="Lucca was a German shepherd and Malinois mix, a female, with the tag number K458.",
+      vis=[SPLIT(P("retire_waits_command_033", focus=(0.5, 0.4)), P("retire_shade_119", focus=(0.5, 0.5)), chip1="LUCCA · K458", chip2="U.S. MARINE CORPS")]),
+ dict(kind="narr", text="She was a specialized search dog, trained to work off the leash, far out in front, hunting for hidden explosives.",
+      vis=[FULL(P("afg_vito_patrol_helmand", focus=(0.5, 0.5), z=(1.0, 1.1), credit=NL + " · U.S. Marine Corps · Public domain"), pops=[CHIP("A MARINE SEARCH DOG · NOT LUCCA", 0.3, color="dark")])]),
+ dict(kind="narr", text="Her first handler and trainer was Gunnery Sergeant Chris Willingham. Together, they served two tours in Iraq.",
+      vis=[MAP("pin", pin="Baghdad", center="Baghdad", towns=[("Baghdad", "BAGHDAD", "r"), ("Diwaniyah", "DIWANIYAH", "r")], label="IRAQ · 2007–2008", zoom=1.4),
+           FULL(P("tunnel_to_towers_2013", focus=(0.5, 0.45), z=(1.0, 1.08)), pops=[CHIP("LUCCA & GYSGT WILLINGHAM", 0.3)])]),
+ dict(kind="narr", text="Along the Tigris River, and around Diwaniyah, she found weapons and bombs, hidden where Marines would walk.",
+      vis=[FULL(P("afg_detectors_2010", focus=(0.5, 0.5), z=(1.08, 1.0), credit=NL + " · U.S. Marine Corps · Public domain"), pops=[CHIP("NOT LUCCA · ILLUSTRATIVE", 0.3, color="dark")])]),
+
+ dict(kind="chapter", n=2, text="Afghanistan", bg=P("afg_ttroy_rest_shah_karez", focus=(0.5, 0.5), credit=NL)),
+ dict(kind="narr", text="In 2011, Lucca was paired with a new handler, Corporal Juan Rodriguez. They were chosen from sixty dog teams to deploy to Afghanistan.",
+      vis=[SPLIT(P("retire_rodriguez_kneel_058", focus=(0.5, 0.45)), P("retire_rodriguez_kneel_143", focus=(0.5, 0.45)), chip1="CPL. JUAN RODRIGUEZ", chip2="LUCCA"),
+           STAT("1 OF 60", "DOG TEAMS CHOSEN", P("afg_mhg_dog_platoon_2011", focus=(0.5, 0.5), credit=NL))]),
+ dict(kind="narr", text="In Helmand Province, they led seventy-five patrols. Lucca went first. The Marines followed in her footsteps.",
+      vis=[MAP("route", pts=["Kabul", "Helmand"], towns=[("Helmand", "HELMAND", "l"), ("Kabul", "KABUL", "r")], label="AFGHANISTAN · 2011–2012", counter=(75, "PATROLS LED")),
+           FULL(P("afg_dogs_of_war_009", focus=(0.5, 0.5), z=(1.0, 1.1), credit=NL + " · U.S. Marine Corps · Public domain"), pops=[CHIP("NOT LUCCA · A MARINE DOG TEAM, 2012", 0.3, color="dark")])]),
+ dict(kind="narr", text="On March 7th, 2012, she stopped. Right in the patrol's path, she had found a large hidden bomb. It was made safe. Nobody was hurt.",
+      vis=[FREEZE(P("afg_ied_dog_windy_2012", focus=(0.5, 0.5), z=(1.0, 1.04), credit=NL + " · U.S. Marine Corps · Public domain"), at="@stopped", circle=(0.5, 0.55, 0.16), label="SHE STOPPED", chip="NOT LUCCA · ILLUSTRATIVE")]),
+ dict(kind="narr", text="Then came March 23rd. That day, she found a hidden weapons cache. Then another bomb. But that wasn't the end of the patrol.",
+      vis=[FULL(P("afg_coot_field_patrol", focus=(0.4, 0.5), z=(1.1, 1.0), credit=NL), pops=[STAMP("MARCH 23, 2012", 0.2)])]),
+
+ dict(kind="chapter", n=3, text="The Last Patrol", bg=P("retire_shade_119", focus=(0.5, 0.5))),
+ dict(kind="narr", text="As she searched a nearby path, a third device went off beneath her. She survived. But she lost her front left leg.",
+      vis=[STAT("23 MARCH 2012", "HELMAND PROVINCE", P("afg_cookie_play", focus=(0.5, 0.5), credit=NL), sub="No one else on the patrol was hurt.")]),
+ dict(kind="narr", text="Juan Rodriguez ran to her. He carried her to a tree line, put a tourniquet on her leg, and called for help.",
+      vis=[FULL(P("retire_rodriguez_kneel_058", focus=(0.5, 0.45), z=(1.0, 1.1)))]),
+ dict(kind="narr", text="Later he said, she had saved my life on so many occasions. I had to make sure that I was there for her, when she needed me.",
+      vis=[FREEZE(P("retire_rodriguez_kneel_143", focus=(0.5, 0.45), z=(1.0, 1.04)), at="@occasions", circle=(0.42, 0.45, 0.2), label="CPL. JUAN RODRIGUEZ", speaker="Cpl. Juan Rodriguez · PDSA, 2016", chip="HIS WORDS")]),
+ dict(kind="narr", text="He stayed with her through every step, from Afghanistan to Germany to California. Sometimes, he slept right next to her. And within ten days, Lucca was walking again.",
+      vis=[FULL(P("retire_runs_toy_089", focus=(0.5, 0.5), z=(1.0, 1.1)), pops=[CHIP("WALKING IN 10 DAYS", "@walking")])]),
+
+ dict(kind="chapter", n=4, text="Homeward Bound", bg=P("dvids_retire_toy_617350", focus=(0.5, 0.5))),
+ dict(kind="narr", text="In July 2012, Lucca retired. She went home to live with Chris Willingham, the Marine who had trained her.",
+      vis=[FULL(P("dvids_retire_toy_617350", focus=(0.5, 0.5), z=(1.0, 1.1)), pops=[STAMP("JULY 2, 2012", 0.3)]),
+           SPLIT(P("dvids_retire_flag_617345", focus=(0.5, 0.45)), P("retire_runs_toy_089", focus=(0.5, 0.5)), chip1="RETIRED", chip2="ON THREE LEGS")]),
+ dict(kind="narr", text="He said, she is the only reason I made it home to my family.",
+      vis=[STAT("\"THE ONLY REASON\"", "I MADE IT HOME", P("tunnel_to_towers_2013", focus=(0.5, 0.45)), sub="GySgt Chris Willingham · PDSA, 2016")]),
+ dict(kind="narr", text="On April 5th, 2016, in London, Lucca received the Dickin Medal. It's often called the animal Victoria Cross. She was the first U.S. Marine Corps dog ever to receive it.",
+      vis=[FULL(P("dvids_dickin_2535915", focus=(0.5, 0.45), z=(1.0, 1.08)), pops=[STAMP("APRIL 5, 2016", 0.3), POL(P("dickin_medal_object", tone="none"), "THE DICKIN MEDAL", "@Medal", pos="br")])]),
+
+ dict(kind="chapter", n=5, text="The Truth About Lucca", bg=P("dvids_dickin_toy_2535918", focus=(0.5, 0.5))),
+ dict(kind="narr", text="You may have seen a viral video of a Marine saying goodbye to his dog. That dog was not Lucca. And she lost a front leg, not a back leg.",
+      vis=[STAT("MYTH", "THE VIRAL GOODBYE VIDEO", P("afg_gracie_fob_rest", focus=(0.5, 0.5), credit=NL)), STAT("FACT", "A DIFFERENT DOG", P("dvids_dickin_2535912", focus=(0.5, 0.4)))]),
+ dict(kind="narr", text="Let's look at her whole journey. Two tours in Iraq. One in Afghanistan. More than four hundred missions. And one medal, from London.",
+      vis=[BOARD([(P("retire_waits_command_033", focus=(0.5, 0.4)), "LUCCA"), (P("tunnel_to_towers_2013"), "WILLINGHAM"), (P("retire_rodriguez_kneel_058"), "RODRIGUEZ"),
+                  (P("dvids_dickin_2535915"), "LONDON 2016")], notes=[("400+", "MISSIONS"), ("75", "PATROLS"), ("3", "LEGS")])]),
+ dict(kind="narr", text="Lucca died peacefully in January 2018, at almost fourteen years old, with the people who loved her. In 2021, both of her handlers stood together, as she was laid to rest at the Michigan War Dog Memorial.",
+      vis=[FULL(P("dvids_dickin_toy_2535918", focus=(0.5, 0.45), z=(1.0, 1.08)), pops=[STAMP("2004 – 2018", 0.4)])]),
+ dict(kind="narr", text="She walked in front, so others could walk home.",
+      vis=[FULL(P("retire_waits_command_033", focus=(0.5, 0.35), z=(1.0, 1.12)))], gap=1.0),
+ dict(kind="narr", text="If Lucca's story moved you, subscribe for more true stories of incredible dogs.",
+      vis=[CTA(0, P("dvids_retire_flag_617345", focus=(0.5, 0.45)))]),
+ dict(kind="narr", text="And tell us in the comments. Would your dog walk in front to keep you safe?",
+      vis=[CTA(1, P("retire_shade_119", focus=(0.5, 0.45)))], gap=1.2),
+]

@@ -68,3 +68,6 @@ STATUS: VERIFIED. Main sources:
 - DiNardo: /dɪˈnɑːrdoʊ/ "dih-NAR-doh"
 - Harris County: normal
 - Otto (Dr. Cynthia Otto): /ˈɑːtoʊ/ "AH-toh"
+
+## Visual note
+No public-domain photo that names Bretagne or Denise Corliss was found on Wikimedia Commons (searched "Bretagne", "Corliss", "golden retriever" + FEMA 2001). Real photos/video of her (2014 9/11 Museum visit, 2015 NYC birthday, 2016 salute) belong to AP, Getty, BarkPost, Houston Chronicle, Cy-Fair VFD or TV stations: license them or ask Cy-Fair VFD / Texas A&M TEEX. Best PD substitutes: FEMA 3978 (Texas Task Force-1 members entering the WTC site, 20 Sept 2001 — her own team, though she is not identified) and FEMA 3981/3982 (a TX-TF1 member "Kinsay" treated by a vet). All other FEMA/Navy dog photos show OTHER dogs: caption them as "search dogs at Ground Zero", never as Bretagne.

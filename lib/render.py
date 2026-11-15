@@ -611,7 +611,9 @@ class MapShot(Shot):
         L = Image.new("RGBA", (BW, BH), (0, 0, 0, 0)); d = ImageDraw.Draw(L)
         for st in self.M["states"]:
             for ring in st["rings"]:
-                d.polygon([(x * s, y * s) for x, y in ring], fill=(92, 80, 60, 255), outline=(190, 168, 120, 255), width=3)
+                hl = st["name"] in getattr(CFG, "HILITE", ()) or not getattr(CFG, "HILITE", ())
+                d.polygon([(x * s, y * s) for x, y in ring], fill=(104, 88, 62, 255) if hl else (52, 54, 58, 255),
+                          outline=(200, 176, 124, 255) if hl else (92, 96, 104, 255), width=3)
         land = noise_tex(BW, BH, (0, 0, 0), 8, 23).convert("L")
         sea = sea.convert("RGBA"); lt_ = noise_tex(BW, BH, (0, 0, 0), 14, 29).convert("L")
         La = L.getchannel("A"); tex = Image.merge("RGBA", [lt_, lt_, lt_, La.point(lambda v: 60 if v else 0)])

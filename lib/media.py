@@ -12,12 +12,12 @@ S = requests.Session(); S.headers["User-Agent"] = "DogStoriesPipeline/1.0 (docum
 API = "https://commons.wikimedia.org/w/api.php"
 
 def get(url, **kw):
-    for a in range(8):
+    for a in range(40):
         try:
             r = S.get(url, timeout=120, **kw)
             if r.status_code == 200: return r
             wait = int(r.headers.get("retry-after", "0") or 0) or 15 * (a + 1)
-            print(f"   {r.status_code} -> wait {min(wait, 120)}s", flush=True); time.sleep(min(wait, 120))
+            print(f"   {r.status_code} -> wait {min(wait, 180)}s", flush=True); time.sleep(min(wait, 180))
         except Exception as e:
             print("   err", e); time.sleep(10)
     return None
@@ -28,7 +28,7 @@ def commons_info(titles):
     out = {}
     for i in range(0, len(titles), 40):
         r = get(API, params=dict(action="query", titles="|".join("File:" + t for t in titles[i:i + 40]), prop="imageinfo",
-                                 iiprop="url|size|mime|extmetadata", iiurlwidth=2000, format="json"))
+                                 iiprop="url|size|mime|extmetadata", iiurlwidth=1920, format="json"))
         if not r: continue
         q = r.json().get("query", {}); norm = {n["to"]: n["from"] for n in q.get("normalized", [])}
         for p in q.get("pages", {}).values():
@@ -64,6 +64,7 @@ def main(code):
     pm = os.path.join(d, "photos", "manifest.csv"); fm = os.path.join(d, "footage", "manifest.csv")
     prow = {r["key"]: r for r in csv.DictReader(open(pm, encoding="utf-8"))} if os.path.exists(pm) else {}
     frow = {r["key"]: r for r in csv.DictReader(open(fm, encoding="utf-8"))} if os.path.exists(fm) else {}
+    if os.environ.get("SKIP_COMMONS"): items = [x for x in items if x.get("type", "commons") != "commons"]
     com = [x for x in items if x.get("type", "commons") == "commons" and x["key"] not in prow and x["key"] not in frow]
     info = commons_info([x["title"].replace("File:", "").replace("_", " ") for x in com]) if com else {}
     for x in items:
@@ -83,7 +84,7 @@ def main(code):
                     print("video", k, frow[k]["dur"], "s")
                 continue
             if ii["mime"] in ("application/pdf", "image/vnd.djvu"): print("skip doc", k); continue
-            url = ii["thumb"] if (ii.get("w") or 0) > 2000 and ii.get("thumb") else ii["url"]
+            url = ii["thumb"] if (ii.get("w") or 0) > 1920 and ii.get("thumb") else ii["url"]
             r = get(url)
             if not r: print("FAILED", k); continue
             raw = os.path.join(d, "photos", k + ".raw"); open(raw, "wb").write(r.content)
@@ -111,9 +112,36 @@ def main(code):
                 frow[k] = dict(key=k, file=f"footage/{k}.mp4", credit=x.get("author") or f"Internet Archive · {title[:50]}",
                                lic=x.get("license") or lic, page=f"https://archive.org/details/{x['title']}", dur=f"{probe_dur(dst):.1f}", shows=x.get("shows", ""))
                 print("  ok", frow[k]["dur"], "s")
+        elif typ == "dvids":
+            r = get(x["title"], headers={"User-Agent": "Mozilla/5.0"})
+            if not r: print("dvids failed", k); continue
+            h = r.text
+            mv = re.search(r'<meta[^>]+property="og:video(?::url)?"[^>]+content="([^"]+\.mp4[^"]*)"', h) or re.search(r'(https://[^"\']+\.mp4)', h)
+            mi = re.search(r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"', h)
+            credit = f"DVIDS · {x.get('author') or 'U.S. Department of Defense'} · Public domain"
+            if "/video/" in x["title"] and mv:
+                raw = os.path.join(d, "footage", k + ".src"); rr = get(mv.group(1))
+                if rr:
+                    open(raw, "wb").write(rr.content); dst = os.path.join(d, "footage", k + ".mp4")
+                    if to_mp4(raw, dst):
+                        os.remove(raw); frow[k] = dict(key=k, file=f"footage/{k}.mp4", credit=credit, lic="Public domain", page=x["title"],
+                                                       dur=f"{probe_dur(dst):.1f}", shows=x.get("shows", "")); print("dvids video", k)
+                continue
+            if mi:
+                rr = get(mi.group(1).replace("/1000w_q95", "/1000w_q95"))
+                if rr:
+                    raw = os.path.join(d, "photos", k + ".raw"); open(raw, "wb").write(rr.content)
+                    try:
+                        im = Image.open(raw); im.load(); im = im.convert("RGB"); im.save(os.path.join(d, "photos", k + ".jpg"), quality=93); os.remove(raw)
+                        prow[k] = dict(key=k, file=f"photos/{k}.jpg", title=x["title"], lic="Public domain", artist=x.get("author") or "U.S. Department of Defense",
+                                       date=str(x.get("date", "")), page=x["title"], size=f"{im.width}x{im.height}", real=str(x.get("is_the_real_dog", "")),
+                                       shows=x.get("shows", "")[:120], source="DVIDS")
+                        print("dvids photo", k, im.size)
+                    except Exception as e: print("BAD", k, e)
+            else: print("dvids: no media found", k)
         else:
             print("manual source (not auto-downloaded):", k, typ, x.get("title"))
-    for path, rows, fields in ((pm, prow, ["key", "file", "title", "lic", "artist", "date", "page", "size", "real", "shows"]),
+    for path, rows, fields in ((pm, prow, ["key", "file", "title", "lic", "artist", "date", "page", "size", "real", "shows", "source"]),
                                (fm, frow, ["key", "file", "credit", "lic", "page", "dur", "shows"])):
         if rows:
             with open(path, "w", newline="", encoding="utf-8") as f:

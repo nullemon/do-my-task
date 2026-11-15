@@ -1,0 +1,73 @@
+# Owney: script + visual plan.  Facts and sources: research.md
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "lib"))
+from shots import *
+OP = "owney_portrait"
+
+SEG = [
+ dict(kind="narr", text="In 1895, a scruffy little mutt walked up the gangway of a mail ship, with no ticket. And he sailed all the way around the world.",
+      vis=[FULL(P(OP, focus=(0.5, 0.35), z=(1.0, 1.10)), punch=True),
+           FULL(P("tacoma_wharves_1892", focus=(0.5, 0.5), z=(1.0, 1.1)), pops=[STAMP("AUGUST 19, 1895", 0.3)], punch=True)], gap=0.3),
+ dict(kind="narr", text="He had ridden the mail trains for years. More than a hundred and forty thousand miles. And every town he visited gave him a souvenir.",
+      vis=[FULL(P("rpo_clerks_working", focus=(0.5, 0.5), z=(1.0, 1.1)), pops=[POL(P("tag_corn_palace", tone="none"), "HIS REAL TAG · 1891", 0.8, pos="br")]),
+           STAT("140,000+", "MILES BY MAIL", P("owney_with_tags", focus=(0.5, 0.5)))], gap=0.3),
+ dict(kind="narr", text="This is the true story of Owney.",
+      vis=[FULL(P("owney_portrait_1895", focus=(0.5, 0.35), z=(1.05, 1.0)))], title=True, gap=0.8),
+
+ dict(kind="chapter", n=1, text="The Post Office Dog", bg=P("albany_post_office_1915", focus=(0.5, 0.5))),
+ dict(kind="narr", text="In 1888, a small terrier mix turned up at the post office in Albany, New York. He probably came with a clerk who later moved away. But the dog stayed.",
+      vis=[FULL(P("albany_post_office_1915", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[PIN("ALBANY, NEW YORK", 0.3), STAMP("1888", "@1888")]),
+           FULL(P("owney_mailsack_illus", focus=(0.5, 0.45), z=(1.0, 1.1)))]),
+ dict(kind="narr", text="The workers named him Owney. And Owney fell in love with one thing. The mailbags.",
+      vis=[SPLIT(P(OP, focus=(0.5, 0.35)), P("owney_mailsack_illus", focus=(0.5, 0.5)), chip1="OWNEY", chip2="THE MAILBAGS")]),
+ dict(kind="narr", text="He slept on them. And when the bags were loaded onto wagons, and then onto trains, Owney went with them.",
+      vis=[FULL(P("rpo_loading", focus=(0.5, 0.5), z=(1.0, 1.1)), pops=[CHIP("MAILBAGS ONTO THE TRAIN", 0.3)]),
+           FULL(P("rms_engraving_1888", focus=(0.5, 0.5), z=(1.08, 1.0)), pops=[CHIP("RAILWAY MAIL SERVICE · 1888", 0.3)])]),
+
+ dict(kind="chapter", n=2, text="The Lucky Dog", bg=P("rpo_interior_1909", focus=(0.5, 0.5))),
+ dict(kind="narr", text="Owney became the mascot of the Railway Mail Service. He rode inside the mail cars, where clerks sorted letters as the train rolled across America.",
+      vis=[FULL(P("rpo_interior_1909", focus=(0.5, 0.5), z=(1.0, 1.1))), FULL(P("owney_mail_carrier", focus=(0.5, 0.45), z=(1.0, 1.08)), pops=[CHIP("OWNEY WITH A MAIL CLERK", 0.3)])]),
+ dict(kind="narr", text="The clerks loved him. Some believed no train he rode would ever be wrecked. And at every stop, people added a tag to his collar.",
+      vis=[SPLIT(P("tag_boston_albany", focus=(0.5, 0.5), tone="none"), P("tag_mitchell_sd", focus=(0.5, 0.5), tone="none"), chip1="BOSTON & ALBANY R.P.O.", chip2="MITCHELL, S.D. · 1892"),
+           SPLIT(P("tag_houston", focus=(0.5, 0.5), tone="none"), P("tag_woodburys_lunch", focus=(0.5, 0.5), tone="none"), chip1="HOUSTON, TEXAS", chip2="A LUNCH TOKEN · 1892")]),
+ dict(kind="narr", text="Medals. Hotel keys. Railway tokens. Even a token for five cents at a bar. His collar became so heavy that the Postmaster General, John Wanamaker, gave him a harness to carry them all.",
+      vis=[FREEZE(P("owney_with_tags", focus=(0.5, 0.5), z=(1.0, 1.04)), at="@harness", circle=(0.5, 0.55, 0.22), label="THE HARNESS", chip="REAL PHOTO"),
+           FULL(P("tag_5_cents_bar", focus=(0.5, 0.5), z=(1.0, 1.1), tone="none"), pops=[CHIP("\"GOOD FOR 5 CENTS\"", 0.3)])]),
+ dict(kind="narr", text="Today, three hundred and seventy-two of his tags survive. But his greatest adventure was still ahead.",
+      vis=[STAT("372", "OF HIS TAGS SURVIVE", P("owney_museum_medals", focus=(0.5, 0.5)), sub="Smithsonian National Postal Museum")]),
+
+ dict(kind="chapter", n=3, text="Around the World", bg=P("tacoma_waterfront_1892", focus=(0.5, 0.5))),
+ dict(kind="narr", text="On August 19th, 1895, Owney left Tacoma, Washington, aboard the mail steamer Victoria. He carried his own bag, and letters of introduction.",
+      vis=[FULL(P("tacoma_waterfront_1892", focus=(0.5, 0.5), z=(1.0, 1.1)), pops=[PIN("TACOMA, WASHINGTON", 0.3), STAMP("AUG 19, 1895", "@August")])]),
+ dict(kind="narr", text="He sailed to Japan, and China. Then Singapore. Through the Suez Canal, to Algiers, and the Azores. And then home to New York.",
+      vis=[MAP("route", pts=["Tacoma", "PacificMid", "Yokohama", "HongKong", "Singapore", "IndianMid", "PortSaid", "Algiers", "Azores", "NewYork"],
+               towns=[("Tacoma", "TACOMA", "l"), ("Yokohama", "JAPAN", "r"), ("HongKong", "CHINA", "l"), ("Singapore", "SINGAPORE", "r"),
+                      ("PortSaid", "SUEZ", "r"), ("Algiers", "ALGIERS", "r"), ("Azores", "AZORES", "l"), ("NewYork", "NEW YORK", "r")],
+               label="1895 · AROUND THE WORLD", note="Route shown is approximate", zoom=1.0)]),
+ dict(kind="narr", text="Newspapers reported that in Japan, he was even given a passport. The whole trip took about four months.",
+      vis=[STAT("~4", "MONTHS AROUND THE WORLD", P("owney_portrait_1895", focus=(0.5, 0.4)), sub="Back in America by the end of December 1895")]),
+ dict(kind="narr", text="By the end of December, he was back in America. A famous dog, with a harness full of medals from all over the world.",
+      vis=[FULL(P("owney_with_tags", focus=(0.5, 0.45), z=(1.08, 1.0)), punch=True)]),
+
+ dict(kind="chapter", n=4, text="The Last Journey", bg=P("rpo_clerk_arm", focus=(0.5, 0.5))),
+ dict(kind="narr", text="But by 1897, Owney was old, and tired, and sometimes grumpy. In June that year, in Toledo, Ohio, after biting a clerk, the old dog was put down.",
+      vis=[FULL(P("rpo_clerk_arm", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[STAMP("JUNE 11, 1897", 0.3)])]),
+ dict(kind="narr", text="The railway mail clerks were heartbroken. So they paid, out of their own pockets, to have him preserved. They wanted him to stay with the mail, forever.",
+      vis=[FULL(P("owney_museum_display", focus=(0.5, 0.45), z=(1.0, 1.08)))]),
+
+ dict(kind="chapter", n=5, text="The Truth About Owney", bg=P("owney_museum_front", focus=(0.5, 0.45))),
+ dict(kind="narr", text="Many stories say he was a stray who wandered in, on a cold night. But the Smithsonian's research suggests he probably had an owner, a postal clerk, who moved away.",
+      vis=[STAT("MYTH", "A STRAY ON A COLD NIGHT", P("albany_post_office_1915", focus=(0.5, 0.5))), STAT("FACT", "PROBABLY A CLERK'S DOG", P(OP, focus=(0.5, 0.4)))]),
+ dict(kind="narr", text="Let's look at his whole journey. Albany. The mail trains. A trip around the world. And a museum, where he still sits today.",
+      vis=[BOARD([(P(OP, focus=(0.5, 0.35)), "OWNEY"), (P("rpo_interior_1909"), "THE MAIL CARS"), (P("tacoma_wharves_1892"), "TACOMA 1895"),
+                  (P("owney_museum_front"), "THE MUSEUM")], notes=[("140K+", "MILES"), ("372", "TAGS LEFT"), ("~4", "MONTHS AT SEA")])]),
+ dict(kind="narr", text="Since 1993, Owney has been at the Smithsonian's National Postal Museum in Washington. And in 2011, the Postal Service put him on a stamp.",
+      vis=[FULL(P("owney_museum_front", focus=(0.5, 0.45), z=(1.0, 1.1)), pops=[PIN("NATIONAL POSTAL MUSEUM", 0.3)]),
+           FULL(P("owney_museum_medals", focus=(0.5, 0.5), z=(1.08, 1.0)), pops=[STAMP("2011: HIS OWN STAMP", 0.3)])]),
+ dict(kind="narr", text="He never had a ticket. But everywhere he went, people made him feel at home.",
+      vis=[FULL(P("owney_portrait_1895", focus=(0.5, 0.35), z=(1.0, 1.12)))], gap=1.0),
+ dict(kind="narr", text="If you loved Owney's story, subscribe for more true stories of incredible dogs.",
+      vis=[CTA(0, P("owney_mail_carrier", focus=(0.5, 0.45)))]),
+ dict(kind="narr", text="And tell us in the comments. Where would your dog travel, if they could go anywhere?",
+      vis=[CTA(1, P("rpo_interior_1909", focus=(0.5, 0.45)))], gap=1.2),
+]

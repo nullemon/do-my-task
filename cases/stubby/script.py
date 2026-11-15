@@ -24,6 +24,10 @@ VIS = {
  "conroy2": FULL(it(121.3, 125.5)),
  "drill1": FULL(it(438.5, 443.0)),
  "drill2": FULL(it(457.2, 461.5)),
+ "follow1": FULL(it(177.3, 182.0), pops=[CHIP("CAMP LIFE · 1917", 0.3)]),
+ "ymca1": FULL(P("liberty_brick", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[CHIP("STUBBY'S BRICK · NATIONAL WWI MUSEUM", 0.3)]),
+ "ymca2": STAT("3", "BONES A DAY", am(307.6, 312.0), sub="His lifetime YMCA membership"),
+ "quote1": STAT("\"ALL WE LIKE\"", "IN HUMAN BEINGS", ma(462.5, 467.0), sub="A newspaper tribute, 1926 · via the Smithsonian"),
  "ch2": dict(media=nf(35.2, 40.0)),
  "ship1": FULL(it(28.0, 32.5), pops=[STAMP("OCTOBER 1917", 0.3)]),
  "ship2": MAP("route", pts=["NewHaven", "AtlanticMid", "SaintNazaire"], towns=[("NewHaven", "NEW HAVEN", "l"), ("SaintNazaire", "FRANCE", "r")], label="1917 · SMUGGLED ACROSS THE ATLANTIC",
@@ -81,6 +85,8 @@ SEG = [
       vis=["yale1", "yale2"]),
  dict(kind="narr", text="A brindle stray of unknown breed began hanging around the camp. A young soldier named Robert Conroy took a liking to him, and named him Stubby, for his short tail.",
       vis=["conroy1", "conroy2"]),
+ dict(kind="narr", text="Stubby slept, ate, and marched with Conroy. Wherever the young soldier went, the little dog followed.",
+      vis=["follow1"]),
  dict(kind="narr", text="Stubby learned the bugle calls and the drills. And Conroy taught him to salute, by raising his paw.",
       vis=["drill1", "drill2"]),
 
@@ -114,6 +120,9 @@ SEG = [
  dict(kind="narr", text="He met presidents. And when Conroy studied law at Georgetown, Stubby became the football team's mascot, nudging a ball around the field at halftime.",
       vis=["fame1", "fame2"]),
 
+ dict(kind="narr", text="He was made a member of the American Legion. And the YMCA gave him a lifetime membership. With three bones a day.",
+      vis=["ymca1", "ymca2"]),
+
  dict(kind="chapter", n=5, text="The Truth About Stubby", bg="ch5"),
  dict(kind="narr", text="You'll often hear him called Sergeant Stubby. But that rank was never official. It was a nickname.",
       vis=["myth1", "fact1"]),
@@ -123,6 +132,8 @@ SEG = [
       vis=["board"]),
  dict(kind="narr", text="In March 1926, Stubby died of old age, with Conroy beside him. Conroy never owned another dog. And in 1956, he gave Stubby to the Smithsonian, where he still stands today.",
       vis=["death1", "museum1"]),
+ dict(kind="narr", text="When he died, one newspaper wrote that Stubby was the concentration of all we like in human beings, and lacked everything we dislike in them.",
+      vis=["quote1"]),
  dict(kind="narr", text="He was a stray nobody wanted. He became a dog a whole nation loved.",
       vis=["closing"], gap=1.0),
  dict(kind="narr", text="If Stubby's story moved you, subscribe for more true stories of incredible dogs.",

@@ -8,7 +8,7 @@ TITLE_SMALL = "THE STRAY WHO WENT TO WAR"
 HOOK = [(0.0, 3.3, [("PETS WERE", "w"), ("BANNED", "r")]),
         (3.3, 7.0, [("SO HE", "w"), ("SMUGGLED", "w"), ("HIM TO WAR", "y")])]
 PRON = {"Stubby": "/stˈʌbi/", "Conroy": "/kˈɑːnɹɔɪ/", "Seicheprey": "/sɛʃpɹˈeɪ/", "Chemin des Dames": "/ʃəmˈæn deɪ dˈɑːm/",
-        "Soissons": "/swɑːsˈoʊn/", "Château-Thierry": "/ʃætˌoʊ tʃɛɹˈiː/", "Pershing": "/pˈɝːʃɪŋ/", "Bausum": "/bˈɔːsəm/", "Hoyas": "/hˈɔɪəz/"}
+        "Soissons": "/swɑːsˈoʊn/", "Château-Thierry": "/ʃætˈoʊ tjɛɹˈiː/", "Pershing": "/pˈɜːɹʃɪŋ/", "Bausum": "/bˈɔːsəm/", "Hoyas": "/hˈɔɪəz/"}
 SPEED = 0.93
 DEFAULT_BG = "stubby_coat"
 MAPFILE = "map_stubby.json"

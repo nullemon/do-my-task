@@ -48,6 +48,26 @@ def curl(url, out=None):
 
 def clean(s): return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", s or "")).strip()
 
+import hashlib, urllib.parse
+def commons_direct(title):
+    """standard-size thumbnails straight from the image CDN (no API call): 1920 -> 1280 -> 960 -> 500 px; videos via 480p transcode"""
+    n = title.replace(" ", "_"); h = hashlib.md5(n.encode()).hexdigest(); q = urllib.parse.quote(n)
+    if n.lower().endswith((".webm", ".ogv")):
+        for v in ("720p.vp9.webm", "480p.vp9.webm", "360p.vp9.webm"):
+            yield f"https://upload.wikimedia.org/wikipedia/commons/transcoded/{h[0]}/{h[:2]}/{q}/{q}.{v}"
+        return
+    suf = ".png" if n.lower().endswith((".tif", ".tiff", ".svg")) else (".jpg" if n.lower().endswith((".webp",)) else "")
+    for w in (1920, 1280, 960, 500, 250):
+        yield f"https://upload.wikimedia.org/wikipedia/commons/thumb/{h[0]}/{h[:2]}/{q}/{w}px-{q}{suf}"
+
+def fetch_direct(title):
+    for u in commons_direct(title):
+        p = subprocess.run(["curl", "-sS", "-L", "-m", "600", "-A", UA, "-w", "\n%{http_code}", u], capture_output=True)
+        body, _, code = p.stdout.rpartition(b"\n")
+        if code == b"200" and len(body) > 2000: return body
+        if code == b"429": time.sleep(20)
+    return None
+
 def commons_info(titles):
     out = {}
     for i in range(0, len(titles), 40):
@@ -93,13 +113,29 @@ def main(code):
     frow = {r["key"]: r for r in csv.DictReader(open(fm, encoding="utf-8"))} if os.path.exists(fm) else {}
     if os.environ.get("SKIP_COMMONS"): items = [x for x in items if x.get("type", "commons") != "commons"]
     com = [x for x in items if x.get("type", "commons") == "commons" and x["key"] not in prow and x["key"] not in frow]
-    info = commons_info([x["title"].replace("File:", "").replace("_", " ") for x in com]) if com else {}
+    info = {} if os.environ.get("NO_API") else (commons_info([x["title"].replace("File:", "").replace("_", " ") for x in com]) if com else {})
     for x in items:
         k = x["key"]; typ = x.get("type", "commons")
         if k in prow or k in frow: continue
         if typ == "commons":
             t = x["title"].replace("File:", "").replace("_", " "); ii = info.get(t)
-            if not ii: print("MISSING on Commons:", k, t); continue
+            if not ii:      # API throttled or failed: use the CDN directly, credit from media.json (licences were checked during research)
+                body = fetch_direct(t)
+                if not body: print("MISSING (direct):", k, t); continue
+                page = "https://commons.wikimedia.org/wiki/File:" + t.replace(" ", "_")
+                if t.lower().endswith((".webm", ".ogv")):
+                    raw = os.path.join(d, "footage", k + ".src"); open(raw, "wb").write(body); dst = os.path.join(d, "footage", k + ".mp4")
+                    if to_mp4(raw, dst, 900):
+                        os.remove(raw); frow[k] = dict(key=k, file=f"footage/{k}.mp4", credit=f"Wikimedia Commons · {x.get('author') or 'see page'} · {x.get('license','')}",
+                                                       lic=x.get("license", ""), page=page, dur=f"{probe_dur(dst):.1f}", shows=x.get("shows", "")); print("video (direct)", k)
+                    continue
+                raw = os.path.join(d, "photos", k + ".raw"); open(raw, "wb").write(body)
+                try:
+                    im = Image.open(raw); im.load(); im = im.convert("RGB"); im.save(os.path.join(d, "photos", k + ".jpg"), quality=93); os.remove(raw)
+                except Exception as e: print("BAD", k, e); continue
+                prow[k] = dict(key=k, file=f"photos/{k}.jpg", title=t, lic=x.get("license", ""), artist=(x.get("author") or "")[:60], date=str(x.get("date", "")),
+                               page=page, size=f"{im.width}x{im.height}", real=str(x.get("is_the_real_dog", "")), shows=x.get("shows", "")[:120])
+                print("photo (direct)", k, im.size, flush=True); time.sleep(2); continue
             if ii["mime"].startswith("video") or t.lower().endswith((".webm", ".ogv")):
                 raw = os.path.join(d, "footage", k + ".src"); r = get(ii["url"])
                 if not r: continue

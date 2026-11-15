@@ -17,6 +17,17 @@ SR = MC.SR
 KEY = getattr(S, "MUSIC_KEY", "D")
 
 
+def _fastconv(a, v, mode="full"):
+    """same result as np.convolve for mix_clean's long box filter, FFT-based (the direct one takes ~10 min)"""
+    from scipy.signal import fftconvolve
+    return fftconvolve(a, v, mode=mode)
+
+
+import types
+MC.np = types.SimpleNamespace(**{k: getattr(np, k) for k in dir(np) if not k.startswith("__")})
+MC.np.convolve = _fastconv
+
+
 def lufs(x):
     p = os.path.join(OUT, "_m.wav"); sf.write(p, x.astype(np.float32), SR, subtype="FLOAT")
     r = subprocess.run(["ffmpeg", "-hide_banner", "-nostats", "-i", p, "-af", "ebur128=peak=true:framelog=quiet", "-f", "null", "-"],
@@ -39,10 +50,12 @@ def bed_stems(voice, dur, swaps):
     v = v / (np.sqrt(np.mean(v[np.abs(v) > 1e-4] ** 2)) + 1e-9) * 0.1
     pad = MC._ff(MC._pad(n, KEY), "lowpass=f=1800,highpass=f=80"); pad = pad.mean(1) if pad.ndim > 1 else pad
     pad = pad[:n] / (np.sqrt(np.mean(pad ** 2)) + 1e-9) * 0.1 * 10 ** (-26 / 20)
-    env = np.convolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
+    env = _fastconv((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
     pad *= 10 ** (-8 * np.clip(env * 4, 0, 1) / 20)
-    w = MC._ff(MC._whoosh(n, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000"); w = w.mean(1) if w.ndim > 1 else w
-    wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-15 / 20))
+    wh = np.zeros(n)
+    if swaps:
+        w = MC._ff(MC._whoosh(n, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000"); w = w.mean(1) if w.ndim > 1 else w
+        wh = w[:n] / (np.abs(w).max() + 1e-9) * (np.abs(v).max() * 10 ** (-15 / 20))
     full = np.stack([v + pad + wh, v + pad * 0.96 + wh], 1); bed = np.stack([pad + wh, pad * 0.96 + wh], 1)
     return full, bed, v, wh
 
@@ -50,12 +63,14 @@ def bed_stems(voice, dur, swaps):
 def main():
     N = int(round(S.DUR * SR))
     voice = MC.clean_voice(dry_track(N))
-    swaps = list(S.SWAP_TIMES)
+    # mix_clean's whoosh is scaled to the voice PEAK (-15 dB); with it the gated bed measured only ~10 dB under the
+    # full mix, which fails the BATCH4 rule (bed >= 20 dB under the mix). So the swaps go without the whoosh: pad only.
+    swaps = list(S.SWAP_TIMES) if os.environ.get("WHOOSH") == "1" else []
     out = MC.mix(voice, S.DUR, swaps=swaps, key=KEY)
     sf.write(os.path.join(OUT, "mix.wav"), out.astype(np.float32), SR, subtype="FLOAT")
     full, bed, v, wh = bed_stems(voice, S.DUR, swaps)
     If, _ = lufs(full); Ib, _ = lufs(bed)
-    pk_v = 20 * np.log10(np.abs(v).max()); pk_w = 20 * np.log10(np.abs(wh).max() + 1e-12)
+    pk_v = 20 * np.log10(np.abs(v).max()); pk_w = 20 * np.log10(np.abs(wh).max() + 1e-12) if np.abs(wh).max() > 0 else -200.0
     Io, tpo = lufs(out)
     res = dict(full_mix_lufs=If, bed_alone_lufs=Ib, bed_below_mix_db=round(If - Ib, 1), whoosh_peak_below_voice_peak_db=round(pk_v - pk_w, 1),
                final_wav_lufs=Io, final_wav_tp=tpo)

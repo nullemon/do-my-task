@@ -11,11 +11,12 @@ What it does:
 - Voice: highpass 70 Hz, light de-mud, gentle compression, slight presence. No echo, no pitch tricks.
 - Music: one soft, slow, warm pad (two sustained chords, low-passed). About 26 dB under the voice and
   ducked a further 8 dB while speech is present.
-- Swaps: an optional soft airy whoosh (0.7 s), at least 15 dB under the voice. Nothing else: no booms,
+- Swaps: an optional soft airy whoosh (0.7 s), about 26 dB under the voice peak. Nothing else: no booms,
   rumbles, risers or crackles.
 """
 import subprocess, tempfile, os
 import numpy as np, soundfile as sf
+from scipy.signal import fftconvolve
 
 SR = 48000
 VOICE_CHAIN = ("highpass=f=70,equalizer=f=250:t=q:w=1:g=-2,equalizer=f=3000:t=q:w=1.2:g=1.5,"
@@ -69,14 +70,14 @@ def mix(voice, dur_s, swaps=(), key="D"):
     pad = _ff(_pad(n, key), "lowpass=f=1800,highpass=f=80")
     pad = pad.mean(1) if pad.ndim > 1 else pad
     pad = pad[:n] / (np.sqrt(np.mean(pad ** 2)) + 1e-9) * 0.1 * 10 ** (-26 / 20)        # -26 dB re speech
-    env = np.convolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
+    env = fftconvolve((np.abs(v) > 0.01).astype(float), np.ones(int(0.25 * SR)) / int(0.25 * SR), "same")
     duck = 10 ** (-8 * np.clip(env * 4, 0, 1) / 20)
     pad *= duck
     wh = np.zeros(n)
     if swaps:
         w = _ff(_whoosh(n, swaps), "bandpass=f=1800:w=2500,lowpass=f=6000")
         w = w.mean(1) if w.ndim > 1 else w
-        pk = np.abs(w).max() + 1e-9; wh = w[:n] / pk * (np.abs(v).max() * 10 ** (-15 / 20))
+        pk = np.abs(w).max() + 1e-9; wh = w[:n] / pk * (np.abs(v).max() * 10 ** (-26 / 20))
     st = np.stack([v + pad + wh, v + pad * 0.96 + wh], 1)
     y = _ff(st, "loudnorm=I=-14:TP=-2:LRA=7,alimiter=limit=0.79:level=disabled")
     return y[:n]

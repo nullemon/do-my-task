@@ -159,7 +159,7 @@ class Scene:
         MO.set_sun(sun_vec(4.0))
         self.moon = Body("moon", "8k_moon.jpg", RP_MOON, pole_vec(-12, 4), model="rock", surf=1.15, detail=0.0, prep=prep_norm)
         self.ven = Body("ven", venus_tex(), RP_VEN, pole_vec(-8, 6), model="giant", k=0.80, surf=1.7,
-                        haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9, night=0.003)
+                        haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9, night=0.012)
         # ---- yard: lights / window, base, albedo, rim (as andromeda-collision)
         a = fg.a; rgb = fg.rgb; f = fg.flat; y = lum(f)[..., None]
         mxc = rgb.max(2); warm = rgb[..., 0] - rgb[..., 2]
@@ -266,8 +266,9 @@ class Scene:
             if cu > 0: sc *= (1 + 0.3 * ease(cu / 0.45)) if cu < 0.45 else 1.3 * (1 - ease((cu - 0.45) / 0.55) ** 0.7) + 0.02
         # phase light: the Venus light factor (x full Moon) drives the sky + yard; compressed for the screen
         alpha = S["alpha"]
-        bright = (0.6 + 0.4 * pulse) * (1.0 if S["body"] == "moon" else 0.6 + 0.4 * min(x_moon(alpha) / 70, 1) * 2)
-        sky, aure = self.sky(t, A, S, w, VX, VY, Rp * max(sc, 0.05), bright)
+        bright = (0.6 + 0.4 * pulse) * (1.0 if S["body"] == "moon" else 0.35 + 0.95 * min(x_moon(alpha) / 70, 1))
+        off = Rp * 0.55 * math.sin(math.radians(alpha))                      # the glow sits on the lit limb
+        sky, aure = self.sky(t, A, S, w, VX + off * SUN_DIR[0], VY + off * SUN_DIR[1], Rp * max(sc, 0.05) * (1 - 0.4 * math.sin(math.radians(alpha))), bright)
         img = self.up(sky)
         sk = lerp(A["sky"], S["sky"], w)
         st = self.stars.render(self.cam, t, gain=1.0, twinkle=1.2, plate_gain=0.12, star_gain=1.0, cx=1800, cy=900, rot=4.0)

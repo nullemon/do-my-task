@@ -164,19 +164,20 @@ class Scene:
             return (col * (0.6 + 0.4 * y)[..., None]).astype(f32)
         self.pl = {
             "moon": Body("rog", "8k_jupiter.jpg", R_MOON_PX, pole_vec(-18, 14), q=0.935, model="giant", k=0.80, surf=0.40, nightside=0.0, winds=0.010,
-                         haze=(0.05, 0.03, 0.04), rim=(0.25, 0.12, 0.10), detail=0.04, prep=prep_rogue, seed=3),
+                         haze=(0, 0, 0), rim=(0.10, 0.05, 0.04), detail=0.04, prep=prep_rogue, seed=3),
             "close": Body("rog2", "8k_jupiter.jpg", R_CLOSE_PX, pole_vec(-18, 14), q=0.935, model="giant", k=0.80, surf=0.40, nightside=0.0, winds=0.010,
-                          haze=(0.05, 0.03, 0.04), rim=(0.25, 0.12, 0.10), detail=0.04, ss=1, prep=prep_rogue, seed=3),
+                          haze=(0, 0, 0), rim=(0.10, 0.05, 0.04), detail=0.04, ss=1, prep=prep_rogue, seed=3),
         }
         # thermal-glow map: the belts (dark in reflected light) are where the deeper, hotter layers show (as at 5 microns on Jupiter)
         jt = np.asarray(Image.open(os.path.join(MO.TEX, "8k_jupiter.jpg")).convert("L").resize((1024, 512), Image.LANCZOS), f32) / 255
         jt = jt / jt.mean()
         self.glow_map = np.clip(1.6 - jt, 0.2, 2.0).astype(f32)
+        self.cloud_map = np.clip(jt, 0.3, 1.8).astype(f32)                       # bright zones / dark belts (turbulent edges)
         self.pole = MO.frame_of(pole_vec(-18, 14))[1]
         # lightning schedule: Poisson flashes on the night side, clustered in belts
         rr = np.random.default_rng(17); ev = []; t = T_LIT0
         while t < T_PASS1:
-            rate = 1.6 if t < T_SW["close"] else 3.2
+            rate = 3.0 if t < T_SW["close"] else 5.0
             t += rr.exponential(1 / rate)
             ang = rr.uniform(0, 2 * np.pi); rad = math.sqrt(rr.uniform(0.0, 0.85))
             lat_band = rr.choice([-0.35, -0.12, 0.18, 0.42]) + rr.normal(0, 0.04)
@@ -270,7 +271,14 @@ class Scene:
                        np.clip((0.5 - lat / np.pi) * 512, 0, 511).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         s = MO.SUN.astype(f32); n = np.stack([u, v, z], -1)
         night = smooth(0.05, -0.25, n @ s)
-        th = (mu ** 0.45 * gm * night * inside)[..., None] * np.array([1.0, 0.13, 0.03], f32) * 0.022 * red
+        mx_ = ((lon / (2 * np.pi) + 0.5) % 1.0 * 1024).astype(f32); my_ = np.clip((0.5 - lat / np.pi) * 512, 0, 511).astype(f32)
+        cm = cv2.remap(self.cloud_map, mx_, my_, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        # matte banded clouds, faintly visible by city skyglow / twilight: dark maroon belts, charcoal zones (no specular)
+        zone = np.clip((cm - 0.75) / 0.55, 0, 1)[..., None]
+        bands = (np.array([0.030, 0.0075, 0.006], f32) * (1 - zone) + np.array([0.014, 0.013, 0.016], f32) * zone) * cm[..., None]
+        amb = bands * (0.55 + 0.45 * mu ** 0.6)[..., None] * inside[..., None] * (0.35 + 0.65 * min(red, 1.0))
+        # deep-red thermal glow, strongest in the belts (deeper, hotter layers), mild limb darkening
+        th = (mu ** 0.25 * gm ** 1.5 * night * inside)[..., None] * np.array([1.0, 0.11, 0.03], f32) * 0.020 * red + amb
         # lightning
         lt = np.zeros(u.shape, f32)
         for e in self.lightning:
@@ -283,11 +291,12 @@ class Scene:
             fl += 0.25 * math.exp(-max(dt_, 0) / 0.18)
             ex, ey = e["u"], e["v"]
             dd = np.sqrt(((u - ex) / 1.9) ** 2 + (v - ey) ** 2)
-            lt += (np.exp(-dd / 0.03) * 0.45 + np.exp(-dd / 0.07) * 0.6 + np.exp(-dd / 0.18) * 0.10) * fl * e["I"]
-        lt *= inside * (0.4 + 0.6 * mu)
-        add = th + lt[..., None] * np.array([0.75, 0.85, 1.0], f32) * 0.9
+            lt += (np.exp(-dd / 0.025) * 1.4 + np.exp(-dd / 0.06) * 0.7) * fl * e["I"]
+        lt *= inside * (0.4 + 0.6 * mu) * (0.25 + 0.9 * cm ** 1.5)          # cloud patches lit from within
+        add = th + lt[..., None] * np.array([0.72, 0.84, 1.0], f32) * 1.6
         img[y0:y1, x0:x1] += add * cov[..., None] * I
         self.aurora(img, cx, cy, R, t, red * 0.8 * I)
+        self._lt = float(lt.sum()) / max(R * R, 1.0)
         return float(lt.max()) if lt.size else 0.0
 
     def refraction(self, img, st, cx, cy, R, t, I):
@@ -384,12 +393,20 @@ class Scene:
         H, W = self.L.H, self.L.W
         y0 = int(YH)
         ys = self.yy[y0:]; xs = self.xx[y0:]
-        sy = np.clip(2 * YH - ys + q * 6 * np.sin(ys * 0.21 + t * 40), 0, YH - 1).astype(f32)
+        sy = np.clip(YH - (ys - YH) * 1.6 + q * 6 * np.sin(ys * 0.21 + t * 40), 0, YH - 1).astype(f32)   # rough, stretched lobe
         sm = cv2.resize(skyimg, (W // 2, H // 2), interpolation=cv2.INTER_AREA)
         sm = cv2.GaussianBlur(sm, (0, 0), sigmaX=2, sigmaY=12)
         refl = cv2.remap(sm, (xs / 2).astype(f32), (sy / 2).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
         R = 0.32 * self.wet[y0:]
         img[y0:] += refl * R[..., None]
+        pl = getattr(self, "_pl", None)
+        if pl is not None:                                                      # the dark disc dims the reflections under it
+            cx, cy, Rp = pl
+            dm = np.clip((Rp - np.sqrt((xs - cx) ** 2 + (sy - cy) ** 2)) / 25.0, 0, 1)
+            dm = cv2.GaussianBlur(dm, (0, 0), sigmaX=10, sigmaY=30)
+            img[y0:] *= (1 - 0.45 * self.wet[y0:] * dm)[..., None]
+        fl = getattr(self, "_flash", 0.0)
+        if fl > 0: img[y0:] += (self.wet[y0:] * fl * 1.6)[..., None] * np.array([0.65, 0.78, 1.0], f32)
 
     # -------------------------------------------------------------------------------------------- frame
     def frame(self, t):
@@ -425,14 +442,16 @@ class Scene:
         if cur == "mars": self.star(st, 494.0, 552.0, 0.8, (1.0, 0.9, 0.8))     # a star the speck passes over
         img += st
         # the planet (and its light)
-        flash = 0.0
+        flash = 0.0; self._pl = None
         if ps and ps[3] == "disc":
             I = pulse * (0.5 + 0.5 * min(max((t - t0) / BLOOM * 3, 0), 1) if cur != "close" or t < T_PASS0 else 1.0)
             R = ps[2] * (g_in if t - t0 < BLOOM else 1.0)
             if col_u > 0:
                 R *= (1 + 0.25 * ease(col_u / 0.45)) if col_u < 0.45 else 1.25 * (1 - ease((col_u - 0.45) / 0.55) ** 0.7) + 0.02
+            self._lt = 0.0
             fl = self.planet(img, st, t, cx, cy, R, "disc", I, red, 1.0)
-            flash = min(fl or 0.0, 3.0) * 0.06
+            flash = min(self._lt * 6.0, 1.2) * 0.25
+            self._pl = (cx, cy, R)
         elif ps and ps[3] == "speck":
             self.planet(img, st, t, cx, cy, ps[2], "speck", 1.0, 1.0, 1.0)
         if cur in ("nep", "mars"):
@@ -449,6 +468,7 @@ class Scene:
         city = city + self.up(bm) * 0.04 * fg.a[..., None]
         a = fg.a[..., None]
         img = img * (1 - a) + city * a
+        self._flash = flash
         self.street(img, skyimg, t, q)
         # swap flashes + chromatic shockwaves
         for ts, k in SWAPS:

@@ -1,6 +1,6 @@
 # The Skies of Earth-Like Exoplanets (YouTube Short, batch 3)
 
-This Short is 9:16 only: 1080×1920 at 30 fps, about 46.4 s long. It uses the swap format: one locked tripod shot of the user's
+This Short is 9:16 only: 1080×1920 at 30 fps, 46.35 s long. It uses the swap format: one locked tripod shot of the user's
 `06_farm_field_barn.png` (941×1672 RGBA, transparent sky, upscaled to 1080×1920). The premise is "if this farm were on…".
 The Sun is swapped for each planet's star, with a flash, a chromatic shockwave and coloured beams. The wheat, barn, silo
 and oak are relit in that star's colour and eye-adapted brightness. Each world gets a readout: PLANET / STAR TYPE /
@@ -53,7 +53,9 @@ R★/a relative to our Sun seen from 1 au (`short.py info`).
 - One locked telephoto lens (true relative sizes). Beams, flashes, shockwaves, spikes and starspots are artistic.
 - Brightness is eye-adapted. A dim star gives a darker, tinted scene, but it is compressed so the farm stays readable.
 - Sky colours under each star are plausible renderings, not radiative-transfer results.
-- Kepler-16B is placed at a mid-orbit separation from its companion.
+- Kepler-16B is placed at a mid-orbit separation from its companion. A double-shadow pass exists in `short.py`
+  (`SHADOWS = False`); it was dropped because it read as a blob on the wheat.
+- Kepler-452b is graded as a warm, hazy, golden "older Earth" afternoon, so it is distinct from the Earth opening.
 
 ## Files
 - Code: `audio/narration.py`, `audio/gen_voice.py`, `audio/mix.py` (sound + SRT), `short.py` (picture; `info`, stills,

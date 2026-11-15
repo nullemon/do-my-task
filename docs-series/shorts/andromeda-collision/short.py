@@ -256,7 +256,7 @@ class Scene:
         E = np.array([x[1] - x[0], y[1] - y[0]]) / 0.2; N = np.array([x[2] - x[0], y[2] - y[0]]) / 0.2
         return float(x[0]), float(y[0]), E, N
 
-    def m31_draw(self, lst, scale, gain, swirl=0.0, t=0.0, lift=1.0, flip=False):
+    def m31_draw(self, lst, scale, gain, swirl=0.0, t=0.0, lift=1.0, flip=False, ok=1.0):
         """draw the GALEX sprite at `scale` x its true size today; returns HDR layer (full res)"""
         W, H = self.L.W, self.L.H
         x0, y0, E, N = self.m31_frame(lst)
@@ -284,7 +284,7 @@ class Scene:
         dx, dy = self.hx - x0, self.hy - y0
         u = (dx * maj[0] + dy * maj[1]) / (PXDEG * scale); v = (-dx * maj[1] + dy * maj[0]) / (PXDEG * scale)
         rr = np.sqrt(u * u + (v / 0.35) ** 2); rh = np.sqrt(u * u + v * v)
-        outer = (np.exp(-rr / 1.3) * 0.18 * smooth(3.5, 1.5, rr) + np.exp(-rh / 3.5) * 0.05)[..., None] * np.array([0.55, 0.68, 1.0], f32)
+        outer = (np.exp(-rr / 1.4) * 0.40 * smooth(4.0, 1.6, rr) + np.exp(-rh / 4.0) * 0.08)[..., None] * ok * np.array([0.55, 0.68, 1.0], f32)
         return (out + self.up(outer)) * gain, (x0, y0, maj)
 
     def tails(self, x0, y0, maj, scale, I, t):
@@ -378,9 +378,9 @@ class Scene:
         dx, dy = self.hx - cx, self.hy - cy
         u = (dx * math.cos(a) + dy * math.sin(a)) / 900; v = (-dx * math.sin(a) + dy * math.cos(a)) / (900 * 0.70)
         r = np.sqrt(u * u + v * v) + 1e-4
-        sb = np.exp(-3.67 * (np.sqrt(r) - 1)) * 0.10 + np.exp(-(r / 0.10) ** 2) * 0.6           # Sersic n = 2 envelope + soft core
-        warm = np.exp(-r / 0.45)[..., None]
-        col = np.array([1.0, 0.72, 0.40], f32) * warm + np.array([0.85, 0.80, 0.85], f32) * (1 - warm)
+        sb = np.exp(-3.67 * (np.sqrt(r) - 1)) * 0.11 + np.exp(-(r / 0.18) ** 2) * 0.35           # Sersic n = 2 envelope + soft core
+        warm = np.exp(-r / 0.9)[..., None]
+        col = np.array([1.0, 0.68, 0.34], f32) * warm + np.array([0.95, 0.80, 0.70], f32) * (1 - warm)
         n = cv2.remap(self.tw[1], (self.hx * 0.25 % 512).astype(f32), (self.hy * 0.25 % 512).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         dust = 1 - 0.25 * np.clip(n - 0.6, 0, 1) * np.exp(-r / 0.6)                          # fading remnant dust
         glow = self.up((sb * dust)[..., None] * col) * I
@@ -396,14 +396,14 @@ class Scene:
             sky += self.mw_layer(lst, gain=5.0 if key != "g3" else 6.5) + self.stars_layer(t, lst)
             sc = 770.0 / r_of(Y if key != "today" else 0.0)
             gain = {"today": 0.30, "g2": 1.2, "g3": 1.5}[key] * (1 + 0.03 * math.sin(t * 1.3))
-            g, info = self.m31_draw(lst, sc, gain, swirl=0.25 if key == "g3" else 0.0, t=t, lift=0.7 if key == "g3" else 1.0)
+            g, info = self.m31_draw(lst, sc, gain, swirl=0.25 if key == "g3" else 0.0, t=t, lift=0.55 if key == "g3" else 1.0)
             if key == "today":                                       # the eye view: a small faint smudge
                 g = cv2.GaussianBlur(g, (0, 0), 1.5) * np.array([0.85, 0.9, 1.0], f32)
             sky += g
             if key == "g3": sky += self.up(self.tails(*info, sc, 1.0, t))
         elif key == "g4":
             sky += self.mw_layer(lst, warp=0.9, gain=9.0, t=t) + self.stars_layer(t, lst, 0.7)
-            g, info = self.m31_draw(lst, 770.0 / 31.0, 1.6, swirl=1.3, t=t, lift=0.65)
+            g, info = self.m31_draw(lst, 770.0 / 31.0, 2.0, swirl=1.3, t=t, lift=0.6, ok=0.25)
             g2 = self.mw_disc(t)
             sky += g + g2 + self.up(self.tails(*info, 770 / 31.0 * 0.5, 2.6, t)) + self.starburst(t, 0.9)
         elif key == "g5":

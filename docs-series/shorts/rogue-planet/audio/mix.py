@@ -107,7 +107,7 @@ def main():
     # lightning -> thunder (use the same schedule as the picture)
     rr = np.random.default_rng(17); t = S.T_LIT0; k = 0
     while t < S.T_PASS1:
-        rate = 1.6 if t < S.T_SW["close"] else 3.2
+        rate = 3.0 if t < S.T_SW["close"] else 5.0
         t += rr.exponential(1 / rate); rr.uniform(0, 2 * np.pi); rr.uniform(0, 0.85); rr.choice([-0.35, -0.12, 0.18, 0.42]); rr.normal(0, 0.04)
         rr.uniform(0.10, 0.28); I = rr.uniform(0.6, 1.4); rr.integers(1, 4)
         if t < S.T_PASS1: bed += thunder(t, 0.22 * I, seed=200 + k); k += 1

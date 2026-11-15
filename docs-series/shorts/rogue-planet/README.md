@@ -62,9 +62,17 @@ observer at 34° elevation.
   - A young Jupiter-mass object (~1–10 Myr old) is still ~500–1,000 K inside, so its night side would glow a faint deep
     red. It is brightest in the belts, where deeper, hotter layers show (as in Jupiter's 5 µm hot spots).
   - An old (billions of years) rogue would be ~100 K and black to the eye. The narration says only "glowing faintly".
-- **Lightning:** Galileo, Cassini and Juno saw lightning flashes on Jupiter's night side. Here they are Poisson flashes,
-  clustered in the belts, each a few return strokes. The thunder in the mix is a liberty; there is no sound through
-  space.
+- **The look (lead's review):** a matte gas giant with no specular hotspot. Banded clouds come from Jupiter's map: dark
+  maroon belts and charcoal zones with turbulent edges, faintly visible in the city skyglow. There is a thin sunlit
+  crescent on the lower limb, and a deep-red thermal glow strongest in the belts.
+- **Lightning:** Galileo, Cassini and Juno saw lightning flashes on Jupiter's night side. Here they are Poisson flashes
+  (3/s at the Moon's distance, 5/s when close), clustered in the belts, each a few return strokes. Each one lights a
+  patch of cloud from within (modulated by the cloud map) and flickers blue-white on the facades and the wet street. The
+  thunder in the mix is a liberty; there is no sound through space.
+- **Street reflection:** the wet asphalt shows a faint, rough-specular reflection of the sky, the dark disc (which dims
+  the neon reflections under it) and its lightning. The reflection lobe is stretched (×1.6) and blurred vertically so
+  the high disc lands on the street. This is a liberty for readability; a true mirror about eye level would only show
+  the sky near the horizon.
 - **Auroral ovals:** Jupiter has the strongest aurorae in the Solar System. Near Earth, a magnetised giant would be
   driven by the solar wind. The ovals are faint and tinted green and red (a liberty: Jupiter's are mostly UV and IR).
 - **"Our orbit could be thrown off":**

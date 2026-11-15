@@ -54,7 +54,7 @@ STAGES = [
          bI=0.25, surf=3.2, glow=0.12, spikes=0.04, gain=1.55, tint=(0.95, 1.0, 1.08), amb=0.0, stars=0.0, expo=1.05, win=1.1, fl=(0.85, 0.92, 1.0)),
     dict(key="jup", d=5.203, name="JUPITER'S ORBIT", l2="5.2 AU · 0.1° WIDE", l3="1/27 OF THE LIGHT", tc=(190, 215, 255),
          zen=(0.010, 0.030, 0.13), hor=(0.10, 0.13, 0.20), beams=[(0.5, 0.7, 1.0), (0.7, 0.6, 1.0), (0.6, 0.9, 1.0)],
-         bI=0.2, surf=30.0, glow=0.22, spikes=0.10, gain=0.80, tint=(0.80, 0.92, 1.15), amb=0.0, stars=0.05, expo=1.25, win=1.35, fl=(0.8, 0.88, 1.0)),
+         bI=0.2, surf=30.0, glow=0.22, spikes=0.04, gain=0.80, tint=(0.80, 0.92, 1.15), amb=0.0, stars=0.05, expo=1.25, win=1.35, fl=(0.8, 0.88, 1.0)),
     dict(key="sat", d=9.537, name="SATURN'S ORBIT", l2="9.5 AU · 0.06° WIDE", l3="1/90 OF THE LIGHT", tc=(180, 205, 255),
          zen=(0.006, 0.015, 0.075), hor=(0.04, 0.06, 0.12), beams=[(0.5, 0.65, 1.0), (0.7, 0.55, 1.0), (0.55, 0.85, 1.0)],
          bI=0.38, surf=55.0, glow=0.5, spikes=0.75, gain=0.48, tint=(0.72, 0.88, 1.2), amb=0.0, stars=0.25, expo=1.3, win=1.6, fl=(0.75, 0.85, 1.0)),

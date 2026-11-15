@@ -1,6 +1,6 @@
 # What Eclipses Look Like on Other Worlds (YouTube Short, batch 3)
 
-This Short is 9:16 only: 1080×1920 at 30 fps, about 44.8 s long. It uses the swap format: one locked tripod shot of the user's
+This Short is 9:16 only: 1080×1920 at 30 fps, 44.83 s long. It uses the swap format: one locked tripod shot of the user's
 `05_tropical_beach.png` (941×1672 RGBA with a transparent sky, upscaled to 1080×1920). The beach is the stage ("if you stood
 here"). The Sun is eclipsed by a different body on each world, with a flash, a chromatic shockwave and coloured beams at
 every swap. The beach is relit each time, and the turquoise shallows reflect the sky. Readouts are big and bold, and the

@@ -27,6 +27,8 @@ FPS = 30
 LEAD, TAIL = 0.25, 1.30
 F_PX = 5000.0                    # one lens for every world: true angular sizes
 R_SUN = F_PX * math.tan(math.radians(0.533 / 2))       # our Sun from Earth: 23.3 px
+SHADOWS = False                  # the double shadow read as a blob on the wheat (lead: drop it)
+K16A_SH = (-0.28, 0.80)         # Kepler-16 shadow shear / length (A); B in K16B
 C = (705.0, 560.0)               # the star's place in the sky (clear, above the barn, right of the oak)
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
@@ -49,33 +51,33 @@ def moon_like_r(R_km, d_km): return F_PX * math.tan(math.asin(R_km / d_km))
 W_ = [
     dict(key="earth", R=1.0, a=1.0, T=5772, planet="EARTH", stype="G2V YELLOW DWARF", ly="8 LIGHT-MINUTES", fact="OUR SUN · 0.53° WIDE",
          tc=(255, 236, 170), zen=(0.012, 0.075, 0.42), hor=(0.30, 0.50, 0.85), surf=40.0, glow=1.0, gain=1.0, tint=(1.0, 0.98, 0.95),
-         flat=0.0, amb=(0.03, 0.05, 0.09), beams="rainbow", bI=0.85, spots=0.0, crop=0.0, expo=1.0),
+         flat=0.0, amb=(0.03, 0.05, 0.09), beams="rainbow", bI=0.85, spots=0.0, crop=0.0, expo=1.0, gk=1.0, spk=1.0),
     dict(key="prox", R=0.1542, a=0.04857, T=3042, planet="PROXIMA B", stype="M5.5 RED DWARF", ly="4.2 LIGHT-YEARS", fact="SUN 3.2× WIDER · A FLARE STAR",
-         tc=(255, 120, 90), zen=(0.030, 0.007, 0.020), hor=(0.20, 0.045, 0.035), surf=1.6, glow=0.55, gain=0.15, tint=(1.0, 0.36, 0.16),
-         flat=0.35, amb=(0.030, 0.012, 0.018), beams=[(1.0, 0.15, 0.06), (0.9, 0.08, 0.40), (1.0, 0.40, 0.08)], bI=0.55, spots=1.0, crop=0.0, expo=1.15),
+         tc=(255, 120, 90), zen=(0.016, 0.003, 0.006), hor=(0.11, 0.018, 0.016), surf=0.55, glow=0.30, gain=0.11, tint=(1.0, 0.24, 0.10),
+         flat=0.35, amb=(0.030, 0.012, 0.018), beams=[(1.0, 0.15, 0.06), (0.9, 0.08, 0.40), (1.0, 0.40, 0.08)], bI=0.40, spots=1.5, crop=0.0, expo=1.10, gk=0.35, spk=0.05),
     dict(key="trap", R=0.1192, a=0.02925, T=2566, planet="TRAPPIST-1E", stype="M8 ULTRACOOL DWARF", ly="40 LIGHT-YEARS", fact="SUN 4× WIDER · NEIGHBOURS ~MOON-SIZED",
-         tc=(255, 160, 130), zen=(0.050, 0.020, 0.032), hor=(0.27, 0.105, 0.075), surf=1.3, glow=0.6, gain=0.16, tint=(1.0, 0.45, 0.30),
-         flat=0.35, amb=(0.035, 0.018, 0.022), beams=[(1.0, 0.45, 0.35), (1.0, 0.65, 0.50), (0.85, 0.30, 0.55), (1.0, 0.30, 0.15)], bI=0.6, spots=0.6, crop=0.0, expo=1.15),
+         tc=(255, 160, 130), zen=(0.050, 0.020, 0.030), hor=(0.29, 0.12, 0.075), surf=1.3, glow=0.55, gain=0.20, tint=(1.0, 0.55, 0.36),
+         flat=0.35, amb=(0.035, 0.018, 0.022), beams=[(1.0, 0.45, 0.35), (1.0, 0.65, 0.50), (0.85, 0.30, 0.55), (1.0, 0.30, 0.15)], bI=0.6, spots=0.6, crop=0.0, expo=1.15, gk=0.45, spk=0.1),
     dict(key="k16", R=0.6489, a=0.7048, T=4450, planet="KEPLER-16B", stype="K + M DWARF PAIR", ly="245 LIGHT-YEARS", fact="A COLD GAS GIANT · THE REAL TATOOINE",
-         tc=(255, 200, 120), zen=(0.030, 0.060, 0.26), hor=(0.42, 0.36, 0.38), surf=7.0, glow=1.0, gain=0.75, tint=(1.0, 0.78, 0.55),
-         flat=0.0, amb=(0.03, 0.04, 0.07), beams=[(1.0, 0.70, 0.30), (1.0, 0.35, 0.15), (0.5, 0.65, 1.0), (1.0, 0.90, 0.6)], bI=0.75, spots=0.0, crop=0.0, expo=1.0),
+         tc=(255, 200, 120), zen=(0.030, 0.060, 0.26), hor=(0.42, 0.36, 0.38), surf=2.6, glow=1.2, gain=0.75, tint=(1.0, 0.78, 0.55),
+         flat=0.0, amb=(0.03, 0.04, 0.07), beams=[(1.0, 0.70, 0.30), (1.0, 0.35, 0.15), (0.5, 0.65, 1.0), (1.0, 0.90, 0.6)], bI=0.75, spots=0.0, crop=0.0, expo=1.0, gk=3.2, spk=0.6),
     dict(key="k186", R=0.523, a=0.432, T=3755, planet="KEPLER-186F", stype="M1 RED DWARF", ly="580 LIGHT-YEARS", fact="NOON ≈ OUR HOUR BEFORE SUNSET",
-         tc=(255, 150, 90), zen=(0.050, 0.035, 0.10), hor=(0.42, 0.17, 0.08), surf=1.8, glow=0.8, gain=0.36, tint=(1.0, 0.55, 0.28),
-         flat=0.2, amb=(0.035, 0.022, 0.030), beams=[(1.0, 0.45, 0.12), (1.0, 0.25, 0.10), (0.7, 0.30, 0.55), (1.0, 0.65, 0.30)], bI=0.6, spots=0.3, crop=1.0, expo=1.05),
+         tc=(255, 150, 90), zen=(0.060, 0.032, 0.030), hor=(0.40, 0.19, 0.06), surf=0.8, glow=0.45, gain=0.34, tint=(1.0, 0.55, 0.26),
+         flat=0.2, amb=(0.035, 0.022, 0.030), beams=[(1.0, 0.45, 0.12), (1.0, 0.25, 0.10), (0.7, 0.30, 0.55), (1.0, 0.65, 0.30)], bI=0.6, spots=0.4, crop=1.0, expo=1.05, gk=0.45, spk=0.08),
     dict(key="k452", R=1.11, a=1.046, T=5757, planet="KEPLER-452B", stype="G2 YELLOW DWARF", ly="1,800 LIGHT-YEARS", fact="ITS SUN: 1.5 BILLION YEARS OLDER",
-         tc=(255, 230, 160), zen=(0.014, 0.080, 0.44), hor=(0.36, 0.54, 0.86), surf=46.0, glow=1.25, gain=1.12, tint=(1.0, 0.97, 0.90),
-         flat=0.0, amb=(0.035, 0.055, 0.095), beams=[(1.0, 0.85, 0.40), (1.0, 0.60, 0.20), (0.6, 0.85, 1.0), (1.0, 0.95, 0.75)], bI=1.0, spots=0.0, crop=0.0, expo=0.95),
+         tc=(255, 230, 160), zen=(0.080, 0.100, 0.22), hor=(0.88, 0.62, 0.32), surf=22.0, glow=2.2, gain=1.15, tint=(1.0, 0.80, 0.52),
+         flat=0.0, amb=(0.035, 0.055, 0.095), beams=[(1.0, 0.85, 0.40), (1.0, 0.60, 0.20), (0.6, 0.85, 1.0), (1.0, 0.95, 0.75)], bI=1.0, spots=0.0, crop=0.0, expo=0.92, gk=2.6, spk=0.35),
 ]
 for w in W_: w["Rp"] = ang_r(w["R"], w["a"])
 WK = {w["key"]: w for w in W_}
 # Kepler-16B (the M dwarf companion, 0.226 R_sun) drawn beside A, at a mid-orbit separation
-K16B = dict(R=0.2262, T=3311, Rp=ang_r(0.2262, 0.7048), off=(-150.0, -70.0))
+K16B = dict(R=0.2262, T=3311, sh=(0.12, 0.90), Rp=ang_r(0.2262, 0.7048), off=(-190.0, -90.0))
 # TRAPPIST-1 neighbours seen from e near closest approach: (R km, distance km, screen pos, albedo colour)
 AU = 1.496e8
-TRAP_PL = [("d", 0.788 * 6371, (0.02925 - 0.02227) * AU * 1.05, (420.0, 330.0), (0.85, 0.80, 0.75)),
-           ("f", 1.045 * 6371, (0.03849 - 0.02925) * AU * 1.05, (905.0, 300.0), (0.80, 0.88, 1.0)),
-           ("c", 1.097 * 6371, (0.02925 - 0.01580) * AU * 1.15, (300.0, 560.0), (0.90, 0.75, 0.62)),
-           ("g", 1.129 * 6371, (0.04683 - 0.02925) * AU * 1.1, (540.0, 820.0), (0.75, 0.85, 0.95))]
+TRAP_PL = [("d", 0.788 * 6371, (0.02925 - 0.02227) * AU * 1.05, (395.0, 300.0), (0.85, 0.78, 0.70), -0.55),
+           ("f", 1.045 * 6371, (0.03849 - 0.02925) * AU * 1.05, (935.0, 270.0), (0.80, 0.90, 1.00), 0.55),
+           ("c", 1.097 * 6371, (0.02925 - 0.01580) * AU * 1.15, (240.0, 560.0), (0.92, 0.74, 0.60), 0.0),
+           ("g", 1.129 * 6371, (0.04683 - 0.02925) * AU * 1.1, (520.0, 830.0), (0.75, 0.86, 0.98), -0.3)]
 
 T_SW = {k: LN[k]["start"] - 0.06 for k in ("prox", "trap", "k16", "k186", "k452")}
 T_BACK = LN["end_b"]["start"] - 0.08
@@ -151,6 +153,14 @@ class Scene:
         self.wheat = (smooth(1330, 1380, self.yy) * a).astype(f32)
         self.wheat_y = (Y / max(float(np.percentile(Y[self.wheat > 0.5], 70)), 1e-3)).astype(f32)
         self.spot_tex = fbm2((256, 256), 33, 2.6)
+        # shadows: oak / barn / silo silhouettes (above the base line) projected forward onto the field
+        y0 = self.hz + 6.0
+        obj = (self.a_hard * (self.yy < self.hz - 22) * (self.yy > 600)).astype(f32)
+        self.shadow = []
+        for shx, k in (K16A_SH, K16B["sh"]):
+            M = np.float32([[1, -shx, shx * y0], [0, -k, (1 + k) * y0]])
+            m = cv2.warpAffine(obj, M, (W, H))
+            self.shadow.append((cv2.GaussianBlur(m, (0, 0), 4.0) * (self.yy > y0 - 5) * a).astype(f32))
         self.gran = fbm2((256, 256), 34, 1.2)
         emph = {"IMAGINE", "WORLD", "PROXIMA B", "RED", "THREE", "WIDER", "FLARES", "TRAPPIST-1E", "SALMON-PINK", "NEIGHBOUR", "SKY",
                 "KEPLER-16B", "TWO", "SUNS", "KEPLER-186F", "GOLDEN", "DARK", "KEPLER-452B", "COUSIN", "BRIGHTER", "HOME", "1,800"}
@@ -169,6 +179,7 @@ class Scene:
         else: w = ramp(t, t0 - 0.12, t0 + 0.55); A = WK["earth" if prev == "earth2" else prev]
         P = {k: lerp(A[k], B[k], w) for k in NUM}
         if cur == "k186": P["crop"] = ramp(t, T_DARK, T_DARK + 1.2)
+        P["k16"] = (w if cur == "k16" else (1 - w if prev == "k16" else 0.0))
         P["beamsA"], P["beamsB"], P["bw"] = A["beams"], B["beams"], w
         return P, cur, t0, t1
 
@@ -199,7 +210,7 @@ class Scene:
         sky = sky + (aure * P["glow"])[..., None] * (0.35 + 0.65 * scol)
         return sky, self.beams_layer(t, P, col_u)
 
-    def star(self, img, x, y, r, T, surf, spots, I, t, flare=0.0):
+    def star(self, img, x, y, r, T, surf, spots, I, t, flare=0.0, gk=1.0, spk=1.0):
         """limb-darkened disc with starspots / granulation, glow, chromatic spikes"""
         H, W = img.shape[:2]
         sc = star_col(T)
@@ -214,41 +225,48 @@ class Scene:
         tx = ((dx / max(r, 1) * 60 + t * 2) % 256).astype(f32); ty = ((dy / max(r, 1) * 60) % 256).astype(f32)
         sp = cv2.remap(self.spot_tex, tx, ty, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         gr = cv2.remap(self.gran, (tx * 2.5) % 256, (ty * 2.5) % 256, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        tex = (1 - spots * 0.55 * smooth(0.9, 1.6, sp)) * (1 + 0.06 * gr)
+        tex = (1 - min(spots, 1.0) * 0.6 * smooth(0.7, 1.4, sp)) * (1 + 0.06 * gr)
         reg = img[y0:y1, x0:x1]
-        dc = sc ** (2.2 if T < 5000 else 1.0)                                   # cool stars: deep, saturated disc colour
-        col = dc * (1 - flare * 0.5) + np.array([0.85, 0.9, 1.0], f32) * flare * 0.5
-        reg += (disc * ld * tex * surf * I * (1 + 3 * flare))[..., None] * col
+        dc = sc ** (4.0 if T < 3400 else (2.6 if T < 5000 else 1.0))                                   # cool stars: deep, saturated disc colour
+        col = dc * (1 - flare * 0.25) + np.array([1.0, 0.8, 0.8], f32) * flare * 0.25
+        reg *= (1 - 0.85 * disc)[..., None]
+        reg += (disc * ld * tex * surf * I * (1 + 1.5 * flare))[..., None] * col
         dd = np.maximum(d - r, 0)
         g = (np.exp(-dd / (0.08 * r + 3)) * 2.0 + np.exp(-dd / (0.5 * r + 22)) * 0.55 + np.exp(-dd / (r + 90)) * 0.12) * (d > r - 1)
         g = g * smooth(pad, pad * 0.7, d)
-        reg += (g * I * (0.25 + surf / 60) * (1 + 4 * flare))[..., None] * (0.3 + 0.7 * dc) * (1 + 0.08 * math.sin(t * 2.3))
+        reg += (g * gk * I * (0.25 + surf / 60) * (1 + 4 * flare))[..., None] * (0.3 + 0.7 * dc) * (1 + 0.08 * math.sin(t * 2.3))
         if flare > 0.01:                                                       # flare: a bright ribbon + loop on the limb
             ang = np.arctan2(dy, dx)
             dda = (ang - 2.3 + np.pi) % (2 * np.pi) - np.pi
             loop = np.exp(-(dda / 0.25) ** 2) * np.exp(-np.abs(d - r * 1.06) / (0.04 * r + 1)) * 8 * flare
             reg += loop[..., None] * np.array([1.0, 0.85, 0.95], f32)
+        if spots > 1.0:                                                        # active red dwarf: an erupting prominence arch on the limb
+            ang = np.arctan2(dy, dx)
+            h = r * (0.10 + 0.22 * min(flare * 2, 1.0) + 0.02 * math.sin(t * 1.3))
+            arch = np.exp(-(((ang - 2.35) / 0.22) ** 2)) * np.exp(-((d - r - h * np.cos((ang - 2.35) / 0.22 * 1.4) ** 2) / (0.025 * r + 0.8)) ** 2) * (d > r)
+            reg += (arch * (0.8 + 2.5 * flare) * I)[..., None] * np.array([1.0, 0.22, 0.10], f32)
         for k in range(6):                                                     # chromatic diffraction spikes
             a = k * math.pi / 3 + 0.26
             al = dx * math.cos(a) + dy * math.sin(a); pp = np.abs(-dx * math.sin(a) + dy * math.cos(a))
             base = np.exp(-pp / (1.6 + 0.01 * r)) * (al > r * 0.8)
             for c, Lk in ((0, 1.0), (1, 0.82), (2, 0.66)):
-                reg[..., c] += base * np.exp(-np.maximum(al - r, 0) / ((150 + 0.6 * r) * Lk)) * 1.2 * I * (0.4 + 0.6 * sc[c]) * min(surf / 20, 1.0)
+                reg[..., c] += base * np.exp(-np.maximum(al - r, 0) / ((150 + 0.6 * r) * Lk)) * 1.2 * I * (0.4 + 0.6 * dc[c]) * min(surf / 20, 1.0) * spk
         img[y0:y1, x0:x1] = reg
 
-    def planet_disc(self, img, x, y, r, alb, sun_xy, I):
+    def planet_disc(self, img, x, y, r, alb, sun_xy, I, lz=0.35, seed=1):
         """a sister planet lit by the star (phase from the star's direction)"""
         def fn(d, dx, dy):
             mu = np.sqrt(np.clip(1 - (d / r) ** 2, 0, 1))
             nx, ny = dx / r, dy / r
             lx, ly = sun_xy[0] - x, sun_xy[1] - y; ln = math.hypot(lx, ly) + 1e-6
-            lz = 0.35                                                          # star partly behind -> gibbous / crescent mix
             L_ = np.array([lx / ln * (1 - lz * lz) ** 0.5, ly / ln * (1 - lz * lz) ** 0.5, lz])
-            ndl = np.clip(nx * L_[0] + ny * L_[1] + mu * L_[2], 0, 1)
-            disc = smooth(r + 0.7, r - 0.7, d)
-            band = 1 + 0.08 * np.sin(dy / r * 9 + dx / r * 2)
-            v = disc * (ndl ** 0.8 * band * 0.55 + 0.03)
-            halo = np.exp(-np.maximum(d - r, 0) / 2.0) * 0.06 * (d > r)
+            ndl = nx * L_[0] + ny * L_[1] + mu * L_[2]
+            lit = smooth(-0.04, 0.10, ndl) * np.clip(ndl, 0, 1) ** 0.6           # crisp terminator
+            disc = smooth(r + 0.6, r - 0.6, d)
+            tx = ((nx / (mu + 0.35) * 40 + seed * 37) % 256).astype(f32); ty = ((ny / (mu + 0.35) * 40 + seed * 11) % 256).astype(f32)
+            surf = 1 + 0.30 * cv2.remap(self.spot_tex, tx, ty, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+            v = disc * (lit * surf * 0.9 + 0.025 * (1 - lit))
+            halo = np.exp(-np.maximum(d - r, 0) / 1.5) * 0.05 * (d > r)
             return (v + halo)[..., None] * np.array(alb, f32) * I
         splat(img, x, y, r + 12, fn)
 
@@ -258,6 +276,10 @@ class Scene:
         tint = np.array(P["tint"], f32)
         out = base * tint * P["gain"] + fg.flat * np.array(P["amb"], f32)
         out += (self.rim * 0.9 + self.rim_soft * 0.25)[..., None] * (0.4 + 0.6 * scol) * P["gain"] * 0.08
+        if SHADOWS and P.get("k16", 0) > 0:                                               # two suns -> two shadows of the oak and barn
+            sA, sB = self.shadow
+            out = out * (1 - (0.70 * sA * P["k16"])[..., None] * np.array([1.0, 1.0, 0.9], f32)) \
+                      * (1 - (0.45 * sB * P["k16"])[..., None] * np.array([0.6, 0.9, 1.0], f32))
         if P["crop"] > 0:                                                       # Kepler-186f: dark, red-tinted crops
             k = (P["crop"] * self.wheat)[..., None]
             dark = (self.wheat_y[..., None] ** 1.2) * np.array([0.07, 0.010, 0.014], f32) * P["gain"] * 1.6 + out * 0.15
@@ -283,15 +305,15 @@ class Scene:
         img = self.up(sky * (1 - 0.3 * col_u) * (1 + 0.6 * flare) + bm * (1 + 0.6 * col_u))
         cx, cy = C
         if cur == "trap":                                                      # the sister planets
-            for j, (nm, Rk, dk, (px, py), alb) in enumerate(TRAP_PL):
+            for j, (nm, Rk, dk, (px, py), alb, lz) in enumerate(TRAP_PL):
                 a_ = ramp(t, T_NEIGH + 0.18 * j, T_NEIGH + 0.18 * j + 0.4) * (1 - col_u)
                 if a_ <= 0: continue
                 rp = moon_like_r(Rk, dk) * back_out((t - T_NEIGH - 0.18 * j) / 0.5)
-                self.planet_disc(img, px, py, max(rp, 0.5), alb, C, 0.9 * a_ * min(pulse, 1.4))
+                self.planet_disc(img, px, py, max(rp, 0.5), alb, C, 1.1 * a_ * min(pulse, 1.4), lz, 40 + j)
         if cur == "k16":
             bx, by = cx + K16B["off"][0] * sc, cy + K16B["off"][1] * sc
-            self.star(img, bx, by, K16B["Rp"] * sc, K16B["T"], 3.0, 0.4, I_mul, t)
-        self.star(img, cx, cy, S["Rp"] * sc, S["T"], S["surf"], S["spots"], I_mul, t, flare)
+            self.star(img, bx, by, K16B["Rp"] * sc, K16B["T"], 1.2, 0.4, I_mul, t, gk=7.0, spk=0.3)
+        self.star(img, cx, cy, S["Rp"] * sc, S["T"], S["surf"], S["spots"], I_mul, t, flare, S["gk"], S["spk"])
         sky_img = img
         light = (1.0 + 0.10 * (pulse - 1) - 0.2 * col_u) * (1 + 1.2 * flare)
         fgc = self.relight(P, light, scol, t) + self.up(bm) * 0.05 * fg.a[..., None]
@@ -363,7 +385,7 @@ if __name__ == "__main__":
         print("DUR", DUR)
         for w in W_: print(f"{w['key']:6s} r={w['Rp']:6.1f}px  {w['Rp'] / R_SUN:5.2f}x Sun  {2 * math.degrees(math.atan(w['Rp'] / F_PX)):.3f} deg")
         print("K16B", round(K16B["Rp"], 1), round(K16B["Rp"] / R_SUN, 2))
-        for nm, Rk, dk, _, _ in TRAP_PL: print("trappist", nm, round(2 * math.degrees(math.asin(Rk / dk)), 3), "deg", round(moon_like_r(Rk, dk), 1), "px")
+        for nm, Rk, dk, _, _, _ in TRAP_PL: print("trappist", nm, round(2 * math.degrees(math.asin(Rk / dk)), 3), "deg", round(moon_like_r(Rk, dk), 1), "px")
         print({k: round(v, 2) for k, v in T_SW.items()}, "back", T_BACK); sys.exit()
     if sys.argv[1] == "segs":
         from lib.v3_redo_q5 import render_segments

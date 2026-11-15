@@ -204,6 +204,7 @@ class Scene:
                            ph=r.uniform(0, 6.28), sp=r.uniform(0.6, 1.4)) for i in range(7)]
         # ---- foreground: rim light, water mask + reflection geometry
         a = fg.a
+        self.a_hard = np.clip(a / 0.9, 0, 1).astype(f32)               # fully opaque where the plate alpha > 0.9
         sh = np.zeros_like(a); sh[10:] = a[:-10]
         self.rim = cv2.GaussianBlur(np.clip(a - sh, 0, 1), (0, 0), 3.0) * a
         self.rim_soft = cv2.GaussianBlur(np.clip(a - np.roll(a, 40, 0), 0, 1), (0, 0), 14.0) * a
@@ -318,10 +319,10 @@ class Scene:
         col = np.interp(idx, np.arange(len(prof)), prof[:, 0], left=0, right=0)
         tau = -np.log(np.clip(1 - al * 0.98, 0.02, 1)) / math.sin(SAT_TILT) * 0.35
         fwd = tau * np.exp(-tau * 2.3)                                     # forward-scattered brightness
-        main = fwd * (0.6 + 0.4 * col / max(col.max(), 1e-3))
+        main = cv2.GaussianBlur((fwd * (0.75 + 0.25 * col / max(col.max(), 1e-3))).astype(f32), (0, 0), 1.2)
         Fr = np.exp(-((rkm - 140220) / 700) ** 2) * 2.2                   # F ring (dusty, narrow)
-        Gr = np.exp(-((rkm - 168000) / 3800) ** 2) * 0.8                  # G ring
-        Er = np.exp(-((rkm - 238000) / 55000) ** 2) * 0.30 + np.exp(-((rkm - 330000) / 120000) ** 2) * 0.08   # E ring
+        Gr = np.exp(-((rkm - 168000) / 4200) ** 2) * 1.6                  # G ring
+        Er = np.exp(-((rkm - 238000) / 50000) ** 2) * 0.75 + np.exp(-((rkm - 330000) / 120000) ** 2) * 0.18   # E ring
         self.r_main = main.astype(f32); self.r_dust = (Fr + Gr).astype(f32); self.r_E = Er.astype(f32)
         self.r_opac = np.clip(al * 0.95, 0, 0.95).astype(f32)
         self.r_front = (v > 0).astype(f32)
@@ -424,9 +425,9 @@ class Scene:
             q = np.maximum(d / R, 1.0)
             prof = self.cor_prof[i]
             k = (q ** -2.6) * (0.55 + 0.9 * prof) * (1 + 0.20 * self.cor_fine[(i * 3) % n])
-            k = k * np.exp(-(q - 1) / (2.2 + 4.0 * prof))
+            k = k * np.exp(-(q - 1) / (3.5 + 6.0 * prof))
             inner = q ** -7 * 1.6
-            v = (k * 2.4 + inner) * smooth(R - 0.6, R + 0.8, d) * (1 + 0.06 * math.sin(t * 2.0))
+            v = (k * 5.5 + inner * 1.5) * smooth(R - 0.6, R + 0.8, d) * (1 + 0.06 * math.sin(t * 2.0))
             col = np.array([1.0, 0.97, 0.94], f32)[None, None] * np.ones_like(v)[..., None]
             out = v[..., None] * col
             for (pa, pw, ph) in self.prom:                                   # pink prominences on the limb
@@ -531,19 +532,20 @@ class Scene:
             Rs = R_SAT
         reg = img[y0:y1, x0:x1]
         g = ring_gain
-        ringcol = np.array([1.0, 0.80, 0.56], f32)
+        ringcol = np.array([1.0, 0.74, 0.44], f32)
         # far rings (behind the globe) -> globe -> near rings
         back = (1 - fr)
         reg *= (1 - op * back * 0.6)[..., None]
-        reg += ((main * 3.2 + dust * 1.2) * back * (1 - m) * g)[..., None] * ringcol
+        reg += ((main * 6.0 + dust * 1.6) * back * (1 - m) * g)[..., None] * ringcol
         reg *= (1 - m)[..., None]
-        reg += tex * 0.010 * (0.6 + 0.4 * g) * m[..., None]
+        reg += tex * 0.0035 * m[..., None]
         o = (rp - 1) * Rs                                                    # backlit atmosphere: thin bright limb
-        limb = (np.exp(-((o - 0.5) / 0.8) ** 2) * 2.4 + (np.exp(-np.maximum(o, 0) / 6) * 0.45 + np.exp(-np.maximum(o, 0) / 28) * 0.22) * (o > -1)) \
+        limb = (np.exp(-((o - 0.6) / 0.9) ** 2) * 4.0 + (np.exp(-np.maximum(o, 0) / 6) * 0.7 + np.exp(-np.maximum(o, 0) / 30) * 0.30) * (o > -1)) \
             * (0.75 + 0.25 * np.cos(ang + 1.2))
         reg += (limb * (0.6 + 0.4 * g))[..., None] * np.array([1.0, 0.88, 0.70], f32)
         reg *= (1 - op * fr * 0.85)[..., None]
-        reg += ((main * 3.2 + dust * 1.2) * fr * shd * g)[..., None] * ringcol
+        reg += ((main * 6.0 + dust * 1.6) * fr * shd * g)[..., None] * ringcol
+        reg += ((main * 0.25) * fr * (1 - shd) * g)[..., None] * np.array([0.7, 0.75, 0.85], f32)      # Saturn-shine on the shadowed rings
         reg += (E * g * sky_E)[..., None] * np.array([0.55, 0.75, 1.0], f32)
         img[y0:y1, x0:x1] = reg
         self.post_dark.append((y0, y1, x0, x1, np.clip((1 - rp) * Rs / 5.0, 0, 1) * (1 - op * fr), 0.7))
@@ -637,12 +639,12 @@ class Scene:
                 dia = math.exp(-((t - (T_C2 - 0.10)) / 0.17) ** 2) if t < T_C2 + 0.4 else 0.0
                 if dia > 0.01:
                     bx, by = cx - rs * 0.98, cy - rs * 0.12
-                    splat(img, bx, by, 260, lambda d, dx, dy: ((np.exp(-d / 1.6) * 40 + np.exp(-d / 9) * 4 + np.exp(-d / 45) * 0.6) * dia)[..., None]
+                    splat(img, bx, by, 380, lambda d, dx, dy: ((np.exp(-d / 2.2) * 60 + np.exp(-d / 12) * 6 + np.exp(-d / 70) * 0.9) * dia)[..., None]
                           * np.array([1.0, 0.97, 0.92], f32))
                     for kk in range(6):
                         a = kk * math.pi / 3 + 0.3
-                        splat(img, bx, by, 240, lambda d, dx, dy, a=a: (np.exp(-np.abs(-dx * math.sin(a) + dy * math.cos(a)) / 1.3) * np.exp(-d / 90)
-                                                                       * (dx * math.cos(a) + dy * math.sin(a) > 0) * 2.5 * dia)[..., None] * np.array([1.0, 0.95, 0.88], f32))
+                        splat(img, bx, by, 240, lambda d, dx, dy, a=a: (np.exp(-np.abs(-dx * math.sin(a) + dy * math.cos(a)) / 1.3) * np.exp(-d / 130)
+                                                                       * (dx * math.cos(a) + dy * math.sin(a) > 0) * 4.0 * dia)[..., None] * np.array([1.0, 0.95, 0.88], f32))
         elif cur == "mars":
             rs = R_SUN_M * sc
             u = (t - T_P0) / (T_P1 - T_P0)
@@ -690,7 +692,7 @@ class Scene:
         bmf = self.up(self.beams_layer(t, P, col_u))
         fgc = fgc + bmf * 0.05 * fg.a[..., None]
         self.water_reflect(sky_img, fgc, t, 1.0)
-        a = fg.a[..., None]
+        a = self.a_hard[..., None]
         img = sky_img * (1 - a) + fgc * a
         # ---- swap flashes + chromatic shockwaves
         for ts, k in SWAPS:
@@ -706,7 +708,7 @@ class Scene:
             img = img + 30 * math.exp(-(t - T_BACK) / 0.10) * np.array([1.0, 0.95, 0.88], f32)
             self.shock(img, cx, cy, t - T_BACK, np.array([1.0, 0.9, 0.7], f32))
         img = self.chroma_bloom(img, 1.0)
-        for (y0, y1, x0, x1, m, k) in self.post_dark: img[y0:y1, x0:x1] *= (1 - k * m)[..., None]
+        for (y0, y1, x0, x1, m, k) in self.post_dark: img[y0:y1, x0:x1] *= (1 - k * m * (1 - self.a_hard[y0:y1, x0:x1]))[..., None]
         out = tonemap(img, 1.0)
         out = self.chroma(out)
         out = finish(out, t, grain=0.008, vignette=0.14)

@@ -132,7 +132,7 @@
  {
   "key": "tag_woodburys_lunch",
   "type": "commons",
-  "title": "Token for a 25 cent lunch at Woodbury\u2019s in Boston, Massachusetts, on April 27, 1892, from the National Postal Museum - NPM-0 052985 207e.jpg",
+  "title": "Token for a 25 cent lunch at Woodbury’s in Boston, Massachusetts, on April 27, 1892, from the National Postal Museum - NPM-0 052985 207e.jpg",
   "shows": "A lunch token given to Owney in Boston, April 27, 1892",
   "license": "Public domain",
   "author": "Unknown maker; photo by National Postal Museum",
@@ -227,6 +227,42 @@
   "license": "Public domain",
   "author": "Alvin H. Waite",
   "date": "1892",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_mailbag_catch_1903",
+  "type": "archive",
+  "title": "CEP00089",
+  "shows": "Train picks up mail bag, 1903 (Edison)",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "Internet Archive (public domain film)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_black_diamond_1896",
+  "type": "archive",
+  "title": "SF125",
+  "shows": "Black Diamond Express, 1896 (Edison)",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "Internet Archive (public domain film)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_black_diamond_1900",
+  "type": "archive",
+  "title": "silent-new-black-diamond-express",
+  "shows": "New Black Diamond Express, 1900",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "Internet Archive (public domain film)",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_mail_in_motion",
+  "type": "archive",
+  "title": "VDY0l9cmzk5T9RMSxxIyOMxoCKILrM",
+  "shows": "Mail in Motion (1956 railway post office promo)",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "Internet Archive (public domain film)",
   "is_the_real_dog": false
  }
 ]

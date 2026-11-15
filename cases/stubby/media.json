@@ -1,0 +1,343 @@
+[
+ {
+  "key": "pershing_medal",
+  "type": "commons",
+  "title": "John J. Pershing holding his dog Sgt. Stubby, as Robert Conroy, wearing suit, stands behind them.jpg",
+  "shows": "Gen. Pershing pins the Humane Education Society gold medal on Stubby (in his decorated coat) while Robert Conroy, in a suit, stands behind. The file title wrongly says 'his dog'; Stubby was Conroy's.",
+  "license": "Public domain",
+  "author": "Harris & Ewing (Library of Congress 2016886207)",
+  "date": "1921",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "pershing_medal_crop",
+  "type": "commons",
+  "title": "John J. Pershing holding his dog Sgt. Stubby, as Robert Conroy, wearing suit, stands behind them (cropped).jpg",
+  "shows": "Tighter crop of the 1921 Pershing medal photo, good for 9:16",
+  "license": "Public domain",
+  "author": "Harris & Ewing",
+  "date": "1921",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "pershing_medal_alt",
+  "type": "commons",
+  "title": "Gen. John Pershing awards Sergeant Stubby with a medal.jpg",
+  "shows": "Another copy/scan of the 1921 Pershing medal ceremony with Conroy",
+  "license": "Public domain",
+  "author": "Unknown (Smithsonian NMAH via National Post)",
+  "date": "1921",
+  "is_the_real_dog": true,
+  "note": "Probably the same negative as pershing_medal; use the LOC version first"
+ },
+ {
+  "key": "stubby_coat",
+  "type": "commons",
+  "title": "Sergeant Stubby.jpg",
+  "shows": "Stubby standing in his chamois coat with medals, chevrons and wound stripe",
+  "license": "Public domain",
+  "author": "Unknown photographer",
+  "date": "1918-1921",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "stubby_coat_2",
+  "type": "commons",
+  "title": "Sergeant Stubby 2.jpg",
+  "shows": "Retouched/cleaned version of the coat portrait (via CT State Military Dept)",
+  "license": "Public domain",
+  "author": "Unknown; edited by User:Patrickneil",
+  "date": "1918-1921",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "stubby_1923_news",
+  "type": "commons",
+  "title": "Sg Stubby.jpg",
+  "shows": "Stubby in his decorated coat, newspaper photo (Mankato Free Press, 19 Jan 1923)",
+  "license": "Public domain",
+  "author": "Nationaal Archief (Netherlands)",
+  "date": "1923",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "nmah_mount",
+  "type": "commons",
+  "title": "Sgt. Stubby on display at the NMAH (cropped).jpg",
+  "shows": "Stubby's preserved body in his coat in the display case at the National Museum of American History",
+  "license": "CC BY-SA 4.0",
+  "author": "Laura A. Macaluso, Ph.D.",
+  "date": "2016",
+  "is_the_real_dog": true,
+  "note": "Credit: Laura A. Macaluso, CC BY-SA 4.0"
+ },
+ {
+  "key": "nmah_case_cherami",
+  "type": "commons",
+  "title": "Sgt. Stubby and Cher Ami on display at the NMAH.jpg",
+  "shows": "Wider view: Stubby beside Cher Ami the pigeon in the Price of Freedom exhibit",
+  "license": "CC BY-SA 4.0",
+  "author": "Laura A. Macaluso, Ph.D.",
+  "date": "2016",
+  "is_the_real_dog": true,
+  "note": "Credit: Laura A. Macaluso, CC BY-SA 4.0"
+ },
+ {
+  "key": "liberty_brick",
+  "type": "commons",
+  "title": "Sgt Stubby's brick at Liberty Memorial.jpg",
+  "shows": "Stubby's engraved brick in the Walk of Honor, Liberty Memorial (National WWI Museum), Kansas City",
+  "license": "Public domain",
+  "author": "Jai Raj (en.wikipedia)",
+  "date": "2006",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "middletown_statue_1",
+  "type": "commons",
+  "title": "Sergeant Stubby Monument (53837397459).jpg",
+  "shows": "'Stubby Salutes' bronze (Susan Bahary, 2018), Veterans Memorial Park, Middletown CT",
+  "license": "CC BY-SA 2.0",
+  "author": "Ethan Long",
+  "date": "2024",
+  "is_the_real_dog": false,
+  "note": "CAUTION: the sculpture is a 2018 copyrighted work and the US has no freedom of panorama for statues. The photo licence does not cover the sculpture, so use briefly or avoid."
+ },
+ {
+  "key": "middletown_statue_2",
+  "type": "commons",
+  "title": "Sergeant Stubby Monument (53837302278).jpg",
+  "shows": "Second angle of the Middletown statue",
+  "license": "CC BY-SA 2.0",
+  "author": "Ethan Long",
+  "date": "2024",
+  "is_the_real_dog": false,
+  "note": "Same sculpture-copyright caution"
+ },
+ {
+  "key": "seicheprey_1918",
+  "type": "commons",
+  "title": "Seicheprey, the scene of the first American battle, April 20, 1918 LCCN2007663854.tif",
+  "shows": "Period photo of Seicheprey, where Stubby was wounded (April 1918)",
+  "license": "Public domain",
+  "author": "Unknown (Library of Congress)",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "seicheprey_ruins",
+  "type": "commons",
+  "title": "The Ruins of Seicheprey.jpg",
+  "shows": "Ruined village of Seicheprey (Literary Digest History of the World War)",
+  "license": "No restrictions (public domain)",
+  "author": "Francis W. Halsey (comp.)",
+  "date": "1919",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "seicheprey_sketch",
+  "type": "commons",
+  "title": "I Was There with the Yanks on the Western Front, 008h.jpg",
+  "shows": "Sketch: 'Seicheprey. America's old home sector—first trenches entirely under their own command'",
+  "license": "Public domain",
+  "author": "Cyrus Leroy Baldridge",
+  "date": "1919",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "chemin_des_dames_26th",
+  "type": "commons",
+  "title": "111-SC-7617 - Gen Traub at his headquarters, 51st Brigade, 26th Division, Chemin Des Dames, France- - NARA - 55176016.jpg",
+  "shows": "26th Division brigade HQ at the Chemin des Dames (Stubby's first front, Feb 1918)",
+  "license": "Public domain",
+  "author": "US Army Signal Corps",
+  "date": "1918-02-17",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "gas_masks_doughboys",
+  "type": "commons",
+  "title": "111-SC-4051 - American soldiers equipped with latest type gas mask. - NARA - 55169506 (cropped).jpg",
+  "shows": "American soldiers wearing WWI gas masks (for the gas-warning segment)",
+  "license": "Public domain",
+  "author": "US Army Signal Corps",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "trench_gas_bags",
+  "type": "commons",
+  "title": "Chemical Warfare Service - Equipment - Miscellaneous - A line of American soldiers in a trench with gas mask ready in the bag hanging from their necks, France - NARA - 26424050.jpg",
+  "shows": "Line of American soldiers in a French trench, gas masks ready",
+  "license": "Public domain",
+  "author": "International Film Service (NARA)",
+  "date": "1917-1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "ww1_dog_gas_mask",
+  "type": "commons",
+  "title": "Dog with mask WWI.jpg",
+  "shows": "A WWI medical-service dog wearing a gas mask (not Stubby; illustrates the canine gas masks of the era)",
+  "license": "Public domain",
+  "author": "Francis W. Halsey (Literary Digest History of the World War, vol. V)",
+  "date": "1920",
+  "is_the_real_dog": false,
+  "note": "Label on screen as 'a WWI dog in a gas mask', not Stubby"
+ },
+ {
+  "key": "us_war_dogs_1918",
+  "type": "commons",
+  "title": "111-SC-7305 - 40th Division, Camp Kearney, San Diego, CA. Some of Uncle Sam's War Dogs in training. - DPLA - 6eb647cb74c18b06e7043c3d2b9660d4.jpg",
+  "shows": "American dogs being trained at Camp Kearney, 1918",
+  "license": "Public domain",
+  "author": "US Army Signal Corps",
+  "date": "1918-03-31",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "chateau_thierry_ops",
+  "type": "commons",
+  "title": "The American Operations at Château-Thierry.jpg",
+  "shows": "Illustration/map of American operations at Château-Thierry, 1918",
+  "license": "No restrictions (public domain)",
+  "author": "Francis W. Halsey (comp.)",
+  "date": "1919",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "torcy_26th",
+  "type": "commons",
+  "title": "Havoc of War - Ruins - France - Cities - T - TORCY, FRANCE. Principle street of town showing havoc wrought to homes and church by Hun gun fire. This town was captured by U.S. 26th Division, July 27, 1918 - NARA - 31484418.jpg",
+  "shows": "Ruined Torcy, near Château-Thierry, taken by the 26th Division in July 1918",
+  "license": "Public domain",
+  "author": "Underwood & Underwood (NARA)",
+  "date": "1919",
+  "is_the_real_dog": false,
+  "note": "The caption contains period wording ('Hun'); don't show the caption on screen"
+ },
+ {
+  "key": "film_neufchateau_26th",
+  "type": "archive",
+  "title": "yt_u6dqlbPGubk",
+  "shows": "Signal Corps film: the 26th Division in the Neufchâteau training area, Jan–Feb 1918 (Stubby's division, just before the front)",
+  "license": "Public domain (US Army Signal Corps film, NARA RG 111)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_chemin_des_dames_26th",
+  "type": "archive",
+  "title": "yt_565xQWaKAR0",
+  "shows": "Signal Corps film: 26th Division in the Chemin des Dames sector, 6 Feb–22 Mar 1918, Stubby's first time under fire",
+  "license": "Public domain (US Army Signal Corps film, NARA RG 111)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_toul_seicheprey_26th",
+  "type": "archive",
+  "title": "yt_kCGZDszExq0",
+  "shows": "Signal Corps film: 26th Division in the Toul-Boucq sector (Lorraine), Apr–Jun 1918, the sector of Seicheprey where Stubby was wounded",
+  "license": "Public domain (US Army Signal Corps film, NARA RG 111)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_aisne_marne_26th",
+  "type": "archive",
+  "title": "yt_EvTBJu0fVOo",
+  "shows": "Signal Corps film: 26th Division in the Aisne-Marne operations (Château-Thierry area), Jul–Aug 1918. Silent.",
+  "license": "Public domain (US Army Signal Corps film, NARA 24862 / 111-H-1359)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "film_meuse_argonne_26th",
+  "type": "archive",
+  "title": "yt_WPP3kIRWowU",
+  "shows": "Signal Corps film: 26th Division in the Meuse-Argonne offensive, Sep–Nov 1918. Silent.",
+  "license": "Public domain (US Army Signal Corps film, NARA 24916 / 111-H-1414)",
+  "author": "US Army Signal Corps / National Archives",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "nara_aisne_marne_record",
+  "type": "nara",
+  "title": "https://catalog.archives.gov/id/24862",
+  "shows": "NARA catalog master record for the 26th Division Aisne-Marne film (higher-quality source than the YouTube mirror)",
+  "license": "Public domain (US government work)",
+  "author": "US Army Signal Corps",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "nara_meuse_argonne_record",
+  "type": "nara",
+  "title": "https://catalog.archives.gov/id/24916",
+  "shows": "NARA catalog master record for the 26th Division Meuse-Argonne film",
+  "license": "Public domain (US government work)",
+  "author": "US Army Signal Corps",
+  "date": "1918",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_infantry_training_1918",
+  "type": "archive",
+  "title": "111-h-1179-r1",
+  "shows": "U.S. infantry training, 1918",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "National Archives / Internet Archive · 111-h-1179-r1",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_pershing_france_1917",
+  "type": "archive",
+  "title": "111-h-1320a",
+  "shows": "General Pershing and party go to France, June 1917",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "National Archives / Internet Archive · 111-h-1320a",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_armistice_paris",
+  "type": "archive",
+  "title": "111-m-61-r1",
+  "shows": "Armistice Day in Paris, 1918",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "National Archives / Internet Archive · 111-m-61-r1",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_red_cross_1918",
+  "type": "archive",
+  "title": "111-h-1540",
+  "shows": "Red Cross welfare activities, 1918-19",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "National Archives / Internet Archive · 111-h-1540",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_embarkation_1919",
+  "type": "archive",
+  "title": "111-H-1454",
+  "shows": "Embarkation of troops for the U.S., April-May 1919",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "National Archives / Internet Archive · 111-H-1454",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "vid_battle_wire",
+  "type": "archive",
+  "title": "111-h-1549",
+  "shows": "Battle wire lines constructed by the Army Signal Corps (WWI)",
+  "license": "Public domain (U.S. government / pre-1929 film)",
+  "author": "National Archives / Internet Archive · 111-h-1549",
+  "is_the_real_dog": false
+ }
+]

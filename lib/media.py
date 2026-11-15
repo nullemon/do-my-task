@@ -11,7 +11,25 @@ from PIL import Image
 S = requests.Session(); S.headers["User-Agent"] = "DogStoriesPipeline/1.0 (documentary research; contact via repository)"
 API = "https://commons.wikimedia.org/w/api.php"
 
-def get(url, **kw):
+class _R:
+    def __init__(self, content, code): self.content = content; self.status_code = code
+    def json(self): return json.loads(self.content)
+    @property
+    def text(self): return self.content.decode("utf-8", "replace")
+
+UA = "DogStoriesPipeline/1.0 (documentary research)"
+def get(url, params=None, **kw):
+    """curl (HTTP/2) with an honest User-Agent; waits on 429 as asked"""
+    if params: url = url + "?" + requests.compat.urlencode(params)
+    for a in range(40):
+        p = subprocess.run(["curl", "-sS", "-L", "-m", "600", "-A", UA, "-w", "\n%{http_code}", url], capture_output=True)
+        body, _, code = p.stdout.rpartition(b"\n"); code = int(code or 0)
+        if code == 200: return _R(body, 200)
+        if code in (404, 403): print("  ", code, url[:100]); return None
+        wait = 20 * (a + 1); print(f"   {code} -> wait {min(wait, 180)}s", flush=True); time.sleep(min(wait, 180))
+    return None
+
+def get_requests(url, **kw):
     for a in range(40):
         try:
             r = S.get(url, timeout=120, **kw)
@@ -21,6 +39,12 @@ def get(url, **kw):
         except Exception as e:
             print("   err", e); time.sleep(10)
     return None
+
+def curl(url, out=None):
+    """some hosts (DVIDS) refuse python-requests but accept curl"""
+    cmd = ["curl", "-sSL", "-m", "600", "-A", "Mozilla/5.0", url] + (["-o", out] if out else [])
+    r = subprocess.run(cmd, capture_output=True)
+    return r.returncode == 0 and (out or r.stdout.decode("utf-8", "replace"))
 
 def clean(s): return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", s or "")).strip()
 
@@ -52,8 +76,11 @@ def archive_best(ident):
     r = get(f"https://archive.org/metadata/{ident}")
     if not r: return None
     j = r.json(); files = j.get("files", [])
-    cand = [f for f in files if f.get("name", "").lower().endswith((".mp4", ".ogv", ".mpeg4"))]
-    cand.sort(key=lambda f: (0 if "512kb" in f["name"] or f.get("format") == "h.264" else 1, int(f.get("size", 0) or 0)))
+    cand = [f for f in files if f.get("name", "").lower().endswith((".mp4", ".ogv", ".mpeg4", ".m4v"))
+            and not re.search(r"sample|trailer|thumb", f["name"], re.I) and 2e6 < int(f.get("size", 0) or 0) < 2.5e9]
+    # prefer the biggest h.264 derivative (best quality); then anything else
+    # prefer archive.org's own web derivative (".ia.mp4" / 512kb), which is complete and small; else the smallest full file
+    cand.sort(key=lambda f: (0 if ("IA" in (f.get("format") or "") or "512kb" in f["name"].lower()) else 1, int(f.get("size", 0) or 0)))
     md = j.get("metadata", {})
     lic = md.get("licenseurl") or ("Public domain" if "public" in json.dumps(md).lower() else "see page")
     return (cand[0]["name"], md.get("title", ident), lic) if cand else None
@@ -113,32 +140,28 @@ def main(code):
                                lic=x.get("license") or lic, page=f"https://archive.org/details/{x['title']}", dur=f"{probe_dur(dst):.1f}", shows=x.get("shows", ""))
                 print("  ok", frow[k]["dur"], "s")
         elif typ == "dvids":
-            r = get(x["title"], headers={"User-Agent": "Mozilla/5.0"})
-            if not r: print("dvids failed", k); continue
-            h = r.text
-            mv = re.search(r'<meta[^>]+property="og:video(?::url)?"[^>]+content="([^"]+\.mp4[^"]*)"', h) or re.search(r'(https://[^"\']+\.mp4)', h)
-            mi = re.search(r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"', h)
+            h = curl(x["title"])
+            if not h: print("dvids failed", k); continue
             credit = f"DVIDS · {x.get('author') or 'U.S. Department of Defense'} · Public domain"
-            if "/video/" in x["title"] and mv:
-                raw = os.path.join(d, "footage", k + ".src"); rr = get(mv.group(1))
-                if rr:
-                    open(raw, "wb").write(rr.content); dst = os.path.join(d, "footage", k + ".mp4")
-                    if to_mp4(raw, dst):
-                        os.remove(raw); frow[k] = dict(key=k, file=f"footage/{k}.mp4", credit=credit, lic="Public domain", page=x["title"],
-                                                       dur=f"{probe_dur(dst):.1f}", shows=x.get("shows", "")); print("dvids video", k)
+            mp4s = re.findall(r'https://[^"\'\s]+?\.mp4', h)
+            mi = re.search(r'<meta[^>]+property="og:image"[^>]+content="([^"]+)"', h) or re.search(r'<meta[^>]+content="([^"]+)"[^>]+property="og:image"', h)
+            if "/video/" in x["title"]:
+                if not mp4s: print("dvids: no mp4 in page", k); continue
+                raw = os.path.join(d, "footage", k + ".src"); dst = os.path.join(d, "footage", k + ".mp4")
+                if curl(mp4s[0], raw) and to_mp4(raw, dst):
+                    os.remove(raw); frow[k] = dict(key=k, file=f"footage/{k}.mp4", credit=credit, lic="Public domain", page=x["title"],
+                                                   dur=f"{probe_dur(dst):.1f}", shows=x.get("shows", "")); print("dvids video", k, frow[k]["dur"])
                 continue
-            if mi:
-                rr = get(mi.group(1).replace("/1000w_q95", "/1000w_q95"))
-                if rr:
-                    raw = os.path.join(d, "photos", k + ".raw"); open(raw, "wb").write(rr.content)
-                    try:
-                        im = Image.open(raw); im.load(); im = im.convert("RGB"); im.save(os.path.join(d, "photos", k + ".jpg"), quality=93); os.remove(raw)
-                        prow[k] = dict(key=k, file=f"photos/{k}.jpg", title=x["title"], lic="Public domain", artist=x.get("author") or "U.S. Department of Defense",
-                                       date=str(x.get("date", "")), page=x["title"], size=f"{im.width}x{im.height}", real=str(x.get("is_the_real_dog", "")),
-                                       shows=x.get("shows", "")[:120], source="DVIDS")
-                        print("dvids photo", k, im.size)
-                    except Exception as e: print("BAD", k, e)
-            else: print("dvids: no media found", k)
+            if not mi: print("dvids: no image", k); continue
+            raw = os.path.join(d, "photos", k + ".raw")
+            if curl(mi.group(1).replace("&amp;", "&"), raw):
+                try:
+                    im = Image.open(raw); im.load(); im = im.convert("RGB"); im.save(os.path.join(d, "photos", k + ".jpg"), quality=93); os.remove(raw)
+                    prow[k] = dict(key=k, file=f"photos/{k}.jpg", title=x["title"], lic="Public domain", artist=x.get("author") or "U.S. Department of Defense",
+                                   date=str(x.get("date", "")), page=x["title"], size=f"{im.width}x{im.height}", real=str(x.get("is_the_real_dog", "")),
+                                   shows=x.get("shows", "")[:120], source="DVIDS")
+                    print("dvids photo", k, im.size)
+                except Exception as e: print("BAD", k, e)
         else:
             print("manual source (not auto-downloaded):", k, typ, x.get("title"))
     for path, rows, fields in ((pm, prow, ["key", "file", "title", "lic", "artist", "date", "page", "size", "real", "shows", "source"]),

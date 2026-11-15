@@ -57,6 +57,17 @@ def panel_tex(w, h, seed=3):
         _cache[k] = im
     return _cache[k].copy()
 
+def reflection(img, w, h, axis="v", dark=0.30):
+    """mirror of the live picture, darkened, slightly softened: fills a panel without ever being plain black"""
+    if axis == "v":
+        src = img.crop((0, max(0, img.height - h), img.width, img.height)).transpose(Image.FLIP_TOP_BOTTOM)
+    else:
+        src = img.crop((max(0, img.width - w), 0, img.width, img.height)).transpose(Image.FLIP_LEFT_RIGHT)
+    src = ImageOps.fit(src, (w, h), Image.BILINEAR)
+    src = ImageEnhance.Brightness(src.filter(ImageFilter.GaussianBlur(4))).enhance(dark)
+    g = noise_tex(w, h, (0, 0, 0), 10, 77)
+    return ImageChops.add(src, g, 1.0, 0)
+
 def cork(w, h):
     k = ("cork", w, h)
     if k not in _cache:
@@ -448,7 +459,7 @@ class Split(Shot):
         d = ImageDraw.Draw(can, "RGBA")
         if FMT == "V":
             _, b, c, _ = G["split"]
-            band = panel_tex(W, c - b, 31); can.paste(band, (0, b))
+            band = reflection(can.crop(self.A), W, c - b, "v", 0.34); can.paste(band, (0, b))
             d.rectangle([0, b, W, b + 6], fill=RED); d.rectangle([0, c - 6, W, c], fill=RED)
             zone = (G["cap_cx"], (b + c) / 2, G["cap_w"])
             credit_line(can, 30, b - 44, self.sa.credit, 20)
@@ -550,9 +561,9 @@ class Freeze(Shot):
         can = Image.new("RGB", (W, H)); can.paste(img, (x0, y0))
         # lower / side panel
         if FMT == "V":
-            pnl = panel_tex(W, H - y1, 41); can.paste(pnl, (0, y1)); ImageDraw.Draw(can).rectangle([0, y1, W, y1 + 6], fill=RED)
+            pnl = reflection(img, W, H - y1, "v", 0.30); can.paste(pnl, (0, y1)); ImageDraw.Draw(can).rectangle([0, y1, W, y1 + 6], fill=RED)
         else:
-            pnl = panel_tex(W - x1, H, 41); can.paste(pnl, (x1, 0)); ImageDraw.Draw(can).rectangle([x1, 0, x1 + 6, H], fill=RED)
+            pnl = reflection(img, W - x1, H, "h", 0.30); can.paste(pnl, (x1, 0)); ImageDraw.Draw(can).rectangle([x1, 0, x1 + 6, H], fill=RED)
         real = self.sp.get("sound")
         chip(can, x0 + 28, y0 + 28, "REAL VIDEO" if real else ("REAL PHOTO" if self.sh["media"]["m"] == "photo" else "REAL FOOTAGE"), 26, bg=(14, 14, 16), dot=True)
         if frozen and self.sh.get("chip"):

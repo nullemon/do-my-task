@@ -98,3 +98,8 @@
 - Hoyas: /ˈhɔɪəz/ HOY-uhz
 - Smithsonian: /smɪθˈsoʊniən/ smith-SOH-nee-un
 - A.E.F.: /ˌeɪ iː ˈɛf/ (American Expeditionary Forces)
+
+## Visual leads
+- Library of Congress, Harris & Ewing: Pershing medal photo (LOC 2016886207) is in media.json. LOC also has a 13 May 1921 parade photo (Harris & Ewing; cited by CT Explored), whose ID was not found.
+- Smithsonian NMAH object images (nmah_439710, plus harness nmah_432476 and scrapbook nmah_432471) are under Smithsonian terms, not free. Use the CC BY-SA museum photos in media.json instead.
+- Do NOT use stills from the 2018 film (Commons has a category for it; skip it).

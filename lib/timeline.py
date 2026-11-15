@@ -80,6 +80,25 @@ def build(cfg, scr):
 if __name__ == "__main__":
     cfg, scr = load_case(sys.argv[1])
     tl = build(cfg, scr)
+    # footage must never repeat: flag overlapping source ranges and count video vs photo screen time
+    used = []; vid = pho = 0.0
+    def media_of(sh):
+        for k in ("media", "top", "bottom", "bg"):
+            m = sh.get(k)
+            if isinstance(m, dict) and m.get("m"): yield m
+    for s in tl["spans"]:
+        d = s["t1"] - s["t0"]
+        ms = list(media_of(s["shot"]))
+        if any(m["m"] == "video" for m in ms): vid += d
+        elif ms: pho += d
+        for m in ms:
+            if m["m"] != "video": continue
+            a0 = m["t_in"]; a1 = m.get("t_out") or a0 + d
+            for (src, b0, b1, t) in used:
+                if src == m["src"] and a0 < b1 - 0.05 and b0 < a1 - 0.05:
+                    print(f"  !! FOOTAGE REUSE: {src} {a0:.1f}-{a1:.1f} overlaps the one used at {t:.1f}s")
+            used.append((m["src"], a0, a1, s["t0"]))
+    print(f"screen time: video {vid:.0f}s ({vid / tl['dur']:.0%}), photo {pho:.0f}s, other {tl['dur'] - vid - pho:.0f}s")
     json.dump(tl, open(os.path.join(cfg.WORK, "timeline.json"), "w"), indent=1, ensure_ascii=False)
     print(f"duration {tl['dur']:.1f}s ({tl['dur']/60:.2f} min); {len(tl['spans'])} spans; {len(tl['caps'])} caption chunks")
     for k, s in enumerate(tl["spans"]):

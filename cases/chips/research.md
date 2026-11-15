@@ -82,3 +82,8 @@
 - Eisenhower: /ˈaɪzənˌhaʊər/ EYE-zun-how-er
 - Front Royal: /ˌfrʌnt ˈrɔɪəl/ frunt ROY-ul
 - Fort Stewart: /ˈstuːərt/ STOO-ert
+
+## Visual leads (not in media.json, because no free-licence file was found)
+- A genuine B&W photo of Chips: US Army Signal Corps, caption no. MM-5-150478, radioed 26 Nov 1943, Italy ("Chips... posing on a rocky perch"). A print is at the National WWII Museum: https://www.ww2online.org/image/us-service-dog-recipient-purple-heart-italy-1943. As a US government photo it is probably public domain, but the museum states no terms. Find the NARA copy (RG 111-SC) before use.
+- NARA reportedly holds a Dec 1945 "Chips returns home" photo with the Wren family (cited by secondary sites; the catalog ID was not found).
+- Note: that 1943 Army caption itself says "German machine gun nest". Period captions got this wrong, and modern sources say the gunners were Italian.

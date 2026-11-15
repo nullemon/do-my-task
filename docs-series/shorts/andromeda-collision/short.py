@@ -143,7 +143,7 @@ def glow_text(txt, size, col, wt_="Black"):
     Wd, Hd = int(w + 2 * pad), int(asc + desc + 2 * pad); sw = max(2, int(f.size * 0.05))
     m = Image.new("L", (Wd, Hd), 0); ImageDraw.Draw(m).text((pad, pad), txt, font=f, fill=255)
     ms = Image.new("L", (Wd, Hd), 0); ImageDraw.Draw(ms).text((pad, pad), txt, font=f, fill=255, stroke_width=sw, stroke_fill=255)
-    c255 = np.array(col, f32) * 255
+    c255 = np.array(col, f32); col = c255 / 255.0                           # col given as 0..255
     a_s = np.asarray(ms, f32) / 255; a_f = np.asarray(m, f32) / 255
     grad = np.linspace(1.0, 0.0, Hd)[:, None, None]
     fill = (np.array([255, 255, 255], f32) * 0.62 + c255 * 0.38) * (0.85 + 0.15 * grad) + c255 * 0.10 * (1 - grad)
@@ -282,7 +282,7 @@ class Scene:
         dx, dy = self.hx - x0, self.hy - y0
         u = (dx * maj[0] + dy * maj[1]) / (PXDEG * scale); v = (-dx * maj[1] + dy * maj[0]) / (PXDEG * scale)
         rr = np.sqrt(u * u + (v / 0.35) ** 2); rh = np.sqrt(u * u + v * v)
-        outer = (np.exp(-rr / 1.1) * 0.05 + np.exp(-rh / 2.5) * 0.012)[..., None] * np.array([0.55, 0.68, 1.0], f32)
+        outer = (np.exp(-rr / 1.0) * 0.16 + np.exp(-rh / 2.2) * 0.03)[..., None] * np.array([0.55, 0.68, 1.0], f32)
         return (out + self.up(outer)) * gain, (x0, y0, maj)
 
     def tails(self, x0, y0, maj, scale, I, t):
@@ -298,7 +298,7 @@ class Scene:
             for (px, py, s) in pts[::2]:
                 acc += np.exp(-((self.hx - px) ** 2 + (self.hy - py) ** 2) / (2 * (L * 0.06 * (0.6 + s)) ** 2)) * (1.2 - 0.45 * s)
         n = cv2.remap(self.tw[0], (self.hx * 0.3 % 512).astype(f32), (self.hy * 0.3 % 512).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        return (np.clip(acc, 0, 3) * (0.7 + 0.3 * n) * 0.035 * I)[..., None] * np.array([0.6, 0.72, 1.0], f32)
+        return (np.clip(acc, 0, 3) * (0.7 + 0.3 * n) * 0.10 * I)[..., None] * np.array([0.6, 0.72, 1.0], f32)
 
     # -------------------------------------------------------------------------------------------- base layers
     def mw_layer(self, lst, warp=0.0, gain=5.0, t=0.0):
@@ -358,9 +358,9 @@ class Scene:
         cx, cy = 540.0, 640.0
         a = math.radians(-24 + 1.5 * math.sin(t * 0.2))
         dx, dy = self.hx - cx, self.hy - cy
-        u = (dx * math.cos(a) + dy * math.sin(a)) / 520; v = (-dx * math.sin(a) + dy * math.cos(a)) / (520 * 0.68)
+        u = (dx * math.cos(a) + dy * math.sin(a)) / 760; v = (-dx * math.sin(a) + dy * math.cos(a)) / (760 * 0.68)
         r = np.sqrt(u * u + v * v) + 1e-4
-        sb = np.exp(-7.67 * (r ** 0.25 - 1)) * 0.012                    # de Vaucouleurs r^1/4 profile
+        sb = np.exp(-7.67 * (r ** 0.25 - 1)) * 0.07                    # de Vaucouleurs r^1/4 profile
         sb = np.minimum(sb, 3.0)
         col = np.array([1.0, 0.80, 0.55], f32) * (1 - np.clip(r, 0, 1)[..., None] * 0.25) + np.array([0.3, 0.3, 0.45], f32) * np.clip(r - 0.5, 0, 1)[..., None] * 0.3
         n = cv2.remap(self.tw[1], (self.hx * 0.25 % 512).astype(f32), (self.hy * 0.25 % 512).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
@@ -377,7 +377,7 @@ class Scene:
         if key in ("today", "g2", "g3"):
             sky += self.mw_layer(lst, gain=5.0 if key != "g3" else 6.5) + self.stars_layer(t, lst)
             sc = 770.0 / r_of(Y if key != "today" else 0.0)
-            gain = {"today": 0.30, "g2": 1.0, "g3": 1.15}[key] * (1 + 0.03 * math.sin(t * 1.3))
+            gain = {"today": 0.30, "g2": 1.2, "g3": 1.5}[key] * (1 + 0.03 * math.sin(t * 1.3))
             g, info = self.m31_draw(lst, sc, gain, swirl=0.25 if key == "g3" else 0.0, t=t)
             if key == "today":                                       # the eye view: a small faint smudge
                 g = cv2.GaussianBlur(g, (0, 0), 1.5) * np.array([0.85, 0.9, 1.0], f32)
@@ -385,7 +385,7 @@ class Scene:
             if key == "g3": sky += self.up(self.tails(*info, sc, 1.0, t))
         elif key == "g4":
             sky += self.mw_layer(lst, warp=0.6, gain=7.0, t=t) + self.stars_layer(t, lst, 0.7)
-            g, info = self.m31_draw(lst, 770.0 / 31.0, 0.75, swirl=1.0, t=t)
+            g, info = self.m31_draw(lst, 770.0 / 31.0, 1.2, swirl=1.0, t=t)
             sky += g + self.up(self.tails(*info, 770 / 31.0 * 0.5, 2.2, t)) + self.starburst(t, 1.0)
         elif key == "g5":
             sky += self.mw_layer(lst, warp=0.0, gain=0.6) + self.stars_layer(t, lst, 0.5) + self.milkomeda(t, 1.0)
@@ -498,8 +498,8 @@ class Scene:
         Y, shown = years(t)
         if cur == "today": shown = 0.0
         wo = 1 - ramp(t, T_WO0, T_WO0 + 0.3) + ramp(t, T_BACK, T_BACK + 0.3)
-        put_glow(out, glow_text("YEAR" if shown < 0.005 else "YEARS FROM NOW", 34, (200, 225, 255)), W / 2, 196, 0.95 * min(wo, 1))
-        put_glow(out, glow_text(fmt_years(shown), 104, (255, 190, 90) if shown > 0.005 else (170, 210, 255)), W / 2, 270, min(wo, 1))
+        put_glow(out, glow_text("YEAR" if shown < 0.005 else "YEARS FROM NOW", 42, (200, 225, 255)), W / 2, 192, 0.95 * min(wo, 1), 0.35)
+        put_glow(out, glow_text(fmt_years(shown), 104, (255, 190, 90) if shown > 0.005 else (170, 210, 255)), W / 2, 270, min(wo, 1), 0.5)
         # ---- readout
         Q = END if (cur == "today" and t >= T_BACK) else SC[cur]
         if cur == "today":

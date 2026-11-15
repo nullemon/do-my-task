@@ -47,23 +47,23 @@ def ang_deg(d): return 2 * math.degrees(math.asin(min(RSUN_AU / d, 1.0)))
 # foreground: gain, tint, ambient; star visibility; exposure; window boost
 STAGES = [
     dict(key="now", d=1.0, name="TODAY · 1 AU", l2="0.53° WIDE · 100% SUNLIGHT", l3="AVERAGE 15 °C", tc=(255, 225, 150),
-         zen=(0.030, 0.11, 0.45), hor=(0.95, 0.62, 0.42), beams="rainbow", bI=1.0, surf=40.0, glow=1.0, spikes=0.6,
+         zen=(0.018, 0.085, 0.42), hor=(0.62, 0.55, 0.55), beams="rainbow", bI=1.0, surf=40.0, glow=1.0, spikes=0.6,
          gain=2.3, tint=(1.18, 1.0, 0.82), amb=0.0, stars=0.0, expo=1.0, win=1.0, fl=(1.0, 0.92, 0.78)),
     dict(key="mars", d=1.524, name="MARS'S ORBIT", l2="1.52 AU · 0.35° WIDE", l3="43% OF THE LIGHT · ENDLESS WINTER", tc=(200, 230, 255),
          zen=(0.020, 0.075, 0.34), hor=(0.42, 0.50, 0.62), beams=[(0.6, 0.85, 1.0), (0.85, 0.95, 1.0), (0.5, 0.7, 1.0), (0.9, 0.9, 1.0)],
-         bI=0.8, surf=6.0, glow=0.35, spikes=0.15, gain=1.55, tint=(0.95, 1.0, 1.08), amb=0.0, stars=0.0, expo=1.05, win=1.1, fl=(0.85, 0.92, 1.0)),
+         bI=0.6, surf=3.2, glow=0.14, spikes=0.10, gain=1.55, tint=(0.95, 1.0, 1.08), amb=0.0, stars=0.0, expo=1.05, win=1.1, fl=(0.85, 0.92, 1.0)),
     dict(key="jup", d=5.203, name="JUPITER'S ORBIT", l2="5.2 AU · 0.1° WIDE", l3="1/27 OF THE LIGHT", tc=(190, 215, 255),
          zen=(0.010, 0.030, 0.13), hor=(0.10, 0.13, 0.20), beams=[(0.5, 0.7, 1.0), (0.7, 0.6, 1.0), (0.6, 0.9, 1.0)],
          bI=0.5, surf=60.0, glow=0.75, spikes=0.95, gain=0.80, tint=(0.80, 0.92, 1.15), amb=0.0, stars=0.05, expo=1.25, win=1.35, fl=(0.8, 0.88, 1.0)),
     dict(key="sat", d=9.537, name="SATURN'S ORBIT", l2="9.5 AU · 0.06° WIDE", l3="1/90 OF THE LIGHT", tc=(180, 205, 255),
          zen=(0.006, 0.015, 0.075), hor=(0.04, 0.06, 0.12), beams=[(0.5, 0.65, 1.0), (0.7, 0.55, 1.0), (0.55, 0.85, 1.0)],
-         bI=0.38, surf=60.0, glow=0.6, spikes=1.05, gain=0.48, tint=(0.72, 0.88, 1.2), amb=0.0, stars=0.25, expo=1.4, win=1.6, fl=(0.75, 0.85, 1.0)),
+         bI=0.38, surf=60.0, glow=0.6, spikes=1.05, gain=0.48, tint=(0.72, 0.88, 1.2), amb=0.0, stars=0.25, expo=1.3, win=1.6, fl=(0.75, 0.85, 1.0)),
     dict(key="nep", d=30.07, name="NEPTUNE'S ORBIT", l2="30 AU · 1/900 OF THE LIGHT", l3="~450× THE FULL MOON · THE AIR FREEZES", tc=(150, 200, 255),
          zen=(0.0032, 0.0075, 0.040), hor=(0.016, 0.026, 0.065), beams=[(0.45, 0.6, 1.0), (0.6, 0.8, 1.0), (0.8, 0.6, 1.0)],
-         bI=0.30, surf=50.0, glow=0.5, spikes=1.15, gain=0.28, tint=(0.62, 0.82, 1.25), amb=0.0, stars=0.7, expo=1.6, win=1.85, fl=(0.7, 0.85, 1.0)),
+         bI=0.30, surf=50.0, glow=0.5, spikes=1.15, gain=0.28, tint=(0.62, 0.82, 1.25), amb=0.0, stars=0.7, expo=1.3, win=1.9, fl=(0.7, 0.85, 1.0)),
     dict(key="oort", d=2000.0, name="THE OORT CLOUD", l2="~2,000 AU · 1/4,000,000 OF THE LIGHT", l3="STILL THE BRIGHTEST STAR", tc=(170, 190, 255),
          zen=(0.0024, 0.0050, 0.030), hor=(0.010, 0.016, 0.045), beams=[(0.5, 0.6, 1.0), (0.8, 0.6, 1.0)],
-         bI=0.10, surf=14.0, glow=0.22, spikes=0.55, gain=0.20, tint=(0.58, 0.78, 1.3), amb=0.0, stars=1.0, expo=1.75, win=2.0, fl=(0.7, 0.8, 1.0)),
+         bI=0.10, surf=14.0, glow=0.18, spikes=0.28, gain=0.17, tint=(0.58, 0.78, 1.3), amb=0.0, stars=1.0, expo=1.3, win=2.0, fl=(0.7, 0.8, 1.0)),
 ]
 for s in STAGES: s["Rp"] = rad_px(s["d"])
 SK = {s["key"]: s for s in STAGES}
@@ -164,7 +164,7 @@ class Scene:
         ang = np.arctan2(yyf - H / 2, xxf - W / 2)
         n1 = cv2.resize(fbm2((256, 256), 501, 2.2), (W, H), interpolation=cv2.INTER_CUBIC)
         n2 = cv2.resize(fbm2((512, 512), 502, 1.4), (W, H), interpolation=cv2.INTER_CUBIC)
-        self.edge_field = (e / 260.0 + 0.35 * n1 + 0.12 * n2).astype(f32)
+        self.edge_field = (e / 170.0 + 0.30 * n1 + 0.12 * n2).astype(f32)
         fine = fbm2((H, W), 503, 0.7)
         streak = np.zeros((H, W), f32)
         for an in (20, 80, 140):
@@ -297,8 +297,8 @@ class Scene:
         m = m * np.clip(0.35 + 0.65 * self.feather, 0, 1.6)
         m = np.clip(m, 0, 1)
         y = cv2.GaussianBlur(lum(img), (0, 0), 25)[..., None]
-        col = (0.04 + y * 0.9) * np.array([0.78, 0.9, 1.25], f32) * (0.8 + 0.4 * self.feather[..., None])
-        return img * (1 - m[..., None] * 0.75) + col * m[..., None] * 0.9
+        col = (0.01 + y * 0.55) * np.array([0.75, 0.9, 1.3], f32) * (0.6 + 0.7 * self.feather[..., None])
+        return img * (1 - m[..., None] * 0.6) + col * m[..., None] * 0.8
 
     def snow(self, img, amt, t):
         if amt <= 0: return img
@@ -309,9 +309,9 @@ class Scene:
         lay = np.zeros((H // 2, W // 2), f32)
         xi = np.clip((x / 2).astype(int), 0, W // 2 - 1); yi = np.clip((y / 2).astype(int), 0, H // 2 - 1)
         np.add.at(lay, (yi, xi), (0.25 + 0.75 * s["z"]) * amt)
-        lay = cv2.GaussianBlur(lay, (0, 0), 0.8) * 1.6 + cv2.GaussianBlur(lay, (0, 0), 2.2) * 1.2
+        lay = cv2.GaussianBlur(lay, (0, 0), 1.0) * 3.2 + cv2.GaussianBlur(lay, (0, 0), 3.0) * 2.0
         y_ = lum(cv2.resize(img, (W // 8, H // 8), interpolation=cv2.INTER_AREA))
-        lit = cv2.resize(cv2.GaussianBlur(y_, (0, 0), 6), (W, H)) * 1.5 + 0.03
+        lit = cv2.resize(cv2.GaussianBlur(y_, (0, 0), 6), (W, H)) * 2.5 + 0.08
         return img + (self.up(lay) * lit)[..., None] * np.array([0.85, 0.92, 1.1], f32)
 
     def frame(self, t):

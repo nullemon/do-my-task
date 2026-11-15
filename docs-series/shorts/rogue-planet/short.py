@@ -163,9 +163,9 @@ class Scene:
             col = np.array([0.55, 0.42, 0.38], f32)
             return (col * (0.6 + 0.4 * y)[..., None]).astype(f32)
         self.pl = {
-            "moon": Body("rog", "8k_jupiter.jpg", R_MOON_PX, pole_vec(-18, 14), q=0.935, model="giant", k=0.80, surf=0.10, winds=0.010,
+            "moon": Body("rog", "8k_jupiter.jpg", R_MOON_PX, pole_vec(-18, 14), q=0.935, model="giant", k=0.80, surf=0.40, nightside=0.0, winds=0.010,
                          haze=(0.05, 0.03, 0.04), rim=(0.25, 0.12, 0.10), detail=0.04, prep=prep_rogue, seed=3),
-            "close": Body("rog2", "8k_jupiter.jpg", R_CLOSE_PX, pole_vec(-18, 14), q=0.935, model="giant", k=0.80, surf=0.10, winds=0.010,
+            "close": Body("rog2", "8k_jupiter.jpg", R_CLOSE_PX, pole_vec(-18, 14), q=0.935, model="giant", k=0.80, surf=0.40, nightside=0.0, winds=0.010,
                           haze=(0.05, 0.03, 0.04), rim=(0.25, 0.12, 0.10), detail=0.04, ss=1, prep=prep_rogue, seed=3),
         }
         # thermal-glow map: the belts (dark in reflected light) are where the deeper, hotter layers show (as at 5 microns on Jupiter)
@@ -282,8 +282,8 @@ class Scene:
                 if tk >= 0: fl += math.exp(-tk / 0.035) * (1 if k == 0 else 0.7)
             fl += 0.25 * math.exp(-max(dt_, 0) / 0.18)
             ex, ey = e["u"], e["v"]
-            dd = np.sqrt((u - ex) ** 2 + (v - ey) ** 2)
-            lt += (np.exp(-dd / 0.012) * 1.6 + np.exp(-dd / 0.05) * 0.6 + np.exp(-dd / 0.16) * 0.12) * fl * e["I"]
+            dd = np.sqrt(((u - ex) / 1.9) ** 2 + (v - ey) ** 2)
+            lt += (np.exp(-dd / 0.03) * 0.45 + np.exp(-dd / 0.07) * 0.6 + np.exp(-dd / 0.18) * 0.10) * fl * e["I"]
         lt *= inside * (0.4 + 0.6 * mu)
         add = th + lt[..., None] * np.array([0.75, 0.85, 1.0], f32) * 0.9
         img[y0:y1, x0:x1] += add * cov[..., None] * I
@@ -300,10 +300,10 @@ class Scene:
         sub = np.ascontiguousarray(st[y0:y1, x0:x1])
         na, nb = 2048, 24
         ang = np.linspace(0, 2 * np.pi, na, endpoint=False).astype(f32)
-        rr = np.linspace(R * 0.90, R, nb).astype(f32)
+        rr = np.linspace(R * 0.86, R, nb).astype(f32)
         mx = (cx - x0 + rr[None, :] * np.cos(ang)[:, None]).astype(f32); my = (cy - y0 + rr[None, :] * np.sin(ang)[:, None]).astype(f32)
         pol = cv2.remap(sub, mx, my, cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-        band = pol.sum(1) * (R * 0.10 / nb) * (2 * np.pi * R / na)                         # stars behind the limb, per angle bin
+        band = pol.sum(1) * (R * 0.14 / nb) * (2 * np.pi * R / na) * 2.5                         # stars behind the limb, per angle bin
         band = cv2.GaussianBlur(band[:, None, :], (0, 0), sigmaX=0.1, sigmaY=4).reshape(na, 3)
         flick = (0.65 + 0.35 * np.sin(ang * 37 + t * 5.0) * np.sin(ang * 13 - t * 3.1)).astype(f32)
         val = (band * flick[:, None]).astype(f32)
@@ -313,7 +313,7 @@ class Scene:
         ai = ((np.arctan2(dy_, dx_) % (2 * np.pi)) / (2 * np.pi) * na).astype(f32)
         v = cv2.remap(val[:, None, :].repeat(2, 1), np.zeros_like(ai), ai, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         prof = np.exp(-((d - R - 1.2) / 1.1) ** 2) * (d > R - 1)
-        img[y0:y1, x0:x1] += v * (prof * 0.55)[..., None] * I
+        img[y0:y1, x0:x1] += v * (prof * 0.9 + np.exp(-np.maximum(d - R, 0) / 6.0) * 0.08 * (d > R - 1))[..., None] * I
 
     def aurora(self, img, cx, cy, R, t, amt):
         """auroral ovals round both magnetic poles (green O / red H-alpha tints), seen near the limb"""
@@ -326,7 +326,7 @@ class Scene:
             def fn(d, dx, dy, sgn=sgn):
                 a_ = dx * ca + dy * sa; b_ = -dx * sa + dy * ca                     # a_: along the pole axis
                 rr = np.sqrt((a_ / (0.14 * R)) ** 2 + (b_ / (0.42 * R)) ** 2)
-                ring = np.exp(-((rr - 1) / 0.12) ** 2) * (0.8 + 0.2 * np.sin(np.arctan2(a_, b_) * 6 - t * 3 * sgn))
+                ring = np.exp(-((rr - 1) / 0.18) ** 2) * (0.8 + 0.2 * np.sin(np.arctan2(a_, b_) * 6 - t * 3 * sgn))
                 curtain = np.exp(-((rr - 1.05) / 0.35) ** 2) * 0.25
                 g = (ring + curtain)
                 col = np.array([0.30, 1.0, 0.55], f32) * 0.7 + np.array([1.0, 0.25, 0.55], f32) * 0.3

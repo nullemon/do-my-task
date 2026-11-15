@@ -348,6 +348,7 @@ def title_overlay(canvas, o, gt):
     od.rectangle([0, cy - 70, W, cy + s1 + 150], fill=(0, 0, 0, int(140 * a)))
     ov = ov.filter(ImageFilter.GaussianBlur(30)); od = ImageDraw.Draw(ov)
     sc = 0.9 + 0.1 * eout(lt / 0.6); f1 = font(PF, int(s1 * sc))
+    while tlen(od, CFG.TITLE_BIG, f1) > W * 0.90 and f1.size > 40: f1 = font(PF, f1.size - 4)
     tw = tlen(od, CFG.TITLE_BIG, f1); od.text((W / 2 - tw / 2, cy), CFG.TITLE_BIG, font=f1, fill=WHITE + (int(255 * a),))
     f2 = font(MXB, 46 if FMT == "V" else 48); sp = 12
     while sum(tlen(od, c, f2) for c in CFG.TITLE_SMALL) + sp * (len(CFG.TITLE_SMALL) - 1) > W * 0.9: f2 = font(MXB, f2.size - 2); sp = max(4, sp - 1)

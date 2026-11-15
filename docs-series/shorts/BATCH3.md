@@ -35,3 +35,5 @@ Read BATCH2.md (format, user rules, examples, process) and REDO_V3.md (the APPRO
 - SendMessage "main" when each Short is finished: path, duration and script.
 - One heavy process at a time, under `nice -n 10`. Never kill processes you didn't start.
 - No git commits, and no media on GitHub.
+
+## Batch 3 complete (15 Nov): all 8 uploaded to Gofile https://gofile.io/d/xpiUozuT as b3-<name>-short.mp4

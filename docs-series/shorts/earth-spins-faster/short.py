@@ -1,5 +1,5 @@
 """WHAT IF EARTH SPUN FASTER? -- one locked tripod shot of the desert (01_desert.png) on the equator, looking ESE
-(azimuth 118 deg) in December. BATCH4 swap format: each spin-up swaps in with a tinted flash + chromatic shockwave,
+(azimuth 135 deg) in December. BATCH4 swap format: each spin-up swaps in with a tinted flash + chromatic shockwave,
 the dunes are relit by the racing day / night cycle, readouts at the top, big orange one-word captions.
   24 h (calm morning, the Sun creeping up) -> 12 h (the Sun shoots up, the first night: star trails)
   -> 6 h (day-night every few seconds, sand starts to blow) -> 2 h (day and night flicker, howling sand haze)
@@ -28,7 +28,7 @@ FPS = 30
 LEAD, TAIL = 0.25, 1.40
 F_PX = 1100.0                     # ~83 deg vertical field on 1920 px
 HZ = 1215.0                       # the true horizon (elevation 0) in frame px: behind the far dune crests
-AZ_CAM = math.radians(118.0)
+AZ_CAM = math.radians(135.0)
 DEC_SUN = math.radians(-23.44)
 CAP_Y = 1520
 RO_Y = (318, 398, 450)
@@ -178,46 +178,81 @@ class Scene:
         cosg = np.clip(self.dirs @ sv.astype(f32), -1, 1)
         gam = np.degrees(np.arccos(cosg))
         e = np.maximum(self.el, 0)
-        zen = np.array([0.055, 0.17, 0.55], f32); hor = np.array([0.42, 0.55, 0.78], f32)
+        zen = np.array([0.018, 0.085, 0.46], f32); hor = np.array([0.25, 0.45, 0.82], f32)
         k = np.exp(-e / 14.0)[..., None]
-        day = (zen * (1 - k) + hor * k) * (1 + 0.6 * (1 + cosg ** 2)[..., None] * 0.25)
-        day = day + np.array([1.0, 0.85, 0.6], f32) * (np.exp(-gam / 7.0) * 0.9 + np.exp(-gam / 25.0) * 0.25)[..., None]
+        day = (zen * (1 - k) + hor * k) * (1 + 0.15 * (1 + cosg ** 2)[..., None])
+        day = day + np.array([1.0, 0.85, 0.6], f32) * (np.exp(-gam / 5.0) * 0.8 + np.exp(-gam / 20.0) * 0.08)[..., None]
         day = day * (0.35 + 0.65 * smooth(-2, 25, es))
         # twilight: orange band on the Sun's side, blue-violet above, Belt of Venus opposite
         az_side = (0.5 + 0.5 * cosg)
-        tw_col = (np.array([1.0, 0.42, 0.12], f32) * (np.exp(-e / 6.0) * az_side ** 2)[..., None] * 0.9
-                  + np.array([0.20, 0.16, 0.38], f32) * np.exp(-e / 30.0)[..., None] * 0.35
-                  + np.array([0.45, 0.20, 0.28], f32) * (np.exp(-((e - 8) / 6) ** 2) * (1 - az_side) ** 2)[..., None] * 0.3)
+        tw_col = (np.array([1.0, 0.36, 0.08], f32) * (np.exp(-e / 7.0) * az_side ** 1.5)[..., None] * 1.3
+                  + np.array([0.75, 0.18, 0.35], f32) * (np.exp(-((e - 14) / 9) ** 2))[..., None] * 0.45
+                  + np.array([0.12, 0.10, 0.40], f32) * np.exp(-e / 40.0)[..., None] * 0.35)
         night = np.array([0.006, 0.013, 0.048], f32) * (0.8 + 0.2 * np.exp(-e / 25))[..., None] \
             + np.array([0.012, 0.018, 0.040], f32) * np.exp(-e / 9)[..., None]
         sky = night * (1 - D) + day * D + tw_col * tw
         return sky.astype(f32), D, tw, es
 
     def trails(self, t, D_now, img):
-        """star trails over a 2.6 s exposure, weighted by how dark the sky was at each instant"""
+        """star trails: a long exposure of the sky behind us (up to 2.6 s or 300 deg of turn, whichever is shorter), drawn
+        as polylines in 4 age slices (older = fainter), each slice weighted by how dark the sky was then"""
         W, H = self.L.W, self.L.H
-        win = 2.6; K = 36
+        om = _omega(t); win = min(2.6, math.radians(300) / om)
+        if t < T_SW["h12"]: win = min(win, 0.15)                               # calm opening: crisp points
+        K = int(np.clip(math.degrees(om * win) * 1.2, 4, 240))
         ts = t - win * np.linspace(0, 1, K)
         Hs = np.array([hour_angle(x) for x in ts])
-        dk = np.array([1 - dayness(x) for x in ts]) * np.exp(-np.linspace(0, 1, K) * 1.6)
-        if dk.max() < 0.01: return
-        # sidereal: the stars' hour angle is the Sun's + (RA - RA_sun); one sidereal day ~ one solar day here
-        HH = Hs[:, None] + ST_RA[None, :]
-        v = eq_to_enu(HH, ST_DEC[None, :])
+        dk = np.array([1 - dayness(x) for x in ts])
+        if dk.max() < 0.02: return
+        sel = ST_F > 0.11                                                      # the brighter ~1,300 stars
+        HH = Hs[:, None] + ST_RA[None, sel]
+        v = eq_to_enu(HH, ST_DEC[None, sel])
         x, y, ok = project(v)
-        ok &= (x > -2) & (x < W + 2) & (y > -2) & (y < HZ + 40)
-        el = np.maximum(v[..., 2], 0.0)
-        ext = np.exp(-0.25 / (el + 0.06))
-        wgt = (dk[:, None] * ST_F[None, :] * ext * (12.0 / K)) * ok
-        if t < T_SW["h12"]:                                                     # calm opening: crisp points, not streaks
-            wgt = wgt * (np.arange(K) == 0)[:, None] * K / 12.0
-        x, y = x[ok], y[ok]; w = wgt[ok]; c = np.broadcast_to(ST_C[None], (K, NS, 3))[ok] * w[:, None]
-        acc = np.zeros((H + 2, W + 2, 3), f32)
-        x0 = np.floor(x).astype(int); y0 = np.floor(y).astype(int); ux = (x - x0)[:, None]; uy = (y - y0)[:, None]
-        for dy, dx, wg in ((0, 0, (1 - ux) * (1 - uy)), (0, 1, ux * (1 - uy)), (1, 0, (1 - ux) * uy), (1, 1, ux * uy)):
-            np.add.at(acc, (np.clip(y0 + dy, 0, H + 1), np.clip(x0 + dx, 0, W + 1)), (c * wg).astype(f32))
-        a = acc[:H, :W]
-        img += (cv2.GaussianBlur(a, (0, 0), 0.7) * 1.6 + cv2.GaussianBlur(a, (0, 0), 2.2) * 0.4) * (1 - 0.95 * D_now)
+        ok &= (x > -400) & (x < W + 400) & (y > -600) & (y < HZ + 30)
+        el = np.maximum(v[..., 2], 0.0); ext = np.exp(-0.25 / (el + 0.06))
+        F = ST_F[sel]; C = ST_C[sel]
+        acc = np.zeros((H, W, 3), f32)
+        slices = np.array_split(np.arange(K), 4) if K >= 8 else [np.arange(K)]
+        for si, idx in enumerate(slices):
+            age = 1 - si / max(len(slices), 1)
+            dsl = float(dk[idx].mean()) * age ** 1.2
+            if dsl < 0.01: continue
+            lo, hi = idx[0], min(idx[-1] + 2, K)
+            for bi, (f0, f1) in enumerate(((0.11, 0.25), (0.25, 0.6), (0.6, 1.5), (1.5, 99))):
+                pick = np.nonzero((F >= f0) & (F < f1))[0]
+                lines = []
+                for j in pick:
+                    oj = ok[lo:hi, j]
+                    if oj.sum() < 1: continue
+                    pts = np.stack([x[lo:hi, j], y[lo:hi, j]], 1)[oj]
+                    if len(pts) == 1: pts = np.concatenate([pts, pts + 0.6])
+                    lines.append((pts * 4).astype(np.int32))
+                if not lines: continue
+                val = min((f0 + f1) / 2, 3.0) * 0.55 * dsl
+                col = tuple(float(c) for c in (np.array([0.85, 0.92, 1.0]) * val))
+                cv2.polylines(acc, lines, False, col, 1 + (bi >= 2), lineType=cv2.LINE_8, shift=2)
+        acc = acc * ext.mean() if False else acc
+        img += (cv2.GaussianBlur(acc, (0, 0), 0.6) * 1.3 + cv2.GaussianBlur(acc, (0, 0), 2.5) * 0.5) * (1 - D_now) ** 2
+
+    def sun_arc(self, img, t, D_now):
+        """the racing Sun leaves a glowing golden arc (a long exposure of its path) once the days get short"""
+        om = _omega(t)
+        amt = float(smooth(2 * math.pi / 12.0, 2 * math.pi / 3.0, om))
+        if amt <= 0.01 or t >= T_BACK: return
+        win = min(0.45 * 2 * math.pi / om, 1.2); K = 90
+        ts = t - win * np.linspace(0, 1, K)
+        v = np.stack([sun_vec(x) for x in ts]); x, y, ok = project(v)
+        ok &= v[:, 2] > -0.05
+        if ok.sum() < 2: return
+        H, W = self.L.H, self.L.W
+        acc = np.zeros((H, W, 3), f32)
+        pts = np.stack([x, y], 1)
+        for k in range(K - 1):
+            if not (ok[k] and ok[k + 1]): continue
+            a = (1 - k / K) ** 1.5
+            p0 = tuple(int(c * 4) for c in pts[k]); p1 = tuple(int(c * 4) for c in pts[k + 1])
+            cv2.line(acc, p0, p1, (6.0 * a, 4.2 * a, 1.6 * a), 3, lineType=cv2.LINE_8, shift=2)
+        img += (cv2.GaussianBlur(acc, (0, 0), 1.2) + cv2.GaussianBlur(acc, (0, 0), 8) * 0.6 + cv2.GaussianBlur(acc, (0, 0), 30) * 0.4) * amt
 
     def sun(self, img, t, pulse):
         """the Sun at its true 0.53 deg; motion-blurred along its path over a half-frame shutter"""
@@ -251,11 +286,11 @@ class Scene:
         if wind <= 0.01: return
         n1, n2 = self.dust_n; H, W = self.L.H, self.L.W
         y0 = 950; ys = self.yy[y0:]; xs = self.xx[y0:]
-        u = ((xs * 0.35 - t * (60 + 260 * wind)) % 512).astype(f32); v = ((ys * 0.9 + 6 * np.sin(xs * 0.01 + t)) * 0.25 % 256).astype(f32)
+        u = ((xs * 0.12 - t * (40 + 220 * wind)) % 512).astype(f32); v = ((ys * 1.6 + 8 * np.sin(xs * 0.008 + t * 2)) * 0.5 % 256).astype(f32)
         a = cv2.remap(n1, u, v, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         b = cv2.remap(n2, (u * 2.3) % 512, (v * 1.7) % 256, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        dens = np.clip(0.45 + 0.35 * a + 0.2 * b, 0, 1.4) * smooth(1000, 1250, ys) * (1 - 0.5 * smooth(1500, 1900, ys)) * wind * 0.55
-        col = np.array([0.80, 0.58, 0.36], f32) * (0.06 + 0.9 * D) + np.array([0.9, 0.45, 0.2], f32) * tw * 0.3
+        dens = np.clip(0.55 * a + 0.35 * b - 0.15, 0, 1.2) * smooth(1080, 1260, ys) * (1 - 0.6 * smooth(1450, 1900, ys)) * wind * 0.45
+        col = np.array([0.95, 0.62, 0.32], f32) * (0.05 + 0.85 * D) + np.array([1.0, 0.45, 0.15], f32) * tw * 0.4
         img[y0:] = img[y0:] * (1 - dens[..., None] * 0.6) + dens[..., None] * col
 
     def grains(self, img, t, D, tw):
@@ -264,18 +299,18 @@ class Scene:
         u = t - T_FLOAT; H, W = self.L.H, self.L.W
         st = G_SEED[:, 0] * 2.5
         age = np.maximum(u - st, 0)
-        up_ = age ** 1.4 * (25 + 70 * G_SEED[:, 1])
+        up_ = age ** 1.5 * (40 + 110 * G_SEED[:, 1])
         x = self.gx + age * (80 + 120 * G_SEED[:, 2]) + 6 * np.sin(age * 3 + G_SEED[:, 3] * 6)
         y = self.gy - up_
         a = smooth(0, 0.4, age) * (1 - smooth(5.5, 7.5, age)) * (0.5 + 0.8 * G_SEED[:, 3])
         sel = (age > 0) & (x > 0) & (x < W - 1) & (y > 0) & (y < H - 1)
         x, y, a = x[sel], y[sel], a[sel]
-        col = (np.array([1.0, 0.78, 0.5], f32) * (0.08 + 1.4 * D + 0.6 * tw))
+        col = (np.array([1.0, 0.78, 0.5], f32) * (0.25 + 1.4 * D + 0.6 * tw))
         acc = np.zeros((H + 1, W + 1), f32)
         x0 = x.astype(int); y0 = y.astype(int); fx = x - x0; fy = y - y0
         for dy, dx, wg in ((0, 0, (1 - fx) * (1 - fy)), (0, 1, fx * (1 - fy)), (1, 0, (1 - fx) * fy), (1, 1, fx * fy)):
             np.add.at(acc, (y0 + dy, x0 + dx), a * wg)
-        acc = cv2.GaussianBlur(acc[:H, :W], (0, 0), 0.8) * 1.6 + cv2.GaussianBlur(acc[:H, :W], (0, 0), 4) * 0.8
+        acc = cv2.GaussianBlur(acc[:H, :W], (0, 0), 1.0) * 6.0 + cv2.GaussianBlur(acc[:H, :W], (0, 0), 5) * 2.0
         img += acc[..., None] * col
 
     def shock(self, img, cx, cy, u, col, size=1.0, decay=0.55):
@@ -298,6 +333,7 @@ class Scene:
         sky, D, tw, es = self.sky(t, sv)
         img = self.up(sky)
         self.trails(t, D, img)
+        self.sun_arc(img, t, D)
         self.sun(img, t, 1.0)
         # ---- foreground
         fgc = self.relight(D, tw, es, sv, cur, wind) * (1 + 0.08 * (pulse - 1))

@@ -577,7 +577,8 @@ class Freeze(Shot):
         else:
             pnl = reflection(img, W - x1, H, "h", 0.30); can.paste(pnl, (x1, 0)); ImageDraw.Draw(can).rectangle([x1, 0, x1 + 6, H], fill=RED)
         real = self.sp.get("sound")
-        chip(can, x0 + 28, y0 + 28, "REAL VIDEO" if real else ("REAL PHOTO" if self.sh["media"]["m"] == "photo" else "REAL FOOTAGE"), 26, bg=(14, 14, 16), dot=True)
+        if "not " not in (self.s.credit or "").lower() and "not " not in (self.sh.get("chip") or "").lower():
+            chip(can, x0 + 28, y0 + 28, "REAL VIDEO" if real else ("REAL PHOTO" if self.sh["media"]["m"] == "photo" else "REAL FOOTAGE"), 26, bg=(14, 14, 16), dot=True)
         if frozen and self.sh.get("chip"):
             d = ImageDraw.Draw(can); f = font(MXB, 26); tw = tlen(d, self.sh["chip"], f)
             chip(can, (min(x1, G["safe_r"]) if FMT == "V" else x1) - tw - 60, y0 + 28, self.sh["chip"], 26)

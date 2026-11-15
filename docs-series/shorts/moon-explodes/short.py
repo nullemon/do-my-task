@@ -6,7 +6,7 @@ shore are relit for the new sky, readouts at the top, big orange one-word captio
   -> over days the debris spreads along the Moon's orbit into a ring (a band arcing up out of the far trees)
   -> some debris falls: meteor showers streak across the sky ("the hard rain"), mirrored in the lake
   -> a bright, settled ring arcing over the lake -> white-out -> our Moon again (loops)
-Lens: telephoto, f = 14,000 px (the frame is ~4.4 deg wide), so the Moon keeps its true 0.52 deg (r = 63 px).
+Lens: long telephoto, f = 22,400 px (the frame is ~2.8 deg wide), so the Moon keeps its true 0.52 deg (r = 101 px).
 Usage (one heavy process, under nice):
   /home/user/ttsenv/bin/python short.py info
   /home/user/ttsenv/bin/python short.py stills 1.0,9.5          -> SCR/stills/<t>.png
@@ -32,7 +32,7 @@ FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8
 FPS = 30
 LEAD, TAIL = 0.25, 1.40
 F_SKY = 1400.0                    # star field / horizon geometry (as more-moons)
-F_TELE = 14000.0                  # disc sizes (true angular size at this focal length)
+F_TELE = 22400.0                  # disc sizes (true angular size at this focal length); the frame is ~2.8 deg wide
 CAP_Y = 1470                      # captions sit on the pier deck; the sky stays clear
 RO_Y = (318, 398, 450)
 
@@ -54,7 +54,7 @@ SUN_ON_EARTH = 1361.0 * math.pi * (R_E * 1e3) ** 2                      # W inte
 ELEV = 3.0
 D_OBS = math.sqrt(D_MOON ** 2 - (R_E * math.cos(math.radians(ELEV))) ** 2) - R_E * math.sin(math.radians(ELEV))
 RP = F_TELE * math.tan(math.asin(R_MOON / D_OBS))                         # Moon radius on screen, px (~63)
-MX, MY = 880.0, 1000.0
+MX, MY = 890.0, 1060.0
 
 PHASE = math.radians(2.5)
 U_SH = np.array([0.45, -0.89]); U_SH = U_SH / np.linalg.norm(U_SH)
@@ -69,9 +69,9 @@ def circ3(p1, p2, p3):
     return ux, uy, math.hypot(x1 - ux, y1 - uy)
 
 
-ARC_CX, ARC_CY, ARC_R = circ3((1200.0, 1235.0), (MX, MY), (-140.0, 470.0))   # rises from behind the far trees, arcs up-left
+ARC_CX, ARC_CY, ARC_R = circ3((1200.0, 1290.0), (MX, MY), (-140.0, 520.0))   # rises from behind the far trees, arcs up-left
 TH_M = math.atan2(MY - ARC_CY, MX - ARC_CX)
-ARC_SGN = 1.0 if math.atan2(470.0 - ARC_CY, -140.0 - ARC_CX) > TH_M else -1.0   # +s runs towards the upper-left end
+ARC_SGN = 1.0 if math.atan2(520.0 - ARC_CY, -140.0 - ARC_CX) > TH_M else -1.0   # +s runs towards the upper-left end
 
 
 def arc_pt(s, q):
@@ -141,16 +141,20 @@ def cracks(t):  # crack lines over the white-hot disc
 
 # ------------------------------------------------------------------------------------------------ debris
 _r = np.random.default_rng(2024)
-ND = 7000
-D_S = np.concatenate([_r.uniform(-1500, 560, ND - 1500), _r.normal(0, 260, 1500)]).astype(f32)   # along the orbit (px)
-D_Q = (_r.standard_t(4, ND) * 26).astype(f32)                                                     # across the band
+ND = 14000
+D_S = np.concatenate([_r.uniform(-1500, 560, ND - 2500), _r.normal(0, 300, 2500)]).astype(f32)   # along the orbit (px)
+D_Q = (_r.standard_t(4, ND) * 34).astype(f32)                                                     # across the band
 D_Q = np.clip(D_Q, -200, 200)
-_ang = _r.uniform(0, 2 * np.pi, ND); _mag = RP * 3.4 * _r.uniform(0, 1, ND) ** 1.3
+_ang = _r.uniform(0, 2 * np.pi, ND); _mag = RP * 5.5 * _r.uniform(0, 1, ND) ** 1.2
 D_B = np.stack([np.cos(_ang) * _mag * 1.25, np.sin(_ang) * _mag * 0.85], 1).astype(f32)          # blast offsets
 D_F = (0.04 * _r.uniform(0, 1, ND) ** (-0.85)).clip(0, 3.0).astype(f32)                          # brightness
 D_C = (np.array([0.92, 0.94, 1.0], f32) * _r.uniform(0.85, 1.15, (ND, 1)).astype(f32)
        * np.array([1.0, 0.97, 0.92], f32) ** _r.uniform(-1, 1, (ND, 1)).astype(f32))
 D_PH = _r.uniform(0, 6.28, ND).astype(f32)
+D_COOL = _r.uniform(0.5, 1.6, ND).astype(f32)                                # per-particle cooling rate
+
+BB_T = np.linspace(800, 6000, 64).astype(f32)
+BB_C = np.stack([bbcolor(float(T)) for T in BB_T]).astype(f32)
 
 # meteors: a Poisson stream; the rate follows the beats (rain -> years -> hard rain; a few in the ring sky)
 RAD = arc_pt(-650.0, 0.0)                                                 # radiant on the ring, upper left
@@ -159,21 +163,21 @@ RAD = arc_pt(-650.0, 0.0)                                                 # radi
 def met_rate(t):
     if t >= T_WO0: return 0.0
     return kf(t, [(0, 0.0), (T_RAIN + 0.3, 0.0), (T_RAIN + 1.2, 2.5), (wt("rain_b", "METEORS"), 5.0), (wt("rain_b", "YEARS"), 9.0),
-                  (wt("rain_c", "RAIN"), 16.0), (T_FINAL - 0.3, 14.0), (T_FINAL + 0.8, 1.6), (T_WO0, 1.6)])
+                  (wt("rain_c", "RAIN"), 22.0), (T_FINAL - 0.3, 20.0), (T_FINAL + 0.8, 2.5), (T_WO0, 2.5)])
 
 
 METEORS = []
 _m = np.random.default_rng(99); tt = 0.0
 while tt < DUR:
-    tt += _m.exponential(1 / 18.0)
-    if _m.uniform() < met_rate(tt) / 18.0:
-        fire = _m.uniform() < 0.10
+    tt += _m.exponential(1 / 24.0)
+    if _m.uniform() < met_rate(tt) / 24.0:
+        fire = _m.uniform() < 0.35
         ang = math.atan2(_m.uniform(400, 1250) - RAD[1], _m.uniform(-100, 1180) - RAD[0])
         r0 = _m.uniform(150, 1100)
         x0, y0 = RAD[0] + r0 * math.cos(ang), RAD[1] + r0 * math.sin(ang)
-        L = _m.uniform(220, 600) * (1.5 if fire else 1.0)
+        L = _m.uniform(260, 650) * (1.6 if fire else 1.0)
         METEORS.append(dict(t0=tt, d=_m.uniform(0.35, 0.8) * (1.4 if fire else 1.0), x0=x0, y0=y0, dx=math.cos(ang) * L, dy=math.sin(ang) * L,
-                            I=_m.uniform(0.6, 1.6) * (5.0 if fire else 1.0), fire=fire,
+                            I=_m.uniform(0.6, 1.6) * (4.0 if fire else 1.0), fire=fire, sp=_m.uniform(-1, 1, (7, 2)).astype(f32), su=_m.uniform(0.55, 0.9),
                             col=np.array([0.75, 1.0, 0.85] if _m.uniform() < 0.5 else [1.0, 0.92, 0.80], f32)))
 
 
@@ -235,7 +239,7 @@ class Scene:
         cv_ = np.zeros((S, S), f32); cv_[by0:by1, bx0:bx1] = cov
         self.p_rad, self.p_cov, self.p_x0, self.p_y0, self.p_S = canvas, cv_, x0, y0, S
         r = np.random.default_rng(31)
-        K = 22; seeds = []
+        K = 40; seeds = []
         while len(seeds) < K:
             u, v = r.uniform(-1, 1, 2)
             if u * u + v * v < 0.92: seeds.append((S / 2 + u * RP, S / 2 + v * RP))
@@ -317,11 +321,12 @@ class Scene:
         y = MY + D_B[:, 1] * b * e + sp * (ty - MY)
         vis = ramp(t, T_SPLIT - 0.05, T_SPLIT + 0.6)
         # brightness: hot glow early (orange -> red as it cools), then reflected sunlight
-        Tk = 1200 + 2600 * hot
-        hotc = bbcolor(Tk) * (2.5 * hot ** 1.5)
+        hp = np.clip(hot ** D_COOL, 0, 1)                                       # each piece cools at its own rate
+        Tk = 1000 + 3200 * hp
+        hotc = np.stack([np.interp(Tk, BB_T, BB_C[:, c]) for c in range(3)], 1) * (4.0 * hp ** 1.5)[:, None]
         cold = (0.35 + 0.65 * ease(sp)) * I
         tw = 0.85 + 0.15 * np.sin(t * 3.0 + D_PH)
-        col = (D_C * cold + hotc[None, :] * (D_F[:, None] > 0.1)) * (D_F * tw * vis)[:, None]
+        col = (D_C * cold + hotc) * (D_F * tw * vis)[:, None]
         sel = (x > -3) & (x < W + 3) & (y > -3) & (y < H + 3)
         x, y, col = x[sel], y[sel], col[sel]; big = D_F[sel] > 0.35
         out = np.zeros((H + 2, W + 2, 3), f32)
@@ -334,17 +339,54 @@ class Scene:
         d = cv2.GaussianBlur(out[:H, :W], (0, 0), 0.6) * 2.2 + cv2.GaussianBlur(outb[:H, :W], (0, 0), 1.3) * 3.0
         return d
 
+    def smoke(self, img, t, hot):
+        """the expanding blast cloud: glowing dust and smoke streaming outward (radial streaks), orange-hot -> grey,
+        dispersing as the debris spreads along the orbit"""
+        b = blast(t); sp = spread(t)
+        if b <= 0 or sp >= 0.98: return
+        if not hasattr(self, "_sm"):
+            self._sm = fbm2((256, 512), 77, 1.6); self._sm2 = fbm2((256, 512), 78, 2.4)
+        Rc = RP * (0.8 + 3.0 * b)
+        H, W = img.shape[:2]; pad = int(Rc * 3.0)
+        x0, x1, y0, y1 = max(0, int(MX) - pad), min(W, int(MX) + pad), max(0, int(MY) - pad), min(H, int(MY) + pad)
+        xx = self.xx[y0:y1, x0:x1] - MX; yy = self.yy[y0:y1, x0:x1] - MY
+        r = np.sqrt((xx / 1.25) ** 2 + (yy / 0.85) ** 2) + 1e-3; th = np.arctan2(yy, xx)
+        u = ((th / (2 * np.pi) + 0.5) * 512).astype(f32)
+        v = ((np.log(r / RP + 0.3) * 60 - t * 25) % 256).astype(f32)
+        n1 = cv2.remap(self._sm, u, v, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        n2 = cv2.remap(self._sm2, (u * 3) % 512, (v * 2) % 256, cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        streak = np.clip(0.55 + 0.35 * n1 + 0.20 * n2, 0, 1.6)
+        dens = np.exp(-(r / Rc) ** 2) * streak * (1 - smooth(0.4, 0.98, sp)) * (1 - smooth(Rc * 1.6, Rc * 2.2, r))
+        shell = np.exp(-((r - Rc * 0.8) / (Rc * 0.25)) ** 2) * streak
+        hp = hot ** 1.3
+        hotc = np.array(bbcolor(1200 + 2200 * hp), f32) * np.array([1.0, 0.72, 0.45], f32) * (2.4 * hp)
+        cold = np.array([0.16, 0.16, 0.17], f32) * (0.4 + 0.6 * (1 - hp))
+        img[y0:y1, x0:x1] += (dens * 0.32)[..., None] * (hotc + cold) + (shell * 0.6 * hp)[..., None] * np.array([1.0, 0.45, 0.12], f32)
+
     def ring_glow(self, t, amt):
         """diffuse band of fine dust along the orbit, clumpy along its length"""
         if amt <= 0.003: return 0.0
         sp = spread(t)
-        sig = 20 + 34 * sp
+        sig = 30 + 62 * sp
         n = self.ring_n; u = ((self.rs + 1600) / 2200 * 2047) % 2047
         cl = cv2.remap(n, u.astype(f32), np.full_like(u, 20 + 10 * math.sin(t * 0.2)).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
         ext = smooth(-1500 * sp - 60, -1500 * sp + 200, self.rs) * (1 - smooth(560 * sp + 60, 560 * sp + 300, self.rs)) if sp < 0.999 else 1.0
-        g = (np.exp(-(self.rq / (sig * 0.35)) ** 2) * 0.9 * (0.75 + 0.25 * cl) + np.exp(-(self.rq / sig) ** 2) * 0.7 * (0.9 + 0.1 * cl)
-             + np.exp(-(self.rq / (sig * 3.2)) ** 2) * 0.2) * ext
-        return (g * amt)[..., None] * np.array([0.80, 0.82, 0.90], f32)
+        q = self.rq / sig
+        lets = self.ringlets(q)                                              # ringlets and gaps across the band
+        core = np.exp(-(q / 0.30) ** 2)
+        g = (core * 1.3 * (0.85 + 0.15 * cl) + np.exp(-q ** 2) * 0.8 * lets * (0.85 + 0.15 * cl)
+             + np.exp(-(q / 3.0) ** 2) * 0.22) * ext
+        col = np.array([0.80, 0.82, 0.90], f32) + core[..., None] * np.array([0.25, 0.18, 0.05], f32)
+        return (g * amt)[..., None] * col
+
+    def ringlets(self, q):
+        if not hasattr(self, "_rl"):
+            r = np.random.default_rng(12); x = np.linspace(-3, 3, 1200)
+            p = 0.88 + 0.12 * np.clip(np.convolve(r.standard_normal(1200), np.ones(61) / 61, "same") * 8, -1, 1)
+            for c, w in ((0.55, 0.06), (-0.85, 0.08)): p *= 1 - 0.45 * np.exp(-((x - c) / w) ** 2)   # two soft gaps
+            self._rl = p.astype(f32)
+        i = np.clip((q + 3) / 6 * 1199, 0, 1199).astype(np.int32)
+        return self._rl[i]
 
     def meteors(self, t):
         H, W = self.L.H, self.L.W
@@ -355,8 +397,8 @@ class Scene:
             if u < 0 or u > 1.35: continue
             head = min(u, 1.0)
             fl = math.sin(math.pi * min(u, 1.0)) ** 0.7 if u <= 1 else 0.0          # brightens then burns out
-            tail = 0.32
-            k = np.linspace(0, 1, 48, dtype=f32)
+            tail = 0.55 if m["fire"] else 0.35
+            k = np.linspace(0, 1, 64, dtype=f32)
             pos = head - tail * k
             ok = pos >= 0
             a = (1 - k) ** 1.5 * fl * m["I"] * 2.2
@@ -364,7 +406,20 @@ class Scene:
             px = m["x0"] + m["dx"] * pos; py = m["y0"] + m["dy"] * pos
             c = np.where((k < 0.08)[:, None], np.array([1.0, 1.0, 1.0], f32), m["col"][None, :])
             xs.append(px[ok]); ys.append(py[ok]); cs.append(c[ok] * a[ok, None])
-            if m["fire"]: light += fl * 0.06
+            if m["fire"]:
+                light += fl * 0.22
+                hx, hy = m["x0"] + m["dx"] * head, m["y0"] + m["dy"] * head
+                xs.append(np.array([hx], f32)); ys.append(np.array([hy], f32)); cs.append(np.array([[3.0, 2.6, 2.0]], f32) * fl * m["I"])
+                if u > m["su"]:                                                    # the fireball fragments: sparks fan out
+                    v = (u - m["su"]) / (1.35 - m["su"])
+                    bx, by = m["x0"] + m["dx"] * m["su"], m["y0"] + m["dy"] * m["su"]
+                    for j, (sx, sy) in enumerate(m["sp"]):
+                        kk = np.linspace(0, 1, 12, dtype=f32)
+                        d = v * (90 + 40 * j % 3) * (1 - 0.6 * kk)
+                        px_ = bx + (m["dx"] / max(abs(m["dx"]) + abs(m["dy"]), 1) * 260 + sx * 60) * d / 100
+                        py_ = by + (m["dy"] / max(abs(m["dx"]) + abs(m["dy"]), 1) * 260 + sy * 60) * d / 100
+                        aa = (1 - kk) * max(0.0, 1 - v) * m["I"] * 0.8
+                        xs.append(px_.astype(f32)); ys.append(py_.astype(f32)); cs.append(np.array([1.0, 0.75, 0.4], f32)[None, :] * aa[:, None])
         if not xs: return None, 0.0
         x = np.concatenate(xs); y = np.concatenate(ys); c = np.concatenate(cs)
         sel = (x > -2) & (x < W + 2) & (y > -2) & (y < H + 2); x, y, c = x[sel], y[sel], c[sel]
@@ -372,7 +427,7 @@ class Scene:
         for dy, dx, wgt in ((0, 0, (1 - ux) * (1 - uy)), (0, 1, ux * (1 - uy)), (1, 0, (1 - ux) * uy), (1, 1, ux * uy)):
             np.add.at(acc, (np.clip(y0 + dy, 0, H + 1), np.clip(x0 + dx, 0, W + 1)), c * wgt)
         a = acc[:H, :W]
-        return cv2.GaussianBlur(a, (0, 0), 0.8) * 2.4 + cv2.GaussianBlur(a, (0, 0), 3.0) * 1.6, light
+        return cv2.GaussianBlur(a, (0, 0), 0.9) * 2.4 + cv2.GaussianBlur(a, (0, 0), 3.5) * 2.0 + cv2.GaussianBlur(a, (0, 0), 12) * 1.5, light
 
     def shock(self, img, cx, cy, u, col, size=1.0, decay=0.55):
         R = 2400 * size * (max(u, 0) / 1.4) ** 0.6; wdt = (18 + 60 * u) * size
@@ -428,7 +483,7 @@ class Scene:
         sp = spread(t); hot = heat(t)
         ring_amt = 0.0
         if cur in ("ring", "rain", "final"):
-            ring_amt = 0.08 * ease(sp) * (1.0 if cur != "final" else 1.0 + 1.2 * ramp(t, T_FINAL, T_FINAL + 1.2))
+            ring_amt = 0.16 * ease(sp) * (1.0 if cur != "final" else 1.0 + 0.9 * ramp(t, T_FINAL, T_FINAL + 1.2))
         # ---- sky: night blue + glow around the Moon / debris core + stars
         gcol = np.array(lerp(A["glow"], B["glow"], w), f32)
         dx = self.hx - MX; dy = self.hy - MY; d = np.sqrt(dx * dx + dy * dy)
@@ -445,6 +500,7 @@ class Scene:
         if moon_on:
             self.draw_moon(img, I * (1 + 1.5 * hot), hot, cracks(t))
         else:
+            self.smoke(img, t, hot)
             dbr = self.debris(t, hot, 1.0 + 0.8 * ramp(t, T_FINAL, T_FINAL + 1.2) * (cur == "final"))
             if dbr is not None: img += dbr
             if sp < 0.999: self.draw_frags(img, t, I, hot)
@@ -453,7 +509,8 @@ class Scene:
         img = img * self.ext ** 0.3
         skyimg = img.copy()
         # ---- foreground + lake (relit for the new sky)
-        light = 1.0 + 0.10 * (pulse - 1) + 1.0 * hot + mlight + (ring_amt * 4 if cur == "final" else ring_amt * 2)
+        fl_boom = 9.0 * math.exp(-max(t - T_FLASH, 0) / 0.35) * (t > T_FLASH - 0.03) * (t < T_RING)
+        light = 1.0 + 0.10 * (pulse - 1) + 1.6 * hot + fl_boom + mlight + ring_amt * (5.0 if cur == "final" else 2.5)
         fgc = self.relight(A, B, w, light)
         a = self.fg.a[..., None]
         img = img * (1 - a) + fgc * a
@@ -463,9 +520,10 @@ class Scene:
             u = t - ts
             if -0.05 < u < 1.4 and k != "end":
                 fc = np.array(SET[k]["fl"], f32)
-                big = 2.0 if k == "boom" else 1.0
+                big = 3.0 if k == "boom" else 1.0
                 img += (3.0 * big * math.exp(-max(u, 0) / 0.08) * ease((u + 0.05) / 0.05)) * fc
-                self.shock(img, MX, MY, u, fc, size=1.0 if k != "boom" else 1.3)
+                self.shock(img, MX, MY, u, fc, size=1.0 if k != "boom" else 1.6, decay=0.55 if k != "boom" else 0.8)
+                if k == "boom": self.shock(img, MX, MY, u * 0.6, np.array([1.0, 0.5, 0.2], f32), size=0.9, decay=0.6)
         if T_WO0 < t < T_BACK:
             v = ease((t - T_WO0) / (T_BACK - T_WO0)); img = img + (30 * v ** 2.5) * np.array([0.95, 0.95, 1.0], f32)
         if T_BACK <= t < T_BACK + 0.6:

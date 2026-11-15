@@ -81,8 +81,10 @@ class Body:
         if rings == "saturn":
             r = np.asarray(Image.open(os.path.join(TEX, "8k_saturn_ring_alpha.png")).convert("RGBA"), f32).mean(0) / 255.0
             col = srgb_to_lin(np.clip(r[:, :3] * 1.9, 0, 1)) * np.array([1.10, 0.97, 0.82], f32)
+            yv = col.mean(1, keepdims=True); col = yv * np.array([1.0, 1.0, 1.02], f32) * 0.88 + col * 0.12   # ringed Moon: icy white-grey
             al = np.clip(r[:, 3] * 1.05, 0, 0.97)
             self.ring_tex = (col.astype(f32), al.astype(f32))
+            k = 61; self.shadow_al = np.convolve(np.pad(al, k), np.ones(2 * k + 1) / (2 * k + 1), "same")[k:-k].astype(f32)  # penumbra
             self.r_in = RING_KM0 / 60268.0; self.r_out = (RING_KM0 + 8192 * RING_KMPX) / 60268.0
         elif rings == "uranus":
             rr = np.linspace(1.55, 2.05, 4096)
@@ -175,8 +177,13 @@ class Body:
                 ts = -h[..., 1] / np.where(np.abs(s[1]) > 1e-6, s[1], 1e-6)
                 p = h + ts[..., None] * s
                 rho = np.sqrt(p[..., 0] ** 2 + p[..., 2] ** 2)
-                _, a = self.ring_sample(rho)
-                col = col * (1 - 0.92 * a * (ts > 0))[..., None]
+                if getattr(self, "shadow_al", None) is not None:          # soft-edged (penumbra) shadow band
+                    n_ = len(self.shadow_al); i = np.clip((rho - self.r_in) / (self.r_out - self.r_in) * (n_ - 1), 0, n_ - 1)
+                    edge = smooth(self.r_in - 0.04, self.r_in + 0.04, rho) * smooth(self.r_out + 0.04, self.r_out - 0.04, rho)
+                    a = np.interp(i, np.arange(n_), self.shadow_al).astype(f32) * edge
+                else:
+                    _, a = self.ring_sample(rho)
+                col = col * (1 - 0.80 * a * (ts > 0))[..., None]
             cov = cov0
             rad = col * cov[..., None] * self.surf
         # rings (in front of the globe where t_ring < t_globe; behind it hidden)

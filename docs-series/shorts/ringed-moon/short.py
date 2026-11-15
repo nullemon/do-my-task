@@ -1,6 +1,6 @@
 """WHAT IF THE MOON HAD RINGS? -- one LOCKED tripod shot of the snowy mountain village (02_snowy_mountain_village) at
 night, BATCH4 swap format. The Moon is drawn at its TRUE angular size (0.518 deg) through a long telephoto lens
-(f = 13,000 px, the frame is ~4.8 deg wide); its rings are Saturn's real radial ring profile (C ring to F ring) scaled
+(f = 21,000 px, the frame is ~2.9 deg wide); its rings are Saturn's real radial ring profile (C ring to F ring) scaled
 from Saturn's radius to the Moon's, so they span 2 x 2.27 Moon radii = 1.18 deg (science.py).
   normal Moon -> ringed Moon rising over the ridge -> the rings' shadow on the disc (side lighting) -> the rings turn
   edge-on (a hairline of light) -> rings wide open at full Moon, ~5.5x the moonlight, the village glows -> white-out
@@ -31,10 +31,10 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/02_snowy_mountain_village.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.30
-F_PX = 13000.0
+F_PX = 21000.0
 RP = F_PX * math.tan(math.asin(SC.R_MOON / SC.D_MOON))         # 58.8 px: the Moon's true radius on screen
 C = (590.0, 640.0)                                             # where the Moon hangs
-RISE0 = (800.0, 1125.0)                                        # behind the ridge, right of the big pine
+RISE0 = (760.0, 1180.0)                                        # behind the ridge, right of the big pine
 
 PL = place(os.path.join(SCR, "vo", "words.json"), LEAD)
 WORDS = [w for l in PL for w in l["words"]]
@@ -63,7 +63,7 @@ ST = {
                  rings=True, tip=26.7, roll=-24, phase=6, pa=20, E=2.6, sky=1.5, fl=(1.0, 0.9, 0.7),
                  beams=[(1.0, 0.85, 0.55), (0.75, 0.80, 1.0), (1.0, 0.70, 0.45), (0.9, 0.9, 1.0)]),
     "shad": dict(name="RING SHADOW", l2="SUNLIGHT FROM THE SIDE", l3="A DARK BAND ACROSS THE DISC", tc=(205, 220, 255), rings=True,
-                 tip=26.7, roll=-24, phase=32, pa=114, E=2.0, sky=1.35, fl=(0.8, 0.85, 1.0),
+                 tip=26.7, roll=-24, phase=float(os.environ.get('SHP', 22)), pa=float(os.environ.get('SHA', -66)), E=2.0, sky=1.35, fl=(0.8, 0.85, 1.0),
                  beams=[(0.55, 0.65, 1.0), (0.85, 0.70, 1.0), (0.45, 0.85, 1.0)]),
     "edge": dict(name="EDGE-ON", l2="1.2° LONG · ONLY METRES THICK", l3="SATURN'S RINGS DO THIS EVERY ~15 YEARS", tc=(235, 240, 255),
                  rings=True, tip=0.35, roll=-24, phase=12, pa=-55, E=1.0, sky=1.0, fl=(0.85, 0.9, 1.0),

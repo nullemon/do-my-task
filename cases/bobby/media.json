@@ -1,0 +1,252 @@
+[
+ {
+  "key": "bobby_photo_ngs",
+  "type": "commons",
+  "title": "Greyfriars Bobby.jpg",
+  "shows": "The real Bobby: albumen print c.1865 in the National Galleries of Scotland (PGP R 831)",
+  "license": "Public domain",
+  "author": "Unknown photographer (National Galleries of Scotland)",
+  "date": "c. 1865",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "bobby_photo_ngs_alt",
+  "type": "commons",
+  "title": "Greyfriars Bobby (1).jpg",
+  "shows": "Alternative scan of the NGS albumen print of Bobby",
+  "license": "No restrictions (Flickr Commons; public domain)",
+  "author": "National Galleries of Scotland",
+  "date": "c. 1865",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "bobby_photo_ngs_crop",
+  "type": "commons",
+  "title": "Greyfriars Bobby (cropped).jpg",
+  "shows": "Tight crop of the NGS photo, Bobby's face (good for frame 1)",
+  "license": "Public domain",
+  "author": "National Galleries of Scotland",
+  "date": "c. 1865",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "bobby_traill_family",
+  "type": "commons",
+  "title": "John Traill and family with Greyfriars Bobby.png",
+  "shows": "Bobby with John Traill and his family, who fed him",
+  "license": "Public domain",
+  "author": "W.G. Patterson (Walter Greenoak Patterson)",
+  "date": "1868",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "bobby_traill_family_crop",
+  "type": "commons",
+  "title": "John Traill and family with Greyfriars Bobby (cropped).png",
+  "shows": "Crop of the Traill family photo centred on Bobby",
+  "license": "Public domain",
+  "author": "W.G. Patterson",
+  "date": "1868",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "bobby_patterson_possible",
+  "type": "commons",
+  "title": "Portrait of dog, possibly Greyfriars Bobby, by Walter Greenoak Patterson, Edinburgh, from mystery album (4353636289).jpg",
+  "shows": "Carte-de-visite of a terrier in a graveyard by W.G. Patterson, POSSIBLY Bobby (the 2010 Flickr find). Label it 'believed to be'.",
+  "license": "CC BY 2.0",
+  "author": "whatsthatpicture (Flickr), photo by W.G. Patterson",
+  "date": "c. 1867 (attributed)",
+  "is_the_real_dog": true
+ },
+ {
+  "key": "traill_coffee_house_1865",
+  "type": "commons",
+  "title": "Traill's Temperance Coffee House.jpg",
+  "shows": "Traill's Temperance Coffee House, where Bobby was fed",
+  "license": "Public domain",
+  "author": "John Dickson",
+  "date": "1865",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "collar",
+  "type": "commons",
+  "title": "Greyfriars bobby collar.jpg",
+  "shows": "Bobby's real 1867 collar, 'from the Lord Provost 1867 licensed', at the Museum of Edinburgh",
+  "license": "CC BY-SA 3.0",
+  "author": "Victuallers",
+  "date": "2010s",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "collar_crop",
+  "type": "commons",
+  "title": "Greyfriars bobby collar (cropped).jpg",
+  "shows": "Close crop of the collar inscription",
+  "license": "CC BY-SA 3.0",
+  "author": "Victuallers",
+  "date": "2010s",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "kirkyard_1840s_hill_adamson",
+  "type": "commons",
+  "title": "Greyfriars Churchyard, Edinburgh by Robert Adamson.jpg",
+  "shows": "Greyfriars Churchyard photographed in the 1840s: the kirkyard as it looked in Bobby's era",
+  "license": "Public domain",
+  "author": "Hill & Adamson",
+  "date": "1843-1848",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "kirkyard_1840s_met",
+  "type": "commons",
+  "title": "Edinburgh. Greyfriars' Churchyard MET DP140468.jpg",
+  "shows": "Calotype of Greyfriars Churchyard tombs (Met Museum)",
+  "license": "CC0",
+  "author": "Hill & Adamson",
+  "date": "1843-1847",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "kirkyard_1848",
+  "type": "commons",
+  "title": "Greyfriars kirkyard 1848.jpg",
+  "shows": "Victorians among the monuments of Greyfriars Kirkyard, 1848",
+  "license": "Public domain",
+  "author": "Hill & Adamson",
+  "date": "c. 1848",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "victorian_cowgate",
+  "type": "commons",
+  "title": "Archibald Burns - 'Timber Fronted House, Cowgate', Edinburgh - Google Art Project.jpg",
+  "shows": "Victorian Old Town street, the Cowgate",
+  "license": "Public domain",
+  "author": "Archibald Burns",
+  "date": "c. 1880",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "greyfriars_kirk",
+  "type": "commons",
+  "title": "Greyfriars Church, Edinburgh - geograph.org.uk - 72099.jpg",
+  "shows": "Greyfriars Kirk and kirkyard today",
+  "license": "CC BY-SA 2.0",
+  "author": "Ron Hann",
+  "date": "1994",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "bobby_headstone_1981",
+  "type": "commons",
+  "title": "Greyfriars Bobby Headstone.jpg",
+  "shows": "Bobby's red granite headstone (1981): 'Let his loyalty and devotion be a lesson to us all'",
+  "license": "CC BY-SA 2.0",
+  "author": "Stephen Montgomery",
+  "date": "2007",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "bobby_grave_geograph",
+  "type": "commons",
+  "title": "Grave of Greyfriars Bobby, Greyfriars Kirkyard, Edinburgh - geograph.org.uk - 2801832.jpg",
+  "shows": "Bobby's grave inside the kirkyard gate",
+  "license": "CC BY-SA 2.0",
+  "author": "Nick Macneill",
+  "date": "2001",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "grave_with_john_gray",
+  "type": "commons",
+  "title": "Grave of Greyfriars Bobby - john gray, james brown.jpg",
+  "shows": "Kirkyard grave area; the file title names Bobby, John Gray and James Brown, but the description only says 'Edinburgh', so check it visually before use",
+  "license": "CC BY-SA 4.0",
+  "author": "Sheila1988",
+  "date": "2019",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "memorial_2021",
+  "type": "commons",
+  "title": "Edinburgh Greyfriars Bobby monument 20211019.jpg",
+  "shows": "Bobby's gravestone and the 150th-anniversary monument in front of Greyfriars Kirk",
+  "license": "CC BY-SA 4.0",
+  "author": "Daniel Kraft",
+  "date": "2021",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "statue_fountain_pd",
+  "type": "commons",
+  "title": "Greyfriars Bobby Memorial Fountain.jpg",
+  "shows": "The 1873 Brodie statue on its granite drinking fountain",
+  "license": "Public domain",
+  "author": "Almbauer",
+  "date": "2018",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "statue_closeup",
+  "type": "commons",
+  "title": "Greyfriars Bobby Statue Edinburgh.jpg",
+  "shows": "Close view of the bronze statue (listed building LB27899)",
+  "license": "CC BY-SA 4.0",
+  "author": "Sumit Surai",
+  "date": "2017",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "statue_plaque",
+  "type": "commons",
+  "title": "Greyfriars Bobby Memorial Fountain Plaque.jpg",
+  "shows": "The inscription plaque on the fountain",
+  "license": "CC BY-SA 4.0",
+  "author": "Sumit Surai",
+  "date": "2017",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "statue_fountain_geograph",
+  "type": "commons",
+  "title": "Greyfriars Bobby drinking fountain - geograph.org.uk - 2052936.jpg",
+  "shows": "The fountain at the corner of George IV Bridge and Candlemaker Row",
+  "license": "CC BY-SA 2.0",
+  "author": "Stanley Howe",
+  "date": "2010",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "statue_rain",
+  "type": "commons",
+  "title": "Greyfriars Bobby statue on a rainy day in Edinburgh.jpg",
+  "shows": "The statue in the rain (moody b-roll)",
+  "license": "CC BY-SA 4.0",
+  "author": "Drkirstyross",
+  "date": "2026",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "nose_rubbing",
+  "type": "commons",
+  "title": "Tourist rubbing the nose of Greyfriar's Bobby, Edinburgh.jpg",
+  "shows": "A tourist rubbing the statue's worn shiny nose (for the myth section)",
+  "license": "CC BY-SA 4.0",
+  "author": "Lirazelf",
+  "date": "2026",
+  "is_the_real_dog": false
+ },
+ {
+  "key": "bronze_cast_museum",
+  "type": "commons",
+  "title": "Bronze cast of Greyfriars Bobby - geograph.org.uk - 1341315.jpg",
+  "shows": "Bronze cast of Bobby displayed in Huntly House (Museum of Edinburgh)",
+  "license": "CC BY-SA 2.0",
+  "author": "Kim Traynor",
+  "date": "2007",
+  "is_the_real_dog": false
+ }
+]

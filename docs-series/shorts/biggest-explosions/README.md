@@ -30,7 +30,8 @@ galactic centre, at its real brightness.
 - All events appear at the galactic centre's position in the sky, so one city-shadow solve serves the whole Short.
 - Light curves are compressed into a few seconds each: the supernova cools, the kilonova reddens and fades, the GRB
   flickers.
-- **Magnetar:** gamma rays are invisible, so the flash and relight are shown in false-colour violet. The readout says
+- **Magnetar:** gamma rays are invisible, so the flash and relight are shown as a capped ~0.35 s pulse in false-colour
+  violet. The readout says
   "INVISIBLE TO THE EYE".
 - **Quasar at the core:** ~30 magnitudes of dust extinction toward the real galactic centre would hide it completely.
   The comparison ignores the dust, like any "if it were here" thought experiment.
@@ -40,7 +41,8 @@ galactic centre, at its real brightness.
 - **Mix:** `audio/mix.py` uses only `lib/mix_clean.py`: `clean_voice(dry)` (no echo, reverb or pitch shift), then
   `mix(voice, DUR, swaps=[7 swap times], key="D")` with the soft pad and the gentle whoosh. Nothing else is added.
 - **Bed check:** with the voice muted, the bed is **−24.3 dB** under the full mix (`SCR/audio/bedcheck.txt`).
-- **Encode:** AAC 192k (`encode.sh`).
+- **Encode:** AAC 192k (`encode.sh`). Measured on the final mp4: **−14.2 LUFS, −2.0 dBTP**. The video is 47.38 s
+  long (1,421 frames).
 
 ## Files
 `short.py`, `science.py`, `skygeo.py` and `mwsky.py` (copied from star-neighbours), `catalog.py` (HYG → SCR/stars.npz),

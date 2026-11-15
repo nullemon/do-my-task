@@ -74,7 +74,7 @@ SUN_DIR = np.array([-0.30, 0.95]); SUN_DIR = SUN_DIR / np.linalg.norm(SUN_DIR)  
 STAGES = {
     "moon": dict(body="moon", alpha=4.0, name="OUR MOON", l2="0.52° WIDE", l3="384,400 KM AWAY", tc=(235, 240, 255),
                  key=0.10, amb=0.06, sky=0.0, glow=(0.62, 0.70, 0.95), fl=(0.85, 0.9, 1.0)),
-    "cres": dict(body="ven", alpha=135.0, name="VENUS · CRESCENT", l2="1.8° WIDE · 3.5× THE MOON", l3="~6× THE LIGHT OF A FULL MOON",
+    "cres": dict(body="ven", alpha=120.0, name="VENUS · CRESCENT", l2="1.8° WIDE · 3.5× THE MOON", l3="~9× THE LIGHT OF A FULL MOON",
                  tc=(255, 236, 190), key=0.20, amb=0.09, sky=0.15, glow=(1.0, 0.92, 0.72), fl=(1.0, 0.95, 0.8)),
     "half": dict(body="ven", alpha=90.0, name="VENUS · HALF", l2="~20× A FULL MOON", l3="ITS CLOUDS REFLECT 76% OF SUNLIGHT",
                  tc=(255, 225, 160), key=0.34, amb=0.14, sky=0.35, glow=(1.0, 0.90, 0.70), fl=(1.0, 0.92, 0.7)),
@@ -159,7 +159,7 @@ class Scene:
         MO.set_sun(sun_vec(4.0))
         self.moon = Body("moon", "8k_moon.jpg", RP_MOON, pole_vec(-12, 4), model="rock", surf=1.15, detail=0.0, prep=prep_norm)
         self.ven = Body("ven", venus_tex(), RP_VEN, pole_vec(-8, 6), model="giant", k=0.80, surf=1.7,
-                        haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9, night=0.012)
+                        haze=(0.55, 0.45, 0.30), rim=(1.6, 1.35, 1.0), winds=0.02, spin=0.03, detail=0.01, prep=prep_norm, seed=9, night=0.004)
         # ---- yard: lights / window, base, albedo, rim (as andromeda-collision)
         a = fg.a; rgb = fg.rgb; f = fg.flat; y = lum(f)[..., None]
         mxc = rgb.max(2); warm = rgb[..., 0] - rgb[..., 2]
@@ -269,13 +269,19 @@ class Scene:
         bright = (0.6 + 0.4 * pulse) * (1.0 if S["body"] == "moon" else 0.35 + 0.95 * min(x_moon(alpha) / 70, 1))
         off = Rp * 0.55 * math.sin(math.radians(alpha))                      # the glow sits on the lit limb
         sky, aure = self.sky(t, A, S, w, VX + off * SUN_DIR[0], VY + off * SUN_DIR[1], Rp * max(sc, 0.05) * (1 - 0.4 * math.sin(math.radians(alpha))), bright)
-        img = self.up(sky)
+        # our own sky (twilight glow + the aureole scattered in our air) lies IN FRONT of the disc: only the stars
+        # behind it are hidden, so the unlit side melts into the sky with just a faint earthshine
         sk = lerp(A["sky"], S["sky"], w)
         st = self.stars.render(self.cam, t, gain=1.0, twinkle=1.2, plate_gain=0.12, star_gain=1.0, cx=1800, cy=900, rot=4.0)
-        img += st * (np.exp(-self.up(aure) * 4) * (1 - 0.85 * min(sk, 1)))[..., None] * 0.9
+        st = st * (np.exp(-self.up(aure) * 4) * (1 - 0.85 * min(sk, 1)))[..., None] * 0.9
         MO.set_sun(sun_vec(alpha))
+        H, W = self.L.H, self.L.W
+        disc = np.zeros((H, W, 3), f32); cov = np.zeros((H, W), f32)
         if sc > 0.01:
-            body.render(img, VX, VY, t, I=pulse, scale=sc)
+            box = body.render(disc, VX, VY, t, I=pulse, scale=sc)
+            if box is not None:
+                x0, x1, y0, y1, c = box; cov[y0:y1, x0:x1] = c
+        img = self.up(sky) + st * (1 - cov)[..., None] + disc
         # ---- the yard: night base + ambient + direct (shadowed, on the lawn) + rim + lights
         key = lerp(A["key"], S["key"], w) * (1 + 0.1 * (pulse - 1)); amb = lerp(A["amb"], S["amb"], w)
         gcol = np.array(lerp(A["glow"], S["glow"], w), f32)
@@ -307,7 +313,7 @@ class Scene:
     def overlay(self, out, t, cur, t0):
         L = self.L; W = L.W; S = STAGES[cur]
         x = W / 2; ys = RO_Y
-        start = LN["moon"]["start"] if cur == "moon" else (LN["end"]["start"] if cur == "end" else t0)
+        start = 1.2 if cur == "moon" else (LN["end"]["start"] if cur == "end" else t0)
         a = ramp(t, start + 0.15, start + 0.45)
         nxt = [ts for ts, k in SWAPS if ts > t]
         if nxt: a *= 1 - ramp(t, nxt[0] - 0.35, nxt[0] - 0.15)
@@ -334,7 +340,7 @@ def run_stills(ts):
 if __name__ == "__main__":
     if sys.argv[1] == "info":
         print("DUR", DUR, f"Moon {ANG_MOON:.3f} deg r {RP_MOON:.1f} px | Venus {ANG_VEN:.3f} deg r {RP_VEN:.1f} px | ratio {R_VEN / R_MOON:.2f}")
-        for al in (135, 90, 4, 0.0001): print(f"alpha {al:6.1f}: V = {venus_mag(al):6.2f}  = {x_moon(al):5.1f} x full Moon  ~{x_moon(al) * 0.25:5.1f} lux")
+        for al in (120, 90, 4, 0.0001): print(f"alpha {al:6.1f}: V = {venus_mag(al):6.2f}  = {x_moon(al):5.1f} x full Moon  ~{x_moon(al) * 0.25:5.1f} lux")
         print(f"tides x{TIDE:.1f}; barycentre {BARY:,.0f} km from Earth's centre; orbit {P_ORB:.1f} d")
         print("swaps", [(round(a, 2), k) for a, k in SWAPS]); sys.exit()
     if sys.argv[1] == "segs":

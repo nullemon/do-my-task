@@ -8,8 +8,8 @@ the sky stays deep blue, and a white-out returns to our Moon so the Short loops.
 
 ## Beats
 1. **Our Moon:** 0.52° and small.
-2. **Venus at the Moon's distance:** 1.80° wide. It blooms in as a **thin crescent** (phase angle 135°), lit from below by
-   the set Sun, and is already ~6× brighter than the full Moon.
+2. **Venus at the Moon's distance:** 1.80° wide. It blooms in as a **crescent** (phase angle 120°), lit from below by
+   the set Sun, and is already ~9× brighter than the full Moon.
 3. **Half** (90°): ~19× the full Moon.
 4. **Full** (~4°): ~69× the full Moon. The sky turns dusk-blue, the stars wash out, and **crisp shadows** of the fence,
    shed and trampoline (mat, frame legs, net poles, and the net mesh at 25 %) stretch across the lawn towards us.
@@ -43,7 +43,7 @@ Voice: Kokoro 0.7 × am_michael + 0.3 × am_onyx at speed 0.86, one TTS call per
 - **Brightness:** the Mallama (2006) Venus phase curve, V(1,α) = −4.384 − 1.044×10⁻³α + 3.687×10⁻⁴α² − 2.814×10⁻⁶α³ +
   8.938×10⁻⁹α⁴, placed at 384,400 km from us and 1 au from the Sun. That gives V = −17.33 at full, against −12.74 for the
   full Moon, so **~69×** ("seventy full Moons"). Half (α = 90°) gives −15.9, **~19×** ("twenty times brighter"). The
-  crescent (α = 135°) gives −14.7, **~6×**, so "outshines the full Moon". The reasons are its size (12× the area) and its
+  crescent (α = 120°) gives −15.2, **~9×**, so "outshines the full Moon". The reasons are its size (12× the area) and its
   cloud albedo (geometric 0.69 against the Moon's 0.12; Bond 0.76, hence "reflects 76 %").
 - **Light:** a full Moon gives ~0.25 lux, so full Venus gives **~17 lux**. That is roughly the light partway through civil
   twilight (civil twilight ends near 3.4 lux), hence "like dusk".

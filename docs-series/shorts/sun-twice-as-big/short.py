@@ -1,6 +1,6 @@
 """WHAT IF THE SUN WERE BIGGER? -- one locked tripod shot of the park (A_park), BATCH3/4 swap format.
 The Sun stays at 1 au and keeps its surface temperature (5,772 K), only its radius grows: 1x -> 2x -> 5x -> 10x. It is
-drawn at its TRUE angular size through a ~59 deg vertical-FOV lens (f = 1700 px): 0.53, 1.07, 2.67, 5.33 deg. Luminosity
+drawn at its TRUE angular size through a ~31.5 deg vertical-FOV lens (f = 3400 px): 0.53, 1.07, 2.67, 5.33 deg. Luminosity
 scales as R^2 (Stefan-Boltzmann at fixed T): 4x, 25x, 100x the light. The park is relit: the sky bleaches towards
 white and shadows harden (2x), the grass browns and steams (5x), the air shimmers and steam pours off a scorched, brown
 park under a white sky (10x). White-out back to today's Sun (loops). Surface: other-suns / sun-closer (animated Worley
@@ -26,7 +26,7 @@ SCR = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/
 FG_PATH = "/tmp/claude-0/-home-user-do-my-task/3692798c-2ff9-5c2c-84e7-cdc249cb8847/scratchpad/backgrounds/A_park.png"
 FPS = 30
 LEAD, TAIL = 0.25, 1.00
-F_PX = 1700.0                                         # ~59 deg vertical FOV on 1920 px
+F_PX = 3400.0                                         # ~31.5 deg vertical FOV on 1920 px (a long lens: the 10x Sun ~316 px across)
 RSUN_AU = 0.00465047                                  # R_sun / 1 au
 
 
@@ -45,6 +45,7 @@ def rad_px(R): return F_PX * math.tan(math.asin(min(R * RSUN_AU, 0.999)))
 def ang_deg(R): return 2 * math.degrees(math.asin(min(R * RSUN_AU, 1.0)))
 
 
+HOT_RAMP = [(0.0, (0.6, 0.20, 0.02)), (0.35, (1.4, 0.65, 0.10)), (0.7, (2.6, 1.55, 0.35)), (1.0, (3.8, 2.6, 0.9)), (1.4, (5.2, 4.4, 2.6))]   # white-gold
 SUN_RAMP = [(0.0, (0.45, 0.10, 0.015)), (0.35, (1.5, 0.55, 0.08)), (0.7, (2.9, 1.55, 0.40)), (1.0, (4.2, 2.9, 1.15)), (1.4, (5.6, 4.7, 2.9))]
 
 
@@ -64,11 +65,11 @@ STAGES = [
          zen=(0.16, 0.30, 0.80), hor=(0.80, 0.88, 1.02), beams=[(0.9, 0.95, 1.0), (1.0, 0.92, 0.7), (0.7, 0.85, 1.0), (1.0, 1.0, 0.9)], bI=1.0,
          surf=2.2, glow=0.75, spikes=0.35, cells=22, fine=420, gain=1.55, tint=(1.0, 0.99, 0.96), hc=0.30, amb=0.12, expo=0.92, fl=(1.0, 0.97, 0.9), bl=1.0),
     dict(key="x5", R=5.0, name="SUN × 5", l2="2.67° WIDE · 25× THE LIGHT", l3="~25 KW ON EVERY SQUARE METRE", tc=(255, 222, 150),
-         zen=(0.55, 0.62, 0.86), hor=(1.25, 1.22, 1.18), beams=[(1.0, 0.95, 0.8), (1.0, 0.85, 0.55), (1.0, 1.0, 0.95), (0.9, 0.9, 1.0)], bI=1.1,
-         surf=1.6, glow=0.95, spikes=0.25, cells=32, fine=800, gain=1.95, tint=(1.0, 0.95, 0.86), hc=0.42, amb=0.14, expo=0.82, fl=(1.0, 0.93, 0.8), bl=0.95),
+         zen=(0.36, 0.56, 1.02), hor=(1.10, 1.12, 1.15), beams=[(1.0, 0.95, 0.8), (1.0, 0.85, 0.55), (1.0, 1.0, 0.95), (0.9, 0.9, 1.0)], bI=1.1,
+         surf=1.05, glow=1.6, spikes=0.35, cells=40, hot=0.8, fine=1600, gain=1.95, tint=(1.0, 0.95, 0.86), hc=0.42, amb=0.14, expo=0.70, fl=(1.0, 0.93, 0.8), bl=0.8),
     dict(key="x10", R=10.0, name="SUN × 10", l2="5.33° WIDE · 100× THE LIGHT", l3="OCEANS BOIL · EARTH ≥ 500 °C", tc=(255, 195, 110),
-         zen=(0.88, 0.84, 0.84), hor=(1.45, 1.34, 1.24), beams=[(1.0, 0.9, 0.7), (1.0, 0.8, 0.5), (1.0, 1.0, 0.95), (1.0, 0.7, 0.4)], bI=1.2,
-         surf=1.5, glow=1.1, spikes=0.25, cells=46, fine=1500, gain=2.40, tint=(1.0, 0.90, 0.76), hc=0.52, amb=0.16, expo=0.74, fl=(1.0, 0.88, 0.7), bl=0.9),
+         zen=(0.42, 0.60, 1.05), hor=(1.20, 1.18, 1.16), beams=[(1.0, 0.9, 0.7), (1.0, 0.8, 0.5), (1.0, 1.0, 0.95), (1.0, 0.7, 0.4)], bI=1.2,
+         surf=1.0, glow=1.9, spikes=0.35, cells=60, hot=1.0, fine=3200, gain=2.40, tint=(1.0, 0.90, 0.76), hc=0.68, amb=0.16, expo=0.60, fl=(1.0, 0.88, 0.7), bl=0.7),
 ]
 for s in STAGES: s["Rp"] = rad_px(s["R"])
 SK = {s["key"]: s for s in STAGES}
@@ -104,8 +105,9 @@ def lerp(a, b, w): return tuple(x + (y - x) * w for x, y in zip(a, b)) if isinst
 
 FX = dict(   # effect amounts as keyframes on the word timings (all cut to 0 at the white-out peak)
     brown=[(0, 0.0), (T_BROWN - 0.3, 0.0), (T_BROWN + 1.4, 0.65), (T_SW["x10"], 0.70), (T_SW["x10"] + 1.0, 0.95), (T_BOIL, 1.0)],
-    scorch=[(0, 0.0), (T_SW["x10"], 0.0), (T_SW["x10"] + 1.5, 0.35), (T_BOIL + 1.0, 0.6)],
-    steam=[(0, 0.0), (T_STEAM - 0.3, 0.0), (T_STEAM + 1.0, 0.55), (T_SW["x10"], 0.6), (T_SW["x10"] + 0.8, 0.8), (T_BOIL - 0.2, 0.9), (T_BOIL + 1.0, 1.6)],
+    scorch=[(0, 0.0), (T_SW["x10"], 0.0), (T_SW["x10"] + 1.6, 0.55), (T_BOIL + 1.0, 1.0)],
+    park=[(0, 0.0), (T_SW["x10"], 0.0), (T_SW["x10"] + 0.8, 2.0), (T_SHIM - 0.2, 2.5), (T_SHIM + 0.8, 5.0)],
+    steam=[(0, 0.0), (T_STEAM - 0.3, 0.0), (T_STEAM + 1.0, 0.55), (T_SW["x10"], 0.6), (T_SW["x10"] + 0.8, 0.8), (T_BOIL - 0.2, 0.8), (T_BOIL + 1.0, 1.1)],
     shim=[(0, 0.0), (T_SW["x2"], 0.0), (T_SW["x2"] + 0.8, 0.5), (T_SW["x5"], 0.6), (T_SW["x5"] + 0.8, 1.5), (T_SW["x10"], 1.7), (T_SHIM - 0.2, 2.2), (T_SHIM + 0.8, 4.0)],
 )
 
@@ -181,7 +183,7 @@ class Scene:
         self.L = L = Layout(True); W, H = L.W, L.H
         self.fg = fg = Foreground(FG_PATH, L, lamps=[], hz_frac=0.68)
         self.hz = float(fg.horizon)
-        self.C = (540.0, 720.0)
+        self.C = (600.0, 650.0)
         hw, hh = W // 2, H // 2
         yy, xx = np.mgrid[0:hh, 0:hw].astype(f32) * 2 + 1.0
         self.hx, self.hy = xx, yy
@@ -207,7 +209,9 @@ class Scene:
         self.grass = (veg * fg.ground).astype(f32); self.leaf = (veg * (1 - fg.ground)).astype(f32)
         Y = lum(rgb)[..., None]
         self.brown = (Y * np.array([1.55, 1.05, 0.52], f32) * (0.85 + 0.3 * np.clip(fg.hf, 0.6, 1.4)[..., None])).astype(f32)   # dry straw / dead leaves
-        self.scorch = (Y * np.array([0.55, 0.36, 0.20], f32)).astype(f32)
+        self.scorch = (Y * np.array([0.22, 0.14, 0.09], f32) + 0.004).astype(f32)                 # charred, near-black
+        pn = cv2.resize(fbm2((160, 90), 151, 2.4), (W, H), interpolation=cv2.INTER_CUBIC)
+        self.patch = smooth(-0.35, 0.55, pn + 0.25 * (np.clip(fg.hf, 0.6, 1.4) - 1)).astype(f32)   # where the lawn chars first
         emph = {"SUN", "BIGGER", "HOT", "WIDER", "2×", "VENUS", "WHITE", "SHADOW", "SHARP", "25×", "LIGHT", "GRASS", "BROWN", "STEAM",
                 "100×", "AIR", "SHIMMERS", "OCEANS", "BOIL", "AWAY", "EARTH", "NORMAL", "SMALL", "RIGHT", "IMAGINE"}
         self.caps = Captions(L, WORDS, emphasis=emph)
@@ -232,7 +236,8 @@ class Scene:
         sc = bbcolor(5772)
         gl = lerp(A["glow"], B["glow"], w)
         dd = np.maximum(self.d - Rp, 0)
-        aure = np.exp(-dd / (45 + 0.3 * Rp)) * 0.9 + np.exp(-dd / (220 + 0.8 * Rp)) * (0.12 + 0.25 * whiten)
+        hot = lerp(A.get("hot", 0.0), B.get("hot", 0.0), w)
+        aure = np.exp(-dd / (45 + 0.3 * Rp)) * 0.9 + np.exp(-dd / (220 + 0.8 * Rp)) * (0.12 + 0.25 * whiten) + np.exp(-dd / (240 + 1.2 * Rp)) * 0.6 * hot
         sky = sky + (aure * gl)[..., None] * (0.35 + 0.65 * sc) * np.array(lerp(A["fl"], B["fl"], w), f32)
         return sky, self.beams_layer(t, A, B, w, Rp, col_u)
 
@@ -296,7 +301,7 @@ class Scene:
                     spot = np.maximum(spot, smooth(rr * 1.9, rr * 1.2, dang) * 0.55 + smooth(rr * 1.0, rr * 0.6, dang) * 0.4)
                 ld = (1 - u_ld * (1 - mu)) * (0.55 + 0.45 * mu)
                 val = tex * ld * (1 - spot)
-                col = ramp_col(SUN_RAMP, val * (1 + hot)) * np.clip(1.0 - 0.9 * spot, 0.1, 1)[:, None]
+                col = ramp_col(HOT_RAMP if S.get("hot") else SUN_RAMP, val * (1 + hot)) * np.clip(1.0 - 0.9 * spot, 0.1, 1)[:, None]
                 surf[ys, xs] = col * S["surf"] * I_mul
             edge = smooth(Re + 1.0, Re - 1.0, d)
             reg *= (1 - edge)[..., None]
@@ -306,6 +311,11 @@ class Scene:
             hgt = Rp * (0.010 + 0.085 * np.clip(n1 * 0.7 + n2 * 0.5, 0, None) ** 1.6) + 2
             fl = np.exp(-(d - Re) / hgt) * (d > Re)
             reg += fl[..., None] * np.array([1.0, 0.32, 0.12], f32) * S["surf"] * 1.6 * I_mul
+            if S.get("hot"):                                                # corona streamers (white, radial, slowly turning)
+                n3 = np.interp((th * 2 + t * 4) % 1024, np.arange(1024), self.prom[2]); n4 = np.interp((th * 5 - t * 6) % 1024, np.arange(1024), self.prom[0])
+                ray = np.clip(0.55 + 0.6 * n3 + 0.35 * n4, 0, None) ** 2.5
+                strm = ray * np.exp(-np.maximum(d - Re, 0) / (0.9 * Rp)) * (d > Re - 1)
+                reg += (strm * 0.9 * S["hot"] * I_mul)[..., None] * np.array([1.0, 0.97, 0.9], f32)
         dd = np.maximum(d - Re, 0)
         g = (np.exp(-dd / (0.06 * Rp + 3)) * 2.2 + np.exp(-dd / (0.35 * Rp + 22)) * 0.55 + np.exp(-dd / (Rp + 90)) * 0.12) * (d > Re - 1)
         if small_disc: g = g * (0.6 + 0.3 * S["surf"] / 40)
@@ -327,7 +337,7 @@ class Scene:
             gm = (self.grass * brown + self.leaf * smooth(0.6, 1.0, brown) * 0.8)[..., None]
             base0 = base0 * (1 - gm) + self.brown * gm
         if scorch > 0:
-            sm = (self.grass * scorch)[..., None]; base0 = base0 * (1 - sm) + self.scorch * sm
+            sm = (self.grass * np.clip(scorch * 1.6 * self.patch - 0.15 * (1 - scorch), 0, 1) * 0.92)[..., None]; base0 = base0 * (1 - sm) + self.scorch * sm
         def one(S):
             base = base0
             if S["hc"] > 0: base = base * np.clip(lum(base)[..., None] / 0.18, 0.05, 6) ** S["hc"]   # harder shadows, hotter highlights
@@ -346,6 +356,24 @@ class Scene:
         band = smooth(hz - 560, hz - 40, sy) * (1 - 0.6 * smooth(hz + 60, H, sy))
         m = cv2.GaussianBlur(np.clip(mn * 1.3 - 0.25, 0, 1), (0, 0), 6)
         return self.up(m * band * a)[..., None] * np.array(col, f32)
+
+    def sun_haze(self, img, t, Rp, amp):
+        """heat-haze shimmer in a ring around the Sun"""
+        cx, cy = self.C; R = int(Rp * 2.8 + 120)
+        x0, x1, y0, y1 = max(0, int(cx - R)), min(self.L.W, int(cx + R)), max(0, int(cy - R)), min(self.L.H, int(cy + R))
+        xx, yy = self.xx[y0:y1, x0:x1], self.yy[y0:y1, x0:x1]
+        d = np.sqrt((xx - cx) ** 2 + (yy - cy) ** 2)
+        k = smooth(Rp * 0.9, Rp * 1.15, d) * smooth(R, R * 0.6, d) * amp
+        n = cv2.remap(self.shim, ((xx * 0.2) % 256).astype(f32), ((yy * 0.2 + t * 30) % 256).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        img[y0:y1, x0:x1] = cv2.remap(img, (xx + n * k).astype(f32), (yy + n * k * 0.7).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        return img
+
+    def park_heat(self, img, t, amp):
+        """wavering heat distortion over the whole park (stronger near the ground, rising)"""
+        u = (self.xx * 0.08) % 256; v = (self.yy * 0.10 + t * 24) % 256
+        n = cv2.remap(self.shim, u.astype(f32), v.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
+        k = smooth(self.hz - 900, self.hz + 200, self.yy) * amp
+        return cv2.remap(img, (self.xx + n * k * 1.2).astype(f32), (self.yy + n * k * 0.5).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
 
     def shimmer(self, img, amp, t):
         if amp <= 0: return img
@@ -372,7 +400,7 @@ class Scene:
             I_mul *= 1 + 5 * col_u ** 2; hot = 0.15 * col_u
         whiten = 0.0
         if cur == "x2": whiten = 0.35 * ramp(t, T_WHITE - 0.3, T_WHITE + 0.9)
-        elif cur in ("x5", "x10"): whiten = 0.35 if cur == "x5" else 0.45
+        elif cur in ("x5", "x10"): whiten = 0.12
         sky, bm = self.sky(t, A, B, w, min(Rp, 900), col_u, whiten)
         img = self.up(sky * (1 - 0.3 * col_u) + bm * (1 + 0.6 * col_u) * (1 - 0.5 * whiten))
         self.draw_sun(img, t, S, max(Rp, 0.3), I_mul, wob, hot)
@@ -386,9 +414,13 @@ class Scene:
         img = img * (1 - a) + fgc * a
         st = fx("steam", t)
         if st > 0:
-            img += self.haze(t, 0.45 * st, (0.95, 0.97, 1.0), rise=95)
+            img += self.haze(t, 0.55 * st, (0.95, 0.97, 1.0), rise=110)
             img += self.haze(t + 13, 0.25 * st, (0.9, 0.92, 0.95), rise=150)
         img = self.shimmer(img, fx("shim", t), t)
+        hz_sun = lerp(A.get("hot", 0.0), B.get("hot", 0.0), w) * (1 if t < T_SUNBACK else 0)
+        if hz_sun > 0: img = self.sun_haze(img, t, Rp, 3.5 * hz_sun)
+        pk = fx("park", t)
+        if pk > 0: img = self.park_heat(img, t, pk)
         # ---- swap flash + chromatic shockwave
         for ts, k in SWAPS:
             u = t - ts

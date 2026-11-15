@@ -51,13 +51,13 @@ STAGES = [
          gain=2.3, tint=(1.18, 1.0, 0.82), amb=0.0, stars=0.0, expo=1.0, win=1.0, fl=(1.0, 0.92, 0.78)),
     dict(key="mars", d=1.524, name="MARS'S ORBIT", l2="1.52 AU · 0.35° WIDE", l3="43% OF THE LIGHT · ENDLESS WINTER", tc=(200, 230, 255),
          zen=(0.020, 0.075, 0.34), hor=(0.42, 0.50, 0.62), beams=[(0.6, 0.85, 1.0), (0.85, 0.95, 1.0), (0.5, 0.7, 1.0), (0.9, 0.9, 1.0)],
-         bI=0.6, surf=3.2, glow=0.14, spikes=0.10, gain=1.55, tint=(0.95, 1.0, 1.08), amb=0.0, stars=0.0, expo=1.05, win=1.1, fl=(0.85, 0.92, 1.0)),
+         bI=0.25, surf=3.2, glow=0.12, spikes=0.04, gain=1.55, tint=(0.95, 1.0, 1.08), amb=0.0, stars=0.0, expo=1.05, win=1.1, fl=(0.85, 0.92, 1.0)),
     dict(key="jup", d=5.203, name="JUPITER'S ORBIT", l2="5.2 AU · 0.1° WIDE", l3="1/27 OF THE LIGHT", tc=(190, 215, 255),
          zen=(0.010, 0.030, 0.13), hor=(0.10, 0.13, 0.20), beams=[(0.5, 0.7, 1.0), (0.7, 0.6, 1.0), (0.6, 0.9, 1.0)],
-         bI=0.5, surf=60.0, glow=0.75, spikes=0.95, gain=0.80, tint=(0.80, 0.92, 1.15), amb=0.0, stars=0.05, expo=1.25, win=1.35, fl=(0.8, 0.88, 1.0)),
+         bI=0.2, surf=30.0, glow=0.22, spikes=0.10, gain=0.80, tint=(0.80, 0.92, 1.15), amb=0.0, stars=0.05, expo=1.25, win=1.35, fl=(0.8, 0.88, 1.0)),
     dict(key="sat", d=9.537, name="SATURN'S ORBIT", l2="9.5 AU · 0.06° WIDE", l3="1/90 OF THE LIGHT", tc=(180, 205, 255),
          zen=(0.006, 0.015, 0.075), hor=(0.04, 0.06, 0.12), beams=[(0.5, 0.65, 1.0), (0.7, 0.55, 1.0), (0.55, 0.85, 1.0)],
-         bI=0.38, surf=60.0, glow=0.6, spikes=1.05, gain=0.48, tint=(0.72, 0.88, 1.2), amb=0.0, stars=0.25, expo=1.3, win=1.6, fl=(0.75, 0.85, 1.0)),
+         bI=0.38, surf=55.0, glow=0.5, spikes=0.75, gain=0.48, tint=(0.72, 0.88, 1.2), amb=0.0, stars=0.25, expo=1.3, win=1.6, fl=(0.75, 0.85, 1.0)),
     dict(key="nep", d=30.07, name="NEPTUNE'S ORBIT", l2="30 AU · 1/900 OF THE LIGHT", l3="~450× THE FULL MOON · THE AIR FREEZES", tc=(150, 200, 255),
          zen=(0.0032, 0.0075, 0.040), hor=(0.016, 0.026, 0.065), beams=[(0.45, 0.6, 1.0), (0.6, 0.8, 1.0), (0.8, 0.6, 1.0)],
          bI=0.30, surf=50.0, glow=0.5, spikes=1.15, gain=0.28, tint=(0.62, 0.82, 1.25), amb=0.0, stars=0.7, expo=1.3, win=1.9, fl=(0.7, 0.85, 1.0)),
@@ -372,9 +372,11 @@ class Scene:
         dx = self.xx[y0:y1, x0:x1] + 0.5 - cx; dy = self.yy[y0:y1, x0:x1] + 0.5 - cy
         d = np.sqrt(dx * dx + dy * dy); ang = np.arctan2(dy, dx)
         dash = (np.sin(ang * 8 + t * 1.5) > -0.1).astype(f32)
-        ring = np.clip(1.0 - np.abs(d - R) / 0.9, 0, 1) * dash * a
+        ring = np.clip(1.0 - np.abs(d - R) / 1.2, 0, 1) * dash * a
+        halo = np.clip(1.0 - np.abs(d - R) / 2.6, 0, 1) * dash * a * 0.5
         reg = out[y0:y1, x0:x1]
-        reg += ring[..., None] * (np.array([1.0, 1.0, 1.0], f32) - reg) * 0.8
+        reg *= (1 - halo)[..., None]                                     # dark outline so it reads on a bright sky
+        reg += ring[..., None] * (np.array([1.0, 1.0, 1.0], f32) - reg) * 0.95
         out[y0:y1, x0:x1] = reg
 
     def chroma_bloom(self, img, amt):

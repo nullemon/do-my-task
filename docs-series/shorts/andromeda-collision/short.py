@@ -98,7 +98,7 @@ SC = {
                beams=[(1.0, 0.35, 0.65), (0.4, 0.75, 1.0), (1.0, 0.75, 0.5), (0.7, 0.4, 1.0)], bI=0.7, expo=0.9),
     "g5": dict(name="MILKOMEDA", tc=(255, 215, 140), l=["ONE GIANT ELLIPTICAL GALAXY", "OUR SUN: BECOMING A RED GIANT", "IF THE MERGER HAPPENS"],
                zen=(0.030, 0.020, 0.030), hor=(0.10, 0.06, 0.06), lc=(1.0, 0.80, 0.55), I=0.8,
-               beams=[(1.0, 0.8, 0.45), (1.0, 0.55, 0.3), (0.8, 0.6, 1.0)], bI=0.6, expo=0.85),
+               beams=[(1.0, 0.8, 0.45), (1.0, 0.55, 0.3), (0.8, 0.6, 1.0)], bI=0.6, expo=0.75),
 }
 END = dict(name="WILL IT HAPPEN?", tc=(255, 222, 120), l=["2025 SIMULATIONS (SAWALA ET AL.):", "~50% CHANCE OF A MERGER", "IN THE NEXT 10 BILLION YEARS"])
 
@@ -256,7 +256,7 @@ class Scene:
         E = np.array([x[1] - x[0], y[1] - y[0]]) / 0.2; N = np.array([x[2] - x[0], y[2] - y[0]]) / 0.2
         return float(x[0]), float(y[0]), E, N
 
-    def m31_draw(self, lst, scale, gain, swirl=0.0, t=0.0):
+    def m31_draw(self, lst, scale, gain, swirl=0.0, t=0.0, lift=1.0, flip=False):
         """draw the GALEX sprite at `scale` x its true size today; returns HDR layer (full res)"""
         W, H = self.L.W, self.L.H
         x0, y0, E, N = self.m31_frame(lst)
@@ -276,13 +276,15 @@ class Scene:
             ca, sa = np.cos(ang), np.sin(ang)
             sx = x0 + dx * ca - dy * sa * 1.15; sy = y0 + dx * sa * 0.85 + dy * ca
             out = cv2.remap(out, sx.astype(f32), sy.astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        if lift < 1.0:                                             # camera stretch: the faint outer D25 disc reads at its true size
+            out = np.maximum(out, 0) ** lift * 0.6
         # outer stellar disc + halo (camera view), on the same axis
         ax = np.array([-math.sin(math.radians(35)), -math.cos(math.radians(35))])          # PA 35 deg in sprite axes
         maj = A @ ax; maj /= np.linalg.norm(maj)
         dx, dy = self.hx - x0, self.hy - y0
         u = (dx * maj[0] + dy * maj[1]) / (PXDEG * scale); v = (-dx * maj[1] + dy * maj[0]) / (PXDEG * scale)
         rr = np.sqrt(u * u + (v / 0.35) ** 2); rh = np.sqrt(u * u + v * v)
-        outer = (np.exp(-rr / 1.0) * 0.16 + np.exp(-rh / 2.2) * 0.03)[..., None] * np.array([0.55, 0.68, 1.0], f32)
+        outer = (np.exp(-rr / 1.3) * 0.18 * smooth(3.5, 1.5, rr) + np.exp(-rh / 3.5) * 0.05)[..., None] * np.array([0.55, 0.68, 1.0], f32)
         return (out + self.up(outer)) * gain, (x0, y0, maj)
 
     def tails(self, x0, y0, maj, scale, I, t):
@@ -343,6 +345,22 @@ class Scene:
             splat(st, x[j], y[j], int(Lk * 4) + 6, lambda d, dx, dy: ((np.exp(-np.abs(dy) / 0.8) * np.exp(-np.abs(dx) / Lk) + np.exp(-np.abs(dx) / 0.8) * np.exp(-np.abs(dy) / Lk)) * a)[..., None] * c)
         return st
 
+    def mw_disc(self, t):
+        """the Milky Way's own disc, torn into arms that swirl across the sky the other way (first close pass)"""
+        W, H = self.L.W, self.L.H
+        img = self.pyr[1]; c = self.mc / 2; k = 1.25
+        a = math.radians(70 + 3 * math.sin(t * 0.3))
+        A = np.array([[math.cos(a), math.sin(a)], [-math.sin(a), math.cos(a)]]) * k        # mirrored: the other spiral
+        cx, cy = 300.0, 1150.0
+        Mx = np.float32([[A[0, 0], A[0, 1], cx - (A[0, 0] * c[0] + A[0, 1] * c[1])], [A[1, 0], A[1, 1], cy - (A[1, 0] * c[0] + A[1, 1] * c[1])]])
+        out = cv2.warpAffine(img, Mx, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        dx, dy = self.xx - cx, self.yy - cy; d = np.sqrt(dx * dx + dy * dy) + 1e-3
+        ang = -1.6 * np.exp(-d / 700.0)
+        ca, sa = np.cos(ang), np.sin(ang)
+        out = cv2.remap(out, (cx + dx * ca - dy * sa).astype(f32), (cy + dx * sa + dy * ca).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT)
+        y = lum(out)[..., None]
+        return (np.maximum(out, 0) ** 0.7 * 0.5) * np.array([1.0, 0.85, 0.75], f32) + y * 0.0
+
     def starburst(self, t, I):
         """pink H II regions + blue young stars across the sky (screen space, drifting)"""
         W, H = self.L.W, self.L.H
@@ -355,20 +373,20 @@ class Scene:
 
     def milkomeda(self, t, I):
         W, H = self.L.W, self.L.H
-        cx, cy = 540.0, 640.0
+        cx, cy = 540.0, 620.0
         a = math.radians(-24 + 1.5 * math.sin(t * 0.2))
         dx, dy = self.hx - cx, self.hy - cy
-        u = (dx * math.cos(a) + dy * math.sin(a)) / 760; v = (-dx * math.sin(a) + dy * math.cos(a)) / (760 * 0.68)
+        u = (dx * math.cos(a) + dy * math.sin(a)) / 900; v = (-dx * math.sin(a) + dy * math.cos(a)) / (900 * 0.70)
         r = np.sqrt(u * u + v * v) + 1e-4
-        sb = np.exp(-7.67 * (r ** 0.25 - 1)) * 0.07                    # de Vaucouleurs r^1/4 profile
-        sb = np.minimum(sb, 3.0)
-        col = np.array([1.0, 0.80, 0.55], f32) * (1 - np.clip(r, 0, 1)[..., None] * 0.25) + np.array([0.3, 0.3, 0.45], f32) * np.clip(r - 0.5, 0, 1)[..., None] * 0.3
+        sb = np.exp(-3.67 * (np.sqrt(r) - 1)) * 0.10 + np.exp(-(r / 0.10) ** 2) * 0.6           # Sersic n = 2 envelope + soft core
+        warm = np.exp(-r / 0.45)[..., None]
+        col = np.array([1.0, 0.72, 0.40], f32) * warm + np.array([0.85, 0.80, 0.85], f32) * (1 - warm)
         n = cv2.remap(self.tw[1], (self.hx * 0.25 % 512).astype(f32), (self.hy * 0.25 % 512).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        dust = 1 - 0.35 * np.clip(n - 0.6, 0, 1) * np.exp(-r / 0.8)                          # fading remnant dust
+        dust = 1 - 0.25 * np.clip(n - 0.6, 0, 1) * np.exp(-r / 0.6)                          # fading remnant dust
         glow = self.up((sb * dust)[..., None] * col) * I
         o = self.old; tw = 1 + 0.25 * np.sin(t * 8 + o["ph"])
         cc = np.tile(np.array([[1.0, 0.82, 0.62]], f32), (len(o["x"]), 1))
-        return glow + self.splat_pts(o["x"], o["y"], o["fd"] * tw * 3 * I, cc, t, o["ph"], ng=8, gth=3.0)
+        return glow + self.splat_pts(o["x"], o["y"], o["fd"] * tw * 6 * I, cc, t, o["ph"], ng=30, gth=2.5)
 
     # -------------------------------------------------------------------------------------------- sky of a scene
     def sky(self, key, t, lst):
@@ -378,15 +396,16 @@ class Scene:
             sky += self.mw_layer(lst, gain=5.0 if key != "g3" else 6.5) + self.stars_layer(t, lst)
             sc = 770.0 / r_of(Y if key != "today" else 0.0)
             gain = {"today": 0.30, "g2": 1.2, "g3": 1.5}[key] * (1 + 0.03 * math.sin(t * 1.3))
-            g, info = self.m31_draw(lst, sc, gain, swirl=0.25 if key == "g3" else 0.0, t=t)
+            g, info = self.m31_draw(lst, sc, gain, swirl=0.25 if key == "g3" else 0.0, t=t, lift=0.7 if key == "g3" else 1.0)
             if key == "today":                                       # the eye view: a small faint smudge
                 g = cv2.GaussianBlur(g, (0, 0), 1.5) * np.array([0.85, 0.9, 1.0], f32)
             sky += g
             if key == "g3": sky += self.up(self.tails(*info, sc, 1.0, t))
         elif key == "g4":
-            sky += self.mw_layer(lst, warp=0.6, gain=7.0, t=t) + self.stars_layer(t, lst, 0.7)
-            g, info = self.m31_draw(lst, 770.0 / 31.0, 1.2, swirl=1.0, t=t)
-            sky += g + self.up(self.tails(*info, 770 / 31.0 * 0.5, 2.2, t)) + self.starburst(t, 1.0)
+            sky += self.mw_layer(lst, warp=0.9, gain=9.0, t=t) + self.stars_layer(t, lst, 0.7)
+            g, info = self.m31_draw(lst, 770.0 / 31.0, 1.6, swirl=1.3, t=t, lift=0.65)
+            g2 = self.mw_disc(t)
+            sky += g + g2 + self.up(self.tails(*info, 770 / 31.0 * 0.5, 2.6, t)) + self.starburst(t, 0.9)
         elif key == "g5":
             sky += self.mw_layer(lst, warp=0.0, gain=0.6) + self.stars_layer(t, lst, 0.5) + self.milkomeda(t, 1.0)
         return sky * self.above + self.nights[key] * (1 - self.above), info
@@ -416,7 +435,7 @@ class Scene:
         w = ramp(t, t0 - 0.05, t0 + 0.6) if t0 > 0 else 1.0
         pulse = 1 + 0.05 * math.sin(2 * math.pi * t / 1.7) + sum(0.30 * math.exp(-((t - tp) / 0.22) ** 2) for tp in PULSES)
         cx, cy = self.m31_frame(lst)[:2]
-        if cur == "g5": cx, cy = 540.0, 640.0
+        if cur == "g5": cx, cy = 540.0, 620.0
         sky, info = self.sky(cur, t, lst)
         if 0 <= u < REVEAL and t0 > 0:
             old, _ = self.sky(prev, t, lst)
@@ -498,8 +517,8 @@ class Scene:
         Y, shown = years(t)
         if cur == "today": shown = 0.0
         wo = 1 - ramp(t, T_WO0, T_WO0 + 0.3) + ramp(t, T_BACK, T_BACK + 0.3)
-        put_glow(out, glow_text("YEAR" if shown < 0.005 else "YEARS FROM NOW", 42, (200, 225, 255)), W / 2, 192, 0.95 * min(wo, 1), 0.35)
-        put_glow(out, glow_text(fmt_years(shown), 104, (255, 190, 90) if shown > 0.005 else (170, 210, 255)), W / 2, 270, min(wo, 1), 0.5)
+        put_glow(out, glow_text("YEAR" if shown < 0.005 else "YEARS FROM NOW", 42, (200, 225, 255)), W / 2, 168, 0.95 * min(wo, 1), 0.35)
+        put_glow(out, glow_text(fmt_years(shown), 104, (255, 190, 90) if shown > 0.005 else (170, 210, 255)), W / 2, 272, min(wo, 1), 0.5)
         # ---- readout
         Q = END if (cur == "today" and t >= T_BACK) else SC[cur]
         if cur == "today":

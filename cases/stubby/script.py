@@ -66,7 +66,7 @@ VIS = {
  "board": BOARD([(COAT, "STUBBY"), (it(65.3, 65.4), "TRAINING 1917"), (cd(272.5, 272.6), "THE FRONT"), (P("pershing_medal"), "PERSHING 1921")],
                 notes=[("1917", "SMUGGLED"), ("1918", "WOUNDED"), ("1921", "MEDAL")]),
  "death1": SPLIT(ma(330.4, 334.5), P("nmah_case_cherami", focus=(0.5, 0.5)), chip1="HIS DIVISION, 1918", chip2="SMITHSONIAN"),
- "museum1": FULL(P("nmah_mount", focus=(0.5, 0.45), z=(1.1, 1.0)), pops=[CHIP("SMITHSONIAN · SINCE 1956", 0.3)]),
+ "museum1": FULL(P("nmah_mount", focus=(0.5, 0.45), z=(1.1, 1.0)), pops=[CHIP("STUBBY TODAY · SMITHSONIAN", 0.3)]),
  "closing": FULL(P("stubby_coat", focus=(0.5, 0.35), z=(1.0, 1.12))),
  "cta0": CTA(0, nf(387.2, 392.0)),
  "cta1": CTA(1, am(517.7, 522.0)),

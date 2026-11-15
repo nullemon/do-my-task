@@ -317,11 +317,11 @@ class Scene:
         al = np.interp(idx, np.arange(len(prof)), prof[:, 3], left=0, right=0)
         col = np.interp(idx, np.arange(len(prof)), prof[:, 0], left=0, right=0)
         tau = -np.log(np.clip(1 - al * 0.98, 0.02, 1)) / math.sin(SAT_TILT) * 0.35
-        fwd = tau * np.exp(-tau * 1.15)                                     # forward-scattered brightness
+        fwd = tau * np.exp(-tau * 2.3)                                     # forward-scattered brightness
         main = fwd * (0.6 + 0.4 * col / max(col.max(), 1e-3))
-        Fr = np.exp(-((rkm - 140220) / 600) ** 2) * 1.6                   # F ring (dusty, narrow)
-        Gr = np.exp(-((rkm - 168000) / 3500) ** 2) * 0.55                  # G ring
-        Er = np.exp(-((rkm - 238000) / 55000) ** 2) * 0.22 + np.exp(-((rkm - 330000) / 120000) ** 2) * 0.06   # E ring
+        Fr = np.exp(-((rkm - 140220) / 700) ** 2) * 2.2                   # F ring (dusty, narrow)
+        Gr = np.exp(-((rkm - 168000) / 3800) ** 2) * 0.8                  # G ring
+        Er = np.exp(-((rkm - 238000) / 55000) ** 2) * 0.30 + np.exp(-((rkm - 330000) / 120000) ** 2) * 0.08   # E ring
         self.r_main = main.astype(f32); self.r_dust = (Fr + Gr).astype(f32); self.r_E = Er.astype(f32)
         self.r_opac = np.clip(al * 0.95, 0, 0.95).astype(f32)
         self.r_front = (v > 0).astype(f32)
@@ -395,7 +395,7 @@ class Scene:
     def sun(self, img, x, y, r, I, col=(1.0, 0.95, 0.86), occ=None, pad=40, glare=1.0):
         """limb-darkened HDR disc; occ(dx, dy) -> coverage 0..1 (dx, dy relative to the Sun centre). Returns the visible fraction"""
         H, W = img.shape[:2]
-        R = r + pad
+        pad = max(pad, r * 14 + 70); R = r + pad
         x0, x1, y0, y1 = max(0, int(x - R)), min(W, int(x + R) + 1), max(0, int(y - R)), min(H, int(y + R) + 1)
         if x1 <= x0 or y1 <= y0: return 0.0
         dx = self.xx[y0:y1, x0:x1] + 0.5 - x; dy = self.yy[y0:y1, x0:x1] + 0.5 - y
@@ -410,7 +410,8 @@ class Scene:
         c = np.array(col, f32)
         img[y0:y1, x0:x1] += (vis_px * 60.0 * I)[..., None] * c
         if glare > 0 and frac > 1e-4:
-            g = (np.exp(-d / (r * 1.3 + 1.5)) * 3.5 + np.exp(-d / (r * 4 + 6)) * 0.5) * (1 - 0.95 * cov) * frac ** 0.6 * glare * I
+            g = (np.exp(-d / (r * 1.3 + 1.5)) * 3.5 + np.exp(-d / (r * 4 + 6)) * 0.5) * (1 - 0.95 * cov * disc) * frac ** 0.6 * glare * I
+            g = g * smooth(R, R * 0.75, d)
             img[y0:y1, x0:x1] += g[..., None] * c
         return frac
 
@@ -487,7 +488,7 @@ class Scene:
             m = self.j_m[y0:y1, x0:x1]; tex = self.j_tex[y0:y1, x0:x1]; rr = self.j_rr[y0:y1, x0:x1]; ang = self.j_ang[y0:y1, x0:x1]
             jv = self.j_v[y0:y1, x0:x1]; ju = self.j_u[y0:y1, x0:x1]; Rj = R_JUP
         reg *= (1 - m)[..., None]
-        reg += tex * 0.006 * m[..., None]
+        reg += tex * 0.016 * m[..., None]
         # lightning in the night-side storms + a faint auroral oval at the north pole
         for i, (lu, lv, ph, sz) in enumerate(self.lightning):
             fl = max(0.0, math.sin(t * (2.3 + 0.37 * i) + ph)) ** 40 * (1 + 2 * max(0.0, math.sin(t * 17 + i)) ** 8)
@@ -512,6 +513,7 @@ class Scene:
             ds = np.sqrt((self.xx[y0:y1, x0:x1] - sun_xy[0]) ** 2 + (self.yy[y0:y1, x0:x1] - sun_xy[1]) ** 2)
             reg += ((np.exp(-ds / 10) * 3.0 + np.exp(-ds / 60) * 0.5) * glow_amt * (o > -2))[..., None] * np.array([1.0, 0.93, 0.80], f32)
         img[y0:y1, x0:x1] = reg
+        self.post_dark.append((y0, y1, x0, x1, np.clip((1 - rr) * Rj / 6.0, 0, 1), 0.75))
         return m
 
     def saturn(self, img, t, sc, ring_gain, sky_E):
@@ -529,20 +531,22 @@ class Scene:
             Rs = R_SAT
         reg = img[y0:y1, x0:x1]
         g = ring_gain
-        ringcol = np.array([1.0, 0.90, 0.74], f32)
+        ringcol = np.array([1.0, 0.80, 0.56], f32)
         # far rings (behind the globe) -> globe -> near rings
         back = (1 - fr)
         reg *= (1 - op * back * 0.6)[..., None]
-        reg += ((main * 1.6 + dust * 1.0) * back * (1 - m) * g)[..., None] * ringcol
+        reg += ((main * 3.2 + dust * 1.2) * back * (1 - m) * g)[..., None] * ringcol
         reg *= (1 - m)[..., None]
-        reg += tex * 0.020 * (0.6 + 0.4 * g) * m[..., None]
+        reg += tex * 0.010 * (0.6 + 0.4 * g) * m[..., None]
         o = (rp - 1) * Rs                                                    # backlit atmosphere: thin bright limb
-        limb = (np.exp(-((o - 0.5) / 0.8) ** 2) * 2.4 + np.exp(-np.maximum(o, 0) / 6) * 0.45 * (o > -1)) * (0.75 + 0.25 * np.cos(ang + 1.2))
+        limb = (np.exp(-((o - 0.5) / 0.8) ** 2) * 2.4 + (np.exp(-np.maximum(o, 0) / 6) * 0.45 + np.exp(-np.maximum(o, 0) / 28) * 0.22) * (o > -1)) \
+            * (0.75 + 0.25 * np.cos(ang + 1.2))
         reg += (limb * (0.6 + 0.4 * g))[..., None] * np.array([1.0, 0.88, 0.70], f32)
         reg *= (1 - op * fr * 0.85)[..., None]
-        reg += ((main * 1.6 + dust * 1.0) * fr * shd * g)[..., None] * ringcol
+        reg += ((main * 3.2 + dust * 1.2) * fr * shd * g)[..., None] * ringcol
         reg += (E * g * sky_E)[..., None] * np.array([0.55, 0.75, 1.0], f32)
         img[y0:y1, x0:x1] = reg
+        self.post_dark.append((y0, y1, x0, x1, np.clip((1 - rp) * Rs / 5.0, 0, 1) * (1 - op * fr), 0.7))
 
     def earth_dot(self, img, t, amt, ptr):
         x, y = EARTH_DOT
@@ -601,6 +605,7 @@ class Scene:
             else: v = (col_u - 0.45) / 0.55; sc *= 1.30 * (1 - ease(v) ** 0.7) + 0.02
             I_mul *= 1 + 3 * col_u ** 2
         cx, cy = C
+        self.post_dark = []
         # ---- visible-sun fraction (drives the sky glare)
         vis = 1.0
         if cur == "earth": vis = earth_vis(t)
@@ -643,7 +648,7 @@ class Scene:
             u = (t - T_P0) / (T_P1 - T_P0)
             px = (-1 + 2 * u) * (rs + PHO_A * 1.3 + 2); py = -0.22 * rs + (-1 + 2 * u) * 0.25 * rs
             occf = self.phobos(img, 0, 0, sc, t)
-            self.sun(img, cx, cy, rs, I_mul * 0.85, col=(0.95, 0.96, 1.0), occ=lambda dx, dy: occf(dx - px, dy - py), pad=50)
+            self.sun(img, cx, cy, rs, I_mul * 0.10, col=(0.95, 0.96, 1.0), occ=lambda dx, dy: occf(dx - px, dy - py), pad=50, glare=2.5)
             # pointer brackets round the transit
             pa = ramp(t, wt("mars", "PHOBOS") - 0.1, wt("mars", "PHOBOS") + 0.3) * (1 - col_u)
             if pa > 0:
@@ -656,6 +661,9 @@ class Scene:
             I_r = (0.55 + 0.45 * ramp(t, T_RED - 0.6, T_RED + 0.2)) * I_mul
             # a last diamond flash as the Sun slips fully behind Earth (just after the swap)
             self.earth_ring(img, ex, ey, R, I_r, t, sdir=math.radians(150))
+            y0, x0 = int(ey - R - 2), int(ex - R - 2); n = int(2 * R + 5)
+            dd = np.sqrt((self.xx[y0:y0 + n, x0:x0 + n] + 0.5 - ex) ** 2 + (self.yy[y0:y0 + n, x0:x0 + n] + 0.5 - ey) ** 2)
+            self.post_dark.append((y0, y0 + n, x0, x0 + n, smooth(R - 1.0, R - 4.0, dd), 0.80))
             self.corona(img, ex, ey, R, 0.10 * ramp(t, t0 + 0.2, t0 + 1.0), t)
         elif cur == "io":
             hid = self.io_hidden(t)
@@ -698,6 +706,7 @@ class Scene:
             img = img + 30 * math.exp(-(t - T_BACK) / 0.10) * np.array([1.0, 0.95, 0.88], f32)
             self.shock(img, cx, cy, t - T_BACK, np.array([1.0, 0.9, 0.7], f32))
         img = self.chroma_bloom(img, 1.0)
+        for (y0, y1, x0, x1, m, k) in self.post_dark: img[y0:y1, x0:x1] *= (1 - k * m)[..., None]
         out = tonemap(img, 1.0)
         out = self.chroma(out)
         out = finish(out, t, grain=0.008, vignette=0.14)

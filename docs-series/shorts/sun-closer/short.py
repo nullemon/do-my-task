@@ -63,10 +63,10 @@ STAGES = [
          gain=1.0, tint=(1.0, 0.98, 0.95), flat=0.0, amb=0.10, expo=1.0, fl=(1.0, 0.95, 0.85)),
     dict(key="ven", d=0.723, name="VENUS'S ORBIT", l2="0.72 AU · 1.4× WIDER", l3="1.9× SUNLIGHT · RUNAWAY GREENHOUSE", tc=(255, 225, 150),
          zen=(0.07, 0.20, 0.62), hor=(0.80, 0.86, 0.98), beams=[(0.85, 0.95, 1.0), (1.0, 0.85, 0.45), (0.55, 0.85, 1.0), (1.0, 0.95, 0.75)],
-         bI=1.15, surf=48.0, glow=1.5, spikes=0.8, gain=1.18, tint=(1.0, 0.97, 0.92), flat=0.12, amb=0.22, expo=0.95, fl=(1.0, 0.97, 0.9)),
+         bI=1.0, surf=1.35, glow=0.42, spikes=0.12, cells=24, fine=500, gain=1.18, tint=(1.0, 0.97, 0.92), flat=0.12, amb=0.22, expo=0.95, fl=(1.0, 0.97, 0.9)),
     dict(key="mer", d=0.387, name="MERCURY'S ORBIT", l2="0.39 AU · 2.6× WIDER", l3="6.7× SUNLIGHT · ROCKS GLOW", tc=(255, 205, 120),
          zen=(0.42, 0.46, 0.62), hor=(1.35, 1.22, 1.00), beams=[(1.0, 0.92, 0.65), (1.0, 0.75, 0.35), (1.0, 1.0, 0.9), (1.0, 0.6, 0.3)],
-         bI=1.25, surf=55.0, glow=2.1, spikes=1.0, gain=1.10, tint=(1.04, 0.90, 0.76), flat=0.25, amb=0.25, expo=0.85, fl=(1.0, 0.9, 0.7)),
+         bI=1.1, surf=1.35, glow=0.48, spikes=0.12, cells=30, fine=800, gain=1.10, tint=(1.04, 0.90, 0.76), flat=0.25, amb=0.25, expo=0.85, fl=(1.0, 0.9, 0.7)),
     dict(key="p01", d=0.1, name="0.1 AU", l2="5.3° WIDE · 10× WIDER", l3="100× SUNLIGHT · SAND MELTS", tc=(255, 175, 80),
          zen=(0.50, 0.30, 0.13), hor=(1.45, 0.88, 0.36), beams=[(1.0, 0.65, 0.15), (1.0, 0.85, 0.40), (1.0, 0.40, 0.10), (1.0, 0.95, 0.6)],
          bI=1.2, surf=1.2, glow=1.8, spikes=0.5, gain=0.62, tint=(1.0, 0.64, 0.40), flat=0.35, amb=0.18, expo=0.88, fl=(1.0, 0.75, 0.4),
@@ -309,7 +309,8 @@ class Scene:
         Re = Rp * (1 + wob * (0.07 * np.sin(3 * ang + 9 * t) + 0.05 * np.sin(5 * ang - 13 * t) + 0.03 * np.sin(8 * ang + 21 * t)))
         Rd = max(Rp, 1.1)
         u_ld = 0.6
-        if Rp < 30 or not S.get("cells"):
+        small_disc = Rp < 4 or not S.get("cells")
+        if small_disc:
             inside = smooth(Re + 0.9, Re - 0.9, d) if Rp > 1.5 else np.exp(-(d / 1.1) ** 2)
             area = min((Rp / Rd) ** 2, 1.0)
             mu = np.sqrt(np.clip(1 - (d / Rd) ** 2, 0, 1))
@@ -317,10 +318,11 @@ class Scene:
             reg += (inside * ld * S["surf"] * area * I_mul)[..., None] * (0.25 + 0.75 * sc)
         else:
             m = d < Re + 2
-            ys, xs = np.nonzero(m[::2, ::2])
+            st = 1 if Rp < 40 else 2                                        # full-res texture for the small discs
+            ys, xs = np.nonzero(m[::st, ::st])
             surf = np.zeros(d.shape[:2] + (3,), f32)
             if len(ys):
-                px = dx[::2, ::2][ys, xs] / Rd; py = dy[::2, ::2][ys, xs] / Rd
+                px = dx[::st, ::st][ys, xs] / Rd; py = dy[::st, ::st][ys, xs] / Rd
                 r2 = np.clip(px * px + py * py, 0, 1); mu = np.sqrt(1 - r2)
                 v = np.stack([px, py, mu], -1)
                 v = rotx(roty(v, 0.03 * t + 0.4), 0.25)
@@ -336,7 +338,7 @@ class Scene:
                 val = tex * ld * (1 - spot)
                 fac = np.clip(1.0 - 0.9 * spot, 0.1, 1)
                 col = ramp_col(SUN_RAMP, val * (1 + hot)) * fac[:, None]
-                small = np.zeros(m[::2, ::2].shape + (3,), f32)
+                small = np.zeros(m[::st, ::st].shape + (3,), f32)
                 small[ys, xs] = col * S["surf"] * I_mul
                 surf = cv2.resize(small, (d.shape[1], d.shape[0]), interpolation=cv2.INTER_LINEAR)
             edge = smooth(Re + 1.0, Re - 1.0, d)
@@ -350,7 +352,7 @@ class Scene:
             reg += fl[..., None] * pc * S["surf"] * 1.6 * I_mul
         dd = np.maximum(d - Re, 0)
         g = (np.exp(-dd / (0.06 * Rp + 3)) * 2.2 + np.exp(-dd / (0.35 * Rp + 22)) * 0.55 + np.exp(-dd / (Rp + 90)) * 0.12) * (d > Re - 1)
-        if Rp < 30: g = g * (0.6 + 0.3 * S["surf"] / 40)
+        if small_disc: g = g * (0.6 + 0.3 * S["surf"] / 40)
         reg += (g * S["glow"] * I_mul)[..., None] * (0.3 + 0.7 * sc) * np.array(S["fl"], f32) * (1 + 0.08 * math.sin(t * 2.3))
         if S["spikes"] > 0:
             for k in range(6):
@@ -505,8 +507,25 @@ class Scene:
         out = tonemap(img, lerp(A["expo"], B["expo"], w))
         out = self.chroma(out)
         out = finish(out, t, grain=0.008, vignette=0.16)
+        if cur != "now" and t0 > 0:
+            self.today_ring(out, t, ramp(t, t0 + 0.5, t0 + 0.9) * (1 - ramp(t, t1 - 0.5, t1 - 0.3) if t1 < 1e8 else 1.0) * (1 - ramp(t, T_WO0 - 0.6, T_WO0)))
         self.overlay(out, t, cur, t0)
         return out
+
+    def today_ring(self, out, t, a):
+        """faint dashed ring at today's true solar size (0.53 deg) on the Sun, for comparison"""
+        if a <= 0.01: return
+        cx, cy = self.C; R = SK["now"]["Rp"] + 1.0
+        x0, y0 = int(cx - R - 4), int(cy - R - 4); x1, y1 = int(cx + R + 5), int(cy + R + 5)
+        dx = self.xx[y0:y1, x0:x1] + 0.5 - cx; dy = self.yy[y0:y1, x0:x1] + 0.5 - cy
+        d = np.sqrt(dx * dx + dy * dy); ang = np.arctan2(dy, dx)
+        dash = (np.sin(ang * 8 + t * 1.5) > -0.1).astype(f32)
+        ring = np.clip(1.0 - np.abs(d - R) / 0.9, 0, 1) * dash * a
+        halo = np.clip(1.0 - np.abs(d - R) / 2.2, 0, 1) * dash * a * 0.55
+        reg = out[y0:y1, x0:x1]
+        reg *= (1 - halo)[..., None]                                     # dark outline so it reads on the bright disc
+        reg += ring[..., None] * (np.array([1.0, 1.0, 1.0], f32) - reg) * 0.95
+        out[y0:y1, x0:x1] = reg
 
     def chroma_bloom(self, img, amt):
         img = bloom(img, 0.85 * amt)

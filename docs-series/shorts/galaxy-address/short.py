@@ -81,8 +81,8 @@ SC = {
                   az=180, alt=40, zen=(0.010, 0.011, 0.070), hor=(0.034, 0.046, 0.185), lc=(0.55, 0.65, 1.0), I=0.10,
                   beams=[(0.45, 0.65, 1.0), (0.8, 0.6, 1.0)], bI=0.0, expo=1.15),
     "gc": dict(name="GALACTIC CENTRE", tc=(255, 215, 140), l=["~1.5 MILLION STARS WITHIN 3 LY", "~12,700 OUTSHINE SIRIUS", "NIGHT SKY ≈ 20 FULL MOONS"],
-               az=185, alt=47, zen=(0.050, 0.032, 0.045), hor=(0.20, 0.12, 0.09), lc=(1.0, 0.80, 0.52), I=1.0,
-               beams=[(1.0, 0.85, 0.5), (0.5, 0.75, 1.0), (1.0, 0.45, 0.75), (1.0, 0.65, 0.2)], bI=1.0, expo=0.55),
+               az=185, alt=47, zen=(0.016, 0.007, 0.014), hor=(0.075, 0.032, 0.036), lc=(1.0, 0.80, 0.52), I=1.0,
+               beams=[(1.0, 0.85, 0.5), (0.5, 0.75, 1.0), (1.0, 0.45, 0.75), (1.0, 0.65, 0.2)], bI=0.6, expo=0.85),
     "arm": dict(name="INSIDE A STELLAR NURSERY", tc=(255, 140, 200), l=["A SPIRAL ARM · LIKE THE CARINA NEBULA", "~250 LY OF GLOWING GAS", "STARS ONLY A FEW MILLION YEARS OLD"],
                 az=178, alt=50, zen=(0.012, 0.004, 0.030), hor=(0.05, 0.015, 0.06), lc=(1.0, 0.48, 0.78), I=0.55,
                 beams=[(1.0, 0.35, 0.65), (0.35, 0.85, 1.0), (1.0, 0.6, 0.85), (0.6, 0.5, 1.0)], bI=0.5, expo=0.95),
@@ -93,8 +93,8 @@ SC = {
                  az=180, alt=50, zen=(0.0035, 0.0050, 0.020), hor=(0.010, 0.024, 0.040), lc=(0.40, 0.60, 0.65), I=0.035,
                  beams=[(0.3, 0.8, 0.7), (0.4, 0.5, 1.0)], bI=0.10, expo=1.35),
 }
-VOIDGAL = [(0.22, 0.07, 0, 24, 0.9), (0.78, 0.29, 1, 16, 0.7), (0.60, 0.40, 2, 20, 0.6), (0.27, 0.62, 3, 14, 0.5),
-           (0.84, 0.60, 4, 18, 0.5), (0.45, 0.13, 5, 12, 0.45)]          # (x/W, y/H, sprite, size px, gain)
+VOIDGAL = [(0.24, 0.07, 0, 110, 1.6), (0.76, 0.30, 1, 34, 0.7), (0.60, 0.43, 2, 84, 1.3), (0.25, 0.62, 3, 22, 0.6),
+           (0.80, 0.62, 4, 64, 1.2), (0.45, 0.14, 5, 18, 0.5)]  # (x/W, y/H, sprite, size px, gain)
 
 
 def back_out(u, s=2.0):
@@ -199,15 +199,15 @@ class Scene:
     # -------------------------------------------------------------------------------------------- data per scene
     def load_gc(self):
         z = np.load(os.path.join(SCR, "cl_nsc.npz"))
-        R = self.Rc["gc"]; sel = z["V"] < -0.8
-        self.sets["gc"] = self.mkset(z["dirs"][sel].astype(np.float64) @ R.T, z["V"][sel], star_rgb(z["T"][sel]))
+        R = self.Rc["gc"]; sel = z["V"] < -3.2                                # distinct "jewel" stars; the rest -> smooth glow
+        self.sets["gc"] = self.mkset(z["dirs"][sel].astype(np.float64) @ R.T, z["V"][sel], star_rgb(z["T"][sel], 2.6))
         fm = z["faint"].astype(f32); MH, MW_ = fm.shape
         u = z["dirs"][~sel]; fl = 10 ** (-0.4 * z["V"][~sel].astype(np.float64))
         ra = np.degrees(np.arctan2(u[:, 1], u[:, 0])) % 360.0; dec = np.degrees(np.arcsin(np.clip(u[:, 2], -1, 1)))
         xi = np.clip((ra / 360 * MW_).astype(int), 0, MW_ - 1); yi = np.clip(((90 - dec) / 180 * MH).astype(int), 0, MH - 1)
         pix_sr = (2 * np.pi / MW_) * (np.pi / MH) * np.cos(np.radians(90 - (yi + 0.5) / MH * 180))
         fm += np.bincount(yi * MW_ + xi, weights=fl / pix_sr, minlength=MH * MW_).reshape(MH, MW_).astype(f32)
-        self.gc_faint = cv2.GaussianBlur(fm, (0, 0), 3.5)
+        self.gc_faint = cv2.GaussianBlur(fm, (0, 0), 6.0)
         print("gc points", len(self.sets["gc"]["V"]))
 
     def load_arm(self):
@@ -302,7 +302,7 @@ class Scene:
         lanes = (np.exp(-((vv - 40) / 55) ** 2) * 1.0 + np.exp(-((vv + 170) / 35) ** 2) * 0.8
                  + np.exp(-((vv - 290) / 40) ** 2) * 0.7) * np.clip(0.55 + 0.45 * w2, 0, 1)
         lanes += np.clip(w2 - 0.9, 0, 1) * 0.5 * np.exp(-np.abs(v) / 500)
-        return np.clip(1 - 0.93 * lanes, 0.05, 1).astype(f32)
+        return np.clip(1 - 0.97 * lanes, 0.03, 1).astype(f32)
 
     def sky_gc(self, t, lst):
         W, H = self.L.W, self.L.H
@@ -311,13 +311,12 @@ class Scene:
         MH, MW_ = self.gc_faint.shape
         ra = np.degrees(np.arctan2(g[..., 1], g[..., 0])) % 360.0; dec = np.degrees(np.arcsin(np.clip(g[..., 2], -1, 1)))
         fl = cv2.remap(self.gc_faint, (ra / 360 * MW_ - 0.5).astype(f32), ((90 - dec) / 180 * MH - 0.5).astype(f32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_WRAP)
-        half = ((np.maximum(fl, 0) / 100.0) ** 0.6 * 0.05 * 0.55)[..., None] * np.array([1.0, 0.60, 0.30], f32)
+        half = ((np.maximum(fl, 0) / 100.0) ** 0.75 * 0.05 * 0.045)[..., None] * np.array([1.0, 0.55, 0.32], f32)
         cx, cy = self.screen_of("gc", lst)
         tr = self.dust(cx, cy, t)
-        sky = self.nights["gc"] + (self.airgrad * 0.45 * 0.05)[..., None] * np.array([0.75, 0.55, 0.55], f32)
-        sky = sky + self.up(half * tr[..., None])
-        st = self.stars_layer(self.sets["gc"], t, lst, spark=0.9, hp=0.30, pop=1.0, ng=70, gth=12.0, gpop=2.2)
-        return sky + st * self.up(np.maximum(tr, 0.35))[..., None]
+        sky = self.nights["gc"] + ((self.airgrad * 0.25 * 0.05)[..., None] * np.array([0.75, 0.50, 0.65], f32) + self.up(half)) * self.up(tr)[..., None]
+        st = self.stars_layer(self.sets["gc"], t, lst, gain=0.9, spark=0.9, hp=0.45, pop=0.30, ng=110, gth=5.0, gpop=2.0)
+        return sky + st * self.up(np.maximum(tr, 0.2))[..., None]
 
     def sky_arm(self, t, lst):
         th, ph = self.local("arm", lst)
@@ -480,7 +479,7 @@ class Scene:
                 ov = np.zeros_like(out[..., 0])
                 for i, (fx, fy, k, sz, gn) in enumerate(VOIDGAL):
                     ai = ramp(t, T_VOIDGAL + 0.08 * i, T_VOIDGAL + 0.08 * i + 0.25)
-                    pr = sz * 1.3 + 10 + 2 * math.sin(t * 4 + i)
+                    pr = sz * 0.6 + 12 + 2 * math.sin(t * 4 + i)
                     cv2.circle(ov, (int((fx * W + dx) * 4), int(fy * L.H * 4)), int(pr * 4), float(ai), 2, cv2.LINE_AA, shift=2)
                 ov = cv2.GaussianBlur(ov, (0, 0), 0.6) * ag * 0.75
                 out[:] = out * (1 - ov[..., None]) + ov[..., None] * np.array([0.75, 1.0, 0.92], f32)

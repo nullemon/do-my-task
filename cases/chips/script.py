@@ -10,20 +10,22 @@ def dj(a, b): return F("film_dogs_join_army", a, b, credit=CD)
 def sn(a, b): return F("film_invasion_sicily_newsreel", a, b, crop=dict(x0=8, y0=6, x1=312, y1=234), credit=CS)
 def li(a, b, focus=(0.5, 0.45)): return F("film_licata_invasion", a, b, crop=dict(x0=0, y0=0, x1=532, y1=228), credit=CL, focus=focus)   # burned-in timecode cropped
 def k(a, b, focus=(0.5, 0.5)): return F("film_casablanca_conference_2", a, b, credit=CK, focus=focus)
+def lc(a, b, focus=(0.5, 0.5)): return F("film_licata_convoy", a, b, crop=dict(x0=10, y0=0, x1=522, y1=236), credit="U.S. Navy color film, Licata invasion convoy 1943 · National Archives", focus=focus)
+def vs(a, b, focus=(0.5, 0.5)): return F("vid_sicily_invasion", a, b, crop=dict(x0=0, y0=0, x1=532, y1=232), credit="U.S. Navy film, invasion of Sicily 1943 · National Archives", focus=focus)
 CH = P("chips_colorized", focus=(0.5, 0.4))
 NOTCHIPS = "ARMY WAR DOG TRAINING · 1943 (NOT CHIPS)"
 VIS = {
  "hook1": FULL(P("chips_colorized", focus=(0.5, 0.4), z=(1.0, 1.10)), punch=True),
- "hook2": FULL(li(46.6, 50.5), punch=True, pops=[STAMP("JULY 10, 1943", 0.2)]),
+ "hook2": FULL(lc(342.6, 347.0), punch=True, pops=[STAMP("JULY 10, 1943", 0.2)]),
  "hook3": FULL(u(350.0, 354.5), punch=True),
- "hook4": FULL(sn(141.6, 145.8), punch=True),
+ "hook4": FULL(vs(228.7, 232.5), punch=True),
  "hook5": FULL(u(330.6, 334.5)),
  "title": FULL(u(230.0, 234.0)),
  "ch1": dict(media=u(50.0, 54.0)),
  "fam1": FULL(P("chips_colorized", focus=(0.5, 0.45), z=(1.0, 1.08)), pops=[PIN("PLEASANTVILLE, NEW YORK", 0.3)]),
- "fam2": FULL(dj(442.6, 446.5), pops=[CHIP("DOGS FOR DEFENSE · 1942", 0.3)]),
+ "fam2": FULL(P("cat_island_war_dogs", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[CHIP("DOGS FOR DEFENSE · ARMY WAR DOGS (NOT CHIPS)", 0.3, color="dark")]),
  "dfd1": FULL(u(110.2, 114.2), pops=[CHIP(NOTCHIPS, 0.3, color="dark")]),
- "dfd2": SPLIT(dj(507.4, 511.5), dj(637.0, 641.0), chip1="FAMILY DOGS JOIN THE ARMY · 1942", chip2="REAL 1942 FILM"),
+ "dfd2": SPLIT(u(430.8, 434.8), u(511.0, 515.0), chip1="FAMILY DOGS JOIN THE ARMY", chip2="REAL 1943 ARMY FILM"),
  "train1": FULL(u(70.0, 74.5), pops=[CHIP(NOTCHIPS, 0.3, color="dark")]),
  "train2": FULL(u(250.5, 255.0)),
  "train3": SPLIT(u(270.5, 274.5), u(310.6, 314.5), chip1="SENTRY TRAINING", chip2="WAR DOGS · 1943"),
@@ -43,23 +45,23 @@ VIS = {
  "map_sicily": MAP("pin", pin="Licata", center="Licata", towns=[("Licata", "LICATA", "r")], label="JULY 10, 1943 · SICILY", zoom=2.0),
  "land1": FULL(li(13.7, 18.5), pops=[CHIP("REAL FILM · LICATA, JULY 1943", 0.3)]),
  "land2": FULL(sn(179.4, 183.5)),
- "fire1": FULL(sn(85.0, 89.0)),
- "fire2": FULL(sn(255.0, 259.0)),
+ "fire1": FULL(vs(42.4, 46.5)),
+ "fire2": FULL(vs(279.5, 283.5)),
  "charge1": FULL(u(370.7, 374.7), punch=True, pops=[CHIP(NOTCHIPS, 0.2, color="dark")]),
  "surr1": FULL(sn(387.2, 391.0)),
  "surr2": FULL(sn(368.3, 372.0)),
  "quote1": STAT("\"I CALLED HIM OFF\"", "PVT. JOHN ROWELL, 1943", u(290.6, 294.5)),
- "night1": FULL(u(130.2, 134.0)),
- "night2": STAT("10", "SOLDIERS CAPTURED THAT NIGHT", u(190.4, 194.4), sub="credited to Chips and his handler"),
+ "night1": FULL(P("scout_dogs_pacific", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[CHIP("WWII ARMY DOG TEAMS (NOT CHIPS)", 0.3, color="dark")]),
+ "night2": STAT("10", "SOLDIERS CAPTURED THAT NIGHT", lc(255.1, 259.0), sub="credited to Chips and his handler"),
  "ch4": dict(media=k(148.3, 152.0)),
  "medal1": FULL(P("chips_colorized", focus=(0.5, 0.35), z=(1.05, 1.12)), pops=[STAMP("SILVER STAR · PURPLE HEART", 0.3)]),
  "medal2": FULL(P("truscott_portrait", focus=(0.5, 0.35), z=(1.0, 1.08)), pops=[CHIP("MAJ. GEN. LUCIAN TRUSCOTT PRESENTED HIS AWARDS", 0.3)]),
  "back1": STAT("1944", "\"NO MORE MEDALS FOR ANIMALS\"", li(95.9, 100.0), sub="War Department ruling"),
  "back2": FULL(li(79.4, 83.5)),
  "ribbon1": FULL(li(145.2, 149.5), pops=[CHIP("HIS MEN STOOD BY HIM", 0.3)]),
- "map_war": MAP("route", pts=["Casablanca", "Licata", "Rome", "Marseille", "Berlin"], towns=[("Casablanca", "NORTH AFRICA", "l"), ("Licata", "SICILY", "r"), ("Rome", "ITALY", "r"), ("Marseille", "FRANCE", "l"), ("Berlin", "GERMANY", "r")],
+ "map_war": MAP("route", pts=["Casablanca", "Licata", "Rome", "Marseille", "Berlin"], towns=[("Casablanca", "NORTH AFRICA", "r"), ("Licata", "SICILY", "r"), ("Rome", "ITALY", "r"), ("Marseille", "FRANCE", "l"), ("Berlin", "GERMANY", "r")],
                 label="1942–1945 · CHIPS' WAR", center="Rome", zoom=1.3, note="Route shown is approximate"),
- "europe1": FULL(sn(292.7, 296.5)),
+ "europe1": FULL(lc(182.2, 186.5)),
  "ch5": dict(media=li(68.5, 72.5)),
  "home1": FULL(P("chips_colorized", focus=(0.5, 0.45), z=(1.1, 1.0)), pops=[STAMP("DECEMBER 1945", 0.3)]),
  "home2": FULL(li(134.2, 138.5)),
@@ -69,8 +71,8 @@ VIS = {
  "dickin1": STAT("2018", "THE DICKIN MEDAL", sn(349.4, 353.5), sub="Awarded in London, 75 years later"),
  "dickin2": FULL(P("licata_beach_memorial", focus=(0.5, 0.5), z=(1.0, 1.08)), pops=[CHIP("LICATA BEACH MEMORIAL", 0.3)]),
  "closing": FULL(P("chips_colorized", focus=(0.5, 0.35), z=(1.0, 1.12))),
- "cta0": CTA(0, dj(593.8, 597.5)),
- "cta1": CTA(1, dj(615.4, 619.5)),
+ "cta0": CTA(0, lc(65.6, 70.0)),
+ "cta1": CTA(1, vs(144.0, 148.0)),
 }
 
 SEG = [

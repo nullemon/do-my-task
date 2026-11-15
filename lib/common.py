@@ -40,7 +40,7 @@ def load_photos(d):
             lic = r.get("lic", "")
             artist = r.get("artist", "").replace("Unknown authorUnknown author", "Unknown author").strip()
             if artist.lower().startswith("unknown") or artist.lower() in ("anonymous", ""): artist = ""
-            src = r.get("source", "Wikimedia Commons")
+            src = r.get("source") or "Wikimedia Commons"
             credit = r.get("credit") or (f"{src} · {artist} · {lic}" if artist else f"{src} · {lic}")
             out[r["key"]] = dict(file=f, credit=credit, lic=lic, page=r.get("page", ""), title=r.get("title", ""))
     return out

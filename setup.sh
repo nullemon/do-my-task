@@ -9,4 +9,6 @@ B=https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0
 [ -f models/kokoro-v1.0.onnx ] || curl -L -o models/kokoro-v1.0.onnx $B/kokoro-v1.0.onnx
 [ -f models/voices-v1.0.bin ] || curl -L -o models/voices-v1.0.bin $B/voices-v1.0.bin
 (cd lib/maps && npm i d3-geo topojson-client world-atlas) || true
+[ -d .venv-voice ] || python3 -m venv .venv-voice
+.venv-voice/bin/pip install chatterbox-tts
 echo "Done. Open this folder in Claude Code and say: Read PROMPT.md and set everything up."

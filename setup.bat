@@ -24,7 +24,13 @@ echo [4/5] Kokoro voice model (about 340 MB)...
 if not exist models mkdir models
 if not exist models\kokoro-v1.0.onnx curl -L -o models\kokoro-v1.0.onnx https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
 if not exist models\voices-v1.0.bin curl -L -o models\voices-v1.0.bin https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
-echo [5/5] Node.js for maps (optional)...
+echo [5/6] Chatterbox premium voice (free, runs on your RTX GPU; about 4 GB, one time)...
+if not exist .venv-voice %PY% -m venv .venv-voice >>"%LOG%" 2>&1
+.venv-voice\Scripts\python.exe -m pip install -U pip >>"%LOG%" 2>&1
+.venv-voice\Scripts\python.exe -m pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu124 >>"%LOG%" 2>&1
+.venv-voice\Scripts\python.exe -m pip install chatterbox-tts >>"%LOG%" 2>&1
+.venv-voice\Scripts\python.exe -c "import chatterbox; print('Chatterbox voice ready')"
+echo [6/6] Node.js for maps (optional)...
 where node >nul 2>nul || winget install -e --id OpenJS.NodeJS.LTS --accept-package-agreements --accept-source-agreements
 where npm >nul 2>nul && ( pushd lib\maps & call npm i d3-geo topojson-client world-atlas >>"%LOG%" 2>&1 & popd )
 echo.

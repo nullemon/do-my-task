@@ -82,6 +82,28 @@ def align(script_words, wh):
         else: i += 1
     return [(w, round(s, 3), round(e, 3)) for w, (s, e) in zip(script_words, T)]
 
+def plain_text(text, cfg):
+    """text for plain-text engines: 9/11, years and names respelled (captions keep the script text)"""
+    from respell import RESPELL
+    rs = dict(RESPELL); rs.update(getattr(cfg, "RESPELL", {}))
+    t = re.sub(r"\b9/11\b", "nine eleven", text)
+    t = years(t)
+    for k_, v_ in sorted(rs.items(), key=lambda kv: -len(kv[0])):
+        t = re.sub(r"(?<!\w)" + re.escape(k_) + r"(?!\w)", v_, t)
+    return t.replace("…", "...").replace("—", ", ")
+
+CBX_PY = os.environ.get("CBX_PY") or next((p for p in [os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".venv-voice", "Scripts", "python.exe"),
+          os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".venv-voice", "bin", "python"), "/home/user/cbx/bin/python"] if os.path.exists(p)), None)
+
+def chatterbox_batch(cfg, items, out_dir):
+    """items: [(seg_index, text)] -> generates out_dir/segNN.wav with Chatterbox in its own environment"""
+    import subprocess, tempfile
+    jobs = [dict(text=t, out=os.path.join(out_dir, f"seg{i:02d}.cbx.wav")) for i, t in items]
+    spec = dict(exaggeration=getattr(cfg, "VOICE_EXAGGERATION", 0.6), cfg=getattr(cfg, "VOICE_CFG", 0.45), seed=7, jobs=jobs,
+                voice_ref=getattr(cfg, "VOICE_REF", None), force=bool(os.environ.get("FORCE")))
+    jf = os.path.join(out_dir, "cbx_jobs.json"); json.dump(spec, open(jf, "w"))
+    subprocess.run([CBX_PY, os.path.join(os.path.dirname(os.path.abspath(__file__)), "cbx_worker.py"), jf], check=True)
+
 def main(code):
     cfg, scr = load_case(code)
     out = os.path.join(cfg.WORK, "tts"); os.makedirs(out, exist_ok=True)
@@ -95,12 +117,23 @@ def main(code):
     jp = os.path.join(out, "tts.json")
     if os.path.exists(jp): old = {o["i"]: o for o in json.load(open(jp))}
     res = []
+    engine = os.environ.get("VOICE") or getattr(cfg, "VOICE_ENGINE", "kokoro")
+    if engine == "chatterbox":
+        items = [(i, plain_text(s["text"], cfg)) for i, s in enumerate(scr.SEG) if s["kind"] == "narr"]
+        chatterbox_batch(cfg, items, out)
     for i, s in enumerate(scr.SEG):
         if s["kind"] != "narr": continue
-        wav = os.path.join(out, f"seg{i:02d}.wav"); sp = to_phonemes(k, s["text"], pron)
+        wav = os.path.join(out, f"seg{i:02d}.wav")
+        sp = ("cbx:" + plain_text(s["text"], cfg)) if engine == "chatterbox" else to_phonemes(k, s["text"], pron)
         if i in old and old[i].get("spoken") == sp and os.path.exists(wav) and not os.environ.get("FORCE") and not os.environ.get("REALIGN"):
             res.append(old[i]); continue
-        if os.environ.get("REALIGN") and os.path.exists(wav):
+        if engine == "chatterbox":
+            a, sr = sf.read(os.path.join(out, f"seg{i:02d}.cbx.wav"))
+            if a.ndim > 1: a = a.mean(1)
+            nz = np.where(np.abs(a) > 0.008)[0]
+            if len(nz): a = a[max(0, nz[0] - 200): nz[-1] + 1200]
+            sf.write(wav, a, sr)
+        elif os.environ.get("REALIGN") and os.path.exists(wav):
             a, sr = sf.read(wav)
         else:
             ph = to_phonemes(k, s["text"], pron)

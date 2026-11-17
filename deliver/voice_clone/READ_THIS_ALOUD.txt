@@ -1,0 +1,35 @@
+VOICE CLONE RECORDING (about 2 minutes)
+
+HOW TO RECORD (this matters more than anything else)
+1. Use a quiet room with soft things around you (a bedroom or a closet full of clothes is perfect). No fan, no TV, no music.
+2. Use your phone's voice recorder. Hold it about a hand's width (15 cm) from your mouth, a little below your chin.
+3. Read in the voice you want for the channel: the way you'd tell a friend an amazing true story. Warm, natural, not "announcer".
+4. Pause about 1 second between paragraphs. If you stumble, stop, wait 2 seconds, and read that sentence again (I'll cut the mistake).
+5. Send me the file exactly as recorded (m4a / mp3 / wav). Don't add effects or noise removal.
+
+--- START READING HERE ---
+
+Hi, this is my voice for the channel. I'm reading this so my narration sounds just like me.
+
+Every evening, a dog walked to a Tokyo train station to meet the man he loved. One day, the man didn't come home. But the dog kept coming back. Every single day. For almost ten years.
+
+In nineteen forty-four, a soldier found a tiny dog shivering in a jungle foxhole. She weighed just four pounds. A year later, an entire airfield was waiting on her.
+
+Can you imagine that? A dog so small you could hold her in one hand, crawling through seventy feet of dark, narrow pipe, while the soldiers waited at the other end, calling her name.
+
+Here's the part most people get wrong. The famous story says he waited fourteen years. But the records tell a different story. And honestly, the truth is even better.
+
+On March eighth, nineteen thirty-five, the old dog was found on a quiet street near the station. He was eleven years old. Japan mourned him. And today, people still leave flowers at his statue.
+
+She was brave. She was loyal. And she never, ever gave up.
+
+If this story touched you, subscribe for more true stories of incredible dogs. And tell us in the comments: what's the most loyal thing your dog has ever done?
+
+One, two, three, four, five. Six hundred and fifty. Two thousand and twenty-six. Ninety-nine percent.
+
+Thank you for listening.
+
+--- END ---
+
+OPTIONAL, FOR THE BEST POSSIBLE CLONE:
+If you're willing to record 20 to 30 minutes in total (for example, read any of our 10 video scripts aloud in the same quiet spot), I can train the model on your voice. That gives a noticeably closer match than a 2-minute sample.
